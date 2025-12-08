@@ -1,0 +1,24 @@
+rootProject.name = "us-payroll-platform"
+
+include(
+    "shared-kernel",
+    "payroll-domain",
+    "hr-domain",
+    "time-domain",
+    "tax-domain",
+    "persistence-core",
+    "messaging-core",
+    "web-core",
+    "edge-service",
+    "identity-service",
+    "hr-service",
+    "time-ingestion-service",
+    "tax-service",
+    "payroll-orchestrator-service",
+    "payroll-worker-service",
+    "payments-service",
+    "filings-service",
+    "reporting-service",
+    "integrations-service",
+    "notification-service",
+)
