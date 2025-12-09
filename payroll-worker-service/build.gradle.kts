@@ -1,26 +1,30 @@
 import org.gradle.api.tasks.compile.JavaCompile
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    kotlin("jvm") version "2.0.0"
+    kotlin("jvm")
+    id("org.springframework.boot") version "3.3.0"
+    id("io.spring.dependency-management") version "1.1.5"
     application
 }
 
 kotlin {
     jvmToolchain(21)
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_21)
+    }
 }
 
 dependencies {
     implementation(project(":shared-kernel"))
     implementation(project(":payroll-domain"))
+    implementation(project(":tax-service"))
+    implementation(project(":labor-service"))
 
-    val ktorVersion = "2.3.7"
-    implementation("io.ktor:ktor-server-core-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-content-negotiation-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-serialization-jackson-jvm:$ktorVersion")
+    implementation("org.springframework.boot:spring-boot-starter-web")
 
     testImplementation(kotlin("test"))
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
 tasks.withType<JavaCompile> {
@@ -28,10 +32,6 @@ tasks.withType<JavaCompile> {
     targetCompatibility = "21"
 }
 
-tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "21"
-}
-
 application {
-    mainClass.set("com.example.uspayroll.worker.ApplicationKt")
+    mainClass.set("com.example.uspayroll.worker.WorkerApplicationKt")
 }

@@ -19,4 +19,6 @@ data class PaycheckInput(
     val priorYtd: YtdSnapshot,
     /** Optional explicit pay schedule; if null, a default schedule is derived from the period frequency. */
     val paySchedule: PaySchedule? = null,
+    /** Optional labor standards context (FLSA-style minimum wage, tip credit, etc.). */
+    val laborStandards: LaborStandardsContext? = null,
 )

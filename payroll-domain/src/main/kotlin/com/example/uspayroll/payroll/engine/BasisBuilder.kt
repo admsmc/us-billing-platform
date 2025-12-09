@@ -94,6 +94,9 @@ object BasisBuilder {
         val ssWages = Money(gross.amount - ssReductions, gross.currency)
         val medicareWages = Money(gross.amount - medicareReductions, gross.currency)
         val supplementalWages = Money(supplementalAmount, gross.currency)
+        // For now, FUTA wages follow gross wages; more precise FUTA-specific
+        // reductions can be added later via additional deduction effects.
+        val futaWages = gross
 
         val bases = buildMap {
             put(TaxBasis.Gross, gross)
@@ -102,6 +105,7 @@ object BasisBuilder {
             put(TaxBasis.SocialSecurityWages, ssWages)
             put(TaxBasis.MedicareWages, medicareWages)
             put(TaxBasis.SupplementalWages, supplementalWages)
+            put(TaxBasis.FutaWages, futaWages)
         }
 
         val components = buildMap<TaxBasis, Map<String, Money>> {
@@ -143,6 +147,9 @@ object BasisBuilder {
             })
             put(TaxBasis.SupplementalWages, buildMap {
                 put("supplemental", Money(supplementalAmount, gross.currency))
+            })
+            put(TaxBasis.FutaWages, buildMap {
+                put("gross", gross)
             })
         }
 

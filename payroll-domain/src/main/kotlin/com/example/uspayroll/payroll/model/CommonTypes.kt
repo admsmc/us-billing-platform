@@ -27,4 +27,33 @@ enum class EarningCategory {
     SUPPLEMENTAL,
     HOLIDAY,
     IMPUTED,
+    TIPS,
 }
+
+/**
+ * High-level labor standards context values used for FLSA-style checks
+ * (minimum wage floors, youth wage rules, tip credit thresholds, etc.).
+ *
+ * This is intentionally small and federal-focused for now; state/local
+ * overlays can be added later without changing the engine boundary.
+ */
+data class LaborStandardsContext(
+    /** Federal minimum wage floor per hour (e.g., $7.25). */
+    val federalMinimumWage: com.example.uspayroll.shared.Money,
+    /**
+     * Youth minimum wage cash rate per hour, if allowed (e.g., $4.25), or
+     * null if not in effect.
+     */
+    val youthMinimumWage: com.example.uspayroll.shared.Money? = null,
+    /** Maximum age in whole years for youth minimum wage eligibility. */
+    val youthMaxAgeYears: Int? = null,
+    /** Maximum number of consecutive calendar days from hire for youth wage. */
+    val youthMaxConsecutiveDaysFromHire: Int? = null,
+    /**
+     * Federal tipped-employee cash minimum per hour (e.g., $2.13) for
+     * employees who customarily and regularly receive tips.
+     */
+    val federalTippedCashMinimum: com.example.uspayroll.shared.Money? = null,
+    /** Monthly tip threshold for classification as a tipped employee. */
+    val tippedMonthlyThreshold: com.example.uspayroll.shared.Money? = null,
+)

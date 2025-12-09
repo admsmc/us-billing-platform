@@ -23,6 +23,12 @@ sealed class TaxBasis {
      * tax rules.
      */
     object SupplementalWages : TaxBasis()
+    /**
+     * Wages subject to FUTA (federal unemployment) taxation. For now this is
+     * modeled as a separate basis so that FUTA rules can use their own wage
+     * base caps and reporting semantics.
+     */
+    object FutaWages : TaxBasis()
 }
 
 sealed class TaxRule {

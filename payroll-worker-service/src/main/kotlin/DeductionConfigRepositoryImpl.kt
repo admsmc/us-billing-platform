@@ -10,6 +10,7 @@ import com.example.uspayroll.shared.Money
 /**
  * Temporary in-memory deduction config implementation for demo purposes.
  */
+@org.springframework.stereotype.Component
 class InMemoryDeductionConfigRepository : DeductionConfigRepository {
 
     private val data: Map<EmployerId, List<DeductionPlan>> = mapOf(

@@ -14,6 +14,7 @@ include(
     "hr-service",
     "time-ingestion-service",
     "tax-service",
+    "labor-service",
     "payroll-orchestrator-service",
     "payroll-worker-service",
     "payments-service",

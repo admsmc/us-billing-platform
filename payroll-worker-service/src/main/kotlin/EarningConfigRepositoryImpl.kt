@@ -11,6 +11,7 @@ import com.example.uspayroll.shared.Money
  * Temporary in-memory earning config implementation for demo purposes.
  * In the future this will be backed by a real config service / database.
  */
+@org.springframework.stereotype.Component
 class InMemoryEarningConfigRepository : EarningConfigRepository {
 
     private val data: Map<EmployerId, List<EarningDefinition>> = mapOf(

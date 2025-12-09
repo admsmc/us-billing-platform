@@ -2,52 +2,65 @@ package com.example.uspayroll.worker
 
 import com.example.uspayroll.payroll.engine.PayrollEngine
 import com.example.uspayroll.payroll.model.*
-import com.example.uspayroll.shared.Money
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
-import com.example.uspayroll.shared.PaycheckId
+import com.example.uspayroll.shared.Money
 import com.example.uspayroll.shared.PayRunId
-import io.ktor.http.*
-import io.ktor.serialization.jackson.*
-import io.ktor.server.application.*
-import io.ktor.server.engine.*
-import io.ktor.server.netty.*
-import io.ktor.server.plugins.contentnegotiation.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
+import com.example.uspayroll.tax.api.TaxContextProvider
+import com.example.uspayroll.tax.service.FederalWithholdingCalculator
+import com.example.uspayroll.tax.service.FederalWithholdingInput
+import com.example.uspayroll.labor.impl.LaborStandardsContextProvider
+import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.springframework.boot.runApplication
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.RestController
 import java.time.LocalDate
 
-fun main() {
-    embeddedServer(Netty, port = 8080) {
-        module()
-    }.start(wait = true)
+@SpringBootApplication
+class WorkerApplication
+
+fun main(args: Array<String>) {
+    runApplication<WorkerApplication>(*args)
 }
 
-fun Application.module() {
-    install(ContentNegotiation) {
-        jackson { }
-    }
+/**
+ * Service responsible for orchestrating a payroll run for an employer.
+ *
+ * This service demonstrates the intended performance behavior:
+ * - It calls [TaxContextProvider] once per (employer, checkDate).
+ * - It reuses the resulting [TaxContext] for every employee in the run.
+ */
+@org.springframework.stereotype.Service
+class PayrollRunService(
+    private val taxContextProvider: TaxContextProvider,
+    private val earningConfigRepository: com.example.uspayroll.payroll.model.config.EarningConfigRepository,
+    private val deductionConfigRepository: com.example.uspayroll.payroll.model.config.DeductionConfigRepository,
+    private val federalWithholdingCalculator: FederalWithholdingCalculator,
+    private val laborStandardsContextProvider: LaborStandardsContextProvider,
+) {
 
-    // Temporary config repositories; in future injected or provided via DI
-    val earningConfig = InMemoryEarningConfigRepository()
-    val deductionConfig = InMemoryDeductionConfigRepository()
+    fun runDemoPayForEmployer(): List<Pair<PaycheckResult, Money>> {
+        val employerId = EmployerId("emp-1")
+        val checkDate = LocalDate.of(2025, 1, 15)
 
-    routing {
-        post("/dry-run-paycheck") {
-            // For now, ignore the body and use a hardcoded example input
-            val employerId = EmployerId("emp-1")
-            val employeeId = EmployeeId("ee-1")
-            val period = PayPeriod(
-                id = "2025-01-BW1",
+        // Load tax context ONCE for this employer/date.
+        val taxContext = taxContextProvider.getTaxContext(employerId, checkDate)
+        val laborStandardsByEmployee = mutableMapOf<EmployeeId, LaborStandardsContext?>()
+
+        val period = PayPeriod(
+            id = "2025-01-BW1",
+            employerId = employerId,
+            dateRange = LocalDateRange(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 14)),
+            checkDate = checkDate,
+            frequency = PayFrequency.BIWEEKLY,
+        )
+
+        // In a real system this would come from HR; here we just model two
+        // employees to demonstrate reuse of the same TaxContext.
+        val employees = listOf(
+            EmployeeSnapshot(
                 employerId = employerId,
-                dateRange = LocalDateRange(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 14)),
-                checkDate = LocalDate.of(2025, 1, 15),
-                frequency = PayFrequency.BIWEEKLY,
-            )
-            val snapshot = EmployeeSnapshot(
-                employerId = employerId,
-                employeeId = employeeId,
+                employeeId = EmployeeId("ee-1"),
                 homeState = "CA",
                 workState = "CA",
                 filingStatus = FilingStatus.SINGLE,
@@ -55,12 +68,34 @@ fun Application.module() {
                     annualSalary = Money(260_000_00L),
                     frequency = period.frequency,
                 ),
-            )
-            val input = PaycheckInput(
-                paycheckId = PaycheckId("chk-dry-run"),
-                payRunId = PayRunId("run-dry-run"),
+            ),
+            EmployeeSnapshot(
                 employerId = employerId,
-                employeeId = employeeId,
+                employeeId = EmployeeId("ee-2"),
+                homeState = "CA",
+                workState = "CA",
+                filingStatus = FilingStatus.SINGLE,
+                baseCompensation = BaseCompensation.Salaried(
+                    annualSalary = Money(130_000_00L),
+                    frequency = period.frequency,
+                ),
+            ),
+        )
+
+        return employees.mapIndexed { index, snapshot ->
+            val laborStandards = laborStandardsByEmployee.getOrPut(snapshot.employeeId) {
+                laborStandardsContextProvider.getLaborStandards(
+                    employerId = employerId,
+                    asOfDate = checkDate,
+                    workState = snapshot.workState,
+                    homeState = snapshot.homeState,
+                )
+            }
+            val input = PaycheckInput(
+                paycheckId = com.example.uspayroll.shared.PaycheckId("chk-demo-${index + 1}"),
+                payRunId = PayRunId("run-demo"),
+                employerId = employerId,
+                employeeId = snapshot.employeeId,
                 period = period,
                 employeeSnapshot = snapshot,
                 timeSlice = TimeSlice(
@@ -68,23 +103,49 @@ fun Application.module() {
                     regularHours = 0.0,
                     overtimeHours = 0.0,
                 ),
-                taxContext = TaxContext(),
-                priorYtd = YtdSnapshot(year = 2025),
+                taxContext = taxContext,
+                priorYtd = YtdSnapshot(year = checkDate.year),
+                laborStandards = laborStandards,
             )
 
-            val result = PayrollEngine.calculatePaycheck(
+            val paycheck = PayrollEngine.calculatePaycheck(
                 input = input,
-                earningConfig = earningConfig,
-                deductionConfig = deductionConfig,
+                earningConfig = earningConfigRepository,
+                deductionConfig = deductionConfigRepository,
             )
 
-            call.respond(HttpStatusCode.OK, mapOf(
-                "version" to PayrollEngine.version(),
-                "paycheckId" to result.paycheckId.value,
-                "employeeId" to result.employeeId.value,
-                "grossCents" to result.gross.amount,
-                "netCents" to result.net.amount,
-            ))
+            val federalWithholding = federalWithholdingCalculator.computeWithholding(
+                FederalWithholdingInput(paycheckInput = input),
+            )
+
+            paycheck to federalWithholding
         }
+    }
+}
+
+/**
+ * Simple HTTP endpoint to trigger the demo payroll run and show the reused
+ * TaxContext behavior end-to-end.
+ */
+@RestController
+class PayrollRunController(
+    private val payrollRunService: PayrollRunService,
+) {
+
+    @GetMapping("/dry-run-paychecks")
+    fun dryRunPaychecks(): Map<String, Any> {
+        val results = payrollRunService.runDemoPayForEmployer()
+        return mapOf(
+            "version" to PayrollEngine.version(),
+            "paychecks" to results.map { (paycheck, federalWithholding) ->
+                mapOf(
+                    "paycheckId" to paycheck.paycheckId.value,
+                    "employeeId" to paycheck.employeeId.value,
+                    "grossCents" to paycheck.gross.amount,
+                    "netCents" to paycheck.net.amount,
+                    "federalWithholdingCents_calc" to federalWithholding.amount,
+                )
+            },
+        )
     }
 }

@@ -22,7 +22,39 @@ object PayrollEngine {
         employerContributions: List<EmployerContributionLine> = emptyList(),
         strictYtdYear: Boolean = false,
     ): PaycheckResult {
-        val earnings = EarningsCalculator.computeEarnings(input, earningConfig, overtimePolicy)
+        val baseEarnings = EarningsCalculator.computeEarnings(input, earningConfig, overtimePolicy)
+        val earnings = baseEarnings.toMutableList()
+
+        // Additional overtime premium on nondiscretionary bonus, for a simple
+        // hourly + bonus + overtime case. This does not change the existing
+        // overtime lines; it only adds any extra premium required by the
+        // increased regular rate due to bonus.
+        val additionalBonusPremium = RegularRateCalculator.additionalOvertimePremiumForBonus(input, earnings)
+        if (additionalBonusPremium.amount > 0L) {
+            val otHours = input.timeSlice.overtimeHours
+            val rate = if (otHours > 0.0) {
+                val centsPerHour = (additionalBonusPremium.amount / otHours).toLong()
+                Money(centsPerHour)
+            } else {
+                null
+            }
+            val extraLine = EarningLine(
+                code = EarningCode("OT_BONUS_PREMIUM"),
+                category = EarningCategory.OVERTIME,
+                description = "Additional overtime premium on bonus",
+                units = otHours,
+                rate = rate,
+                amount = additionalBonusPremium,
+            )
+            earnings += extraLine
+        }
+
+        // Tip-credit make-up for weekly, non-exempt, tipped hourly employees.
+        TipCreditEnforcer.applyTipCreditMakeup(
+            input = input,
+            laborStandards = input.laborStandards,
+            earnings = earnings,
+        )
 
         val ytdYear = input.priorYtd.year
         val checkYear = input.period.checkDate.year

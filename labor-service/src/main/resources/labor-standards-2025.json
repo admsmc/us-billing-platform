@@ -1,0 +1,759 @@
+[ {
+  "stateCode" : "AL",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "No state minimum wage; FLSA applies",
+    "url" : "https://www.dol.gov/agencies/whd/minimum-wage/state"
+  } ]
+}, {
+  "stateCode" : "AK",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "TODO: fill from official Alaska labor agency/DOL sources",
+    "url" : null
+  } ]
+}, {
+  "stateCode" : "AZ",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "TODO: fill from official Arizona labor agency/DOL sources",
+    "url" : null
+  } ]
+}, {
+  "stateCode" : "AR",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "TODO: fill from official Arkansas labor agency/DOL sources",
+    "url" : null
+  } ]
+}, {
+  "stateCode" : "CA",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : 1600,
+  "tippedMinimumCashWageCents" : 1600,
+  "maxTipCreditCents" : 0,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : 8.0,
+  "dailyDoubleTimeThresholdHours" : 12.0,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "DOL State Minimum Wage Table 2025 (CA)",
+    "url" : "https://www.dol.gov/agencies/whd/minimum-wage/state"
+  }, {
+    "kind" : "STATE_STATUTE",
+    "citation" : "CA Labor Code §1182.12 (example)",
+    "url" : null
+  } ]
+}, {
+  "stateCode" : "CO",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "TODO: fill from official Colorado labor agency/DOL sources",
+    "url" : null
+  } ]
+}, {
+  "stateCode" : "CT",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "TODO: fill from official Connecticut labor agency/DOL sources",
+    "url" : null
+  } ]
+}, {
+  "stateCode" : "DE",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "TODO: fill from official Delaware labor agency/DOL sources",
+    "url" : null
+  } ]
+}, {
+  "stateCode" : "FL",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "TODO: fill from official Florida labor agency/DOL sources",
+    "url" : null
+  } ]
+}, {
+  "stateCode" : "GA",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "State minimum wage below federal; FLSA generally applies",
+    "url" : "https://www.dol.gov/agencies/whd/minimum-wage/state"
+  } ]
+}, {
+  "stateCode" : "HI",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "TODO: fill from official Hawaii labor agency/DOL sources",
+    "url" : null
+  } ]
+}, {
+  "stateCode" : "ID",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "TODO: fill from official Idaho labor agency/DOL sources",
+    "url" : null
+  } ]
+}, {
+  "stateCode" : "IL",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "TODO: fill from official Illinois labor agency/DOL sources",
+    "url" : null
+  } ]
+}, {
+  "stateCode" : "IN",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "TODO: fill from official Indiana labor agency/DOL sources",
+    "url" : null
+  } ]
+}, {
+  "stateCode" : "IA",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "TODO: fill from official Iowa labor agency/DOL sources",
+    "url" : null
+  } ]
+}, {
+  "stateCode" : "KS",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "TODO: fill from official Kansas labor agency/DOL sources",
+    "url" : null
+  } ]
+}, {
+  "stateCode" : "KY",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "TODO: fill from official Kentucky labor agency/DOL sources",
+    "url" : null
+  } ]
+}, {
+  "stateCode" : "LA",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "No state minimum wage; FLSA applies",
+    "url" : "https://www.dol.gov/agencies/whd/minimum-wage/state"
+  } ]
+}, {
+  "stateCode" : "ME",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "TODO: fill from official Maine labor agency/DOL sources",
+    "url" : null
+  } ]
+}, {
+  "stateCode" : "MD",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "TODO: fill from official Maryland labor agency/DOL sources",
+    "url" : null
+  } ]
+}, {
+  "stateCode" : "MA",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "TODO: fill from official Massachusetts labor agency/DOL sources",
+    "url" : null
+  } ]
+}, {
+  "stateCode" : "MI",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "TODO: fill from official Michigan labor agency/DOL sources",
+    "url" : null
+  } ]
+}, {
+  "stateCode" : "MN",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "TODO: fill from official Minnesota labor agency/DOL sources",
+    "url" : null
+  } ]
+}, {
+  "stateCode" : "MS",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "No state minimum wage; FLSA applies",
+    "url" : "https://www.dol.gov/agencies/whd/minimum-wage/state"
+  } ]
+}, {
+  "stateCode" : "MO",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "TODO: fill from official Missouri labor agency/DOL sources",
+    "url" : null
+  } ]
+}, {
+  "stateCode" : "MT",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "TODO: fill from official Montana labor agency/DOL sources",
+    "url" : null
+  } ]
+}, {
+  "stateCode" : "NE",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "TODO: fill from official Nebraska labor agency/DOL sources",
+    "url" : null
+  } ]
+}, {
+  "stateCode" : "NV",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "TODO: fill from official Nevada labor agency/DOL sources",
+    "url" : null
+  } ]
+}, {
+  "stateCode" : "NH",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "No state minimum wage; FLSA applies",
+    "url" : "https://www.dol.gov/agencies/whd/minimum-wage/state"
+  } ]
+}, {
+  "stateCode" : "NJ",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "TODO: fill from official New Jersey labor agency/DOL sources",
+    "url" : null
+  } ]
+}, {
+  "stateCode" : "NM",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "TODO: fill from official New Mexico labor agency/DOL sources",
+    "url" : null
+  } ]
+}, {
+  "stateCode" : "NY",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "TODO: fill from official New York labor agency/DOL sources",
+    "url" : null
+  } ]
+}, {
+  "stateCode" : "NC",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "TODO: fill from official North Carolina labor agency/DOL sources",
+    "url" : null
+  } ]
+}, {
+  "stateCode" : "ND",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "TODO: fill from official North Dakota labor agency/DOL sources",
+    "url" : null
+  } ]
+}, {
+  "stateCode" : "OH",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "TODO: fill from official Ohio labor agency/DOL sources",
+    "url" : null
+  } ]
+}, {
+  "stateCode" : "OK",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "State minimum wage below federal; FLSA generally applies",
+    "url" : "https://www.dol.gov/agencies/whd/minimum-wage/state"
+  } ]
+}, {
+  "stateCode" : "OR",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "TODO: fill from official Oregon labor agency/DOL sources",
+    "url" : null
+  } ]
+}, {
+  "stateCode" : "PA",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "TODO: fill from official Pennsylvania labor agency/DOL sources",
+    "url" : null
+  } ]
+}, {
+  "stateCode" : "RI",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "TODO: fill from official Rhode Island labor agency/DOL sources",
+    "url" : null
+  } ]
+}, {
+  "stateCode" : "SC",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "No state minimum wage; FLSA applies",
+    "url" : "https://www.dol.gov/agencies/whd/minimum-wage/state"
+  } ]
+}, {
+  "stateCode" : "SD",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "TODO: fill from official South Dakota labor agency/DOL sources",
+    "url" : null
+  } ]
+}, {
+  "stateCode" : "TN",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "No state minimum wage; FLSA applies",
+    "url" : "https://www.dol.gov/agencies/whd/minimum-wage/state"
+  } ]
+}, {
+  "stateCode" : "TX",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : 725,
+  "tippedMinimumCashWageCents" : 213,
+  "maxTipCreditCents" : 512,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "DOL State Minimum Wage Table 2025 (TX)",
+    "url" : "https://www.dol.gov/agencies/whd/minimum-wage/state"
+  }, {
+    "kind" : "FEDERAL_DOL_TIPPED_WAGE_TABLE",
+    "citation" : "DOL Tipped Minimum Wage Table 2025 (TX)",
+    "url" : "https://www.dol.gov/agencies/whd/state/minimum-wage/tipped"
+  } ]
+}, {
+  "stateCode" : "UT",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "TODO: fill from official Utah labor agency/DOL sources",
+    "url" : null
+  } ]
+}, {
+  "stateCode" : "VT",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "TODO: fill from official Vermont labor agency/DOL sources",
+    "url" : null
+  } ]
+}, {
+  "stateCode" : "VA",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "TODO: fill from official Virginia labor agency/DOL sources",
+    "url" : null
+  } ]
+}, {
+  "stateCode" : "WA",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "TODO: fill from official Washington labor agency/DOL sources",
+    "url" : null
+  } ]
+}, {
+  "stateCode" : "WV",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "TODO: fill from official West Virginia labor agency/DOL sources",
+    "url" : null
+  } ]
+}, {
+  "stateCode" : "WI",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "TODO: fill from official Wisconsin labor agency/DOL sources",
+    "url" : null
+  } ]
+}, {
+  "stateCode" : "WY",
+  "effectiveFrom" : "2025-01-01",
+  "effectiveTo" : null,
+  "regularMinimumWageCents" : null,
+  "tippedMinimumCashWageCents" : null,
+  "maxTipCreditCents" : null,
+  "weeklyOvertimeThresholdHours" : 40.0,
+  "dailyOvertimeThresholdHours" : null,
+  "dailyDoubleTimeThresholdHours" : null,
+  "sources" : [ {
+    "kind" : "FEDERAL_DOL_MIN_WAGE_TABLE",
+    "citation" : "State minimum wage below federal; FLSA generally applies",
+    "url" : "https://www.dol.gov/agencies/whd/minimum-wage/state"
+  } ]
+} ]

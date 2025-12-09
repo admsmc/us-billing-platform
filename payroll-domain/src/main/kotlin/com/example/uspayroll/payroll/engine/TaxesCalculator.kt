@@ -70,6 +70,7 @@ object TaxesCalculator {
                     TaxBasis.SocialSecurityWages -> "socialSecurityWages"
                     TaxBasis.MedicareWages -> "medicareWages"
                     TaxBasis.SupplementalWages -> "supplementalWages"
+                    TaxBasis.FutaWages -> "futaWages"
                 } to amount,
             )
             traceSteps += TraceStep.BasisComputed(
@@ -79,8 +80,43 @@ object TaxesCalculator {
             )
         }
 
+        fun shouldSkipFicaOrMedicare(
+            basis: TaxBasis,
+            basisMoney: Money,
+        ): Boolean {
+            val snapshot = input.employeeSnapshot
+            val employmentType = snapshot.employmentType
+
+            val isFicaBasis = basis is TaxBasis.SocialSecurityWages || basis is TaxBasis.MedicareWages
+            if (!isFicaBasis) return false
+
+            // Global FICA exemption flag.
+            if (snapshot.ficaExempt) return true
+
+            // Special thresholds for household and election workers; below
+            // these amounts in the year, FICA/Medicare should not apply.
+            val thresholdCents: Long? = when (employmentType) {
+                com.example.uspayroll.payroll.model.EmploymentType.HOUSEHOLD -> 2_800_00L
+                com.example.uspayroll.payroll.model.EmploymentType.ELECTION_WORKER -> 2_400_00L
+                else -> null
+            }
+
+            if (thresholdCents != null) {
+                val priorWages = input.priorYtd.wagesByBasis[basis]?.amount ?: 0L
+                if (priorWages + basisMoney.amount < thresholdCents) {
+                    return true
+                }
+            }
+
+            return false
+        }
+
         fun applyFlatTax(rule: TaxRule.FlatRateTax, descriptionPrefix: String, target: MutableList<TaxLine>) {
             val basisMoney = bases[rule.basis] ?: return
+
+            if (shouldSkipFicaOrMedicare(rule.basis, basisMoney)) {
+                return
+            }
 
             val taxableCents: Long = if (rule.annualWageCap != null) {
                 val priorWages = input.priorYtd.wagesByBasis[rule.basis]?.amount ?: 0L
@@ -130,6 +166,45 @@ object TaxesCalculator {
 
         fun applyBracketedTax(rule: TaxRule.BracketedIncomeTax, descriptionPrefix: String, target: MutableList<TaxLine>) {
             val basisMoney = bases[rule.basis] ?: return
+            if (shouldSkipFicaOrMedicare(rule.basis, basisMoney)) {
+                return
+            }
+
+            // Special handling for Additional Medicare: apply the 0.9% rate
+            // only to wages in this period that exceed the annual threshold
+            // when combined with prior-year-to-date Medicare wages for this
+            // employer, per IRS rules.
+            if (rule.id == "US_FED_ADDITIONAL_MEDICARE_2025" && rule.basis is TaxBasis.MedicareWages) {
+                val priorYtd = input.priorYtd.wagesByBasis[TaxBasis.MedicareWages]?.amount ?: 0L
+                val current = basisMoney.amount
+                val addlTaxCents = FicaPolicy.additionalMedicareForPeriod(
+                    priorMedicareYtdCents = priorYtd,
+                    currentMedicareCents = current,
+                )
+                if (addlTaxCents <= 0L) {
+                    return
+                }
+                val taxAmount = Money(addlTaxCents, basisMoney.currency)
+                val line = TaxLine(
+                    ruleId = rule.id,
+                    jurisdiction = rule.jurisdiction,
+                    description = "$descriptionPrefix ${rule.jurisdiction.code}",
+                    basis = basisMoney,
+                    rate = null,
+                    amount = taxAmount,
+                )
+                target += line
+                traceSteps += TraceStep.TaxApplied(
+                    ruleId = rule.id,
+                    jurisdiction = rule.jurisdiction,
+                    basis = basisMoney,
+                    brackets = emptyList(),
+                    rate = null,
+                    amount = taxAmount,
+                )
+                return
+            }
+
             val (bracketTax, brackets) = computeBracketedTax(basisMoney, rule)
 
             var totalTaxCents = bracketTax.amount
