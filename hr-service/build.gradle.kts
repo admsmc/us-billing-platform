@@ -10,6 +10,10 @@ kotlin {
 }
 
 dependencies {
+    implementation(project(":shared-kernel"))
+    implementation(project(":payroll-domain"))
+
+    testImplementation(kotlin("test"))
 }
 
 tasks.withType<JavaCompile> {
