@@ -43,6 +43,12 @@ sealed class TaxRule {
         val brackets: List<TaxBracket>,
         val standardDeduction: Money? = null,
         val additionalWithholding: Money? = null,
+        /**
+         * Optional filing status selector for this rule. When non-null, the
+         * rule applies only to employees with the matching [FilingStatus]. When
+         * null, the rule is treated as generic and may apply to all statuses.
+         */
+        val filingStatus: FilingStatus? = null,
     ) : TaxRule()
 
     data class FlatRateTax(

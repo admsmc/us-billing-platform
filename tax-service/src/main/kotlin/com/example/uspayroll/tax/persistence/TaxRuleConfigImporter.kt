@@ -2,12 +2,14 @@ package com.example.uspayroll.tax.persistence
 
 import com.example.uspayroll.tax.config.TaxBracketConfig
 import com.example.uspayroll.tax.config.TaxRuleConfig
+import com.example.uspayroll.tax.config.TaxRuleConfigValidator
 import com.example.uspayroll.tax.config.TaxRuleFile
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.jooq.impl.DSL
 import java.nio.file.Files
 import java.nio.file.Path
@@ -22,6 +24,8 @@ import java.nio.file.Path
 class TaxRuleConfigImporter(
     private val dsl: DSLContext,
 ) {
+
+    private val logger = LoggerFactory.getLogger(TaxRuleConfigImporter::class.java)
 
     private val objectMapper = jacksonObjectMapper()
         .registerModule(JavaTimeModule())
@@ -53,6 +57,25 @@ class TaxRuleConfigImporter(
      */
     fun importRules(rules: List<TaxRuleConfig>) {
         if (rules.isEmpty()) return
+
+        val startNanos = System.nanoTime()
+        logger.info("Importing {} tax rule(s) into tax_rule table", rules.size)
+
+        val validation = TaxRuleConfigValidator.validateRules(rules)
+        if (!validation.isValid) {
+            val details = validation.errors.joinToString(separator = "; ") { err ->
+                val idPart = err.ruleId?.let { "id=$it: " } ?: ""
+                idPart + err.message
+            }
+            logger.error("Tax rule config validation failed: {}", details)
+        }
+        require(validation.isValid) {
+            val details = validation.errors.joinToString(separator = "; ") { err ->
+                val idPart = err.ruleId?.let { "id=$it: " } ?: ""
+                idPart + err.message
+            }
+            "Tax rule config validation failed: $details"
+        }
 
         val t = DSL.table("tax_rule")
 
@@ -102,6 +125,13 @@ class TaxRuleConfigImporter(
                     .execute()
             }
         }
+
+        val durationMillis = (System.nanoTime() - startNanos) / 1_000_000
+        logger.info(
+            "Imported {} tax rule(s) into tax_rule table in {} ms",
+            rules.size,
+            durationMillis,
+        )
     }
 
     private fun serializeBrackets(brackets: List<TaxBracketConfig>): String =

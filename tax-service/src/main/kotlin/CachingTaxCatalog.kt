@@ -3,7 +3,9 @@ package com.example.uspayroll.tax.impl
 import com.example.uspayroll.payroll.model.TaxRule
 import com.example.uspayroll.tax.api.TaxCatalog
 import com.example.uspayroll.tax.api.TaxQuery
+import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicLong
 
 /**
  * Normalized cache key for tax rule lookups.
@@ -44,10 +46,42 @@ class CachingTaxCatalog(
     private val delegate: TaxCatalog,
 ) : TaxCatalog {
 
+    private val logger = LoggerFactory.getLogger(CachingTaxCatalog::class.java)
+
     private val cache = ConcurrentHashMap<TaxQueryKey, List<TaxRule>>()
+    private val loadCalls = AtomicLong(0)
+    private val cacheHits = AtomicLong(0)
+    private val cacheMisses = AtomicLong(0)
 
     override fun loadRules(query: TaxQuery): List<TaxRule> {
+        loadCalls.incrementAndGet()
         val key = TaxQueryKey.from(query)
-        return cache.computeIfAbsent(key) { delegate.loadRules(query) }
+
+        val existing = cache[key]
+        if (existing != null) {
+            cacheHits.incrementAndGet()
+            logger.debug("TaxCatalog cache HIT for key={} (size={})", key, existing.size)
+            return existing
+        }
+
+        cacheMisses.incrementAndGet()
+        val loaded = delegate.loadRules(query)
+        cache[key] = loaded
+        logger.debug("TaxCatalog cache MISS for key={} (loaded {} rules)", key, loaded.size)
+        return loaded
     }
+
+    data class CacheMetrics(
+        val loadCalls: Long,
+        val cacheHits: Long,
+        val cacheMisses: Long,
+        val entries: Long,
+    )
+
+    fun metricsSnapshot(): CacheMetrics = CacheMetrics(
+        loadCalls = loadCalls.get(),
+        cacheHits = cacheHits.get(),
+        cacheMisses = cacheMisses.get(),
+        entries = cache.size.toLong(),
+    )
 }

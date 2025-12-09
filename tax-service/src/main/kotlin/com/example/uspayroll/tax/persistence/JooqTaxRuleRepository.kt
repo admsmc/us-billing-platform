@@ -9,6 +9,7 @@ import com.example.uspayroll.tax.impl.TaxRuleRepository
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import java.time.LocalDate
 
 /**
@@ -23,6 +24,8 @@ import java.time.LocalDate
 class JooqTaxRuleRepository(
     private val dsl: DSLContext,
 ) : TaxRuleRepository {
+
+    private val logger = LoggerFactory.getLogger(JooqTaxRuleRepository::class.java)
 
     override fun findRulesFor(query: TaxQuery): List<TaxRuleRecord> {
         val t = DSL.table("tax_rule")
@@ -74,6 +77,16 @@ class JooqTaxRuleRepository(
             .selectFrom(t)
             .where(whereCondition)
             .fetch()
+
+        logger.debug(
+            "Tax rule query for employer={} asOf={} residentState={} workState={} locals={} returned {} row(s)",
+            query.employerId.value,
+            query.asOfDate,
+            query.residentState,
+            query.workState,
+            query.localJurisdictions,
+            records.size,
+        )
 
         return records.map { r ->
             TaxRuleRecord(

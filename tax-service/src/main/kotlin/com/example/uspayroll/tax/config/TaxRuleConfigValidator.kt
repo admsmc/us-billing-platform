@@ -1,0 +1,121 @@
+package com.example.uspayroll.tax.config
+
+/**
+ * Validation utilities for [TaxRuleConfig] / [TaxRuleFile]. These are intended
+ * to catch common configuration issues *before* importing rules into the
+ * `tax_rule` table or using them in tests.
+ */
+object TaxRuleConfigValidator {
+
+    data class ValidationError(
+        val ruleId: String?,
+        val message: String,
+    )
+
+    data class ValidationResult(
+        val errors: List<ValidationError>,
+    ) {
+        val isValid: Boolean get() = errors.isEmpty()
+    }
+
+    private val validBases = setOf(
+        "Gross",
+        "FederalTaxable",
+        "StateTaxable",
+        "SocialSecurityWages",
+        "MedicareWages",
+        "SupplementalWages",
+        "FutaWages",
+    )
+
+    private val validRuleTypes = setOf("FLAT", "BRACKETED")
+
+    fun validateFile(file: TaxRuleFile): ValidationResult =
+        validateRules(file.rules)
+
+    fun validateRules(rules: List<TaxRuleConfig>): ValidationResult {
+        val errors = mutableListOf<ValidationError>()
+
+        // 1. Duplicate IDs
+        val byId = rules.groupBy { it.id }
+        byId.forEach { (id, group) ->
+            if (group.size > 1) {
+                errors += ValidationError(
+                    ruleId = id,
+                    message = "Duplicate rule id '$id' appears ${group.size} times",
+                )
+            }
+        }
+
+        // 2. Per-rule structural checks
+        rules.forEach { rule ->
+            // Basis must be known
+            if (rule.basis !in validBases) {
+                errors += ValidationError(
+                    ruleId = rule.id,
+                    message = "Unknown basis '${rule.basis}' (expected one of $validBases)",
+                )
+            }
+
+            // Rule type must be known
+            if (rule.ruleType !in validRuleTypes) {
+                errors += ValidationError(
+                    ruleId = rule.id,
+                    message = "Unknown ruleType '${rule.ruleType}' (expected one of $validRuleTypes)",
+                )
+            }
+
+            // Effective dates: require from < to
+            if (!rule.effectiveFrom.isBefore(rule.effectiveTo)) {
+                errors += ValidationError(
+                    ruleId = rule.id,
+                    message = "effectiveFrom=${rule.effectiveFrom} must be before effectiveTo=${rule.effectiveTo}",
+                )
+            }
+
+            // Structural checks for FLAT vs BRACKETED
+            when (rule.ruleType) {
+                "FLAT" -> {
+                    if (rule.rate == null) {
+                        errors += ValidationError(
+                            ruleId = rule.id,
+                            message = "FLAT rule must have non-null rate",
+                        )
+                    }
+                    if (rule.brackets != null) {
+                        errors += ValidationError(
+                            ruleId = rule.id,
+                            message = "FLAT rule must not define brackets (found ${rule.brackets.size})",
+                        )
+                    }
+                }
+                "BRACKETED" -> {
+                    if (rule.brackets.isNullOrEmpty()) {
+                        errors += ValidationError(
+                            ruleId = rule.id,
+                            message = "BRACKETED rule must have at least one bracket",
+                        )
+                    }
+                    // For pure bracketed income tax we expect rate=null; we allow
+                    // non-null rate only if we later introduce hybrid semantics.
+                    if (rule.rate != null) {
+                        errors += ValidationError(
+                            ruleId = rule.id,
+                            message = "BRACKETED rule should not have flat rate field set (found rate=${rule.rate})",
+                        )
+                    }
+                    rule.brackets?.forEachIndexed { index, bracket ->
+                        if (bracket.rate <= 0.0 && bracket.upToCents == null) {
+                            errors += ValidationError(
+                                ruleId = rule.id,
+                                message = "Top bracket (index $index) has non-positive rate=${bracket.rate} and no upper bound",
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        return ValidationResult(errors)
+    }
+}

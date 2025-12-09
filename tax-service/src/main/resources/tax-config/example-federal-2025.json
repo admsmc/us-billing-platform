@@ -22,6 +22,48 @@
       "localityFilter": null
     },
     {
+      "id": "US_FED_FIT_2025_MARRIED",
+      "jurisdictionType": "FEDERAL",
+      "jurisdictionCode": "US",
+      "basis": "FederalTaxable",
+      "ruleType": "BRACKETED",
+      "brackets": [
+        { "upToCents": 2200000, "rate": 0.10 },
+        { "upToCents": 8945000, "rate": 0.12 },
+        { "upToCents": null, "rate": 0.22 }
+      ],
+      "standardDeductionCents": 2920000,
+      "additionalWithholdingCents": 0,
+      "employerId": null,
+      "effectiveFrom": "2025-01-01",
+      "effectiveTo": "9999-12-31",
+      "filingStatus": "MARRIED",
+      "residentStateFilter": null,
+      "workStateFilter": null,
+      "localityFilter": null
+    },
+    {
+      "id": "US_FED_FIT_2025_HEAD_OF_HOUSEHOLD",
+      "jurisdictionType": "FEDERAL",
+      "jurisdictionCode": "US",
+      "basis": "FederalTaxable",
+      "ruleType": "BRACKETED",
+      "brackets": [
+        { "upToCents": 1570000, "rate": 0.10 },
+        { "upToCents": 5985000, "rate": 0.12 },
+        { "upToCents": null, "rate": 0.22 }
+      ],
+      "standardDeductionCents": 2190000,
+      "additionalWithholdingCents": 0,
+      "employerId": null,
+      "effectiveFrom": "2025-01-01",
+      "effectiveTo": "9999-12-31",
+      "filingStatus": "HEAD_OF_HOUSEHOLD",
+      "residentStateFilter": null,
+      "workStateFilter": null,
+      "localityFilter": null
+    },
+    {
       "id": "US_FICA_SS_2025",
       "jurisdictionType": "FEDERAL",
       "jurisdictionCode": "US",
@@ -142,6 +184,24 @@
       "basis": "FutaWages",
       "ruleType": "FLAT",
       "rate": 0.006,
+      "annualWageCapCents": 700000,
+      "standardDeductionCents": null,
+      "additionalWithholdingCents": null,
+      "employerId": null,
+      "effectiveFrom": "2025-01-01",
+      "effectiveTo": "9999-12-31",
+      "filingStatus": null,
+      "residentStateFilter": null,
+      "workStateFilter": null,
+      "localityFilter": null
+    },
+    {
+      "id": "US_CA_SUI_2025",
+      "jurisdictionType": "OTHER",
+      "jurisdictionCode": "CA_SUI",
+      "basis": "Gross",
+      "ruleType": "FLAT",
+      "rate": 0.03,
       "annualWageCapCents": 700000,
       "standardDeductionCents": null,
       "additionalWithholdingCents": null,

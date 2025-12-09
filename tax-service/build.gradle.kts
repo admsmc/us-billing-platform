@@ -29,6 +29,9 @@ dependencies {
     // configuration will be provided by the hosting service.
     implementation("org.postgresql:postgresql:42.7.3")
 
+    // Logging API; bindings are provided by the hosting application.
+    implementation("org.slf4j:slf4j-api:2.0.16")
+
     // Jackson for reading tax rule configuration files managed in Git.
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.17.0")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.0")
@@ -46,7 +49,6 @@ tasks.withType<JavaCompile> {
     sourceCompatibility = "21"
     targetCompatibility = "21"
 }
-
 // Convenience task to run the StateIncomeTaxImporter CLI via Gradle.
 tasks.register<JavaExec>("runStateIncomeTaxImporter") {
     group = "application"
@@ -59,4 +61,13 @@ tasks.register<JavaExec>("runStateIncomeTaxImporter") {
         ?: System.getenv("TAX_YEAR")
         ?: "2025"
     args(yearProp)
+}
+
+// Validate all TaxRuleFile JSON documents under src/main/resources/tax-config.
+tasks.register<JavaExec>("validateTaxConfig") {
+    group = "verification"
+    description = "Validate tax rule JSON config files under src/main/resources/tax-config."
+
+    classpath = sourceSets.getByName("main").runtimeClasspath
+    mainClass.set("com.example.uspayroll.tax.tools.TaxConfigValidatorCli")
 }

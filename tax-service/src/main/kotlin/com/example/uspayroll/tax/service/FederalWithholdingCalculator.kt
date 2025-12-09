@@ -66,9 +66,18 @@ class DefaultFederalWithholdingCalculator : FederalWithholdingCalculator {
         snapshot.w4OtherIncomeAnnual?.let { adjustedAnnualWages += it.amount }
         snapshot.w4DeductionsAnnual?.let { adjustedAnnualWages -= it.amount }
 
-        // Compute baseline annual tax using the existing federal bracket rules.
+        // Compute baseline annual tax using the existing federal FIT rules
+        // selected by filing status.
         val federalRules = input.paycheckInput.taxContext.federal
-        val bracketRules = federalRules.filterIsInstance<TaxRule.BracketedIncomeTax>()
+        val filingStatus = snapshot.filingStatus
+
+        val bracketRules = federalRules
+            .filterIsInstance<TaxRule.BracketedIncomeTax>()
+            .filter { rule ->
+                // Use filingStatus field from config when present; otherwise
+                // treat the rule as applicable to all filing statuses.
+                rule.filingStatus == null || rule.filingStatus == filingStatus
+            }
 
         val annualTaxCents = bracketRules.fold(0L) { acc, rule ->
             acc + computeBracketedTaxOnAnnualWages(adjustedAnnualWages, rule)

@@ -92,6 +92,13 @@ class DbTaxCatalog(
                 brackets = parseBrackets(bracketsJson),
                 standardDeduction = standardDeductionCents?.let { Money(it) },
                 additionalWithholding = additionalWithholdingCents?.let { Money(it) },
+                filingStatus = filingStatus?.let { raw ->
+                    try {
+                        FilingStatus.valueOf(raw)
+                    } catch (e: IllegalArgumentException) {
+                        error("Unknown filing status '$raw' on tax rule '$id'")
+                    }
+                },
             )
         }
     }

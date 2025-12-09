@@ -180,7 +180,7 @@ object StateIncomeTaxCsvParser {
             append(rule.taxYear)
             rule.filingStatus?.let { append("_").append(it) }
         }
-        val id = "US_${'$'}idSuffix"
+        val id = "US_$idSuffix"
 
         return TaxRuleConfig(
             id = id,
