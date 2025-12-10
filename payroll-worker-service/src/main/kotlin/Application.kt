@@ -6,6 +6,7 @@ import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.shared.Money
 import com.example.uspayroll.shared.PayRunId
+import com.example.uspayroll.shared.toLocalityCodeStrings
 import com.example.uspayroll.tax.api.TaxContextProvider
 import com.example.uspayroll.tax.service.FederalWithholdingCalculator
 import com.example.uspayroll.tax.service.FederalWithholdingInput
@@ -165,7 +166,7 @@ class PayrollRunService(
             val taxContext = taxClient?.getTaxContext(
                 employerId = employerId,
                 asOfDate = payPeriod.checkDate,
-                localityCodes = localityCodes.map { it.value },
+                localityCodes = localityCodes.toLocalityCodeStrings(),
             ) ?: taxContextProvider.getTaxContext(
                 employerId = employerId,
                 asOfDate = payPeriod.checkDate,

@@ -193,6 +193,52 @@ object TaxRuleConfigValidator {
             }
         }
 
+        // 3. Overlapping effective date range checks per key
+        //
+        // For each combination of (jurisdictionType, jurisdictionCode,
+        // employerId, localityFilter, filingStatus), assert that effective
+        // date ranges do not overlap. Boundaries that touch (to == from) are
+        // allowed.
+        val byKey = rules.groupBy { rule ->
+            Key(
+                jurisdictionType = rule.jurisdictionType,
+                jurisdictionCode = rule.jurisdictionCode,
+                employerId = rule.employerId,
+                localityFilter = rule.localityFilter,
+                filingStatus = rule.filingStatus,
+            )
+        }
+
+        byKey.forEach { (key, group) ->
+            if (group.size <= 1) return@forEach
+            val sorted = group.sortedBy { it.effectiveFrom }
+            var previous = sorted.first()
+            for (i in 1 until sorted.size) {
+                val current = sorted[i]
+                if (current.effectiveFrom.isBefore(previous.effectiveTo)) {
+                    errors += ValidationError(
+                        ruleId = current.id,
+                        message =
+                            "Overlapping effective date ranges for key $key between ${previous.id} " +
+                                "[${previous.effectiveFrom}, ${previous.effectiveTo}) and ${current.id} " +
+                                "[${current.effectiveFrom}, ${current.effectiveTo})",
+                    )
+                }
+                if (current.effectiveTo.isAfter(previous.effectiveTo)) {
+                    previous = current
+                }
+            }
+        }
+
         return ValidationResult(errors)
     }
+
+    /** Grouping key for overlapping-range validation. */
+    private data class Key(
+        val jurisdictionType: String,
+        val jurisdictionCode: String,
+        val employerId: String?,
+        val localityFilter: String?,
+        val filingStatus: String?,
+    )
 }

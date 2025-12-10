@@ -29,7 +29,12 @@ dependencies {
 
     // For cross-module tests that start hr-service in-process
     testImplementation(project(":hr-service"))
+
+    // H2 + jOOQ + Jackson for test-local tax catalog wiring.
     testImplementation("com.h2database:h2:2.3.232")
+    testImplementation("org.jooq:jooq:3.19.11")
+    testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.17.0")
+    testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.0")
 }
 
 tasks.withType<JavaCompile> {
