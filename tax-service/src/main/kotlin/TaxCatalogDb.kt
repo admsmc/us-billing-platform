@@ -37,7 +37,7 @@ data class TaxRuleRecord(
     val workStateFilter: String? = null,
     val localityFilter: String? = null,
 ) {
-    enum class RuleType { FLAT, BRACKETED }
+    enum class RuleType { FLAT, BRACKETED, WAGE_BRACKET }
 }
 
 /**
@@ -75,6 +75,10 @@ class DbTaxCatalog(
             code = jurisdictionCode,
         )
 
+        // Treat non-positive annual wage caps as "no cap" to avoid accidental
+        // zero wage bases in the domain model.
+        val normalizedCapCents: Long? = annualWageCapCents?.takeIf { it > 0L }
+
         return when (ruleType) {
             TaxRuleRecord.RuleType.FLAT -> TaxRule.FlatRateTax(
                 id = id,
@@ -83,7 +87,7 @@ class DbTaxCatalog(
                 rate = Percent(requireNotNull(rate) {
                     "Flat tax rule '$id' is missing rate"
                 }),
-                annualWageCap = annualWageCapCents?.let { Money(it) },
+                annualWageCap = normalizedCapCents?.let { Money(it) },
             )
             TaxRuleRecord.RuleType.BRACKETED -> TaxRule.BracketedIncomeTax(
                 id = id,
@@ -92,6 +96,19 @@ class DbTaxCatalog(
                 brackets = parseBrackets(bracketsJson),
                 standardDeduction = standardDeductionCents?.let { Money(it) },
                 additionalWithholding = additionalWithholdingCents?.let { Money(it) },
+                filingStatus = filingStatus?.let { raw ->
+                    try {
+                        FilingStatus.valueOf(raw)
+                    } catch (e: IllegalArgumentException) {
+                        error("Unknown filing status '$raw' on tax rule '$id'")
+                    }
+                },
+            )
+            TaxRuleRecord.RuleType.WAGE_BRACKET -> TaxRule.WageBracketTax(
+                id = id,
+                jurisdiction = jurisdiction,
+                basis = basis,
+                brackets = parseWageBrackets(bracketsJson),
                 filingStatus = filingStatus?.let { raw ->
                     try {
                         FilingStatus.valueOf(raw)
@@ -111,6 +128,20 @@ class DbTaxCatalog(
             TaxBracket(
                 upTo = cfg.upToCents?.let { Money(it) },
                 rate = Percent(cfg.rate),
+            )
+        }
+    }
+
+    private fun parseWageBrackets(json: String?): List<WageBracketRow> {
+        if (json.isNullOrBlank()) return emptyList()
+
+        val configs: List<TaxBracketConfig> = objectMapper.readValue(json)
+        return configs.mapIndexed { index, cfg ->
+            val taxCents = cfg.taxCents
+                ?: error("WAGE_BRACKET rule has bracket at index $index without taxCents")
+            WageBracketRow(
+                upTo = cfg.upToCents?.let { Money(it) },
+                tax = Money(taxCents),
             )
         }
     }

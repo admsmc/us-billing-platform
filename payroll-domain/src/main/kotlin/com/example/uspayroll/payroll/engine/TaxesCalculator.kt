@@ -241,23 +241,69 @@ object TaxesCalculator {
             }
         }
 
+        fun applyWageBracketTax(rule: TaxRule.WageBracketTax, descriptionPrefix: String, target: MutableList<TaxLine>) {
+            val basisMoney = bases[rule.basis] ?: return
+            if (shouldSkipFicaOrMedicare(rule.basis, basisMoney)) {
+                return
+            }
+
+            // Find the first bracket whose upper bound contains the basis amount.
+            val amount = basisMoney.amount
+            val row = rule.brackets.firstOrNull { bracket ->
+                val upper = bracket.upTo?.amount ?: Long.MAX_VALUE
+                amount <= upper
+            } ?: return
+
+            var totalTaxCents = row.tax.amount
+            val perEmployeeExtra = input.employeeSnapshot.additionalWithholdingPerPeriod
+            if (perEmployeeExtra != null) {
+                totalTaxCents += perEmployeeExtra.amount
+            }
+            if (totalTaxCents == 0L) return
+
+            val taxAmount = Money(totalTaxCents, basisMoney.currency)
+            val line = TaxLine(
+                ruleId = rule.id,
+                jurisdiction = rule.jurisdiction,
+                description = "$descriptionPrefix ${rule.jurisdiction.code}",
+                basis = basisMoney,
+                rate = null,
+                amount = taxAmount,
+            )
+            target += line
+            traceSteps += TraceStep.TaxApplied(
+                ruleId = rule.id,
+                jurisdiction = rule.jurisdiction,
+                basis = basisMoney,
+                brackets = emptyList(),
+                rate = null,
+                amount = taxAmount,
+            )
+            if (perEmployeeExtra != null) {
+                traceSteps += TraceStep.AdditionalWithholdingApplied(amount = perEmployeeExtra)
+            }
+        }
+
         // Treat federal/state/local rules as employee taxes for now
         input.taxContext.federal.forEach { rule ->
             when (rule) {
                 is TaxRule.FlatRateTax -> applyFlatTax(rule, "Employee tax", employeeTaxes)
                 is TaxRule.BracketedIncomeTax -> applyBracketedTax(rule, "Employee tax", employeeTaxes)
+                is TaxRule.WageBracketTax -> applyWageBracketTax(rule, "Employee tax", employeeTaxes)
             }
         }
         input.taxContext.state.forEach { rule ->
             when (rule) {
                 is TaxRule.FlatRateTax -> applyFlatTax(rule, "Employee tax", employeeTaxes)
                 is TaxRule.BracketedIncomeTax -> applyBracketedTax(rule, "Employee tax", employeeTaxes)
+                is TaxRule.WageBracketTax -> applyWageBracketTax(rule, "Employee tax", employeeTaxes)
             }
         }
         input.taxContext.local.forEach { rule ->
             when (rule) {
                 is TaxRule.FlatRateTax -> applyFlatTax(rule, "Employee tax", employeeTaxes)
                 is TaxRule.BracketedIncomeTax -> applyBracketedTax(rule, "Employee tax", employeeTaxes)
+                is TaxRule.WageBracketTax -> applyWageBracketTax(rule, "Employee tax", employeeTaxes)
             }
         }
 
@@ -266,6 +312,7 @@ object TaxesCalculator {
             when (rule) {
                 is TaxRule.FlatRateTax -> applyFlatTax(rule, "Employer tax", employerTaxes)
                 is TaxRule.BracketedIncomeTax -> applyBracketedTax(rule, "Employer tax", employerTaxes)
+                is TaxRule.WageBracketTax -> applyWageBracketTax(rule, "Employer tax", employerTaxes)
             }
         }
 

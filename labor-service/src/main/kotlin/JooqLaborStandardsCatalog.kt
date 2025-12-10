@@ -30,14 +30,27 @@ class JooqLaborStandardsCatalog(
             DSL.field("effective_to", LocalDate::class.java).ge(asOf),
         )
 
+        // If locality codes are provided, prefer matching locality rows by
+        // restricting to those codes and ordering locals before statewide.
+        val localityCodes = query.localityCodes.map { it.uppercase() }
         val whereCondition = conditions
             .fold<Condition, Condition?>(null) { acc, c -> acc?.and(c) ?: c }
             ?: DSL.noCondition()
 
+        val orderBy = if (localityCodes.isNotEmpty()) {
+            listOf(
+                // Local rows (non-null locality_code) first, then statewide.
+                DSL.field("locality_code").isNotNull.desc(),
+                DSL.field("effective_from").desc(),
+            )
+        } else {
+            listOf(DSL.field("effective_from").desc())
+        }
+
         val record = dsl
             .selectFrom(t)
             .where(whereCondition)
-            .orderBy(DSL.field("effective_from").desc())
+            .orderBy(orderBy)
             .limit(1)
             .fetchOne() ?: return null
 
@@ -51,6 +64,8 @@ class JooqLaborStandardsCatalog(
             weeklyOvertimeThresholdHours = record.get("weekly_ot_threshold_hours", Double::class.java) ?: 40.0,
             dailyOvertimeThresholdHours = record.get("daily_ot_threshold_hours", Double::class.java),
             dailyDoubleTimeThresholdHours = record.get("daily_dt_threshold_hours", Double::class.java),
+            localityCode = record.get("locality_code", String::class.java),
+            localityKind = record.get("locality_kind", String::class.java),
         )
     }
 
@@ -84,6 +99,8 @@ class JooqLaborStandardsCatalog(
                 weeklyOvertimeThresholdHours = r.get("weekly_ot_threshold_hours", Double::class.java) ?: 40.0,
                 dailyOvertimeThresholdHours = r.get("daily_ot_threshold_hours", Double::class.java),
                 dailyDoubleTimeThresholdHours = r.get("daily_dt_threshold_hours", Double::class.java),
+                localityCode = r.get("locality_code", String::class.java),
+                localityKind = r.get("locality_kind", String::class.java),
             )
         }
     }

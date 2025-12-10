@@ -10,6 +10,8 @@ data class LaborStandardsQuery(
     val asOfDate: LocalDate,
     val workState: String? = null,
     val homeState: String? = null,
+    /** Optional locality codes (e.g., NYC, SEA) for regional labor standards. */
+    val localityCodes: List<String> = emptyList(),
 )
 
 enum class LaborStandardSourceKind {
@@ -37,6 +39,10 @@ data class StateLaborStandard(
     val dailyOvertimeThresholdHours: Double? = null,
     val dailyDoubleTimeThresholdHours: Double? = null,
     val sources: List<LaborStandardSourceRef> = emptyList(),
+    /** Optional locality identifier (e.g., NYC, SEA). Null for statewide baselines. */
+    val localityCode: String? = null,
+    /** Optional locality kind (e.g., CITY, COUNTY, METRO). */
+    val localityKind: String? = null,
 )
 
 interface LaborStandardsCatalog {

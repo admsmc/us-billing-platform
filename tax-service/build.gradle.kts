@@ -5,6 +5,9 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     kotlin("jvm")
+    id("org.springframework.boot") version "3.3.0"
+    id("io.spring.dependency-management") version "1.1.5"
+    application
 }
 
 kotlin {
@@ -18,10 +21,9 @@ dependencies {
     implementation(project(":shared-kernel"))
     implementation(project(":payroll-domain"))
 
-    // Spring context for dependency injection in service modules. Domain
-    // modules remain framework-free.
-    implementation("org.springframework:spring-context:6.1.5")
-    implementation("org.springframework:spring-jdbc:6.1.5")
+    // Spring Boot web + JDBC for tax-service HTTP API and DB access.
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-jdbc")
 
     // jOOQ for SQL-centric, type-safe access to the tax_rule schema.
     implementation("org.jooq:jooq:3.19.11")
@@ -40,6 +42,7 @@ dependencies {
     implementation("org.apache.commons:commons-csv:1.11.0")
 
     testImplementation(kotlin("test"))
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("com.h2database:h2:2.3.232")
 }
 
@@ -48,6 +51,10 @@ val sourceSets = extensions.getByType<SourceSetContainer>()
 tasks.withType<JavaCompile> {
     sourceCompatibility = "21"
     targetCompatibility = "21"
+}
+
+application {
+    mainClass.set("com.example.uspayroll.tax.TaxServiceApplicationKt")
 }
 // Convenience task to run the StateIncomeTaxImporter CLI via Gradle.
 tasks.register<JavaExec>("runStateIncomeTaxImporter") {

@@ -41,4 +41,12 @@ data class TaxRuleConfig(
 data class TaxBracketConfig(
     val upToCents: Long?,
     val rate: Double,
+    /**
+     * Optional fixed tax amount for wage-bracket style rules. For
+     * `ruleType = "WAGE_BRACKET"`, this field is required and represents the
+     * tax to apply when the basis falls within this bracket's range.
+     *
+     * For `FLAT` and `BRACKETED` rules this is ignored and may be null.
+     */
+    val taxCents: Long? = null,
 )

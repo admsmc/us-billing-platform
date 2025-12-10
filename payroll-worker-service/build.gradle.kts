@@ -25,6 +25,11 @@ dependencies {
 
     testImplementation(kotlin("test"))
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
+
+    // For cross-module tests that start hr-service in-process
+    testImplementation(project(":hr-service"))
+    testImplementation("com.h2database:h2:2.3.232")
 }
 
 tasks.withType<JavaCompile> {

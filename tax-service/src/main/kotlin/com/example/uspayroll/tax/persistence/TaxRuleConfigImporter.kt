@@ -82,6 +82,12 @@ class TaxRuleConfigImporter(
         dsl.transaction { _ ->
             rules.forEach { rule ->
                 val bracketsJson = rule.brackets?.let { serializeBrackets(it) }
+                if (rule.id == "US_NYC_LOCAL_2025") {
+                    logger.info("Importer NYC annualWageCapCents from config: {}", rule.annualWageCapCents)
+                }
+                // Treat non-positive annual wage caps as "no cap" to avoid
+                // accidentally creating zero wage bases in the domain model.
+                val annualCap: Long? = rule.annualWageCapCents?.takeIf { it > 0L }
 
                 dsl.insertInto(t)
                     .columns(
@@ -111,7 +117,7 @@ class TaxRuleConfigImporter(
                         rule.basis,
                         rule.ruleType,
                         rule.rate,
-                        rule.annualWageCapCents,
+                        annualCap,
                         bracketsJson,
                         rule.standardDeductionCents,
                         rule.additionalWithholdingCents,

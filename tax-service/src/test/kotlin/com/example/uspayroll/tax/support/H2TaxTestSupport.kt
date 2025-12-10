@@ -94,8 +94,52 @@ object H2TaxTestSupport {
         override fun findRulesFor(query: TaxQuery): List<TaxRuleRecord> {
             val t = DSL.table("tax_rule")
 
+            // Mirror the selection semantics from JooqTaxRuleRepository, but
+            // implemented in tests using jOOQ directly.
+            val conditions = mutableListOf<org.jooq.Condition>()
+
+            // Employer: generic (NULL) or employer-specific rules.
+            conditions += org.jooq.impl.DSL.or(
+                org.jooq.impl.DSL.field("employer_id").isNull,
+                org.jooq.impl.DSL.field("employer_id").eq(query.employerId.value),
+            )
+
+            // Effective dating.
+            conditions += org.jooq.impl.DSL.field("effective_from", LocalDate::class.java).le(query.asOfDate)
+            conditions += org.jooq.impl.DSL.field("effective_to", LocalDate::class.java).gt(query.asOfDate)
+
+            // Resident state filter: applies only when provided.
+            query.residentState?.let { state ->
+                conditions += org.jooq.impl.DSL.or(
+                    org.jooq.impl.DSL.field("resident_state_filter").isNull,
+                    org.jooq.impl.DSL.field("resident_state_filter").eq(state),
+                )
+            }
+
+            // Work state filter: similar semantics.
+            query.workState?.let { state ->
+                conditions += org.jooq.impl.DSL.or(
+                    org.jooq.impl.DSL.field("work_state_filter").isNull,
+                    org.jooq.impl.DSL.field("work_state_filter").eq(state),
+                )
+            }
+
+            // Localities: when present, rules either have no locality_filter or
+            // a locality_filter that matches one of the requested jurisdictions.
+            if (query.localJurisdictions.isNotEmpty()) {
+                conditions += org.jooq.impl.DSL.or(
+                    org.jooq.impl.DSL.field("locality_filter").isNull,
+                    org.jooq.impl.DSL.field("locality_filter").`in`(query.localJurisdictions),
+                )
+            }
+
+            val whereCondition = conditions
+                .fold<org.jooq.Condition, org.jooq.Condition?>(null) { acc, c -> acc?.and(c) ?: c }
+                ?: org.jooq.impl.DSL.noCondition()
+
             val records = dsl
                 .selectFrom(t)
+                .where(whereCondition)
                 .fetch()
 
             return records.map { r ->

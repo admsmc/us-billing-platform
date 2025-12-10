@@ -11,8 +11,8 @@ class InMemoryLaborStandardsCatalog : LaborStandardsCatalog {
             stateCode = "CA",
             effectiveFrom = LocalDate.of(2025, 1, 1),
             effectiveTo = null,
-            regularMinimumWageCents = 16_00L,
-            tippedMinimumCashWageCents = 16_00L,
+            regularMinimumWageCents = 16_50L,
+            tippedMinimumCashWageCents = 16_50L,
             maxTipCreditCents = 0L,
             weeklyOvertimeThresholdHours = 40.0,
             dailyOvertimeThresholdHours = 8.0,
@@ -32,6 +32,8 @@ class InMemoryLaborStandardsCatalog : LaborStandardsCatalog {
     override fun loadStateStandard(query: LaborStandardsQuery): StateLaborStandard? {
         val state = query.workState ?: return null
         val asOf = query.asOfDate
+        // In-memory implementation currently ignores localityCodes and only
+        // matches on state + effective date.
         return standards.firstOrNull { s ->
             s.stateCode.equals(state, ignoreCase = true) &&
                 !asOf.isBefore(s.effectiveFrom) &&
@@ -52,6 +54,7 @@ interface LaborStandardsContextProvider {
         asOfDate: LocalDate,
         workState: String?,
         homeState: String?,
+        localityCodes: List<String> = emptyList(),
     ): LaborStandardsContext?
 }
 
@@ -64,15 +67,19 @@ class CatalogBackedLaborStandardsContextProvider(
         asOfDate: LocalDate,
         workState: String?,
         homeState: String?,
+        localityCodes: List<String>,
     ): LaborStandardsContext? {
         if (workState == null) return null
+
         val query = LaborStandardsQuery(
             employerId = employerId,
             asOfDate = asOfDate,
             workState = workState,
             homeState = homeState,
+            localityCodes = localityCodes,
         )
         val state = catalog.loadStateStandard(query) ?: return null
+
         return LaborStandardsContext(
             federalMinimumWage = state.regularMinimumWageCents?.let { Money(it) } ?: Money(7_25L),
             youthMinimumWage = null,

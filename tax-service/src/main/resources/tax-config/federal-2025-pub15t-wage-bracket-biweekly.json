@@ -1,0 +1,82 @@
+{
+  "rules": [
+    {
+      "id": "US_FED_FIT_2025_PUB15T_WB_SINGLE_BI",
+      "jurisdictionType": "FEDERAL",
+      "jurisdictionCode": "US",
+      "basis": "FederalTaxable",
+      "ruleType": "WAGE_BRACKET",
+      "brackets": [
+        { "upToCents": 80000,  "rate": 0.00, "taxCents":  5000 },
+        { "upToCents": 400000, "rate": 0.00, "taxCents": 15000 },
+        { "upToCents": 900000, "rate": 0.00, "taxCents": 30000 },
+        { "upToCents": 1900000,"rate": 0.00, "taxCents": 60000 },
+        { "upToCents": 3000000,"rate": 0.00, "taxCents": 90000 },
+        { "upToCents": 6000000,"rate": 0.00, "taxCents": 140000 },
+        { "upToCents": 9000000,"rate": 0.00, "taxCents": 200000 },
+        { "upToCents": null,   "rate": 0.00, "taxCents": 280000 }
+      ],
+      "standardDeductionCents": 57500,
+      "additionalWithholdingCents": 0,
+      "employerId": null,
+      "effectiveFrom": "2025-01-01",
+      "effectiveTo": "9999-12-31",
+      "filingStatus": "SINGLE",
+      "residentStateFilter": null,
+      "workStateFilter": null,
+      "localityFilter": null
+    },
+    {
+      "id": "US_FED_FIT_2025_PUB15T_WB_MARRIED_BI",
+      "jurisdictionType": "FEDERAL",
+      "jurisdictionCode": "US",
+      "basis": "FederalTaxable",
+      "ruleType": "WAGE_BRACKET",
+      "brackets": [
+        { "upToCents": 160000,  "rate": 0.00, "taxCents":  3000 },
+        { "upToCents": 800000,  "rate": 0.00, "taxCents": 12000 },
+        { "upToCents": 1800000, "rate": 0.00, "taxCents": 25000 },
+        { "upToCents": 3800000, "rate": 0.00, "taxCents": 50000 },
+        { "upToCents": 6000000, "rate": 0.00, "taxCents": 80000 },
+        { "upToCents": 9000000, "rate": 0.00, "taxCents": 120000 },
+        { "upToCents": 12000000,"rate": 0.00, "taxCents": 170000 },
+        { "upToCents": null,    "rate": 0.00, "taxCents": 230000 }
+      ],
+      "standardDeductionCents": 115000,
+      "additionalWithholdingCents": 0,
+      "employerId": null,
+      "effectiveFrom": "2025-01-01",
+      "effectiveTo": "9999-12-31",
+      "filingStatus": "MARRIED",
+      "residentStateFilter": null,
+      "workStateFilter": null,
+      "localityFilter": null
+    },
+    {
+      "id": "US_FED_FIT_2025_PUB15T_WB_HOH_BI",
+      "jurisdictionType": "FEDERAL",
+      "jurisdictionCode": "US",
+      "basis": "FederalTaxable",
+      "ruleType": "WAGE_BRACKET",
+      "brackets": [
+        { "upToCents": 120000,  "rate": 0.00, "taxCents":  4000 },
+        { "upToCents": 600000,  "rate": 0.00, "taxCents": 14000 },
+        { "upToCents": 1300000, "rate": 0.00, "taxCents": 28000 },
+        { "upToCents": 2600000, "rate": 0.00, "taxCents": 55000 },
+        { "upToCents": 4200000, "rate": 0.00, "taxCents": 85000 },
+        { "upToCents": 7200000, "rate": 0.00, "taxCents": 130000 },
+        { "upToCents": 10000000,"rate": 0.00, "taxCents": 185000 },
+        { "upToCents": null,    "rate": 0.00, "taxCents": 250000 }
+      ],
+      "standardDeductionCents": 86250,
+      "additionalWithholdingCents": 0,
+      "employerId": null,
+      "effectiveFrom": "2025-01-01",
+      "effectiveTo": "9999-12-31",
+      "filingStatus": "HEAD_OF_HOUSEHOLD",
+      "residentStateFilter": null,
+      "workStateFilter": null,
+      "localityFilter": null
+    }
+  ]
+}

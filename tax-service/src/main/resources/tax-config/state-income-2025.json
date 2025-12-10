@@ -9,13 +9,16 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 50000,
-      "rate" : 0.02
+      "rate" : 0.02,
+      "taxCents" : null
     }, {
       "upToCents" : 300000,
-      "rate" : 0.04
+      "rate" : 0.04,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.05
+      "rate" : 0.05,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,
@@ -63,6 +66,48 @@
     "workStateFilter" : null,
     "localityFilter" : null
   }, {
+    "id" : "US_AR_SIT_2025_SINGLE",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "AR",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 549900,
+      "rate" : 0.0,
+      "taxCents" : null
+    }, {
+      "upToCents" : 1089900,
+      "rate" : 0.02,
+      "taxCents" : null
+    }, {
+      "upToCents" : 1559900,
+      "rate" : 0.03,
+      "taxCents" : null
+    }, {
+      "upToCents" : 2569900,
+      "rate" : 0.034,
+      "taxCents" : null
+    }, {
+      "upToCents" : 9230000,
+      "rate" : 0.039,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.039,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "SINGLE",
+    "residentStateFilter" : "AR",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
     "id" : "US_CA_SIT_2025_SINGLE",
     "jurisdictionType" : "STATE",
     "jurisdictionCode" : "CA",
@@ -72,31 +117,40 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 1075600,
-      "rate" : 0.01
+      "rate" : 0.01,
+      "taxCents" : null
     }, {
       "upToCents" : 2549900,
-      "rate" : 0.02
+      "rate" : 0.02,
+      "taxCents" : null
     }, {
       "upToCents" : 4024500,
-      "rate" : 0.04
+      "rate" : 0.04,
+      "taxCents" : null
     }, {
       "upToCents" : 5586600,
-      "rate" : 0.06
+      "rate" : 0.06,
+      "taxCents" : null
     }, {
       "upToCents" : 7060600,
-      "rate" : 0.08
+      "rate" : 0.08,
+      "taxCents" : null
     }, {
       "upToCents" : 36065900,
-      "rate" : 0.093
+      "rate" : 0.093,
+      "taxCents" : null
     }, {
       "upToCents" : 43278700,
-      "rate" : 0.103
+      "rate" : 0.103,
+      "taxCents" : null
     }, {
       "upToCents" : 72131400,
-      "rate" : 0.113
+      "rate" : 0.113,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.123
+      "rate" : 0.123,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,
@@ -117,31 +171,40 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 2151200,
-      "rate" : 0.01
+      "rate" : 0.01,
+      "taxCents" : null
     }, {
       "upToCents" : 5099800,
-      "rate" : 0.02
+      "rate" : 0.02,
+      "taxCents" : null
     }, {
       "upToCents" : 8049000,
-      "rate" : 0.04
+      "rate" : 0.04,
+      "taxCents" : null
     }, {
       "upToCents" : 11173200,
-      "rate" : 0.06
+      "rate" : 0.06,
+      "taxCents" : null
     }, {
       "upToCents" : 14121200,
-      "rate" : 0.08
+      "rate" : 0.08,
+      "taxCents" : null
     }, {
       "upToCents" : 72131800,
-      "rate" : 0.093
+      "rate" : 0.093,
+      "taxCents" : null
     }, {
       "upToCents" : 86557400,
-      "rate" : 0.103
+      "rate" : 0.103,
+      "taxCents" : null
     }, {
       "upToCents" : 144262800,
-      "rate" : 0.113
+      "rate" : 0.113,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.123
+      "rate" : 0.123,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,
@@ -162,28 +225,36 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 2152700,
-      "rate" : 0.01
+      "rate" : 0.01,
+      "taxCents" : null
     }, {
       "upToCents" : 5100000,
-      "rate" : 0.02
+      "rate" : 0.02,
+      "taxCents" : null
     }, {
       "upToCents" : 6574400,
-      "rate" : 0.04
+      "rate" : 0.04,
+      "taxCents" : null
     }, {
       "upToCents" : 8136400,
-      "rate" : 0.06
+      "rate" : 0.06,
+      "taxCents" : null
     }, {
       "upToCents" : 9610700,
-      "rate" : 0.08
+      "rate" : 0.08,
+      "taxCents" : null
     }, {
       "upToCents" : 49049300,
-      "rate" : 0.093
+      "rate" : 0.093,
+      "taxCents" : null
     }, {
       "upToCents" : 58859300,
-      "rate" : 0.103
+      "rate" : 0.103,
+      "taxCents" : null
     }, {
       "upToCents" : 98098700,
-      "rate" : 0.113
+      "rate" : 0.113,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,
@@ -222,25 +293,32 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 1000000,
-      "rate" : 0.02
+      "rate" : 0.02,
+      "taxCents" : null
     }, {
       "upToCents" : 5000000,
-      "rate" : 0.045
+      "rate" : 0.045,
+      "taxCents" : null
     }, {
       "upToCents" : 10000000,
-      "rate" : 0.055
+      "rate" : 0.055,
+      "taxCents" : null
     }, {
       "upToCents" : 20000000,
-      "rate" : 0.06
+      "rate" : 0.06,
+      "taxCents" : null
     }, {
       "upToCents" : 25000000,
-      "rate" : 0.065
+      "rate" : 0.065,
+      "taxCents" : null
     }, {
       "upToCents" : 50000000,
-      "rate" : 0.069
+      "rate" : 0.069,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.0699
+      "rate" : 0.0699,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,
@@ -261,25 +339,32 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 2000000,
-      "rate" : 0.02
+      "rate" : 0.02,
+      "taxCents" : null
     }, {
       "upToCents" : 10000000,
-      "rate" : 0.045
+      "rate" : 0.045,
+      "taxCents" : null
     }, {
       "upToCents" : 20000000,
-      "rate" : 0.055
+      "rate" : 0.055,
+      "taxCents" : null
     }, {
       "upToCents" : 40000000,
-      "rate" : 0.06
+      "rate" : 0.06,
+      "taxCents" : null
     }, {
       "upToCents" : 50000000,
-      "rate" : 0.065
+      "rate" : 0.065,
+      "taxCents" : null
     }, {
       "upToCents" : 100000000,
-      "rate" : 0.069
+      "rate" : 0.069,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.0699
+      "rate" : 0.0699,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,
@@ -300,25 +385,32 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 1600000,
-      "rate" : 0.02
+      "rate" : 0.02,
+      "taxCents" : null
     }, {
       "upToCents" : 8000000,
-      "rate" : 0.045
+      "rate" : 0.045,
+      "taxCents" : null
     }, {
       "upToCents" : 16000000,
-      "rate" : 0.055
+      "rate" : 0.055,
+      "taxCents" : null
     }, {
       "upToCents" : 32000000,
-      "rate" : 0.06
+      "rate" : 0.06,
+      "taxCents" : null
     }, {
       "upToCents" : 40000000,
-      "rate" : 0.065
+      "rate" : 0.065,
+      "taxCents" : null
     }, {
       "upToCents" : 80000000,
-      "rate" : 0.069
+      "rate" : 0.069,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.0699
+      "rate" : 0.0699,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,
@@ -339,25 +431,32 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 200000,
-      "rate" : 0.0
+      "rate" : 0.0,
+      "taxCents" : null
     }, {
       "upToCents" : 500000,
-      "rate" : 0.022
+      "rate" : 0.022,
+      "taxCents" : null
     }, {
       "upToCents" : 1000000,
-      "rate" : 0.039
+      "rate" : 0.039,
+      "taxCents" : null
     }, {
       "upToCents" : 2000000,
-      "rate" : 0.048
+      "rate" : 0.048,
+      "taxCents" : null
     }, {
       "upToCents" : 2500000,
-      "rate" : 0.052
+      "rate" : 0.052,
+      "taxCents" : null
     }, {
       "upToCents" : 6000000,
-      "rate" : 0.0555
+      "rate" : 0.0555,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.066
+      "rate" : 0.066,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,
@@ -414,40 +513,52 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 240000,
-      "rate" : 0.014
+      "rate" : 0.014,
+      "taxCents" : null
     }, {
       "upToCents" : 480000,
-      "rate" : 0.032
+      "rate" : 0.032,
+      "taxCents" : null
     }, {
       "upToCents" : 960000,
-      "rate" : 0.055
+      "rate" : 0.055,
+      "taxCents" : null
     }, {
       "upToCents" : 1440000,
-      "rate" : 0.064
+      "rate" : 0.064,
+      "taxCents" : null
     }, {
       "upToCents" : 1920000,
-      "rate" : 0.068
+      "rate" : 0.068,
+      "taxCents" : null
     }, {
       "upToCents" : 2400000,
-      "rate" : 0.072
+      "rate" : 0.072,
+      "taxCents" : null
     }, {
       "upToCents" : 3600000,
-      "rate" : 0.076
+      "rate" : 0.076,
+      "taxCents" : null
     }, {
       "upToCents" : 4800000,
-      "rate" : 0.079
+      "rate" : 0.079,
+      "taxCents" : null
     }, {
       "upToCents" : 15000000,
-      "rate" : 0.0825
+      "rate" : 0.0825,
+      "taxCents" : null
     }, {
       "upToCents" : 17500000,
-      "rate" : 0.09
+      "rate" : 0.09,
+      "taxCents" : null
     }, {
       "upToCents" : 20000000,
-      "rate" : 0.1
+      "rate" : 0.1,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.11
+      "rate" : 0.11,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,
@@ -456,6 +567,58 @@
     "effectiveTo" : "9999-12-31",
     "filingStatus" : "SINGLE",
     "residentStateFilter" : "HI",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_ID_SIT_2025_SINGLE",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "ID",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 250000,
+      "rate" : 0.0,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.053,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "SINGLE",
+    "residentStateFilter" : "ID",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_ID_SIT_2025_MARRIED",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "ID",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 500000,
+      "rate" : 0.0,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.053,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "MARRIED",
+    "residentStateFilter" : "ID",
     "workStateFilter" : null,
     "localityFilter" : null
   }, {
@@ -522,10 +685,12 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 2000000,
-      "rate" : 0.052
+      "rate" : 0.052,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.0558
+      "rate" : 0.0558,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,
@@ -582,13 +747,16 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 2450000,
-      "rate" : 0.058
+      "rate" : 0.058,
+      "taxCents" : null
     }, {
       "upToCents" : 5805000,
-      "rate" : 0.0675
+      "rate" : 0.0675,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.0715
+      "rate" : 0.0715,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,
@@ -609,34 +777,44 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 100000,
-      "rate" : 0.02
+      "rate" : 0.02,
+      "taxCents" : null
     }, {
       "upToCents" : 200000,
-      "rate" : 0.03
+      "rate" : 0.03,
+      "taxCents" : null
     }, {
       "upToCents" : 300000,
-      "rate" : 0.04
+      "rate" : 0.04,
+      "taxCents" : null
     }, {
       "upToCents" : 10000000,
-      "rate" : 0.0475
+      "rate" : 0.0475,
+      "taxCents" : null
     }, {
       "upToCents" : 12500000,
-      "rate" : 0.05
+      "rate" : 0.05,
+      "taxCents" : null
     }, {
       "upToCents" : 15000000,
-      "rate" : 0.0525
+      "rate" : 0.0525,
+      "taxCents" : null
     }, {
       "upToCents" : 25000000,
-      "rate" : 0.055
+      "rate" : 0.055,
+      "taxCents" : null
     }, {
       "upToCents" : 50000000,
-      "rate" : 0.0575
+      "rate" : 0.0575,
+      "taxCents" : null
     }, {
       "upToCents" : 100000000,
-      "rate" : 0.0625
+      "rate" : 0.0625,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.065
+      "rate" : 0.065,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,
@@ -657,10 +835,12 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 108315000,
-      "rate" : 0.05
+      "rate" : 0.05,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.09
+      "rate" : 0.09,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,
@@ -681,10 +861,12 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 108315000,
-      "rate" : 0.05
+      "rate" : 0.05,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.09
+      "rate" : 0.09,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,
@@ -705,13 +887,16 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 108315000,
-      "rate" : 0.05
+      "rate" : 0.05,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.09
+      "rate" : 0.09,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.09
+      "rate" : 0.09,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,
@@ -750,19 +935,24 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 3257000,
-      "rate" : 0.0535
+      "rate" : 0.0535,
+      "taxCents" : null
     }, {
       "upToCents" : 3257000,
-      "rate" : 0.0535
+      "rate" : 0.0535,
+      "taxCents" : null
     }, {
       "upToCents" : 10699000,
-      "rate" : 0.068
+      "rate" : 0.068,
+      "taxCents" : null
     }, {
       "upToCents" : 19863000,
-      "rate" : 0.0785
+      "rate" : 0.0785,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.0985
+      "rate" : 0.0985,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,
@@ -783,16 +973,20 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 4762000,
-      "rate" : 0.0535
+      "rate" : 0.0535,
+      "taxCents" : null
     }, {
       "upToCents" : 18918000,
-      "rate" : 0.068
+      "rate" : 0.068,
+      "taxCents" : null
     }, {
       "upToCents" : 33041000,
-      "rate" : 0.0785
+      "rate" : 0.0785,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.0985
+      "rate" : 0.0985,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,
@@ -813,16 +1007,20 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 4010000,
-      "rate" : 0.0535
+      "rate" : 0.0535,
+      "taxCents" : null
     }, {
       "upToCents" : 16113000,
-      "rate" : 0.068
+      "rate" : 0.068,
+      "taxCents" : null
     }, {
       "upToCents" : 26405000,
-      "rate" : 0.0785
+      "rate" : 0.0785,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.0985
+      "rate" : 0.0985,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,
@@ -843,10 +1041,12 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 1000000,
-      "rate" : 0.0
+      "rate" : 0.0,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.044
+      "rate" : 0.044,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,
@@ -867,25 +1067,32 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 100000,
-      "rate" : 0.0
+      "rate" : 0.0,
+      "taxCents" : null
     }, {
       "upToCents" : 200000,
-      "rate" : 0.02
+      "rate" : 0.02,
+      "taxCents" : null
     }, {
       "upToCents" : 300000,
-      "rate" : 0.025
+      "rate" : 0.025,
+      "taxCents" : null
     }, {
       "upToCents" : 400000,
-      "rate" : 0.03
+      "rate" : 0.03,
+      "taxCents" : null
     }, {
       "upToCents" : 500000,
-      "rate" : 0.035
+      "rate" : 0.035,
+      "taxCents" : null
     }, {
       "upToCents" : 800000,
-      "rate" : 0.04
+      "rate" : 0.04,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.047
+      "rate" : 0.047,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,
@@ -906,10 +1113,12 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 2110000,
-      "rate" : 0.047
+      "rate" : 0.047,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.059
+      "rate" : 0.059,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,
@@ -930,16 +1139,20 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 500000,
-      "rate" : 0.024
+      "rate" : 0.024,
+      "taxCents" : null
     }, {
       "upToCents" : 2000000,
-      "rate" : 0.035
+      "rate" : 0.035,
+      "taxCents" : null
     }, {
       "upToCents" : 7500000,
-      "rate" : 0.044
+      "rate" : 0.044,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.052
+      "rate" : 0.052,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,
@@ -996,25 +1209,32 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 2000000,
-      "rate" : 0.014
+      "rate" : 0.014,
+      "taxCents" : null
     }, {
       "upToCents" : 3500000,
-      "rate" : 0.0175
+      "rate" : 0.0175,
+      "taxCents" : null
     }, {
       "upToCents" : 4000000,
-      "rate" : 0.035
+      "rate" : 0.035,
+      "taxCents" : null
     }, {
       "upToCents" : 7500000,
-      "rate" : 0.05525
+      "rate" : 0.05525,
+      "taxCents" : null
     }, {
       "upToCents" : 50000000,
-      "rate" : 0.0637
+      "rate" : 0.0637,
+      "taxCents" : null
     }, {
       "upToCents" : 100000000,
-      "rate" : 0.0897
+      "rate" : 0.0897,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.1075
+      "rate" : 0.1075,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,
@@ -1035,28 +1255,36 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 2000000,
-      "rate" : 0.014
+      "rate" : 0.014,
+      "taxCents" : null
     }, {
       "upToCents" : 5000000,
-      "rate" : 0.0175
+      "rate" : 0.0175,
+      "taxCents" : null
     }, {
       "upToCents" : 7000000,
-      "rate" : 0.0245
+      "rate" : 0.0245,
+      "taxCents" : null
     }, {
       "upToCents" : 8000000,
-      "rate" : 0.035
+      "rate" : 0.035,
+      "taxCents" : null
     }, {
       "upToCents" : 15000000,
-      "rate" : 0.05525
+      "rate" : 0.05525,
+      "taxCents" : null
     }, {
       "upToCents" : 50000000,
-      "rate" : 0.0637
+      "rate" : 0.0637,
+      "taxCents" : null
     }, {
       "upToCents" : 100000000,
-      "rate" : 0.0897
+      "rate" : 0.0897,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.1075
+      "rate" : 0.1075,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,
@@ -1077,28 +1305,36 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 2000000,
-      "rate" : 0.014
+      "rate" : 0.014,
+      "taxCents" : null
     }, {
       "upToCents" : 5000000,
-      "rate" : 0.0175
+      "rate" : 0.0175,
+      "taxCents" : null
     }, {
       "upToCents" : 7000000,
-      "rate" : 0.0245
+      "rate" : 0.0245,
+      "taxCents" : null
     }, {
       "upToCents" : 8000000,
-      "rate" : 0.035
+      "rate" : 0.035,
+      "taxCents" : null
     }, {
       "upToCents" : 15000000,
-      "rate" : 0.05525
+      "rate" : 0.05525,
+      "taxCents" : null
     }, {
       "upToCents" : 50000000,
-      "rate" : 0.0637
+      "rate" : 0.0637,
+      "taxCents" : null
     }, {
       "upToCents" : 100000000,
-      "rate" : 0.0897
+      "rate" : 0.0897,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.1075
+      "rate" : 0.1075,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,
@@ -1119,22 +1355,28 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 550000,
-      "rate" : 0.015
+      "rate" : 0.015,
+      "taxCents" : null
     }, {
       "upToCents" : 1650000,
-      "rate" : 0.032
+      "rate" : 0.032,
+      "taxCents" : null
     }, {
       "upToCents" : 3350000,
-      "rate" : 0.043
+      "rate" : 0.043,
+      "taxCents" : null
     }, {
       "upToCents" : 6650000,
-      "rate" : 0.047
+      "rate" : 0.047,
+      "taxCents" : null
     }, {
       "upToCents" : 21000000,
-      "rate" : 0.049
+      "rate" : 0.049,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.059
+      "rate" : 0.059,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,
@@ -1155,31 +1397,40 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 850000,
-      "rate" : 0.04
+      "rate" : 0.04,
+      "taxCents" : null
     }, {
       "upToCents" : 1170000,
-      "rate" : 0.045
+      "rate" : 0.045,
+      "taxCents" : null
     }, {
       "upToCents" : 1390000,
-      "rate" : 0.0525
+      "rate" : 0.0525,
+      "taxCents" : null
     }, {
       "upToCents" : 8065000,
-      "rate" : 0.055
+      "rate" : 0.055,
+      "taxCents" : null
     }, {
       "upToCents" : 21540000,
-      "rate" : 0.06
+      "rate" : 0.06,
+      "taxCents" : null
     }, {
       "upToCents" : 107755000,
-      "rate" : 0.0685
+      "rate" : 0.0685,
+      "taxCents" : null
     }, {
       "upToCents" : 500000000,
-      "rate" : 0.0965
+      "rate" : 0.0965,
+      "taxCents" : null
     }, {
       "upToCents" : 2500000000,
-      "rate" : 0.103
+      "rate" : 0.103,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.109
+      "rate" : 0.109,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,
@@ -1200,31 +1451,40 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 1715000,
-      "rate" : 0.04
+      "rate" : 0.04,
+      "taxCents" : null
     }, {
       "upToCents" : 2360000,
-      "rate" : 0.045
+      "rate" : 0.045,
+      "taxCents" : null
     }, {
       "upToCents" : 2790000,
-      "rate" : 0.0525
+      "rate" : 0.0525,
+      "taxCents" : null
     }, {
       "upToCents" : 16155000,
-      "rate" : 0.055
+      "rate" : 0.055,
+      "taxCents" : null
     }, {
       "upToCents" : 32320000,
-      "rate" : 0.06
+      "rate" : 0.06,
+      "taxCents" : null
     }, {
       "upToCents" : 215535000,
-      "rate" : 0.0685
+      "rate" : 0.0685,
+      "taxCents" : null
     }, {
       "upToCents" : 500000000,
-      "rate" : 0.0965
+      "rate" : 0.0965,
+      "taxCents" : null
     }, {
       "upToCents" : 2500000000,
-      "rate" : 0.103
+      "rate" : 0.103,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.109
+      "rate" : 0.109,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,
@@ -1245,31 +1505,40 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 1280000,
-      "rate" : 0.04
+      "rate" : 0.04,
+      "taxCents" : null
     }, {
       "upToCents" : 1765000,
-      "rate" : 0.045
+      "rate" : 0.045,
+      "taxCents" : null
     }, {
       "upToCents" : 2090000,
-      "rate" : 0.0525
+      "rate" : 0.0525,
+      "taxCents" : null
     }, {
       "upToCents" : 10765000,
-      "rate" : 0.055
+      "rate" : 0.055,
+      "taxCents" : null
     }, {
       "upToCents" : 26930000,
-      "rate" : 0.06
+      "rate" : 0.06,
+      "taxCents" : null
     }, {
       "upToCents" : 161645000,
-      "rate" : 0.0685
+      "rate" : 0.0685,
+      "taxCents" : null
     }, {
       "upToCents" : 500000000,
-      "rate" : 0.0965
+      "rate" : 0.0965,
+      "taxCents" : null
     }, {
       "upToCents" : 2500000000,
-      "rate" : 0.103
+      "rate" : 0.103,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.109
+      "rate" : 0.109,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,
@@ -1308,13 +1577,16 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 4715000,
-      "rate" : 0.0
+      "rate" : 0.0,
+      "taxCents" : null
     }, {
       "upToCents" : 23820000,
-      "rate" : 0.0195
+      "rate" : 0.0195,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.025
+      "rate" : 0.025,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,
@@ -1335,13 +1607,16 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 2605000,
-      "rate" : 0.0
+      "rate" : 0.0,
+      "taxCents" : null
     }, {
       "upToCents" : 10000000,
-      "rate" : 0.0275
+      "rate" : 0.0275,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.03125
+      "rate" : 0.03125,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,
@@ -1362,22 +1637,28 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 100000,
-      "rate" : 0.0025
+      "rate" : 0.0025,
+      "taxCents" : null
     }, {
       "upToCents" : 250000,
-      "rate" : 0.0075
+      "rate" : 0.0075,
+      "taxCents" : null
     }, {
       "upToCents" : 375000,
-      "rate" : 0.0175
+      "rate" : 0.0175,
+      "taxCents" : null
     }, {
       "upToCents" : 490000,
-      "rate" : 0.0275
+      "rate" : 0.0275,
+      "taxCents" : null
     }, {
       "upToCents" : 720000,
-      "rate" : 0.0375
+      "rate" : 0.0375,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.0475
+      "rate" : 0.0475,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,
@@ -1398,16 +1679,20 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 435000,
-      "rate" : 0.0475
+      "rate" : 0.0475,
+      "taxCents" : null
     }, {
       "upToCents" : 1090000,
-      "rate" : 0.0675
+      "rate" : 0.0675,
+      "taxCents" : null
     }, {
       "upToCents" : 13775000,
-      "rate" : 0.0875
+      "rate" : 0.0875,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.099
+      "rate" : 0.099,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,
@@ -1428,16 +1713,20 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 870000,
-      "rate" : 0.0475
+      "rate" : 0.0475,
+      "taxCents" : null
     }, {
       "upToCents" : 2180000,
-      "rate" : 0.0675
+      "rate" : 0.0675,
+      "taxCents" : null
     }, {
       "upToCents" : 27550000,
-      "rate" : 0.0875
+      "rate" : 0.0875,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.099
+      "rate" : 0.099,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,
@@ -1458,16 +1747,20 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 870000,
-      "rate" : 0.0475
+      "rate" : 0.0475,
+      "taxCents" : null
     }, {
       "upToCents" : 2180000,
-      "rate" : 0.0675
+      "rate" : 0.0675,
+      "taxCents" : null
     }, {
       "upToCents" : 27550000,
-      "rate" : 0.0875
+      "rate" : 0.0875,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.099
+      "rate" : 0.099,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,
@@ -1506,13 +1799,16 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 7990000,
-      "rate" : 0.0375
+      "rate" : 0.0375,
+      "taxCents" : null
     }, {
       "upToCents" : 18165000,
-      "rate" : 0.0475
+      "rate" : 0.0475,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.0599
+      "rate" : 0.0599,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,
@@ -1533,13 +1829,16 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 320000,
-      "rate" : 0.0
+      "rate" : 0.0,
+      "taxCents" : null
     }, {
       "upToCents" : 1604000,
-      "rate" : 0.03
+      "rate" : 0.03,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.06
+      "rate" : 0.06,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,
@@ -1632,16 +1931,20 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 4790000,
-      "rate" : 0.0335
+      "rate" : 0.0335,
+      "taxCents" : null
     }, {
       "upToCents" : 11600000,
-      "rate" : 0.066
+      "rate" : 0.066,
+      "taxCents" : null
     }, {
       "upToCents" : 24200000,
-      "rate" : 0.076
+      "rate" : 0.076,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.0875
+      "rate" : 0.0875,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,
@@ -1662,16 +1965,20 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 300000,
-      "rate" : 0.02
+      "rate" : 0.02,
+      "taxCents" : null
     }, {
       "upToCents" : 500000,
-      "rate" : 0.03
+      "rate" : 0.03,
+      "taxCents" : null
     }, {
       "upToCents" : 1700000,
-      "rate" : 0.05
+      "rate" : 0.05,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.0575
+      "rate" : 0.0575,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,
@@ -1710,19 +2017,24 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 1000000,
-      "rate" : 0.0222
+      "rate" : 0.0222,
+      "taxCents" : null
     }, {
       "upToCents" : 2500000,
-      "rate" : 0.0296
+      "rate" : 0.0296,
+      "taxCents" : null
     }, {
       "upToCents" : 4000000,
-      "rate" : 0.0333
+      "rate" : 0.0333,
+      "taxCents" : null
     }, {
       "upToCents" : 6000000,
-      "rate" : 0.0444
+      "rate" : 0.0444,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.0482
+      "rate" : 0.0482,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,
@@ -1743,16 +2055,20 @@
     "annualWageCapCents" : null,
     "brackets" : [ {
       "upToCents" : 1432000,
-      "rate" : 0.035
+      "rate" : 0.035,
+      "taxCents" : null
     }, {
       "upToCents" : 2864000,
-      "rate" : 0.044
+      "rate" : 0.044,
+      "taxCents" : null
     }, {
       "upToCents" : 31531000,
-      "rate" : 0.053
+      "rate" : 0.053,
+      "taxCents" : null
     }, {
       "upToCents" : null,
-      "rate" : 0.0765
+      "rate" : 0.0765,
+      "taxCents" : null
     } ],
     "standardDeductionCents" : null,
     "additionalWithholdingCents" : null,

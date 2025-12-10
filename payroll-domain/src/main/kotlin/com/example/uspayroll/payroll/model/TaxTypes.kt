@@ -58,11 +58,30 @@ sealed class TaxRule {
         val rate: Percent,
         val annualWageCap: Money? = null,
     ) : TaxRule()
+
+    /**
+     * Table-based wage-bracket tax: for a given basis amount, select the first
+     * bracket whose `upTo` bound contains the amount and apply its fixed
+     * [WageBracketRow.tax] amount (plus any additional withholding).
+     */
+    data class WageBracketTax(
+        override val id: String,
+        override val jurisdiction: TaxJurisdiction,
+        override val basis: TaxBasis,
+        val brackets: List<WageBracketRow>,
+        val filingStatus: FilingStatus? = null,
+    ) : TaxRule()
 }
 
-data class TaxBracket(
+ data class TaxBracket(
     val upTo: Money?, // null = no upper bound
     val rate: Percent,
+)
+
+/** Row in a wage-bracket tax table. */
+data class WageBracketRow(
+    val upTo: Money?, // null = no upper bound
+    val tax: Money,
 )
 
 data class TaxContext(

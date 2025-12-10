@@ -1,0 +1,25 @@
+{
+  "rules": [
+    {
+      "id": "US_FED_FIT_2025_WB_SINGLE_DEMO",
+      "jurisdictionType": "FEDERAL",
+      "jurisdictionCode": "US",
+      "basis": "FederalTaxable",
+      "ruleType": "WAGE_BRACKET",
+      "brackets": [
+        { "upToCents": 3000000, "rate": 0.0, "taxCents": 150000 },
+        { "upToCents": 6000000, "rate": 0.0, "taxCents": 600000 },
+        { "upToCents": null,    "rate": 0.0, "taxCents": 1500000 }
+      ],
+      "standardDeductionCents": null,
+      "additionalWithholdingCents": null,
+      "employerId": null,
+      "effectiveFrom": "2025-01-01",
+      "effectiveTo": "9999-12-31",
+      "filingStatus": "SINGLE",
+      "residentStateFilter": null,
+      "workStateFilter": null,
+      "localityFilter": null
+    }
+  ]
+}

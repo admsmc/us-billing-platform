@@ -177,4 +177,188 @@ class EmployerTaxesGoldenTest {
         // Wage base is $7,000; at 3% this yields $210.00 => 21,000 cents.
         assertEquals(21_000L, suiLine.amount.amount, "Expected SUI employer tax of $210.00 given a $7,000 wage base at 3%")
     }
+
+    @Test
+    fun `NY and TX SUI employer taxes applied on Gross wages from DB-backed catalog`() {
+        val dsl = createDslContext("taxdb-golden-sui-multi")
+        importConfig(dsl, "tax-config/example-federal-2025.json")
+
+        val employerId = EmployerId("EMP-SUI-GOLDEN-MULTI")
+        val asOfDate = LocalDate.of(2025, 3, 31)
+
+        val taxContext = employerTaxContext(employerId, asOfDate, dsl)
+
+        val nyRule = taxContext.employerSpecific.firstOrNull { it.id == "US_NY_SUI_2025" }
+            ?: error("Expected US_NY_SUI_2025 employer tax rule in catalog")
+        assertTrue(nyRule is TaxRule.FlatRateTax && nyRule.basis is TaxBasis.Gross)
+
+        val txRule = taxContext.employerSpecific.firstOrNull { it.id == "US_TX_SUI_2025" }
+            ?: error("Expected US_TX_SUI_2025 employer tax rule in catalog")
+        assertTrue(txRule is TaxRule.FlatRateTax && txRule.basis is TaxBasis.Gross)
+
+        val grossWagesCents = 10_000_00L // $10,000.00
+
+        val period = PayPeriod(
+            id = "SUI-GOLDEN-MULTI-ANNUAL",
+            employerId = employerId,
+            dateRange = LocalDateRange(asOfDate, asOfDate),
+            checkDate = asOfDate,
+            frequency = PayFrequency.ANNUAL,
+        )
+
+        fun computeEmployerTax(ruleId: String, rate: Double, wageBaseCents: Long): Long {
+            val bases: Map<TaxBasis, Money> = mapOf(
+                TaxBasis.Gross to Money(grossWagesCents),
+            )
+            val basisComponents: Map<TaxBasis, Map<String, Money>> = mapOf(
+                TaxBasis.Gross to mapOf("gross" to Money(grossWagesCents)),
+            )
+
+            val snapshot = EmployeeSnapshot(
+                employerId = employerId,
+                employeeId = EmployeeId("EE-$ruleId"),
+                homeState = "CA",
+                workState = "CA",
+                filingStatus = FilingStatus.SINGLE,
+                baseCompensation = BaseCompensation.Salaried(
+                    annualSalary = Money(grossWagesCents),
+                    frequency = PayFrequency.ANNUAL,
+                ),
+            )
+
+            val input = PaycheckInput(
+                paycheckId = PaycheckId("CHK-$ruleId"),
+                payRunId = PayRunId("RUN-SUI-GOLDEN-MULTI"),
+                employerId = employerId,
+                employeeId = snapshot.employeeId,
+                period = period,
+                employeeSnapshot = snapshot,
+                timeSlice = TimeSlice(
+                    period = period,
+                    regularHours = 0.0,
+                    overtimeHours = 0.0,
+                ),
+                taxContext = taxContext,
+                priorYtd = YtdSnapshot(year = asOfDate.year),
+            )
+
+            val result = TaxesCalculator.computeTaxes(input, bases, basisComponents)
+
+            val line = result.employerTaxes.firstOrNull { it.ruleId == ruleId }
+                ?: error("Expected employer tax line for $ruleId")
+
+            return line.amount.amount
+        }
+
+        // Wage base caps: NY 8,500, TX 9,000.
+        val nyTax = computeEmployerTax("US_NY_SUI_2025", 0.035, 850_000L)
+        val txTax = computeEmployerTax("US_TX_SUI_2025", 0.02, 900_000L)
+
+        // Expected amounts:
+        // - NY: min(10,000, 8,500) * 3.5% = 8,500 * 0.035 = 297.50 => 29,750 cents.
+        // - TX: min(10,000, 9,000) * 2.0% = 9,000 * 0.02 = 180.00 => 18,000 cents.
+        assertEquals(29_750L, nyTax, "Expected NY SUI employer tax of $297.50 on $10,000 wages with $8,500 base at 3.5%")
+        assertEquals(18_000L, txTax, "Expected TX SUI employer tax of $180.00 on $10,000 wages with $9,000 base at 2.0%")
+    }
+
+    @Test
+    fun `additional multi-state SUI and SDI employer taxes applied on Gross wages from DB-backed catalog`() {
+        val dsl = createDslContext("taxdb-golden-sui-expanded")
+        importConfig(dsl, "tax-config/example-federal-2025.json")
+
+        val employerId = EmployerId("EMP-SUI-GOLDEN-EXPANDED")
+        val asOfDate = LocalDate.of(2025, 3, 31)
+
+        val taxContext = employerTaxContext(employerId, asOfDate, dsl)
+
+        val expectedIds = listOf(
+            "US_WA_SUI_2025",
+            "US_NJ_SUI_2025",
+            "US_OR_SUI_2025",
+            "US_MA_SUI_2025",
+            "US_NJ_SDI_2025",
+            "US_NY_SDI_2025",
+        )
+
+        expectedIds.forEach { id ->
+            val rule = taxContext.employerSpecific.firstOrNull { it.id == id }
+                ?: error("Expected $id employer tax rule in catalog")
+            assertTrue(rule is TaxRule.FlatRateTax && rule.basis is TaxBasis.Gross)
+        }
+
+        val grossWagesCents = 10_000_00L // $10,000.00
+
+        fun compute(ruleId: String): Long {
+            val bases: Map<TaxBasis, Money> = mapOf(
+                TaxBasis.Gross to Money(grossWagesCents),
+            )
+            val basisComponents: Map<TaxBasis, Map<String, Money>> = mapOf(
+                TaxBasis.Gross to mapOf("gross" to Money(grossWagesCents)),
+            )
+
+            val period = PayPeriod(
+                id = "SUI-GOLDEN-EXPANDED-$ruleId",
+                employerId = employerId,
+                dateRange = LocalDateRange(asOfDate, asOfDate),
+                checkDate = asOfDate,
+                frequency = PayFrequency.ANNUAL,
+            )
+
+            val snapshot = EmployeeSnapshot(
+                employerId = employerId,
+                employeeId = EmployeeId("EE-$ruleId"),
+                homeState = "CA",
+                workState = "CA",
+                filingStatus = FilingStatus.SINGLE,
+                baseCompensation = BaseCompensation.Salaried(
+                    annualSalary = Money(grossWagesCents),
+                    frequency = PayFrequency.ANNUAL,
+                ),
+            )
+
+            val input = PaycheckInput(
+                paycheckId = PaycheckId("CHK-$ruleId"),
+                payRunId = PayRunId("RUN-SUI-GOLDEN-EXPANDED"),
+                employerId = employerId,
+                employeeId = snapshot.employeeId,
+                period = period,
+                employeeSnapshot = snapshot,
+                timeSlice = TimeSlice(
+                    period = period,
+                    regularHours = 0.0,
+                    overtimeHours = 0.0,
+                ),
+                taxContext = taxContext,
+                priorYtd = YtdSnapshot(year = asOfDate.year),
+            )
+
+            val result = TaxesCalculator.computeTaxes(input, bases, basisComponents)
+
+            val line = result.employerTaxes.firstOrNull { it.ruleId == ruleId }
+                ?: error("Expected employer tax line for $ruleId")
+
+            return line.amount.amount
+        }
+
+        // Expected amounts using min(gross, wageBase) * rate.
+        // WA: min(10,000, 6,200) * 1.8% = 6,200 * 0.018 = 111.60 => 11,160 cents.
+        // NJ SUI: min(10,000, 4,200) * 2.75% = 4,200 * 0.0275 = 115.50 => 11,550 cents.
+        // OR SUI: min(10,000, 4,500) * 2.1% = 4,500 * 0.021 = 94.50 => 9,450 cents.
+        // MA SUI: min(10,000, 15,000) * 2.2% = 10,000 * 0.022 = 220.00 => 22,000 cents.
+        // NJ SDI: min(10,000, 16,000) * 0.5% = 10,000 * 0.005 = 50.00 => 5,000 cents.
+        // NY SDI: min(10,000, 6,500) * 0.5% = 6,500 * 0.005 = 32.50 => 3,250 cents.
+        val waTax = compute("US_WA_SUI_2025")
+        val njSuiTax = compute("US_NJ_SUI_2025")
+        val orTax = compute("US_OR_SUI_2025")
+        val maTax = compute("US_MA_SUI_2025")
+        val njSdiTax = compute("US_NJ_SDI_2025")
+        val nySdiTax = compute("US_NY_SDI_2025")
+
+        assertEquals(11_160L, waTax)
+        assertEquals(11_550L, njSuiTax)
+        assertEquals(9_450L, orTax)
+        assertEquals(22_000L, maTax)
+        assertEquals(5_000L, njSdiTax)
+        assertEquals(3_250L, nySdiTax)
+    }
 }

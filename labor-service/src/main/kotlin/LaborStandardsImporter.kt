@@ -33,6 +33,7 @@ object LaborStandardsImporter {
         Files.createDirectories(resourcesDir)
 
         val csvPath = resourcesDir.resolve("labor-standards-$year.csv")
+        val localCsvPath = resourcesDir.resolve("labor-standards-$year-local.csv")
         val jsonPath = resourcesDir.resolve("labor-standards-$year.json")
         val sqlPath = resourcesDir.resolve("labor-standard-$year.sql")
 
@@ -40,12 +41,22 @@ object LaborStandardsImporter {
             "CSV file not found: $csvPath. Expected labor-standards-$year.csv in labor-service/src/main/resources."
         }
 
-        val standards: List<StateLaborStandard> = Files.newBufferedReader(csvPath).use { reader ->
+        val stateStandards: List<StateLaborStandard> = Files.newBufferedReader(csvPath).use { reader ->
             LaborStandardsCsvParser.parse(reader)
         }
 
-        writeJson(standards, jsonPath)
-        writeSql(standards, sqlPath)
+        val localStandards: List<StateLaborStandard> = if (Files.exists(localCsvPath)) {
+            Files.newBufferedReader(localCsvPath).use { reader ->
+                LaborStandardsCsvParser.parseLocal(reader)
+            }
+        } else {
+            emptyList()
+        }
+
+        val combined = stateStandards + localStandards
+
+        writeJson(combined, jsonPath)
+        writeSql(combined, sqlPath)
     }
 
     private val objectMapper = jacksonObjectMapper()
@@ -86,10 +97,13 @@ object LaborStandardsImporter {
         fun sqlDate(d: LocalDate?): String = d?.let { "DATE '${'$'}it'" } ?: "NULL"
         fun sqlLong(v: Long?): String = v?.toString() ?: "NULL"
         fun sqlDouble(v: Double?): String = v?.toString() ?: "NULL"
+        fun sqlString(v: String?): String = v?.let { "'${'$'}it'" } ?: "NULL"
 
         return """
             |INSERT INTO labor_standard (
             |    state_code,
+            |    locality_code,
+            |    locality_kind,
             |    effective_from,
             |    effective_to,
             |    regular_minimum_wage_cents,
@@ -100,6 +114,8 @@ object LaborStandardsImporter {
             |    daily_dt_threshold_hours
             |) VALUES (
             |    '${'$'}{s.stateCode}',
+            |    ${'$'}{sqlString(s.localityCode)},
+            |    ${'$'}{sqlString(s.localityKind)},
             |    ${'$'}{sqlDate(s.effectiveFrom)},
             |    ${'$'}{sqlDate(s.effectiveTo)},
             |    ${'$'}{sqlLong(s.regularMinimumWageCents)},

@@ -37,6 +37,9 @@ class PayrollRunService(
     private val deductionConfigRepository: com.example.uspayroll.payroll.model.config.DeductionConfigRepository,
     private val federalWithholdingCalculator: FederalWithholdingCalculator,
     private val laborStandardsContextProvider: LaborStandardsContextProvider,
+    private val hrClient: com.example.uspayroll.worker.client.HrClient? = null,
+    private val taxClient: com.example.uspayroll.worker.client.TaxClient? = null,
+    private val laborClient: com.example.uspayroll.worker.client.LaborStandardsClient? = null,
 ) {
 
     fun runDemoPayForEmployer(): List<Pair<PaycheckResult, Money>> {
@@ -44,7 +47,8 @@ class PayrollRunService(
         val checkDate = LocalDate.of(2025, 1, 15)
 
         // Load tax context ONCE for this employer/date.
-        val taxContext = taxContextProvider.getTaxContext(employerId, checkDate)
+        val taxContext = taxClient?.getTaxContext(employerId, checkDate)
+            ?: taxContextProvider.getTaxContext(employerId, checkDate)
         val laborStandardsByEmployee = mutableMapOf<EmployeeId, LaborStandardsContext?>()
 
         val period = PayPeriod(
@@ -119,6 +123,68 @@ class PayrollRunService(
             )
 
             paycheck to federalWithholding
+        }
+    }
+
+    /**
+     * HR-backed path that uses HrClient to obtain the pay period and employee
+     * snapshots over HTTP, then runs the payroll engine. This is intended for
+     * integration tests and future real flows.
+     */
+    fun runHrBackedPayForPeriod(
+        employerId: EmployerId,
+        payPeriodId: String,
+        employeeIds: List<EmployeeId>,
+    ): List<PaycheckResult> {
+        val client = requireNotNull(hrClient) { "HrClient is required for HR-backed flows" }
+
+        val payPeriod = client.getPayPeriod(employerId, payPeriodId)
+            ?: error("No pay period '$payPeriodId' for employer ${employerId.value}")
+
+        val taxContext = taxClient?.getTaxContext(employerId, payPeriod.checkDate)
+            ?: taxContextProvider.getTaxContext(employerId, payPeriod.checkDate)
+
+        return employeeIds.map { eid ->
+            val snapshot = client.getEmployeeSnapshot(
+                employerId = employerId,
+                employeeId = eid,
+                asOfDate = payPeriod.checkDate,
+            ) ?: error("No employee snapshot for ${eid.value} as of ${payPeriod.checkDate}")
+
+            val laborStandards = laborClient?.getLaborStandards(
+                employerId = employerId,
+                asOfDate = payPeriod.checkDate,
+                workState = snapshot.workState,
+                homeState = snapshot.homeState,
+            ) ?: laborStandardsContextProvider.getLaborStandards(
+                employerId = employerId,
+                asOfDate = payPeriod.checkDate,
+                workState = snapshot.workState,
+                homeState = snapshot.homeState,
+            )
+
+            val input = PaycheckInput(
+                paycheckId = com.example.uspayroll.shared.PaycheckId("chk-${payPeriod.id}-${eid.value}"),
+                payRunId = PayRunId("run-${payPeriod.id}"),
+                employerId = employerId,
+                employeeId = snapshot.employeeId,
+                period = payPeriod,
+                employeeSnapshot = snapshot,
+                timeSlice = TimeSlice(
+                    period = payPeriod,
+                    regularHours = 0.0,
+                    overtimeHours = 0.0,
+                ),
+                taxContext = taxContext,
+                priorYtd = YtdSnapshot(year = payPeriod.checkDate.year),
+                laborStandards = laborStandards,
+            )
+
+            PayrollEngine.calculatePaycheck(
+                input = input,
+                earningConfig = earningConfigRepository,
+                deductionConfig = deductionConfigRepository,
+            )
         }
     }
 }

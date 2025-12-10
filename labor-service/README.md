@@ -70,7 +70,25 @@ When policy/ops have updated the sheet:
    - Validate that the CSV still matches the expected format and parses correctly.
    - Regenerate:
      - `src/main/resources/labor-standards-2025.json` (JSON config used by tools/runtime), and
-     - `src/main/resources/labor-standard-2025.sql` (INSERTs for the `labor_standard` table).
+     - `src/main/resources/labor-standard-2025.sql` (INSERTs for the `labor_standard` table, including locality_code/locality_kind columns where provided).
+
+### Database schema note (locality columns)
+
+The generated `labor-standard-2025.sql` assumes the `labor_standard` table has the following additional nullable columns:
+
+- `locality_code VARCHAR` – e.g. `NYC`, `SEA`, `PORTLAND_METRO`, `LA_CITY`, `SF`, `CHI`.
+- `locality_kind VARCHAR` – e.g. `CITY`, `COUNTY`, `METRO`.
+
+If your database does not yet include these columns, add them via a migration similar to:
+
+```sql
+ALTER TABLE labor_standard
+    ADD COLUMN locality_code VARCHAR(64) NULL,
+    ADD COLUMN locality_kind VARCHAR(32) NULL;
+```
+
+Statewide rows from the baseline CSV will have these fields null; locality-specific
+rows from `labor-standards-2025-local.csv` will populate them accordingly.
 
 4. Review and commit the updated CSV + JSON + SQL files together as a single change.
 

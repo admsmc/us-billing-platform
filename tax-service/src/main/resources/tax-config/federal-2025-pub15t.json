@@ -1,0 +1,79 @@
+{
+  "rules": [
+    {
+      "id": "US_FED_FIT_2025_PUB15T_SINGLE",
+      "jurisdictionType": "FEDERAL",
+      "jurisdictionCode": "US",
+      "basis": "FederalTaxable",
+      "ruleType": "BRACKETED",
+      "brackets": [
+        { "upToCents": 1192500, "rate": 0.10 },
+        { "upToCents": 4847500, "rate": 0.12 },
+        { "upToCents": 10335000, "rate": 0.22 },
+        { "upToCents": 19730000, "rate": 0.24 },
+        { "upToCents": 25052500, "rate": 0.32 },
+        { "upToCents": 62635000, "rate": 0.35 },
+        { "upToCents": null, "rate": 0.37 }
+      ],
+      "standardDeductionCents": 1500000,
+      "additionalWithholdingCents": 0,
+      "employerId": null,
+      "effectiveFrom": "2025-01-01",
+      "effectiveTo": "9999-12-31",
+      "filingStatus": "SINGLE",
+      "residentStateFilter": null,
+      "workStateFilter": null,
+      "localityFilter": null
+    },
+    {
+      "id": "US_FED_FIT_2025_PUB15T_MARRIED",
+      "jurisdictionType": "FEDERAL",
+      "jurisdictionCode": "US",
+      "basis": "FederalTaxable",
+      "ruleType": "BRACKETED",
+      "brackets": [
+        { "upToCents": 2385000, "rate": 0.10 },
+        { "upToCents": 9695000, "rate": 0.12 },
+        { "upToCents": 20670000, "rate": 0.22 },
+        { "upToCents": 39460000, "rate": 0.24 },
+        { "upToCents": 50105000, "rate": 0.32 },
+        { "upToCents": 75160000, "rate": 0.35 },
+        { "upToCents": null, "rate": 0.37 }
+      ],
+      "standardDeductionCents": 3000000,
+      "additionalWithholdingCents": 0,
+      "employerId": null,
+      "effectiveFrom": "2025-01-01",
+      "effectiveTo": "9999-12-31",
+      "filingStatus": "MARRIED",
+      "residentStateFilter": null,
+      "workStateFilter": null,
+      "localityFilter": null
+    },
+    {
+      "id": "US_FED_FIT_2025_PUB15T_HOH",
+      "jurisdictionType": "FEDERAL",
+      "jurisdictionCode": "US",
+      "basis": "FederalTaxable",
+      "ruleType": "BRACKETED",
+      "brackets": [
+        { "upToCents": 1700000, "rate": 0.10 },
+        { "upToCents": 6485000, "rate": 0.12 },
+        { "upToCents": 10335000, "rate": 0.22 },
+        { "upToCents": 19730000, "rate": 0.24 },
+        { "upToCents": 25050000, "rate": 0.32 },
+        { "upToCents": 62635000, "rate": 0.35 },
+        { "upToCents": null, "rate": 0.37 }
+      ],
+      "standardDeductionCents": 2250000,
+      "additionalWithholdingCents": 0,
+      "employerId": null,
+      "effectiveFrom": "2025-01-01",
+      "effectiveTo": "9999-12-31",
+      "filingStatus": "HEAD_OF_HOUSEHOLD",
+      "residentStateFilter": null,
+      "workStateFilter": null,
+      "localityFilter": null
+    }
+  ]
+}

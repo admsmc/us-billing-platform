@@ -28,7 +28,7 @@ object TaxRuleConfigValidator {
         "FutaWages",
     )
 
-    private val validRuleTypes = setOf("FLAT", "BRACKETED")
+    private val validRuleTypes = setOf("FLAT", "BRACKETED", "WAGE_BRACKET")
 
     fun validateFile(file: TaxRuleFile): ValidationResult =
         validateRules(file.rules)
@@ -73,7 +73,7 @@ object TaxRuleConfigValidator {
                 )
             }
 
-            // Structural checks for FLAT vs BRACKETED
+            // Structural checks for FLAT vs BRACKETED vs WAGE_BRACKET
             when (rule.ruleType) {
                 "FLAT" -> {
                     if (rule.rate == null) {
@@ -109,6 +109,44 @@ object TaxRuleConfigValidator {
                             errors += ValidationError(
                                 ruleId = rule.id,
                                 message = "Top bracket (index $index) has non-positive rate=${bracket.rate} and no upper bound",
+                            )
+                        }
+                    }
+                }
+                "WAGE_BRACKET" -> {
+                    val brackets = rule.brackets
+                    if (brackets.isNullOrEmpty()) {
+                        errors += ValidationError(
+                            ruleId = rule.id,
+                            message = "WAGE_BRACKET rule must have at least one bracket",
+                        )
+                    } else {
+                        var sawOpenEnded = false
+                        var prevUpper: Long? = null
+                        brackets.forEachIndexed { index, bracket ->
+                            if (bracket.taxCents == null) {
+                                errors += ValidationError(
+                                    ruleId = rule.id,
+                                    message = "WAGE_BRACKET bracket index $index must define taxCents",
+                                )
+                            }
+                            val upper = bracket.upToCents
+                            if (upper == null) {
+                                sawOpenEnded = true
+                            } else {
+                                if (prevUpper != null && upper <= prevUpper!!) {
+                                    errors += ValidationError(
+                                        ruleId = rule.id,
+                                        message = "WAGE_BRACKET brackets must have strictly increasing upToCents (index $index has upToCents=$upper after $prevUpper)",
+                                    )
+                                }
+                                prevUpper = upper
+                            }
+                        }
+                        if (!sawOpenEnded) {
+                            errors += ValidationError(
+                                ruleId = rule.id,
+                                message = "WAGE_BRACKET rule should have at least one open-ended bracket (upToCents=null)",
                             )
                         }
                     }

@@ -19,9 +19,9 @@ class LaborStandardsCsvParserTest {
         val ca = standards.firstOrNull { it.stateCode == "CA" }
         assertNotNull(ca, "Expected CA row in labor-standards-2025.csv")
 
-        // 16.00 dollars -> 1600 cents
-        assertEquals(1_600L, ca.regularMinimumWageCents)
-        assertEquals(1_600L, ca.tippedMinimumCashWageCents)
+        // 16.50 dollars -> 1650 cents
+        assertEquals(1_650L, ca.regularMinimumWageCents)
+        assertEquals(1_650L, ca.tippedMinimumCashWageCents)
         assertEquals(0L, ca.maxTipCreditCents)
 
         assertEquals(40.0, ca.weeklyOvertimeThresholdHours)

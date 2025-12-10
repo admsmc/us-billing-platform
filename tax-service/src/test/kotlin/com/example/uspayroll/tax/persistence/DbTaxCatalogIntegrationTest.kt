@@ -50,6 +50,25 @@ class DbTaxCatalogIntegrationTest {
 
         val taxContext = provider.getTaxContext(employerId, asOfDate)
 
+        // Sanity: no flat tax rule should have a non-positive annual wage cap in the
+        // domain model. Caps are either null (no cap) or strictly positive.
+        taxContext.federal
+            .filterIsInstance<FlatRateTax>()
+            .forEach { rule ->
+                val cap = rule.annualWageCap
+                if (cap != null) {
+                    assertTrue(cap.amount > 0L, "FlatRateTax ${'$'}{rule.id} has non-positive annualWageCap=${'$'}{cap.amount}")
+                }
+            }
+        taxContext.employerSpecific
+            .filterIsInstance<FlatRateTax>()
+            .forEach { rule ->
+                val cap = rule.annualWageCap
+                if (cap != null) {
+                    assertTrue(cap.amount > 0L, "FlatRateTax ${'$'}{rule.id} has non-positive annualWageCap=${'$'}{cap.amount}")
+                }
+            }
+
         // Federal: we expect the example federal FIT rule plus other federal rules.
         val federalIds = taxContext.federal.map(TaxRule::id).toSet()
         assertTrue(
@@ -62,9 +81,10 @@ class DbTaxCatalogIntegrationTest {
             .first { it.id == "US_FED_FIT_2025_SINGLE" }
 
         // Brackets for FIT should be parsed from brackets_json into domain TaxBracket.
-        assertEquals(3, federalFit.brackets.size)
+        // example-federal-2025.json now has 4 brackets for SINGLE with a top rate of 24%.
+        assertEquals(4, federalFit.brackets.size)
         assertEquals(0.10, federalFit.brackets.first().rate.value)
-        assertEquals(0.22, federalFit.brackets.last().rate.value)
+        assertEquals(0.24, federalFit.brackets.last().rate.value)
 
         // State: we expect at least one CA state income tax rule in the context.
         val caStateRules = taxContext.state

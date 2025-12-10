@@ -34,7 +34,7 @@ private class TestEarningConfigRepository : EarningConfigRepository {
 class AdditionalEarningsAndOvertimePolicyTest {
 
     @Test
-    fun `hourly with overtime uses configured multiplier`() {
+    fun `hourly with overtime uses configured multiplier (generic)`() {
         val employerId = EmployerId("emp-ot")
         val employeeId = EmployeeId("ee-ot2")
         val period = PayPeriod(
@@ -77,6 +77,59 @@ class AdditionalEarningsAndOvertimePolicyTest {
         // Regular: 40 * 50 = 2,000
         // Overtime: 5 * (50 * 2.0) = 500
         assertEquals(2_500_00L, result.gross.amount)
+    }
+
+    @Test
+    fun `CA-style daily overtime shaping yields correct overtime dollars`() {
+        val employerId = EmployerId("emp-ot-ca")
+        val employeeId = EmployeeId("ee-ot-ca")
+        val period = PayPeriod(
+            id = "2025-01-W-OT-CA",
+            employerId = employerId,
+            dateRange = LocalDateRange(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 7)),
+            checkDate = LocalDate.of(2025, 1, 8),
+            frequency = PayFrequency.WEEKLY,
+        )
+        val snapshot = EmployeeSnapshot(
+            employerId = employerId,
+            employeeId = employeeId,
+            homeState = "CA",
+            workState = "CA",
+            filingStatus = FilingStatus.SINGLE,
+            baseCompensation = BaseCompensation.Hourly(hourlyRate = Money(40_00L)),
+        )
+
+        // Model a CA employee working 5 days of 10 hours each:
+        // - 8 * 5 = 40 regular hours
+        // - 2 * 5 = 10 daily overtime hours
+        // Upstream timesheet logic would derive these counts from the 8-hour daily
+        // threshold configured in labor standards; here we assert the engine
+        // correctly prices the 10 overtime hours at the configured multiplier.
+        val input = PaycheckInput(
+            paycheckId = PaycheckId("chk-ot-ca"),
+            payRunId = PayRunId("run-ot-ca"),
+            employerId = employerId,
+            employeeId = employeeId,
+            period = period,
+            employeeSnapshot = snapshot,
+            timeSlice = TimeSlice(
+                period = period,
+                regularHours = 40.0,
+                overtimeHours = 10.0,
+            ),
+            taxContext = TaxContext(),
+            priorYtd = YtdSnapshot(year = 2025),
+        )
+
+        val result = PayrollEngine.calculatePaycheck(
+            input = input,
+            earningConfig = TestEarningConfigRepository(),
+            deductionConfig = null,
+        )
+
+        // Regular: 40 * 40 = 1,600
+        // Overtime: 10 * (40 * 2.0) = 800
+        assertEquals(2_400_00L, result.gross.amount)
     }
 
     @Test

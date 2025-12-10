@@ -7,6 +7,14 @@ import java.io.InputStreamReader
 
 class StateIncomeTaxCsvParserTest {
 
+    // NOTE: Arkansas (AR) uses two statutory individual income tax tables
+    // (a standard progressive table and an alternative table for higher
+    // incomes). The CSVs encode a single progressive bracket schedule that
+    // preserves the true marginal bands (including the 0%, 2%, 3%, 3.4%, and
+    // 3.9% rates) while approximating the high-income alternative table.
+    // Do not "simplify" AR back to a flat FLAT rule; if more precision is
+    // needed, extend the bracket model or schema instead of collapsing it.
+
     @Test
     fun `parse sample state income tax CSVs and validate CA rule`() {
         val rulesStream = javaClass.classLoader.getResourceAsStream("state-income-tax-2025-rules.csv")
