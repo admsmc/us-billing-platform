@@ -40,7 +40,7 @@ class LaborHttpControllerIntegrationTest {
             header("X-Correlation-ID", correlationId)
         }.andExpect {
             status { isOk() }
-            jsonPath("$.federalMinimumWage.amount") { value(1_650) }
+            jsonPath("$.federalMinimumWageCents") { value(1_650) }
             header { string("X-Correlation-ID", correlationId) }
         }
     }
@@ -56,8 +56,8 @@ class LaborHttpControllerIntegrationTest {
             param("state", "CA")
         }.andExpect {
             status { isOk() }
-            jsonPath("$.federalMinimumWage.amount") { value(1_650) }
-            jsonPath("$.federalTippedCashMinimum") { doesNotExist() }
+            jsonPath("$.federalMinimumWageCents") { value(1_650) }
+            jsonPath("$.federalTippedCashMinimumCents") { doesNotExist() }
         }
 
         // TX: federal baseline with tip credit.
@@ -66,8 +66,8 @@ class LaborHttpControllerIntegrationTest {
             param("state", "TX")
         }.andExpect {
             status { isOk() }
-            jsonPath("$.federalMinimumWage.amount") { value(725) }
-            jsonPath("$.federalTippedCashMinimum.amount") { value(213) }
+            jsonPath("$.federalMinimumWageCents") { value(725) }
+            jsonPath("$.federalTippedCashMinimumCents") { value(213) }
         }
     }
 

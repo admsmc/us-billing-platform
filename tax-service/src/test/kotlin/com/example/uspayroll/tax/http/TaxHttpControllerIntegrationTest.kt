@@ -1,8 +1,11 @@
 package com.example.uspayroll.tax.http
 
-import com.example.uspayroll.payroll.model.TaxContext
-import com.example.uspayroll.shared.EmployerId
-import com.example.uspayroll.tax.api.TaxContextProvider
+import com.example.uspayroll.payroll.model.TaxBasis
+import com.example.uspayroll.payroll.model.TaxJurisdiction
+import com.example.uspayroll.payroll.model.TaxJurisdictionType
+import com.example.uspayroll.payroll.model.TaxRule
+import com.example.uspayroll.tax.api.TaxCatalog
+import com.example.uspayroll.tax.api.TaxQuery
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
@@ -47,14 +50,22 @@ class TaxHttpControllerIntegrationTest {
     class TestConfig {
 
         @Bean
-        fun taxContextProvider(): TaxContextProvider =
-            object : TaxContextProvider {
-                override fun getTaxContext(
-                    employerId: EmployerId,
-                    asOfDate: LocalDate,
-                ): TaxContext {
-                    // Return an empty context for testing serialization & wiring.
-                    return TaxContext()
+        fun taxCatalog(): TaxCatalog =
+            object : TaxCatalog {
+                override fun loadRules(query: TaxQuery): List<TaxRule> {
+                    // Return a single synthetic federal rule to exercise
+                    // serialization and wiring without hitting a database.
+                    return listOf(
+                        TaxRule.FlatRateTax(
+                            id = "FED_TEST",
+                            jurisdiction = TaxJurisdiction(
+                                type = TaxJurisdictionType.FEDERAL,
+                                code = "US",
+                            ),
+                            basis = TaxBasis.Gross,
+                            rate = com.example.uspayroll.payroll.model.Percent(0.1),
+                        ),
+                    )
                 }
             }
     }

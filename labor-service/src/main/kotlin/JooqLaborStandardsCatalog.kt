@@ -30,9 +30,20 @@ class JooqLaborStandardsCatalog(
             DSL.field("effective_to", LocalDate::class.java).ge(asOf),
         )
 
-        // If locality codes are provided, prefer matching locality rows by
-        // restricting to those codes and ordering locals before statewide.
+        // If locality codes are provided, restrict to rows that are either
+        // generic (NULL locality_code) or whose locality_code matches one of
+        // the requested codes. When none are provided, restrict to statewide
+        // rows only so that generic baselines are used.
         val localityCodes = query.localityCodes.map { it.uppercase() }
+        if (localityCodes.isEmpty()) {
+            conditions += DSL.field("locality_code").isNull
+        } else {
+            conditions += DSL.or(
+                DSL.field("locality_code").isNull,
+                DSL.field("locality_code").`in`(localityCodes),
+            )
+        }
+
         val whereCondition = conditions
             .fold<Condition, Condition?>(null) { acc, c -> acc?.and(c) ?: c }
             ?: DSL.noCondition()

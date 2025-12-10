@@ -1,0 +1,12 @@
+spring:
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+# Labor service database configuration.
+# Override these values per-environment when running against a real Postgres instance.
+labor:
+  db:
+    url: jdbc:postgresql://localhost:5432/us_payroll_labor
+    username: labor_service
+    password: changeme

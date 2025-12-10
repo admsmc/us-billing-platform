@@ -1,0 +1,13 @@
+spring:
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+# Tax service database configuration.
+# Override these values per-environment (e.g., via environment variables or
+# externalized configuration) when running against a real Postgres instance.
+tax:
+  db:
+    url: jdbc:postgresql://localhost:5432/us_payroll_tax
+    username: tax_service
+    password: changeme

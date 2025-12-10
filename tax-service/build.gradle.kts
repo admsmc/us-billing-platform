@@ -25,6 +25,9 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
 
+    // Flyway for managing Postgres schema migrations (including tax_rule).
+    implementation("org.flywaydb:flyway-core")
+
     // jOOQ for SQL-centric, type-safe access to the tax_rule schema.
     implementation("org.jooq:jooq:3.19.11")
     // Postgres driver for runtime connectivity; actual DataSource/DSLContext
@@ -44,6 +47,10 @@ dependencies {
     testImplementation(kotlin("test"))
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("com.h2database:h2:2.3.232")
+
+    // Testcontainers for verifying Boot + Flyway startup against a real Postgres instance.
+    testImplementation("org.testcontainers:junit-jupiter")
+    testImplementation("org.testcontainers:postgresql")
 }
 
 val sourceSets = extensions.getByType<SourceSetContainer>()

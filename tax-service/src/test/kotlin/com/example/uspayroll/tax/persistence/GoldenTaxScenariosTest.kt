@@ -449,6 +449,98 @@ class GoldenTaxScenariosTest {
     }
 
     @Test
+    fun `additional state income golden scenario AL vs AZ`() {
+        val dsl = createDslContext("taxdb-golden-state-al-az")
+
+        // Import both federal and state rules; we'll focus on state lines.
+        importConfig(dsl, "tax-config/example-federal-2025.json")
+        importConfig(dsl, "tax-config/state-income-2025.json")
+
+        val repository: TaxRuleRepository = H2TaxRuleRepository(dsl)
+        val dbCatalog = DbTaxCatalog(repository)
+        val cachingCatalog = CachingTaxCatalog(dbCatalog)
+        val provider = CatalogBackedTaxContextProvider(cachingCatalog)
+
+        val employerId = EmployerId("EMP-STATE-GOLDEN-AL-AZ")
+        val asOfDate = LocalDate.of(2025, 1, 15)
+
+        val baseTaxContext = provider.getTaxContext(employerId, asOfDate)
+
+        fun taxContextFor(stateCode: String): TaxContext = baseTaxContext.copy(
+            state = baseTaxContext.state.filter {
+                it.jurisdiction.type == TaxJurisdictionType.STATE && it.jurisdiction.code == stateCode
+            },
+        )
+
+        // Use a simple state taxable base that lies in the first bracket for AL
+        // and is taxed at the flat rate for AZ.
+        val stateTaxableCents = 40_000L // $400.00
+
+        fun computeStateTaxFor(stateCode: String): Long {
+            val stateTaxContext = taxContextFor(stateCode)
+
+            val bases: Map<TaxBasis, Money> = mapOf(
+                TaxBasis.StateTaxable to Money(stateTaxableCents),
+            )
+            val basisComponents: Map<TaxBasis, Map<String, Money>> = mapOf(
+                TaxBasis.StateTaxable to mapOf("stateTaxable" to Money(stateTaxableCents)),
+            )
+
+            val period = PayPeriod(
+                id = "STATE-GOLDEN-$stateCode-AL-AZ",
+                employerId = employerId,
+                dateRange = LocalDateRange(asOfDate, asOfDate),
+                checkDate = asOfDate,
+                frequency = PayFrequency.ANNUAL,
+            )
+
+            val snapshot = EmployeeSnapshot(
+                employerId = employerId,
+                employeeId = EmployeeId("EE-$stateCode-AL-AZ"),
+                homeState = stateCode,
+                workState = stateCode,
+                filingStatus = FilingStatus.SINGLE,
+                baseCompensation = BaseCompensation.Salaried(
+                    annualSalary = Money(stateTaxableCents),
+                    frequency = PayFrequency.ANNUAL,
+                ),
+            )
+
+            val input = PaycheckInput(
+                paycheckId = PaycheckId("CHK-$stateCode-AL-AZ"),
+                payRunId = PayRunId("RUN-STATE-GOLDEN-AL-AZ"),
+                employerId = employerId,
+                employeeId = snapshot.employeeId,
+                period = period,
+                employeeSnapshot = snapshot,
+                timeSlice = TimeSlice(
+                    period = period,
+                    regularHours = 0.0,
+                    overtimeHours = 0.0,
+                ),
+                taxContext = stateTaxContext,
+                priorYtd = YtdSnapshot(year = asOfDate.year),
+            )
+
+            val result = TaxesCalculator.computeTaxes(input, bases, basisComponents)
+
+            val stateLine = result.employeeTaxes
+                .firstOrNull { it.jurisdiction.type == TaxJurisdictionType.STATE }
+
+            return stateLine?.amount?.amount ?: 0L
+        }
+
+        val alTax = computeStateTaxFor("AL")
+        val azTax = computeStateTaxFor("AZ")
+
+        // Expected:
+        // - AL: first bracket up to $500 at 2% -> 400 * 2% = 8.00 => 800 cents.
+        // - AZ: flat 2.5% -> 400 * 2.5% = 10.00 => 1,000 cents.
+        assertEquals(800L, alTax, "Expected AL state tax of $8.00 on $400 at 2%")
+        assertEquals(1_000L, azTax, "Expected AZ state tax of $10.00 on $400 at 2.5%")
+    }
+
+    @Test
     fun `NYC local tax applied only for NYC locality`() {
         val dsl = createDslContext("taxdb-golden-local-nyc")
 

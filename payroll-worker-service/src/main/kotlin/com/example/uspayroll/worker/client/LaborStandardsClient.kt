@@ -1,5 +1,7 @@
 package com.example.uspayroll.worker.client
 
+import com.example.uspayroll.labor.http.LaborStandardsContextDto
+import com.example.uspayroll.labor.http.toDomain
 import com.example.uspayroll.payroll.model.LaborStandardsContext
 import com.example.uspayroll.shared.EmployerId
 import org.springframework.boot.context.properties.ConfigurationProperties
@@ -64,6 +66,8 @@ class HttpLaborStandardsClient(
         }
 
         val url = baseQuery + localityQuery
-        return restTemplate.getForObject<LaborStandardsContext>(url)
+        val dto = restTemplate.getForObject<LaborStandardsContextDto>(url)
+            ?: return null
+        return dto.toDomain()
     }
 }

@@ -2,11 +2,12 @@ package com.example.uspayroll.worker.client
 
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.payroll.model.TaxContext
+import com.example.uspayroll.tax.http.TaxContextDto
+import com.example.uspayroll.tax.http.toDomain
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.client.getForObject
 import java.time.LocalDate
@@ -49,7 +50,10 @@ class HttpTaxClient(
         val localityParam = if (localityCodes.isEmpty()) "" else localityCodes.joinToString("&") { "locality=${it}" }
         val sep = if (localityParam.isEmpty()) "" else "&"
         val url = "${props.baseUrl}/employers/${employerId.value}/tax-context?asOf=$asOfDate$sep$localityParam"
-        return restTemplate.getForObject<TaxContext>(url)
+
+        val dto = restTemplate.getForObject<TaxContextDto>(url)
             ?: error("Tax service returned null TaxContext for employer=${employerId.value} asOf=$asOfDate")
+
+        return dto.toDomain()
     }
 }

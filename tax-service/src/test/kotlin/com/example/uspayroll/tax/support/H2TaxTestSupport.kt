@@ -36,35 +36,21 @@ object H2TaxTestSupport {
             password = ""
         }
 
-        val dsl = DSL.using(ds, SQLDialect.H2)
+        // Apply the same Flyway migrations used in production (against Postgres)
+        // to this in-memory H2 database running in PostgreSQL compatibility
+        // mode. This ensures our H2-backed tests exercise the real DDL.
+        val flyway = org.flywaydb.core.Flyway.configure()
+            .dataSource(ds)
+            .locations("classpath:db/migration")
+            .cleanDisabled(false)
+            .load()
 
-        // Minimal tax_rule table matching the columns used by TaxRuleConfigImporter.
-        dsl.execute(
-            """
-            DROP TABLE IF EXISTS tax_rule;
-            CREATE TABLE tax_rule (
-                id                          VARCHAR(100) NOT NULL,
-                employer_id                 VARCHAR(64)      NULL,
-                jurisdiction_type           VARCHAR(20)      NOT NULL,
-                jurisdiction_code           VARCHAR(32)      NOT NULL,
-                basis                       VARCHAR(32)      NOT NULL,
-                rule_type                   VARCHAR(16)      NOT NULL,
-                rate                        DOUBLE PRECISION     NULL,
-                annual_wage_cap_cents       BIGINT               NULL,
-                brackets_json               CLOB                 NULL,
-                standard_deduction_cents    BIGINT               NULL,
-                additional_withholding_cents BIGINT              NULL,
-                effective_from              DATE            NOT NULL,
-                effective_to                DATE            NOT NULL,
-                filing_status               VARCHAR(32)     NULL,
-                resident_state_filter       VARCHAR(2)      NULL,
-                work_state_filter           VARCHAR(2)      NULL,
-                locality_filter             VARCHAR(32)     NULL
-            );
-            """.trimIndent()
-        )
+        // Clean is safe here because each test gets an isolated in-memory
+        // database and we want a fresh schema for every invocation.
+        flyway.clean()
+        flyway.migrate()
 
-        return dsl
+        return DSL.using(ds, SQLDialect.H2)
     }
 
     /** Import a TaxRuleFile JSON resource (on the classpath) into the given H2 DSL context. */

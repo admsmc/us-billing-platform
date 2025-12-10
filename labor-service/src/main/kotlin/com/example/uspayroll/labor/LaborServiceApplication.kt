@@ -1,7 +1,8 @@
 package com.example.uspayroll.labor
 
 import com.example.uspayroll.labor.impl.LaborStandardsContextProvider
-import com.example.uspayroll.payroll.model.LaborStandardsContext
+import com.example.uspayroll.labor.http.LaborStandardsContextDto
+import com.example.uspayroll.labor.http.toDto
 import com.example.uspayroll.shared.EmployerId
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
@@ -33,13 +34,15 @@ class LaborHttpController(
         @RequestParam("state") workState: String,
         @RequestParam("homeState", required = false) homeState: String?,
         @RequestParam("locality", required = false) localityCodes: List<String>?,
-    ): LaborStandardsContext? {
-        return laborStandardsContextProvider.getLaborStandards(
+    ): LaborStandardsContextDto? {
+        val context = laborStandardsContextProvider.getLaborStandards(
             employerId = EmployerId(employerId),
             asOfDate = asOf,
             workState = workState,
             homeState = homeState,
             localityCodes = localityCodes ?: emptyList(),
         )
+
+        return context?.toDto()
     }
 }

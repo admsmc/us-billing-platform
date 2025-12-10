@@ -46,7 +46,7 @@ class LaborHttpLocalityIntegrationTest {
             param("state", "NY")
         }.andExpect {
             status { isOk() }
-            jsonPath("$.federalMinimumWage.amount") { value(1_550) }
+            jsonPath("$.federalMinimumWageCents") { value(1_550) }
         }
 
         // 2) NYC locality should use local 16_50 -> 1650 cents.
@@ -56,7 +56,7 @@ class LaborHttpLocalityIntegrationTest {
             param("locality", "NYC")
         }.andExpect {
             status { isOk() }
-            jsonPath("$.federalMinimumWage.amount") { value(1_650) }
+            jsonPath("$.federalMinimumWageCents") { value(1_650) }
         }
     }
 
