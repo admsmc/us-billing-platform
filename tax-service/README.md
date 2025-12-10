@@ -57,6 +57,10 @@ Each row describes one tax bracket:
 
 Brackets are grouped by `(state_code, tax_year, filing_status)` and attached to the corresponding rule in the rules CSV.
 
+#### Arkansas two-table nuance
+
+Arkansas publishes two individual income tax tables: a standard progressive table with multiple brackets and an alternative table for higher incomes. The current model encodes a single progressive schedule for `AR` in `state-income-tax-2025-brackets.csv`, preserving the true marginal rate structure (including the 0%, 2%, 3%, 3.4%, and 3.9% bands) while approximating the high-income alternative table. Do not "simplify" Arkansas back to a flat `FLAT` rule; any refinements should instead extend the bracket model (or the schema) to better capture the statutory tables.
+
 ### 2. CSV → JSON (TaxRuleFile)
 
 A small tool converts the CSVs into a JSON `TaxRuleFile` that matches the `TaxRuleConfig` schema used by the importer:
@@ -111,3 +115,55 @@ The `state-income-tax-2025-rules.csv` file already contains **skeleton rows for 
 4. Use `TaxRuleConfigImporter` to push the resulting rules into the `tax_rule` table.
 
 This keeps state income tax policy data maintainable for non-engineering collaborators while preserving a clear, reproducible pipeline into the engine’s tax catalog.
+
+## Employer-specific tax overlays
+
+Beyond statutory rules, the `tax_rule` table supports employer-specific overlays via the `employer_id` column. The config model already exposes this through the optional `employerId` field on `TaxRuleConfig`.
+
+### Defining an overlay
+
+To define an employer-specific rule (for example, a 1% CA state surcharge for a single employer), add a JSON config under `src/main/resources/tax-config`:
+
+```json
+{
+  "rules": [
+    {
+      "id": "US_CA_EMP_ACME_SURCHARGE_2025",
+      "jurisdictionType": "STATE",
+      "jurisdictionCode": "CA",
+      "basis": "StateTaxable",
+      "ruleType": "FLAT",
+      "rate": 0.01,
+      "annualWageCapCents": null,
+      "brackets": null,
+      "standardDeductionCents": null,
+      "additionalWithholdingCents": null,
+      "employerId": "EMP-ACME",
+      "effectiveFrom": "2025-01-01",
+      "effectiveTo": "9999-12-31",
+      "filingStatus": "SINGLE",
+      "residentStateFilter": "CA",
+      "workStateFilter": "CA",
+      "localityFilter": null
+    }
+  ]
+}
+```
+
+Key points:
+- `employerId` binds the rule to a specific employer; `null` means “generic statutory” and applies to all employers.
+- Jurisdiction (`jurisdictionType`, `jurisdictionCode`) and `basis` should match how the underlying statutory rule is modeled (for example, `STATE`/`CA` on `StateTaxable`).
+- Effective dating works the same as for statutory rules.
+
+### Importing overlays
+
+Overlays are imported with the same pipeline as other tax rules. For example, using H2 or Postgres via `TaxRuleConfigImporter`:
+
+1. Place your overlay JSON under `src/main/resources/tax-config`.
+2. Point `TaxRuleConfigImporter` at the directory (including both `state-income-YYYY.json` and any overlay files).
+3. Run the importer; it will append rows into `tax_rule`, setting `employer_id` based on `employerId` in the config.
+
+At runtime, `JooqTaxRuleRepository` and the H2 test repository both apply the selection rule:
+- Rules where `employer_id IS NULL` (generic) **or** `employer_id = query.employerId` are eligible.
+
+This means an employer with overlays sees both statutory and overlay rules, while an employer without overlays sees only statutory rules.

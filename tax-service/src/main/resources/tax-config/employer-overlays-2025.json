@@ -1,0 +1,42 @@
+{
+  "rules": [
+    {
+      "id": "US_CA_EMP_ACME_SURCHARGE_2025",
+      "jurisdictionType": "STATE",
+      "jurisdictionCode": "CA",
+      "basis": "StateTaxable",
+      "ruleType": "FLAT",
+      "rate": 0.01,
+      "annualWageCapCents": null,
+      "brackets": null,
+      "standardDeductionCents": null,
+      "additionalWithholdingCents": null,
+      "employerId": "EMP-ACME",
+      "effectiveFrom": "2025-01-01",
+      "effectiveTo": "9999-12-31",
+      "filingStatus": "SINGLE",
+      "residentStateFilter": "CA",
+      "workStateFilter": "CA",
+      "localityFilter": null
+    },
+    {
+      "id": "US_CA_EMP_BASELINE_SURCHARGE_2025",
+      "jurisdictionType": "STATE",
+      "jurisdictionCode": "CA",
+      "basis": "StateTaxable",
+      "ruleType": "FLAT",
+      "rate": 0.0,
+      "annualWageCapCents": null,
+      "brackets": null,
+      "standardDeductionCents": null,
+      "additionalWithholdingCents": null,
+      "employerId": "EMP-BASELINE",
+      "effectiveFrom": "2025-01-01",
+      "effectiveTo": "9999-12-31",
+      "filingStatus": "SINGLE",
+      "residentStateFilter": "CA",
+      "workStateFilter": "CA",
+      "localityFilter": null
+    }
+  ]
+}
