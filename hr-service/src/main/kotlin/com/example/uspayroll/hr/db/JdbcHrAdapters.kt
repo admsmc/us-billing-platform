@@ -81,6 +81,7 @@ class JdbcEmployeeSnapshotProvider(
             flsaEnterpriseCovered = row.flsaEnterpriseCovered,
             flsaExemptStatus = flsaExemptStatus,
             isTippedEmployee = row.isTippedEmployee,
+            workCity = row.workCity,
         )
     }
 
@@ -89,6 +90,7 @@ class JdbcEmployeeSnapshotProvider(
         val employeeId: String,
         val homeState: String,
         val workState: String,
+        val workCity: String?,
         val filingStatus: String,
         val employmentType: String,
         val hireDate: LocalDate?,
@@ -117,6 +119,7 @@ class JdbcEmployeeSnapshotProvider(
             employeeId = rs.getString("employee_id"),
             homeState = rs.getString("home_state"),
             workState = rs.getString("work_state"),
+            workCity = rs.getString("work_city"),
             filingStatus = rs.getString("filing_status"),
             employmentType = rs.getString("employment_type"),
             hireDate = rs.getDate("hire_date")?.toLocalDate(),

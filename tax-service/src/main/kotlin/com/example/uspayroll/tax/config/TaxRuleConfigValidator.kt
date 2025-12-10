@@ -30,6 +30,35 @@ object TaxRuleConfigValidator {
 
     private val validRuleTypes = setOf("FLAT", "BRACKETED", "WAGE_BRACKET")
 
+    /**
+     * Registry of known locality codes used by tax-service. This is intentionally
+     * small for now (NYC and a few Michigan cities) but can be expanded as
+     * additional locals are modeled.
+     */
+    private val validLocalities = setOf(
+        "NYC",
+        "DETROIT",
+        "GRAND_RAPIDS",
+        "LANSING",
+        "PHILADELPHIA",
+        "ST_LOUIS",
+        "KANSAS_CITY",
+        "COLUMBUS",
+        "CLEVELAND",
+        "CINCINNATI",
+        "AKRON",
+        "DAYTON",
+        "TOLEDO",
+        "YOUNGSTOWN",
+        "BALTIMORE_CITY",
+        "BIRMINGHAM",
+        "WILMINGTON",
+        "MARION_COUNTY",
+        "LOUISVILLE",
+        "PORTLAND_METRO_SHS",
+        "MULTNOMAH_PFA",
+    )
+
     fun validateFile(file: TaxRuleFile): ValidationResult =
         validateRules(file.rules)
 
@@ -70,6 +99,16 @@ object TaxRuleConfigValidator {
                 errors += ValidationError(
                     ruleId = rule.id,
                     message = "effectiveFrom=${rule.effectiveFrom} must be before effectiveTo=${rule.effectiveTo}",
+                )
+            }
+
+            // Locality filter, when provided, must be in the registry of known
+            // localities. This helps catch typos like "DETROI" early.
+            val locality = rule.localityFilter
+            if (!locality.isNullOrBlank() && locality !in validLocalities) {
+                errors += ValidationError(
+                    ruleId = rule.id,
+                    message = "Unknown localityFilter '$locality' (expected one of $validLocalities)",
                 )
             }
 

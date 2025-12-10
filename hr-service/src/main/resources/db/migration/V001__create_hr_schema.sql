@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS employee (
 
     home_state                   CHAR(2)      NOT NULL,
     work_state                   CHAR(2)      NOT NULL,
+    work_city                    VARCHAR(100)     NULL,
 
     filing_status                VARCHAR(32)  NOT NULL,
     employment_type              VARCHAR(32)  NOT NULL DEFAULT 'REGULAR',

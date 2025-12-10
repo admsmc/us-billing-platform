@@ -1,0 +1,61 @@
+{
+  "rules": [
+    {
+      "id": "US_MI_DETROIT_LOCAL_2025",
+      "jurisdictionType": "LOCAL",
+      "jurisdictionCode": "MI_DETROIT",
+      "basis": "StateTaxable",
+      "ruleType": "FLAT",
+      "rate": 0.025,
+      "annualWageCapCents": null,
+      "brackets": null,
+      "standardDeductionCents": null,
+      "additionalWithholdingCents": null,
+      "employerId": null,
+      "effectiveFrom": "2025-01-01",
+      "effectiveTo": "9999-12-31",
+      "filingStatus": null,
+      "residentStateFilter": "MI",
+      "workStateFilter": null,
+      "localityFilter": "DETROIT"
+    },
+    {
+      "id": "US_MI_GRAND_RAPIDS_LOCAL_2025",
+      "jurisdictionType": "LOCAL",
+      "jurisdictionCode": "MI_GRAND_RAPIDS",
+      "basis": "StateTaxable",
+      "ruleType": "FLAT",
+      "rate": 0.02,
+      "annualWageCapCents": null,
+      "brackets": null,
+      "standardDeductionCents": null,
+      "additionalWithholdingCents": null,
+      "employerId": null,
+      "effectiveFrom": "2025-01-01",
+      "effectiveTo": "9999-12-31",
+      "filingStatus": null,
+      "residentStateFilter": "MI",
+      "workStateFilter": null,
+      "localityFilter": "GRAND_RAPIDS"
+    },
+    {
+      "id": "US_MI_LANSING_LOCAL_2025",
+      "jurisdictionType": "LOCAL",
+      "jurisdictionCode": "MI_LANSING",
+      "basis": "StateTaxable",
+      "ruleType": "FLAT",
+      "rate": 0.018,
+      "annualWageCapCents": null,
+      "brackets": null,
+      "standardDeductionCents": null,
+      "additionalWithholdingCents": null,
+      "employerId": null,
+      "effectiveFrom": "2025-01-01",
+      "effectiveTo": "9999-12-31",
+      "filingStatus": null,
+      "residentStateFilter": "MI",
+      "workStateFilter": null,
+      "localityFilter": "LANSING"
+    }
+  ]
+}

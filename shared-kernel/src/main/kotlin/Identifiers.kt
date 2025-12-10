@@ -12,6 +12,9 @@ value class PayRunId(val value: String)
 @JvmInline
 value class PaycheckId(val value: String)
 
+@JvmInline
+value class LocalityCode(val value: String)
+
 enum class CurrencyCode { USD }
 
 data class Money(

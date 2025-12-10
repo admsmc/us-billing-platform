@@ -116,4 +116,10 @@ data class EmployeeSnapshot(
      * tips per month). Derivation of this flag is left to HR/config.
      */
     val isTippedEmployee: Boolean = false,
+    /**
+     * Optional work city label for locality resolution (e.g., "Detroit",
+     * "Grand Rapids", "Lansing"). The mapping from addresses to locality
+     * codes is handled by worker-service using [LocalityCode].
+     */
+    val workCity: String? = null,
 )

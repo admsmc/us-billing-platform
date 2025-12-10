@@ -48,7 +48,7 @@ class JdbcHrAdaptersTest {
         jdbcTemplate.update(
             """
             INSERT INTO employee (
-              employer_id, employee_id, home_state, work_state,
+              employer_id, employee_id, home_state, work_state, work_city,
               filing_status, employment_type,
               hire_date, termination_date,
               dependents,
@@ -57,7 +57,7 @@ class JdbcHrAdaptersTest {
               w4_step2_multiple_jobs,
               additional_withholding_cents,
               fica_exempt, flsa_enterprise_covered, flsa_exempt_status, is_tipped_employee
-            ) VALUES (?, ?, 'CA', 'CA', 'SINGLE', 'REGULAR', ?, NULL, 2,
+            ) VALUES (?, ?, 'CA', 'CA', 'San Francisco', 'SINGLE', 'REGULAR', ?, NULL, 2,
                       FALSE, FALSE,
                       100000, 200000, 300000,
                       FALSE,

@@ -37,6 +37,7 @@ class PayrollRunService(
     private val deductionConfigRepository: com.example.uspayroll.payroll.model.config.DeductionConfigRepository,
     private val federalWithholdingCalculator: FederalWithholdingCalculator,
     private val laborStandardsContextProvider: LaborStandardsContextProvider,
+    private val localityResolver: LocalityResolver,
     private val hrClient: com.example.uspayroll.worker.client.HrClient? = null,
     private val taxClient: com.example.uspayroll.worker.client.TaxClient? = null,
     private val laborClient: com.example.uspayroll.worker.client.LaborStandardsClient? = null,
@@ -46,7 +47,10 @@ class PayrollRunService(
         val employerId = EmployerId("emp-1")
         val checkDate = LocalDate.of(2025, 1, 15)
 
-        // Load tax context ONCE for this employer/date.
+        // Load tax context ONCE for this employer/date. For the demo path we
+        // currently do not vary locality by employee or city; a future
+        // iteration can plug LocalityResolver in here once work cities are
+        // modeled for the demo employees.
         val taxContext = taxClient?.getTaxContext(employerId, checkDate)
             ?: taxContextProvider.getTaxContext(employerId, checkDate)
         val laborStandardsByEmployee = mutableMapOf<EmployeeId, LaborStandardsContext?>()
@@ -141,8 +145,10 @@ class PayrollRunService(
         val payPeriod = client.getPayPeriod(employerId, payPeriodId)
             ?: error("No pay period '$payPeriodId' for employer ${employerId.value}")
 
-        val taxContext = taxClient?.getTaxContext(employerId, payPeriod.checkDate)
-            ?: taxContextProvider.getTaxContext(employerId, payPeriod.checkDate)
+        // For HR-backed flows, derive locality codes from the employee's
+        // work state and city when fetching the TaxContext. For now, we
+        // resolve per employee below and do not reuse a single TaxContext
+        // across employees when localities may differ.
 
         return employeeIds.map { eid ->
             val snapshot = client.getEmployeeSnapshot(
@@ -150,6 +156,22 @@ class PayrollRunService(
                 employeeId = eid,
                 asOfDate = payPeriod.checkDate,
             ) ?: error("No employee snapshot for ${eid.value} as of ${payPeriod.checkDate}")
+
+            val localityCodes = localityResolver.resolve(
+                workState = snapshot.workState,
+                workCity = snapshot.workCity,
+            )
+
+            val taxContext = taxClient?.getTaxContext(
+                employerId = employerId,
+                asOfDate = payPeriod.checkDate,
+                localityCodes = localityCodes.map { it.value },
+            ) ?: taxContextProvider.getTaxContext(
+                employerId = employerId,
+                asOfDate = payPeriod.checkDate,
+                // In-process provider will need an overload in a later step if
+                // we want it to honor locality codes directly.
+            )
 
             val laborStandards = laborClient?.getLaborStandards(
                 employerId = employerId,

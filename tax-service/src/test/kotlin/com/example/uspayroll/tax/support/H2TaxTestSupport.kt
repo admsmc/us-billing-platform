@@ -124,9 +124,13 @@ object H2TaxTestSupport {
                 )
             }
 
-            // Localities: when present, rules either have no locality_filter or
-            // a locality_filter that matches one of the requested jurisdictions.
-            if (query.localJurisdictions.isNotEmpty()) {
+            // Localities:
+            // - When none are provided, restrict to rules with no locality_filter.
+            // - When provided, allow rules with NULL locality_filter or a
+            //   locality_filter that matches one of the requested jurisdictions.
+            if (query.localJurisdictions.isEmpty()) {
+                conditions += org.jooq.impl.DSL.field("locality_filter").isNull
+            } else {
                 conditions += org.jooq.impl.DSL.or(
                     org.jooq.impl.DSL.field("locality_filter").isNull,
                     org.jooq.impl.DSL.field("locality_filter").`in`(query.localJurisdictions),

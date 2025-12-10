@@ -60,9 +60,14 @@ class JooqTaxRuleRepository(
             )
         }
 
-        // Localities: if none are provided, rules with a non-null locality_filter
-        // may still be selected depending on how you want to scope locals.
-        if (query.localJurisdictions.isNotEmpty()) {
+        // Localities:
+        // - When none are provided, restrict to rules with no locality_filter
+        //   (statutory/generic rules only).
+        // - When provided, allow rules that are either generic (NULL locality)
+        //   or match one of the requested local jurisdictions.
+        if (query.localJurisdictions.isEmpty()) {
+            conditions += DSL.field("locality_filter").isNull
+        } else {
             conditions += DSL.or(
                 DSL.field("locality_filter").isNull,
                 DSL.field("locality_filter").`in`(query.localJurisdictions),

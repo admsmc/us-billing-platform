@@ -18,6 +18,7 @@ interface TaxClient {
     fun getTaxContext(
         employerId: EmployerId,
         asOfDate: LocalDate,
+        localityCodes: List<String> = emptyList(),
     ): TaxContext
 }
 
@@ -43,8 +44,11 @@ class HttpTaxClient(
     override fun getTaxContext(
         employerId: EmployerId,
         asOfDate: LocalDate,
+        localityCodes: List<String>,
     ): TaxContext {
-        val url = "${props.baseUrl}/employers/${employerId.value}/tax-context?asOf=$asOfDate"
+        val localityParam = if (localityCodes.isEmpty()) "" else localityCodes.joinToString("&") { "locality=${it}" }
+        val sep = if (localityParam.isEmpty()) "" else "&"
+        val url = "${props.baseUrl}/employers/${employerId.value}/tax-context?asOf=$asOfDate$sep$localityParam"
         return restTemplate.getForObject<TaxContext>(url)
             ?: error("Tax service returned null TaxContext for employer=${employerId.value} asOf=$asOfDate")
     }
