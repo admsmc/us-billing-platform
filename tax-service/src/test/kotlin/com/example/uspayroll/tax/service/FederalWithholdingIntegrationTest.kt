@@ -36,6 +36,14 @@ class FederalWithholdingIntegrationTest {
         )
     }
 
+    private fun importPub15TWageBracketConfig(dsl: DSLContext) {
+        H2TaxTestSupport.importConfigFromResource(
+            dsl,
+            "tax-config/federal-2025-pub15t-wage-bracket-biweekly.json",
+            javaClass.classLoader,
+        )
+    }
+
     private fun createProvider(dsl: DSLContext): CatalogBackedTaxContextProvider {
         val repository: TaxRuleRepository = H2TaxRuleRepository(dsl)
         val dbCatalog = DbTaxCatalog(repository)
@@ -218,5 +226,273 @@ class FederalWithholdingIntegrationTest {
             "W-4 other income should increase DB-backed federal withholding relative to baseline")
         assertTrue(withDeductions.amount < baseline.amount,
             "W-4 deductions should decrease DB-backed federal withholding relative to baseline")
+    }
+
+    @Test
+    fun `nonresident alien has higher withholding than resident for same biweekly wages`() {
+        val dsl = createDslContext("taxdb-fed-w4-int-nra")
+        importFederalConfig(dsl)
+
+        val provider = createProvider(dsl)
+        val employerId = EmployerId("EMP-FED-W4-NRA")
+        val asOfDate = LocalDate.of(2025, 6, 30)
+
+        val taxContext = provider.getTaxContext(employerId, asOfDate)
+
+        val period = PayPeriod(
+            id = "FED-W4-NRA-BIWEEKLY",
+            employerId = employerId,
+            dateRange = LocalDateRange(asOfDate.minusDays(13), asOfDate),
+            checkDate = asOfDate,
+            frequency = PayFrequency.BIWEEKLY,
+        )
+
+        fun paycheck(isNra: Boolean): FederalWithholdingInput {
+            val wagesCents = 52_000_00L // $52,000 annual -> $2,000 biweekly
+
+            val snapshot = EmployeeSnapshot(
+                employerId = employerId,
+                employeeId = EmployeeId("EE-NRA-$isNra"),
+                homeState = "CA",
+                workState = "CA",
+                filingStatus = FilingStatus.SINGLE,
+                baseCompensation = BaseCompensation.Salaried(
+                    annualSalary = Money(wagesCents),
+                    frequency = period.frequency,
+                ),
+                isNonresidentAlien = isNra,
+            )
+
+            val input = PaycheckInput(
+                paycheckId = PaycheckId("CHK-NRA-$isNra"),
+                payRunId = PayRunId("RUN-FED-W4-NRA"),
+                employerId = employerId,
+                employeeId = snapshot.employeeId,
+                period = period,
+                employeeSnapshot = snapshot,
+                timeSlice = TimeSlice(
+                    period = period,
+                    regularHours = 0.0,
+                    overtimeHours = 0.0,
+                ),
+                taxContext = taxContext,
+                priorYtd = YtdSnapshot(year = asOfDate.year),
+            )
+
+            return FederalWithholdingInput(input)
+        }
+
+        val calc = DefaultFederalWithholdingCalculator()
+
+        val resident = calc.computeWithholding(paycheck(isNra = false))
+        val nra = calc.computeWithholding(paycheck(isNra = true))
+
+        assertTrue(nra.amount > resident.amount,
+            "Expected nonresident alien withholding to exceed resident withholding for the same biweekly wages using DB-backed FIT rules")
+    }
+
+    @Test
+    fun `nonresident alien has higher withholding than resident for same weekly wages`() {
+        val dsl = createDslContext("taxdb-fed-w4-int-nra-weekly")
+        importFederalConfig(dsl)
+
+        val provider = createProvider(dsl)
+        val employerId = EmployerId("EMP-FED-W4-NRA-WEEKLY")
+        val asOfDate = LocalDate.of(2025, 6, 30)
+
+        val taxContext = provider.getTaxContext(employerId, asOfDate)
+
+        val period = PayPeriod(
+            id = "FED-W4-NRA-WEEKLY",
+            employerId = employerId,
+            dateRange = LocalDateRange(asOfDate.minusDays(6), asOfDate),
+            checkDate = asOfDate,
+            frequency = PayFrequency.WEEKLY,
+        )
+
+        fun paycheck(isNra: Boolean): FederalWithholdingInput {
+            val wagesCents = 52_000_00L // $52,000 annual -> ~$1,000 weekly
+
+            val snapshot = EmployeeSnapshot(
+                employerId = employerId,
+                employeeId = EmployeeId("EE-NRA-WEEKLY-$isNra"),
+                homeState = "CA",
+                workState = "CA",
+                filingStatus = FilingStatus.SINGLE,
+                baseCompensation = BaseCompensation.Salaried(
+                    annualSalary = Money(wagesCents),
+                    frequency = period.frequency,
+                ),
+                isNonresidentAlien = isNra,
+            )
+
+            val input = PaycheckInput(
+                paycheckId = PaycheckId("CHK-NRA-WEEKLY-$isNra"),
+                payRunId = PayRunId("RUN-FED-W4-NRA-WEEKLY"),
+                employerId = employerId,
+                employeeId = snapshot.employeeId,
+                period = period,
+                employeeSnapshot = snapshot,
+                timeSlice = TimeSlice(
+                    period = period,
+                    regularHours = 0.0,
+                    overtimeHours = 0.0,
+                ),
+                taxContext = taxContext,
+                priorYtd = YtdSnapshot(year = asOfDate.year),
+            )
+
+            return FederalWithholdingInput(input)
+        }
+
+        val calc = DefaultFederalWithholdingCalculator()
+
+        val resident = calc.computeWithholding(paycheck(isNra = false))
+        val nra = calc.computeWithholding(paycheck(isNra = true))
+
+        assertTrue(nra.amount > resident.amount,
+            "Expected nonresident alien withholding to exceed resident withholding for the same weekly wages using DB-backed FIT rules")
+    }
+
+    @Test
+    fun `Step 2 multiple jobs biweekly wage-bracket yields higher FIT than standard`() {
+        val dsl = H2TaxTestSupport.createDslContext("taxdb-fed-w4-step2-wb")
+        H2TaxTestSupport.importConfigFromResource(
+            dsl,
+            "tax-config/federal-2025-pub15t-wage-bracket-biweekly.json",
+            javaClass.classLoader,
+        )
+
+        val provider = createProvider(dsl)
+        val employerId = EmployerId("EMP-FED-W4-STEP2-WB")
+        val asOfDate = LocalDate.of(2025, 6, 30)
+
+        val taxContext = provider.getTaxContext(employerId, asOfDate)
+
+        val period = PayPeriod(
+            id = "FED-W4-STEP2-WB-BI",
+            employerId = employerId,
+            dateRange = LocalDateRange(asOfDate.minusDays(13), asOfDate),
+            checkDate = asOfDate,
+            frequency = PayFrequency.BIWEEKLY,
+        )
+
+        fun paycheck(step2: Boolean): FederalWithholdingInput {
+            val wagesCents = 1_000_00L // $1,000 biweekly -> in first or second bracket
+
+            val snapshot = EmployeeSnapshot(
+                employerId = employerId,
+                employeeId = EmployeeId("EE-STEP2-WB-$step2"),
+                homeState = "CA",
+                workState = "CA",
+                filingStatus = FilingStatus.SINGLE,
+                baseCompensation = BaseCompensation.Salaried(
+                    annualSalary = Money(wagesCents * 26),
+                    frequency = period.frequency,
+                ),
+                w4Step2MultipleJobs = step2,
+            )
+
+            val input = PaycheckInput(
+                paycheckId = PaycheckId("CHK-STEP2-WB-$step2"),
+                payRunId = PayRunId("RUN-FED-W4-STEP2-WB"),
+                employerId = employerId,
+                employeeId = snapshot.employeeId,
+                period = period,
+                employeeSnapshot = snapshot,
+                timeSlice = TimeSlice(
+                    period = period,
+                    regularHours = 0.0,
+                    overtimeHours = 0.0,
+                ),
+                taxContext = taxContext,
+                priorYtd = YtdSnapshot(year = asOfDate.year),
+            )
+
+            return FederalWithholdingInput(input)
+        }
+
+        val calc = DefaultFederalWithholdingCalculator(method = "WAGE_BRACKET")
+
+        val standard = calc.computeWithholding(paycheck(step2 = false))
+        val withStep2 = calc.computeWithholding(paycheck(step2 = true))
+
+        assertTrue(withStep2.amount > standard.amount,
+            "Expected wage-bracket Step 2 multiple-jobs withholding to exceed STANDARD withholding for the same biweekly wages")
+    }
+
+    @Test
+    fun `percentage and wage-bracket methods are approximately consistent for biweekly SINGLE`() {
+        val dsl = createDslContext("taxdb-fed-w4-cross-method-single")
+        importFederalConfig(dsl)
+        importPub15TWageBracketConfig(dsl)
+
+        val provider = createProvider(dsl)
+        val employerId = EmployerId("EMP-FED-W4-CROSS-METHOD-SINGLE")
+        val asOfDate = LocalDate.of(2025, 6, 30)
+
+        val taxContext = provider.getTaxContext(employerId, asOfDate)
+
+        val period = PayPeriod(
+            id = "FED-W4-CROSS-METHOD-BI",
+            employerId = employerId,
+            dateRange = LocalDateRange(asOfDate.minusDays(13), asOfDate),
+            checkDate = asOfDate,
+            frequency = PayFrequency.BIWEEKLY,
+        )
+
+        fun paycheck(wagesCents: Long): FederalWithholdingInput {
+            val snapshot = EmployeeSnapshot(
+                employerId = employerId,
+                employeeId = EmployeeId("EE-CROSS-METHOD-$wagesCents"),
+                homeState = "CA",
+                workState = "CA",
+                filingStatus = FilingStatus.SINGLE,
+                baseCompensation = BaseCompensation.Salaried(
+                    annualSalary = Money(wagesCents * 26),
+                    frequency = period.frequency,
+                ),
+            )
+
+            val input = PaycheckInput(
+                paycheckId = PaycheckId("CHK-CROSS-METHOD-$wagesCents"),
+                payRunId = PayRunId("RUN-FED-W4-CROSS-METHOD"),
+                employerId = employerId,
+                employeeId = snapshot.employeeId,
+                period = period,
+                employeeSnapshot = snapshot,
+                timeSlice = TimeSlice(
+                    period = period,
+                    regularHours = 0.0,
+                    overtimeHours = 0.0,
+                ),
+                taxContext = taxContext,
+                priorYtd = YtdSnapshot(year = asOfDate.year),
+            )
+
+            return FederalWithholdingInput(input)
+        }
+
+        val calcPercentage = DefaultFederalWithholdingCalculator(method = "PERCENTAGE")
+        val calcWageBracket = DefaultFederalWithholdingCalculator(method = "WAGE_BRACKET")
+
+        val wages = 2_000_00L // $2,000 biweekly (~$52,000 annual)
+        val pct = calcPercentage.computeWithholding(paycheck(wages))
+        val wb = calcWageBracket.computeWithholding(paycheck(wages))
+
+        // Compute absolute difference in cents without relying on kotlin.math.abs
+        // to avoid overload ambiguity.
+        val diffCents = if (pct.amount >= wb.amount) {
+            pct.amount - wb.amount
+        } else {
+            wb.amount - pct.amount
+        }
+        // Allow a modest tolerance per period; IRS percentage and table methods
+        // are designed to be numerically close but are not guaranteed identical.
+        val toleranceCents = 5_00L // $5.00
+        assertTrue(
+            diffCents <= toleranceCents,
+            "Expected percentage and wage-bracket methods to be within $5 per period for biweekly SINGLE (diff=$diffCents)",
+        )
     }
 }

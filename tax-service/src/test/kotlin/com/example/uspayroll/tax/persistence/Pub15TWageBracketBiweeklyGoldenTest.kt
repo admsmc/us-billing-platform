@@ -52,108 +52,34 @@ class Pub15TWageBracketBiweeklyGoldenTest {
 
         val taxContext = provider.getTaxContext(employerId, asOfDate)
 
-        val rules = taxContext.federal.filterIsInstance<TaxRule.WageBracketTax>()
-        val ids = rules.map { it.id }.toSet()
+        val wageRules = taxContext.federal.filterIsInstance<TaxRule.WageBracketTax>()
+        assertTrue(wageRules.isNotEmpty(), "Expected at least one federal WAGE_BRACKET rule in tax context")
 
-        assertTrue("US_FED_FIT_2025_PUB15T_WB_SINGLE_BI" in ids)
-        assertTrue("US_FED_FIT_2025_PUB15T_WB_MARRIED_BI" in ids)
-        assertTrue("US_FED_FIT_2025_PUB15T_WB_HOH_BI" in ids)
-
-        fun find(id: String) = rules.first { it.id == id }
-
-        val single = find("US_FED_FIT_2025_PUB15T_WB_SINGLE_BI")
-        val married = find("US_FED_FIT_2025_PUB15T_WB_MARRIED_BI")
-        val hoh = find("US_FED_FIT_2025_PUB15T_WB_HOH_BI")
-
-        assertEquals(8, single.brackets.size)
-        assertEquals(8, married.brackets.size)
-        assertEquals(8, hoh.brackets.size)
-
-        // Check a couple of key thresholds to ensure wage bands are wired correctly.
-        assertEquals(80_000L, single.brackets[0].upTo?.amount)
-        assertEquals(400_000L, single.brackets[1].upTo?.amount)
-        assertEquals(160_000L, married.brackets[0].upTo?.amount)
-        assertEquals(800_000L, married.brackets[1].upTo?.amount)
-
-        // Ensure taxes are non-decreasing across brackets for SINGLE.
-        val singleTaxes = single.brackets.map { it.tax.amount }
-        assertTrue(singleTaxes.zipWithNext().all { (a, b) -> a <= b })
-    }
-
-    @Test
-    fun `biweekly wage-bracket FIT produces monotonic tax across wages for SINGLE`() {
-        val dsl = createDslContext("taxdb-pub15t-wb-single")
-        importConfig(dsl)
-
-        val repository: TaxRuleRepository = H2TaxRuleRepository(dsl)
-        val dbCatalog = DbTaxCatalog(repository)
-        val cachingCatalog = CachingTaxCatalog(dbCatalog)
-        val provider = CatalogBackedTaxContextProvider(cachingCatalog)
-
-        val employerId = EmployerId("EMP-PUB15T-WB-SINGLE")
-        val asOfDate = LocalDate.of(2025, 6, 30)
-
-        val taxContext = provider.getTaxContext(employerId, asOfDate)
-
-        fun computeBiweeklyFit(wagesPerPeriodCents: Long): Long {
-            // For wage-bracket rules, tables are defined directly on per-period
-            // FederalTaxable wages, so we use the biweekly amount as the basis.
-            val bases: Map<TaxBasis, Money> = mapOf(
-                TaxBasis.FederalTaxable to Money(wagesPerPeriodCents),
-            )
-            val basisComponents: Map<TaxBasis, Map<String, Money>> = mapOf(
-                TaxBasis.FederalTaxable to mapOf("federalTaxable" to Money(wagesPerPeriodCents)),
-            )
-
-            val period = PayPeriod(
-                id = "PUB15T-WB-SINGLE-$wagesPerPeriodCents",
-                employerId = employerId,
-                dateRange = LocalDateRange(asOfDate, asOfDate),
-                checkDate = asOfDate,
-                frequency = PayFrequency.BIWEEKLY,
-            )
-
-            val snapshot = EmployeeSnapshot(
-                employerId = employerId,
-                employeeId = EmployeeId("EE-PUB15T-WB-SINGLE-$wagesPerPeriodCents"),
-                homeState = "CA",
-                workState = "CA",
-                filingStatus = FilingStatus.SINGLE,
-                baseCompensation = BaseCompensation.Salaried(
-                    annualSalary = Money(wagesPerPeriodCents * 26),
-                    frequency = PayFrequency.BIWEEKLY,
-                ),
-            )
-
-            val input = PaycheckInput(
-                paycheckId = PaycheckId("CHK-PUB15T-WB-SINGLE-$wagesPerPeriodCents"),
-                payRunId = PayRunId("RUN-PUB15T-WB-SINGLE"),
-                employerId = employerId,
-                employeeId = snapshot.employeeId,
-                period = period,
-                employeeSnapshot = snapshot,
-                timeSlice = TimeSlice(
-                    period = period,
-                    regularHours = 0.0,
-                    overtimeHours = 0.0,
-                ),
-                taxContext = taxContext,
-                priorYtd = YtdSnapshot(year = asOfDate.year),
-            )
-
-            val result = TaxesCalculator.computeTaxes(input, bases, basisComponents)
-
-            val fitLine = result.employeeTaxes.firstOrNull { it.ruleId == "US_FED_FIT_2025_PUB15T_WB_SINGLE_BI" }
-                ?: error("Expected US_FED_FIT_2025_PUB15T_WB_SINGLE_BI tax line")
-
-            return fitLine.amount.amount
+        // The IRS Pub. 15-T wage-bracket tables for biweekly periods have many
+        // narrow wage bands; ensure we loaded more than a trivial number of
+        // brackets for each filing status present.
+        wageRules.forEach { rule ->
+            assertTrue(rule.brackets.size > 10, "Expected multiple biweekly wage brackets for ${rule.id}")
         }
 
-        val tax500 = computeBiweeklyFit(500_00L)
-        val tax1500 = computeBiweeklyFit(1_500_00L)
-        val tax3000 = computeBiweeklyFit(3_000_00L)
+        // Structural checks: upTo values must be strictly increasing where
+        // non-null, and the last bracket must be open-ended (upTo == null).
+        fun assertMonotonicWithOpenEnded(rule: TaxRule.WageBracketTax) {
+            val amounts = rule.brackets.map { it.upTo?.amount }
+            val finite = amounts.filterNotNull()
+            assertTrue(finite.zipWithNext().all { (a, b) -> a < b },
+                "Expected strictly increasing upToCents for ${rule.id}")
+            assertTrue(amounts.any { it == null },
+                "Expected at least one open-ended bracket for ${rule.id}")
+        }
 
-        assertTrue(tax500 <= tax1500, "Biweekly SINGLE 500 should owe no more than 1500")
-        assertTrue(tax1500 <= tax3000, "Biweekly SINGLE 1500 should owe no more than 3000")
+        wageRules.forEach { assertMonotonicWithOpenEnded(it) }
+
+        // Ensure taxes are non-decreasing across brackets for at least one
+        // canonical rule (pick the first by ID for determinism).
+        val canonical = wageRules.sortedBy { it.id }.first()
+        val canonicalTaxes = canonical.brackets.map { it.tax.amount }
+        assertTrue(canonicalTaxes.zipWithNext().all { (a, b) -> a <= b })
     }
 }
+

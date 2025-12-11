@@ -112,6 +112,7 @@ class JooqTaxRuleRepository(
                 residentStateFilter = r.get("resident_state_filter", String::class.java),
                 workStateFilter = r.get("work_state_filter", String::class.java),
                 localityFilter = r.get("locality_filter", String::class.java),
+                fitVariant = r.get("fit_variant", String::class.java),
             )
         }
     }

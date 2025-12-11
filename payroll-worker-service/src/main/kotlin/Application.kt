@@ -9,8 +9,12 @@ import com.example.uspayroll.shared.PayRunId
 import com.example.uspayroll.shared.toLocalityCodeStrings
 import com.example.uspayroll.tax.api.TaxContextProvider
 import com.example.uspayroll.tax.service.FederalWithholdingCalculator
+import com.example.uspayroll.payroll.model.garnishment.GarnishmentContext
 import com.example.uspayroll.tax.service.FederalWithholdingInput
 import com.example.uspayroll.labor.impl.LaborStandardsContextProvider
+import com.example.uspayroll.worker.GarnishmentEngineProperties
+import io.micrometer.core.instrument.MeterRegistry
+import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.web.bind.annotation.GetMapping
@@ -42,7 +46,11 @@ class PayrollRunService(
     private val hrClient: com.example.uspayroll.worker.client.HrClient? = null,
     private val taxClient: com.example.uspayroll.worker.client.TaxClient? = null,
     private val laborClient: com.example.uspayroll.worker.client.LaborStandardsClient? = null,
+    private val meterRegistry: MeterRegistry,
+    private val garnishmentEngineProperties: GarnishmentEngineProperties,
 ) {
+
+    private val logger = LoggerFactory.getLogger(PayrollRunService::class.java)
 
     fun runDemoPayForEmployer(): List<Pair<PaycheckResult, Money>> {
         val employerId = EmployerId("emp-1")
@@ -186,6 +194,30 @@ class PayrollRunService(
                 homeState = snapshot.homeState,
             )
 
+            val garnishmentOrders = client.getGarnishmentOrders(
+                employerId = employerId,
+                employeeId = eid,
+                asOfDate = payPeriod.checkDate,
+            )
+            if (garnishmentOrders.isNotEmpty()) {
+                logger.info(
+                    "payroll_run.garnishments.fetched orders={} employer={} employee={} pay_period={} check_date={}",
+                    garnishmentOrders.size,
+                    employerId.value,
+                    eid.value,
+                    payPeriod.id,
+                    payPeriod.checkDate,
+                )
+                meterRegistry.counter(
+                    "payroll.garnishments.employees_with_orders",
+                    "employer_id", employerId.value,
+                ).increment()
+            }
+
+            val engineEnabled = garnishmentEngineProperties.isEnabledFor(employerId)
+            val effectiveOrders = if (engineEnabled) garnishmentOrders else emptyList()
+            val garnishmentContext = GarnishmentContext(orders = effectiveOrders)
+
             val input = PaycheckInput(
                 paycheckId = com.example.uspayroll.shared.PaycheckId("chk-${payPeriod.id}-${eid.value}"),
                 payRunId = PayRunId("run-${payPeriod.id}"),
@@ -201,13 +233,59 @@ class PayrollRunService(
                 taxContext = taxContext,
                 priorYtd = YtdSnapshot(year = payPeriod.checkDate.year),
                 laborStandards = laborStandards,
+                garnishments = garnishmentContext,
             )
 
-            PayrollEngine.calculatePaycheck(
+            val paycheck = PayrollEngine.calculatePaycheck(
                 input = input,
                 earningConfig = earningConfigRepository,
                 deductionConfig = deductionConfigRepository,
             )
+
+            // Emit metrics for protected-earnings adjustments, if any.
+            val protectedSteps = paycheck.trace.steps.filterIsInstance<TraceStep.ProtectedEarningsApplied>()
+            if (protectedSteps.isNotEmpty()) {
+                meterRegistry.counter(
+                    "payroll.garnishments.protected_floor_applied",
+                    "employer_id", employerId.value,
+                ).increment(protectedSteps.size.toDouble())
+            }
+
+            // Record garnishment withholdings back to HR for this paycheck.
+            if (effectiveOrders.isNotEmpty()) {
+                val deductionsByCode = paycheck.deductions.associateBy { it.code.value }
+                val events = effectiveOrders.map { order ->
+                    val line = deductionsByCode[order.orderId.value]
+                    val withheld = line?.amount ?: Money(0L)
+                    com.example.uspayroll.worker.client.GarnishmentWithholdingEvent(
+                        orderId = order.orderId.value,
+                        paycheckId = input.paycheckId.value,
+                        payRunId = input.payRunId?.value,
+                        checkDate = payPeriod.checkDate,
+                        withheld = withheld,
+                        netPay = paycheck.net,
+                    )
+                }
+
+                logger.info(
+                    "payroll_run.garnishments.withholdings_sent events={} employer={} employee={} pay_period={} check_date={} total_withheld_cents={} orders_with_positive_withholding={}",
+                    events.size,
+                    employerId.value,
+                    eid.value,
+                    payPeriod.id,
+                    payPeriod.checkDate,
+                    events.sumOf { it.withheld.amount },
+                    events.count { it.withheld.amount > 0L },
+                )
+
+                client.recordGarnishmentWithholding(
+                    employerId = employerId,
+                    employeeId = eid,
+                    request = com.example.uspayroll.worker.client.GarnishmentWithholdingRequest(events = events),
+                )
+            }
+
+            paycheck
         }
     }
 }

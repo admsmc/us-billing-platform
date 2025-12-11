@@ -26,6 +26,8 @@ data class TaxRuleConfig(
     val standardDeductionCents: Long? = null,
     val additionalWithholdingCents: Long? = null,
     val employerId: String? = null,
+    /** Optional variant label, e.g. STANDARD vs STEP2_CHECKBOX for FIT tables. */
+    val fitVariant: String? = null,
     val effectiveFrom: LocalDate,
     val effectiveTo: LocalDate,
     val filingStatus: String? = null,

@@ -1,0 +1,36 @@
+[
+  {
+    "type": "FEDERAL_TAX_LEVY",
+    "jurisdictionType": "FEDERAL",
+    "jurisdictionCode": "US",
+    "bands": [
+      // Illustrative low-income band: smaller exempt amount.
+      { "upToCents": 200000, "exemptCents": 40000, "filingStatus": "SINGLE" },
+      // Mid-range disposable income: moderate exempt amount.
+      { "upToCents": 500000, "exemptCents": 50000, "filingStatus": "SINGLE" },
+      // High disposable income: larger exempt amount.
+      { "upToCents": null, "exemptCents": 75000, "filingStatus": "SINGLE" },
+      // Example married bands with somewhat higher exemptions.
+      { "upToCents": 200000, "exemptCents": 60000, "filingStatus": "MARRIED" },
+      { "upToCents": 500000, "exemptCents": 70000, "filingStatus": "MARRIED" },
+      { "upToCents": null, "exemptCents": 90000, "filingStatus": "MARRIED" }
+    ]
+  },
+  {
+    "type": "STATE_TAX_LEVY",
+    "jurisdictionType": "STATE",
+    "jurisdictionCode": "CA",
+    "bands": [
+      // Illustrative low-income band for CA.
+      { "upToCents": 200000, "exemptCents": 60000, "filingStatus": "SINGLE" },
+      // Mid-range band.
+      { "upToCents": 500000, "exemptCents": 100000, "filingStatus": "SINGLE" },
+      // High disposable income band.
+      { "upToCents": null, "exemptCents": 150000, "filingStatus": "SINGLE" },
+      // Example married bands.
+      { "upToCents": 200000, "exemptCents": 80000, "filingStatus": "MARRIED" },
+      { "upToCents": 500000, "exemptCents": 120000, "filingStatus": "MARRIED" },
+      { "upToCents": null, "exemptCents": 170000, "filingStatus": "MARRIED" }
+    ]
+  }
+]

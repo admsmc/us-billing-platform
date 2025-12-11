@@ -36,6 +36,7 @@ data class TaxRuleRecord(
     val residentStateFilter: String? = null,
     val workStateFilter: String? = null,
     val localityFilter: String? = null,
+    val fitVariant: String? = null,
 ) {
     enum class RuleType { FLAT, BRACKETED, WAGE_BRACKET }
 }

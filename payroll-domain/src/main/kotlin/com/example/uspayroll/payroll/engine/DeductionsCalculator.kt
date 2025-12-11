@@ -44,10 +44,6 @@ object DeductionsCalculator {
 
         val gross = earnings.fold(0L) { acc, e -> acc + e.amount.amount }.let { Money(it) }
 
-        // Track running totals to support garnishment "disposable income" limits
-        var mandatoryPreTaxCents = 0L
-        var garnishmentCents = 0L
-
         val sortedPlans = DeductionOrdering.sort(plans)
 
         fun ytdFor(plan: DeductionPlan): Long {
@@ -80,6 +76,14 @@ object DeductionsCalculator {
         }
 
         for (plan in sortedPlans) {
+            val code = DeductionCode(plan.id)
+            plansByCode[code] = plan
+
+            if (plan.kind == DeductionKind.GARNISHMENT) {
+                // Garnishments are computed by GarnishmentsCalculator after taxes.
+                continue
+            }
+
             // Compute raw employee amount from rate and/or flat
             var rawCents = 0L
             plan.employeeRate?.let { rate ->
@@ -94,20 +98,6 @@ object DeductionsCalculator {
             var (finalCents, cappedAt) = applyCaps(plan, rawCents, ytd)
             if (finalCents == 0L) continue
 
-            val code = DeductionCode(plan.id)
-
-            // For garnishments, enforce that amount does not exceed disposable income
-            if (plan.kind == DeductionKind.GARNISHMENT) {
-                val disposableBefore = gross.amount - mandatoryPreTaxCents
-                val remainingDisposable = disposableBefore - garnishmentCents
-                if (remainingDisposable <= 0L) {
-                    finalCents = 0L
-                } else if (finalCents > remainingDisposable) {
-                    finalCents = remainingDisposable
-                }
-                if (finalCents == 0L) continue
-            }
-
             val amount = Money(finalCents, gross.currency)
 
             val targetList = when (plan.kind) {
@@ -117,8 +107,12 @@ object DeductionsCalculator {
 
                 DeductionKind.ROTH_RETIREMENT_EMPLOYEE,
                 DeductionKind.POSTTAX_VOLUNTARY,
-                DeductionKind.GARNISHMENT,
                 DeductionKind.OTHER_POSTTAX -> postTax
+
+                // GARNISHMENT plans are filtered out above and handled by
+                // GarnishmentsCalculator; this branch is unreachable but kept
+                // for exhaustiveness.
+                DeductionKind.GARNISHMENT -> postTax
             }
 
             targetList += DeductionLine(
@@ -126,16 +120,8 @@ object DeductionsCalculator {
                 description = plan.name,
                 amount = amount,
             )
-            plansByCode[code] = plan
 
             val planEffects = if (plan.employeeEffects.isNotEmpty()) plan.employeeEffects else plan.kind.defaultEmployeeEffects()
-
-            if (plan.kind == DeductionKind.PRETAX_RETIREMENT_EMPLOYEE || plan.kind == DeductionKind.HSA || plan.kind == DeductionKind.FSA) {
-                mandatoryPreTaxCents += finalCents
-            }
-            if (plan.kind == DeductionKind.GARNISHMENT) {
-                garnishmentCents += finalCents
-            }
 
             traceSteps += TraceStep.DeductionApplied(
                 description = plan.name,

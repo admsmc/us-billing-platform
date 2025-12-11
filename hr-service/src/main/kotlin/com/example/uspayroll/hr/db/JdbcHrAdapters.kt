@@ -2,6 +2,7 @@ package com.example.uspayroll.hr.db
 
 import com.example.uspayroll.hr.api.EmployeeSnapshotProvider
 import com.example.uspayroll.hr.api.PayPeriodProvider
+import com.example.uspayroll.payroll.engine.pub15t.W4Version
 import com.example.uspayroll.payroll.model.*
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
@@ -76,6 +77,11 @@ class JdbcEmployeeSnapshotProvider(
             w4AnnualCreditAmount = row.w4AnnualCreditCents?.let { Money(it) },
             w4OtherIncomeAnnual = row.w4OtherIncomeCents?.let { Money(it) },
             w4DeductionsAnnual = row.w4DeductionsCents?.let { Money(it) },
+            w4Version = row.w4Version?.let { W4Version.valueOf(it) },
+            legacyAllowances = row.legacyAllowances,
+            legacyAdditionalWithholdingPerPeriod = row.legacyAdditionalWithholdingCents?.let { Money(it) },
+            legacyMaritalStatus = row.legacyMaritalStatus,
+            w4EffectiveDate = row.w4EffectiveDate,
             w4Step2MultipleJobs = row.w4Step2MultipleJobs,
             ficaExempt = row.ficaExempt,
             flsaEnterpriseCovered = row.flsaEnterpriseCovered,
@@ -102,6 +108,11 @@ class JdbcEmployeeSnapshotProvider(
         val w4OtherIncomeCents: Long?,
         val w4DeductionsCents: Long?,
         val w4Step2MultipleJobs: Boolean,
+        val w4Version: String?,
+        val legacyAllowances: Int?,
+        val legacyAdditionalWithholdingCents: Long?,
+        val legacyMaritalStatus: String?,
+        val w4EffectiveDate: LocalDate?,
         val additionalWithholdingCents: Long?,
         val ficaExempt: Boolean,
         val flsaEnterpriseCovered: Boolean,
@@ -131,6 +142,11 @@ class JdbcEmployeeSnapshotProvider(
             w4OtherIncomeCents = rs.getObject("w4_other_income_cents")?.let { rs.getLong("w4_other_income_cents") },
             w4DeductionsCents = rs.getObject("w4_deductions_cents")?.let { rs.getLong("w4_deductions_cents") },
             w4Step2MultipleJobs = rs.getBoolean("w4_step2_multiple_jobs"),
+            w4Version = rs.getString("w4_version"),
+            legacyAllowances = rs.getObject("legacy_allowances")?.let { rs.getInt("legacy_allowances") },
+            legacyAdditionalWithholdingCents = rs.getObject("legacy_additional_withholding_cents")?.let { rs.getLong("legacy_additional_withholding_cents") },
+            legacyMaritalStatus = rs.getString("legacy_marital_status"),
+            w4EffectiveDate = rs.getDate("w4_effective_date")?.toLocalDate(),
             additionalWithholdingCents = rs.getObject("additional_withholding_cents")?.let { rs.getLong("additional_withholding_cents") },
             ficaExempt = rs.getBoolean("fica_exempt"),
             flsaEnterpriseCovered = rs.getBoolean("flsa_enterprise_covered"),

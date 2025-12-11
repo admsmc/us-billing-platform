@@ -11,3 +11,10 @@ tax:
     url: jdbc:postgresql://localhost:5432/us_payroll_tax
     username: tax_service
     password: changeme
+
+  federalWithholding:
+    # Method used for federal income tax withholding. Valid values: PERCENTAGE, WAGE_BRACKET.
+    # Default is PERCENTAGE to match existing behavior.
+    method: PERCENTAGE
+    # When true, enables stricter Pub 15-T behavior toggles (placeholder for future use).
+    pub15tStrictMode: false

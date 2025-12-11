@@ -22,13 +22,17 @@ dependencies {
     implementation(project(":labor-service"))
 
     implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
 
     testImplementation(kotlin("test"))
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
+    testImplementation("org.junit.jupiter:junit-jupiter-params")
 
     // For cross-module tests that start hr-service in-process
     testImplementation(project(":hr-service"))
+    // JDBC access for seeding hr-service's H2 schema from worker-service tests.
+    testImplementation("org.springframework.boot:spring-boot-starter-jdbc")
 
     // H2 + jOOQ + Jackson for test-local tax catalog wiring.
     testImplementation("com.h2database:h2:2.3.232")

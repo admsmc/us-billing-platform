@@ -34,7 +34,9 @@ CREATE TABLE IF NOT EXISTS tax_rule (
     filing_status                VARCHAR(32)     NULL,     -- e.g. 'SINGLE', 'MARRIED', or NULL = all
     resident_state_filter        VARCHAR(2)      NULL,     -- optional constraint by resident state
     work_state_filter            VARCHAR(2)      NULL,     -- optional constraint by work state
-    locality_filter              VARCHAR(32)     NULL,     -- e.g. 'NYC', 'DETROIT'
+    locality_filter              VARCHAR(32)      NULL,     -- e.g. 'NYC', 'DETROIT'
+    -- Optional variant label for rule selection (e.g., STANDARD vs STEP2_CHECKBOX).
+    fit_variant                  VARCHAR(32)      NULL,
 
     -- Metadata for auditing and SCD2-style traceability
     created_at                   TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),

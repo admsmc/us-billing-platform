@@ -91,8 +91,12 @@ class TaxServiceHttpIntegrationTest {
 
         assertEquals(TaxRuleKindDto.BRACKETED, single.kind)
         assertEquals(4, single.brackets.size, "SINGLE should have 4 brackets over HTTP")
-        assertEquals(0.10, single.brackets.first().rate, 1e-9, "First SINGLE bracket rate should be 10% over HTTP")
-        assertEquals(0.24, single.brackets.last().rate, 1e-9, "Top SINGLE bracket rate should be 24% over HTTP")
+        val firstSingleRate = single.brackets.first().rate
+            ?: error("Expected first SINGLE bracket rate to be non-null over HTTP")
+        val lastSingleRate = single.brackets.last().rate
+            ?: error("Expected last SINGLE bracket rate to be non-null over HTTP")
+        assertEquals(0.10, firstSingleRate, 1e-9, "First SINGLE bracket rate should be 10% over HTTP")
+        assertEquals(0.24, lastSingleRate, 1e-9, "Top SINGLE bracket rate should be 24% over HTTP")
 
         // CA state income tax should have multiple brackets with top rate 12.3%.
         val caState = dto.state
@@ -101,7 +105,9 @@ class TaxServiceHttpIntegrationTest {
             ?: error("Expected at least one CA BRACKETED state rule from HTTP endpoint")
 
         assertTrue(caState.brackets.size >= 5, "Expected multiple CA brackets over HTTP")
-        assertEquals(0.123, caState.brackets.last().rate, 1e-9, "Top CA state rate should be 12.3% over HTTP")
+        val lastCaRate = caState.brackets.last().rate
+            ?: error("Expected last CA state bracket rate to be non-null over HTTP")
+        assertEquals(0.123, lastCaRate, 1e-9, "Top CA state rate should be 12.3% over HTTP")
     }
 
     @Test

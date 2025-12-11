@@ -3,6 +3,7 @@ package com.example.uspayroll.payroll.model
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.shared.Money
+import com.example.uspayroll.payroll.engine.pub15t.W4Version
 import java.time.LocalDate
 
 // Employee snapshot and compensation
@@ -86,6 +87,29 @@ data class EmployeeSnapshot(
      * from annual wages for federal withholding computations.
      */
     val w4DeductionsAnnual: Money? = null,
+    /**
+     * Indicates which W-4 regime applies for this employee (legacy vs modern).
+     * When null, callers may infer a default based on hire/effective dates.
+     */
+    val w4Version: W4Version? = null,
+    /**
+     * Legacy (pre-2020) W-4 allowances count, when applicable.
+     */
+    val legacyAllowances: Int? = null,
+    /**
+     * Legacy (pre-2020) additional withholding amount per period, when
+     * populated from older W-4 fields.
+     */
+    val legacyAdditionalWithholdingPerPeriod: Money? = null,
+    /**
+     * Legacy (pre-2020) marital status label as captured on older W-4 forms.
+     */
+    val legacyMaritalStatus: String? = null,
+    /**
+     * Date the current W-4 took effect, used for certain Pub. 15-T nuances
+     * (for example NRA tables that depend on first paid date).
+     */
+    val w4EffectiveDate: LocalDate? = null,
     /**
      * Indicates that the employee's Form W-4 Step 2 "multiple jobs" box is
      * checked. Tax-service logic can use this to select the appropriate

@@ -206,6 +206,7 @@ object TaxRuleConfigValidator {
                 employerId = rule.employerId,
                 localityFilter = rule.localityFilter,
                 filingStatus = rule.filingStatus,
+                fitVariant = rule.fitVariant,
             )
         }
 
@@ -240,5 +241,6 @@ object TaxRuleConfigValidator {
         val employerId: String?,
         val localityFilter: String?,
         val filingStatus: String?,
+        val fitVariant: String?,
     )
 }

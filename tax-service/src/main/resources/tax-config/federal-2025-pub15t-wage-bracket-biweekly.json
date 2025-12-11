@@ -1,82 +1,4269 @@
 {
-  "rules": [
-    {
-      "id": "US_FED_FIT_2025_PUB15T_WB_SINGLE_BI",
-      "jurisdictionType": "FEDERAL",
-      "jurisdictionCode": "US",
-      "basis": "FederalTaxable",
-      "ruleType": "WAGE_BRACKET",
-      "brackets": [
-        { "upToCents": 80000,  "rate": 0.00, "taxCents":  5000 },
-        { "upToCents": 400000, "rate": 0.00, "taxCents": 15000 },
-        { "upToCents": 900000, "rate": 0.00, "taxCents": 30000 },
-        { "upToCents": 1900000,"rate": 0.00, "taxCents": 60000 },
-        { "upToCents": 3000000,"rate": 0.00, "taxCents": 90000 },
-        { "upToCents": 6000000,"rate": 0.00, "taxCents": 140000 },
-        { "upToCents": 9000000,"rate": 0.00, "taxCents": 200000 },
-        { "upToCents": null,   "rate": 0.00, "taxCents": 280000 }
-      ],
-      "standardDeductionCents": 57500,
-      "additionalWithholdingCents": 0,
-      "employerId": null,
-      "effectiveFrom": "2025-01-01",
-      "effectiveTo": "9999-12-31",
-      "filingStatus": "SINGLE",
-      "residentStateFilter": null,
-      "workStateFilter": null,
-      "localityFilter": null
-    },
-    {
-      "id": "US_FED_FIT_2025_PUB15T_WB_MARRIED_BI",
-      "jurisdictionType": "FEDERAL",
-      "jurisdictionCode": "US",
-      "basis": "FederalTaxable",
-      "ruleType": "WAGE_BRACKET",
-      "brackets": [
-        { "upToCents": 160000,  "rate": 0.00, "taxCents":  3000 },
-        { "upToCents": 800000,  "rate": 0.00, "taxCents": 12000 },
-        { "upToCents": 1800000, "rate": 0.00, "taxCents": 25000 },
-        { "upToCents": 3800000, "rate": 0.00, "taxCents": 50000 },
-        { "upToCents": 6000000, "rate": 0.00, "taxCents": 80000 },
-        { "upToCents": 9000000, "rate": 0.00, "taxCents": 120000 },
-        { "upToCents": 12000000,"rate": 0.00, "taxCents": 170000 },
-        { "upToCents": null,    "rate": 0.00, "taxCents": 230000 }
-      ],
-      "standardDeductionCents": 115000,
-      "additionalWithholdingCents": 0,
-      "employerId": null,
-      "effectiveFrom": "2025-01-01",
-      "effectiveTo": "9999-12-31",
-      "filingStatus": "MARRIED",
-      "residentStateFilter": null,
-      "workStateFilter": null,
-      "localityFilter": null
-    },
-    {
-      "id": "US_FED_FIT_2025_PUB15T_WB_HOH_BI",
-      "jurisdictionType": "FEDERAL",
-      "jurisdictionCode": "US",
-      "basis": "FederalTaxable",
-      "ruleType": "WAGE_BRACKET",
-      "brackets": [
-        { "upToCents": 120000,  "rate": 0.00, "taxCents":  4000 },
-        { "upToCents": 600000,  "rate": 0.00, "taxCents": 14000 },
-        { "upToCents": 1300000, "rate": 0.00, "taxCents": 28000 },
-        { "upToCents": 2600000, "rate": 0.00, "taxCents": 55000 },
-        { "upToCents": 4200000, "rate": 0.00, "taxCents": 85000 },
-        { "upToCents": 7200000, "rate": 0.00, "taxCents": 130000 },
-        { "upToCents": 10000000,"rate": 0.00, "taxCents": 185000 },
-        { "upToCents": null,    "rate": 0.00, "taxCents": 250000 }
-      ],
-      "standardDeductionCents": 86250,
-      "additionalWithholdingCents": 0,
-      "employerId": null,
-      "effectiveFrom": "2025-01-01",
-      "effectiveTo": "9999-12-31",
-      "filingStatus": "HEAD_OF_HOUSEHOLD",
-      "residentStateFilter": null,
-      "workStateFilter": null,
-      "localityFilter": null
-    }
-  ]
+  "rules" : [ {
+    "id" : "US_FED_FIT_2025_PUB15T_WB_MARRIED_BI",
+    "jurisdictionType" : "FEDERAL",
+    "jurisdictionCode" : "US",
+    "basis" : "FederalTaxable",
+    "ruleType" : "WAGE_BRACKET",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 29000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 30000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 31000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 32000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 33000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 34000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 35000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 36000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 37000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 38000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 39000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 40000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 41000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 42000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 43000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 44000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 45000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 46000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 47000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 48000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 49000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 50000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 51000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 52000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 53500,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 55000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 56500,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 58000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 59500,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 61000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 62500,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 64000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 65500,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 67000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 68500,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 70000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 71500,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 73000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 74500,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 76000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 77500,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 79000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 80500,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 82000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 83500,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 85000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 86500,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 88000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 89500,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 91000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 92500,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 94000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 95500,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 97000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 98500,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 100000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 101500,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 103000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 104500,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 106000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 107500,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 109000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 110500,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 112000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 113500,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 115000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 116500,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 118000,
+      "rate" : 0.0,
+      "taxCents" : 200
+    }, {
+      "upToCents" : 119500,
+      "rate" : 0.0,
+      "taxCents" : 300
+    }, {
+      "upToCents" : 121000,
+      "rate" : 0.0,
+      "taxCents" : 500
+    }, {
+      "upToCents" : 122500,
+      "rate" : 0.0,
+      "taxCents" : 600
+    }, {
+      "upToCents" : 124500,
+      "rate" : 0.0,
+      "taxCents" : 800
+    }, {
+      "upToCents" : 126500,
+      "rate" : 0.0,
+      "taxCents" : 1000
+    }, {
+      "upToCents" : 128500,
+      "rate" : 0.0,
+      "taxCents" : 1200
+    }, {
+      "upToCents" : 130500,
+      "rate" : 0.0,
+      "taxCents" : 1400
+    }, {
+      "upToCents" : 132500,
+      "rate" : 0.0,
+      "taxCents" : 1600
+    }, {
+      "upToCents" : 134500,
+      "rate" : 0.0,
+      "taxCents" : 1800
+    }, {
+      "upToCents" : 136500,
+      "rate" : 0.0,
+      "taxCents" : 2000
+    }, {
+      "upToCents" : 138500,
+      "rate" : 0.0,
+      "taxCents" : 2200
+    }, {
+      "upToCents" : 140500,
+      "rate" : 0.0,
+      "taxCents" : 2400
+    }, {
+      "upToCents" : 142500,
+      "rate" : 0.0,
+      "taxCents" : 2600
+    }, {
+      "upToCents" : 144500,
+      "rate" : 0.0,
+      "taxCents" : 2800
+    }, {
+      "upToCents" : 146500,
+      "rate" : 0.0,
+      "taxCents" : 3000
+    }, {
+      "upToCents" : 148500,
+      "rate" : 0.0,
+      "taxCents" : 3200
+    }, {
+      "upToCents" : 150500,
+      "rate" : 0.0,
+      "taxCents" : 3400
+    }, {
+      "upToCents" : 152500,
+      "rate" : 0.0,
+      "taxCents" : 3600
+    }, {
+      "upToCents" : 154500,
+      "rate" : 0.0,
+      "taxCents" : 3800
+    }, {
+      "upToCents" : 156500,
+      "rate" : 0.0,
+      "taxCents" : 4000
+    }, {
+      "upToCents" : 158500,
+      "rate" : 0.0,
+      "taxCents" : 4200
+    }, {
+      "upToCents" : 160500,
+      "rate" : 0.0,
+      "taxCents" : 4400
+    }, {
+      "upToCents" : 162500,
+      "rate" : 0.0,
+      "taxCents" : 4600
+    }, {
+      "upToCents" : 164500,
+      "rate" : 0.0,
+      "taxCents" : 4800
+    }, {
+      "upToCents" : 166500,
+      "rate" : 0.0,
+      "taxCents" : 5000
+    }, {
+      "upToCents" : 168500,
+      "rate" : 0.0,
+      "taxCents" : 5200
+    }, {
+      "upToCents" : 170500,
+      "rate" : 0.0,
+      "taxCents" : 5400
+    }, {
+      "upToCents" : 172500,
+      "rate" : 0.0,
+      "taxCents" : 5600
+    }, {
+      "upToCents" : 174500,
+      "rate" : 0.0,
+      "taxCents" : 5800
+    }, {
+      "upToCents" : 176500,
+      "rate" : 0.0,
+      "taxCents" : 6000
+    }, {
+      "upToCents" : 178500,
+      "rate" : 0.0,
+      "taxCents" : 6200
+    }, {
+      "upToCents" : 180500,
+      "rate" : 0.0,
+      "taxCents" : 6400
+    }, {
+      "upToCents" : 182500,
+      "rate" : 0.0,
+      "taxCents" : 6600
+    }, {
+      "upToCents" : 184500,
+      "rate" : 0.0,
+      "taxCents" : 6800
+    }, {
+      "upToCents" : 186500,
+      "rate" : 0.0,
+      "taxCents" : 7000
+    }, {
+      "upToCents" : 188500,
+      "rate" : 0.0,
+      "taxCents" : 7200
+    }, {
+      "upToCents" : 190500,
+      "rate" : 0.0,
+      "taxCents" : 7400
+    }, {
+      "upToCents" : 192500,
+      "rate" : 0.0,
+      "taxCents" : 7600
+    }, {
+      "upToCents" : 194500,
+      "rate" : 0.0,
+      "taxCents" : 7800
+    }, {
+      "upToCents" : 196500,
+      "rate" : 0.0,
+      "taxCents" : 8000
+    }, {
+      "upToCents" : 198500,
+      "rate" : 0.0,
+      "taxCents" : 8200
+    }, {
+      "upToCents" : 200500,
+      "rate" : 0.0,
+      "taxCents" : 8400
+    }, {
+      "upToCents" : 202500,
+      "rate" : 0.0,
+      "taxCents" : 8600
+    }, {
+      "upToCents" : 204500,
+      "rate" : 0.0,
+      "taxCents" : 8800
+    }, {
+      "upToCents" : 206500,
+      "rate" : 0.0,
+      "taxCents" : 9000
+    }, {
+      "upToCents" : 208500,
+      "rate" : 0.0,
+      "taxCents" : 9200
+    }, {
+      "upToCents" : 210500,
+      "rate" : 0.0,
+      "taxCents" : 9500
+    }, {
+      "upToCents" : 212500,
+      "rate" : 0.0,
+      "taxCents" : 9700
+    }, {
+      "upToCents" : 214500,
+      "rate" : 0.0,
+      "taxCents" : 9900
+    }, {
+      "upToCents" : 216500,
+      "rate" : 0.0,
+      "taxCents" : 10200
+    }, {
+      "upToCents" : 218500,
+      "rate" : 0.0,
+      "taxCents" : 10400
+    }, {
+      "upToCents" : 220500,
+      "rate" : 0.0,
+      "taxCents" : 10700
+    }, {
+      "upToCents" : 222500,
+      "rate" : 0.0,
+      "taxCents" : 10900
+    }, {
+      "upToCents" : 224500,
+      "rate" : 0.0,
+      "taxCents" : 11100
+    }, {
+      "upToCents" : 226500,
+      "rate" : 0.0,
+      "taxCents" : 11400
+    }, {
+      "upToCents" : 228500,
+      "rate" : 0.0,
+      "taxCents" : 11600
+    }, {
+      "upToCents" : 231500,
+      "rate" : 0.0,
+      "taxCents" : 11900
+    }, {
+      "upToCents" : 234500,
+      "rate" : 0.0,
+      "taxCents" : 12300
+    }, {
+      "upToCents" : 237500,
+      "rate" : 0.0,
+      "taxCents" : 12600
+    }, {
+      "upToCents" : 240500,
+      "rate" : 0.0,
+      "taxCents" : 13000
+    }, {
+      "upToCents" : 243500,
+      "rate" : 0.0,
+      "taxCents" : 13400
+    }, {
+      "upToCents" : 246500,
+      "rate" : 0.0,
+      "taxCents" : 13700
+    }, {
+      "upToCents" : 249500,
+      "rate" : 0.0,
+      "taxCents" : 14100
+    }, {
+      "upToCents" : 252500,
+      "rate" : 0.0,
+      "taxCents" : 14400
+    }, {
+      "upToCents" : 255500,
+      "rate" : 0.0,
+      "taxCents" : 14800
+    }, {
+      "upToCents" : 258500,
+      "rate" : 0.0,
+      "taxCents" : 15200
+    }, {
+      "upToCents" : 261500,
+      "rate" : 0.0,
+      "taxCents" : 15500
+    }, {
+      "upToCents" : 264500,
+      "rate" : 0.0,
+      "taxCents" : 15900
+    }, {
+      "upToCents" : 267500,
+      "rate" : 0.0,
+      "taxCents" : 16200
+    }, {
+      "upToCents" : 270500,
+      "rate" : 0.0,
+      "taxCents" : 16600
+    }, {
+      "upToCents" : 273500,
+      "rate" : 0.0,
+      "taxCents" : 17000
+    }, {
+      "upToCents" : 276500,
+      "rate" : 0.0,
+      "taxCents" : 17300
+    }, {
+      "upToCents" : 279500,
+      "rate" : 0.0,
+      "taxCents" : 17700
+    }, {
+      "upToCents" : 282500,
+      "rate" : 0.0,
+      "taxCents" : 18000
+    }, {
+      "upToCents" : 285500,
+      "rate" : 0.0,
+      "taxCents" : 18400
+    }, {
+      "upToCents" : 288500,
+      "rate" : 0.0,
+      "taxCents" : 18800
+    }, {
+      "upToCents" : 291500,
+      "rate" : 0.0,
+      "taxCents" : 19100
+    }, {
+      "upToCents" : 294500,
+      "rate" : 0.0,
+      "taxCents" : 19500
+    }, {
+      "upToCents" : 297500,
+      "rate" : 0.0,
+      "taxCents" : 19800
+    }, {
+      "upToCents" : 300500,
+      "rate" : 0.0,
+      "taxCents" : 20200
+    }, {
+      "upToCents" : 303500,
+      "rate" : 0.0,
+      "taxCents" : 20600
+    }, {
+      "upToCents" : 306500,
+      "rate" : 0.0,
+      "taxCents" : 20900
+    }, {
+      "upToCents" : 309500,
+      "rate" : 0.0,
+      "taxCents" : 21300
+    }, {
+      "upToCents" : 312500,
+      "rate" : 0.0,
+      "taxCents" : 21600
+    }, {
+      "upToCents" : 315500,
+      "rate" : 0.0,
+      "taxCents" : 22000
+    }, {
+      "upToCents" : 318500,
+      "rate" : 0.0,
+      "taxCents" : 22400
+    }, {
+      "upToCents" : 321500,
+      "rate" : 0.0,
+      "taxCents" : 22700
+    }, {
+      "upToCents" : 324500,
+      "rate" : 0.0,
+      "taxCents" : 23100
+    }, {
+      "upToCents" : 327500,
+      "rate" : 0.0,
+      "taxCents" : 23400
+    }, {
+      "upToCents" : 330500,
+      "rate" : 0.0,
+      "taxCents" : 23800
+    }, {
+      "upToCents" : 333500,
+      "rate" : 0.0,
+      "taxCents" : 24200
+    }, {
+      "upToCents" : 336500,
+      "rate" : 0.0,
+      "taxCents" : 24500
+    }, {
+      "upToCents" : 339500,
+      "rate" : 0.0,
+      "taxCents" : 24900
+    }, {
+      "upToCents" : 342500,
+      "rate" : 0.0,
+      "taxCents" : 25200
+    }, {
+      "upToCents" : 345500,
+      "rate" : 0.0,
+      "taxCents" : 25600
+    }, {
+      "upToCents" : 348500,
+      "rate" : 0.0,
+      "taxCents" : 26000
+    }, {
+      "upToCents" : 351500,
+      "rate" : 0.0,
+      "taxCents" : 26300
+    }, {
+      "upToCents" : 354500,
+      "rate" : 0.0,
+      "taxCents" : 26700
+    }, {
+      "upToCents" : 357500,
+      "rate" : 0.0,
+      "taxCents" : 27000
+    }, {
+      "upToCents" : 360500,
+      "rate" : 0.0,
+      "taxCents" : 27400
+    }, {
+      "upToCents" : 363500,
+      "rate" : 0.0,
+      "taxCents" : 27800
+    }, {
+      "upToCents" : 366500,
+      "rate" : 0.0,
+      "taxCents" : 28100
+    }, {
+      "upToCents" : 369500,
+      "rate" : 0.0,
+      "taxCents" : 28500
+    }, {
+      "upToCents" : 372500,
+      "rate" : 0.0,
+      "taxCents" : 28800
+    }, {
+      "upToCents" : null,
+      "rate" : 0.0,
+      "taxCents" : 29200
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : "STANDARD",
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "MARRIED",
+    "residentStateFilter" : null,
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_FED_FIT_2025_PUB15T_WB_MARRIED_BI_STEP2",
+    "jurisdictionType" : "FEDERAL",
+    "jurisdictionCode" : "US",
+    "basis" : "FederalTaxable",
+    "ruleType" : "WAGE_BRACKET",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 29000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 30000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 31000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 32000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 33000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 34000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 35000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 36000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 37000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 38000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 39000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 40000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 41000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 42000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 43000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 44000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 45000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 46000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 47000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 48000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 49000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 50000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 51000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 52000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 53500,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 55000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 56500,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 58000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 59500,
+      "rate" : 0.0,
+      "taxCents" : 100
+    }, {
+      "upToCents" : 61000,
+      "rate" : 0.0,
+      "taxCents" : 300
+    }, {
+      "upToCents" : 62500,
+      "rate" : 0.0,
+      "taxCents" : 400
+    }, {
+      "upToCents" : 64000,
+      "rate" : 0.0,
+      "taxCents" : 600
+    }, {
+      "upToCents" : 65500,
+      "rate" : 0.0,
+      "taxCents" : 700
+    }, {
+      "upToCents" : 67000,
+      "rate" : 0.0,
+      "taxCents" : 900
+    }, {
+      "upToCents" : 68500,
+      "rate" : 0.0,
+      "taxCents" : 1000
+    }, {
+      "upToCents" : 70000,
+      "rate" : 0.0,
+      "taxCents" : 1200
+    }, {
+      "upToCents" : 71500,
+      "rate" : 0.0,
+      "taxCents" : 1300
+    }, {
+      "upToCents" : 73000,
+      "rate" : 0.0,
+      "taxCents" : 1500
+    }, {
+      "upToCents" : 74500,
+      "rate" : 0.0,
+      "taxCents" : 1600
+    }, {
+      "upToCents" : 76000,
+      "rate" : 0.0,
+      "taxCents" : 1800
+    }, {
+      "upToCents" : 77500,
+      "rate" : 0.0,
+      "taxCents" : 1900
+    }, {
+      "upToCents" : 79000,
+      "rate" : 0.0,
+      "taxCents" : 2100
+    }, {
+      "upToCents" : 80500,
+      "rate" : 0.0,
+      "taxCents" : 2200
+    }, {
+      "upToCents" : 82000,
+      "rate" : 0.0,
+      "taxCents" : 2400
+    }, {
+      "upToCents" : 83500,
+      "rate" : 0.0,
+      "taxCents" : 2500
+    }, {
+      "upToCents" : 85000,
+      "rate" : 0.0,
+      "taxCents" : 2700
+    }, {
+      "upToCents" : 86500,
+      "rate" : 0.0,
+      "taxCents" : 2800
+    }, {
+      "upToCents" : 88000,
+      "rate" : 0.0,
+      "taxCents" : 3000
+    }, {
+      "upToCents" : 89500,
+      "rate" : 0.0,
+      "taxCents" : 3100
+    }, {
+      "upToCents" : 91000,
+      "rate" : 0.0,
+      "taxCents" : 3300
+    }, {
+      "upToCents" : 92500,
+      "rate" : 0.0,
+      "taxCents" : 3400
+    }, {
+      "upToCents" : 94000,
+      "rate" : 0.0,
+      "taxCents" : 3600
+    }, {
+      "upToCents" : 95500,
+      "rate" : 0.0,
+      "taxCents" : 3700
+    }, {
+      "upToCents" : 97000,
+      "rate" : 0.0,
+      "taxCents" : 3900
+    }, {
+      "upToCents" : 98500,
+      "rate" : 0.0,
+      "taxCents" : 4000
+    }, {
+      "upToCents" : 100000,
+      "rate" : 0.0,
+      "taxCents" : 4200
+    }, {
+      "upToCents" : 101500,
+      "rate" : 0.0,
+      "taxCents" : 4300
+    }, {
+      "upToCents" : 103000,
+      "rate" : 0.0,
+      "taxCents" : 4500
+    }, {
+      "upToCents" : 104500,
+      "rate" : 0.0,
+      "taxCents" : 4600
+    }, {
+      "upToCents" : 106000,
+      "rate" : 0.0,
+      "taxCents" : 4800
+    }, {
+      "upToCents" : 107500,
+      "rate" : 0.0,
+      "taxCents" : 5000
+    }, {
+      "upToCents" : 109000,
+      "rate" : 0.0,
+      "taxCents" : 5100
+    }, {
+      "upToCents" : 110500,
+      "rate" : 0.0,
+      "taxCents" : 5300
+    }, {
+      "upToCents" : 112000,
+      "rate" : 0.0,
+      "taxCents" : 5500
+    }, {
+      "upToCents" : 113500,
+      "rate" : 0.0,
+      "taxCents" : 5700
+    }, {
+      "upToCents" : 115000,
+      "rate" : 0.0,
+      "taxCents" : 5900
+    }, {
+      "upToCents" : 116500,
+      "rate" : 0.0,
+      "taxCents" : 6000
+    }, {
+      "upToCents" : 118000,
+      "rate" : 0.0,
+      "taxCents" : 6200
+    }, {
+      "upToCents" : 119500,
+      "rate" : 0.0,
+      "taxCents" : 6400
+    }, {
+      "upToCents" : 121000,
+      "rate" : 0.0,
+      "taxCents" : 6600
+    }, {
+      "upToCents" : 122500,
+      "rate" : 0.0,
+      "taxCents" : 6800
+    }, {
+      "upToCents" : 124500,
+      "rate" : 0.0,
+      "taxCents" : 7000
+    }, {
+      "upToCents" : 126500,
+      "rate" : 0.0,
+      "taxCents" : 7200
+    }, {
+      "upToCents" : 128500,
+      "rate" : 0.0,
+      "taxCents" : 7500
+    }, {
+      "upToCents" : 130500,
+      "rate" : 0.0,
+      "taxCents" : 7700
+    }, {
+      "upToCents" : 132500,
+      "rate" : 0.0,
+      "taxCents" : 7900
+    }, {
+      "upToCents" : 134500,
+      "rate" : 0.0,
+      "taxCents" : 8200
+    }, {
+      "upToCents" : 136500,
+      "rate" : 0.0,
+      "taxCents" : 8400
+    }, {
+      "upToCents" : 138500,
+      "rate" : 0.0,
+      "taxCents" : 8700
+    }, {
+      "upToCents" : 140500,
+      "rate" : 0.0,
+      "taxCents" : 8900
+    }, {
+      "upToCents" : 142500,
+      "rate" : 0.0,
+      "taxCents" : 9100
+    }, {
+      "upToCents" : 144500,
+      "rate" : 0.0,
+      "taxCents" : 9400
+    }, {
+      "upToCents" : 146500,
+      "rate" : 0.0,
+      "taxCents" : 9600
+    }, {
+      "upToCents" : 148500,
+      "rate" : 0.0,
+      "taxCents" : 9900
+    }, {
+      "upToCents" : 150500,
+      "rate" : 0.0,
+      "taxCents" : 10100
+    }, {
+      "upToCents" : 152500,
+      "rate" : 0.0,
+      "taxCents" : 10300
+    }, {
+      "upToCents" : 154500,
+      "rate" : 0.0,
+      "taxCents" : 10600
+    }, {
+      "upToCents" : 156500,
+      "rate" : 0.0,
+      "taxCents" : 10800
+    }, {
+      "upToCents" : 158500,
+      "rate" : 0.0,
+      "taxCents" : 11100
+    }, {
+      "upToCents" : 160500,
+      "rate" : 0.0,
+      "taxCents" : 11300
+    }, {
+      "upToCents" : 162500,
+      "rate" : 0.0,
+      "taxCents" : 11500
+    }, {
+      "upToCents" : 164500,
+      "rate" : 0.0,
+      "taxCents" : 11800
+    }, {
+      "upToCents" : 166500,
+      "rate" : 0.0,
+      "taxCents" : 12000
+    }, {
+      "upToCents" : 168500,
+      "rate" : 0.0,
+      "taxCents" : 12300
+    }, {
+      "upToCents" : 170500,
+      "rate" : 0.0,
+      "taxCents" : 12500
+    }, {
+      "upToCents" : 172500,
+      "rate" : 0.0,
+      "taxCents" : 12700
+    }, {
+      "upToCents" : 174500,
+      "rate" : 0.0,
+      "taxCents" : 13000
+    }, {
+      "upToCents" : 176500,
+      "rate" : 0.0,
+      "taxCents" : 13200
+    }, {
+      "upToCents" : 178500,
+      "rate" : 0.0,
+      "taxCents" : 13500
+    }, {
+      "upToCents" : 180500,
+      "rate" : 0.0,
+      "taxCents" : 13700
+    }, {
+      "upToCents" : 182500,
+      "rate" : 0.0,
+      "taxCents" : 13900
+    }, {
+      "upToCents" : 184500,
+      "rate" : 0.0,
+      "taxCents" : 14200
+    }, {
+      "upToCents" : 186500,
+      "rate" : 0.0,
+      "taxCents" : 14400
+    }, {
+      "upToCents" : 188500,
+      "rate" : 0.0,
+      "taxCents" : 14700
+    }, {
+      "upToCents" : 190500,
+      "rate" : 0.0,
+      "taxCents" : 14900
+    }, {
+      "upToCents" : 192500,
+      "rate" : 0.0,
+      "taxCents" : 15100
+    }, {
+      "upToCents" : 194500,
+      "rate" : 0.0,
+      "taxCents" : 15400
+    }, {
+      "upToCents" : 196500,
+      "rate" : 0.0,
+      "taxCents" : 15600
+    }, {
+      "upToCents" : 198500,
+      "rate" : 0.0,
+      "taxCents" : 15900
+    }, {
+      "upToCents" : 200500,
+      "rate" : 0.0,
+      "taxCents" : 16100
+    }, {
+      "upToCents" : 202500,
+      "rate" : 0.0,
+      "taxCents" : 16300
+    }, {
+      "upToCents" : 204500,
+      "rate" : 0.0,
+      "taxCents" : 16600
+    }, {
+      "upToCents" : 206500,
+      "rate" : 0.0,
+      "taxCents" : 16800
+    }, {
+      "upToCents" : 208500,
+      "rate" : 0.0,
+      "taxCents" : 17100
+    }, {
+      "upToCents" : 210500,
+      "rate" : 0.0,
+      "taxCents" : 17300
+    }, {
+      "upToCents" : 212500,
+      "rate" : 0.0,
+      "taxCents" : 17500
+    }, {
+      "upToCents" : 214500,
+      "rate" : 0.0,
+      "taxCents" : 17800
+    }, {
+      "upToCents" : 216500,
+      "rate" : 0.0,
+      "taxCents" : 18000
+    }, {
+      "upToCents" : 218500,
+      "rate" : 0.0,
+      "taxCents" : 18300
+    }, {
+      "upToCents" : 220500,
+      "rate" : 0.0,
+      "taxCents" : 18500
+    }, {
+      "upToCents" : 222500,
+      "rate" : 0.0,
+      "taxCents" : 18700
+    }, {
+      "upToCents" : 224500,
+      "rate" : 0.0,
+      "taxCents" : 19000
+    }, {
+      "upToCents" : 226500,
+      "rate" : 0.0,
+      "taxCents" : 19200
+    }, {
+      "upToCents" : 228500,
+      "rate" : 0.0,
+      "taxCents" : 19500
+    }, {
+      "upToCents" : 231500,
+      "rate" : 0.0,
+      "taxCents" : 19800
+    }, {
+      "upToCents" : 234500,
+      "rate" : 0.0,
+      "taxCents" : 20100
+    }, {
+      "upToCents" : 237500,
+      "rate" : 0.0,
+      "taxCents" : 20500
+    }, {
+      "upToCents" : 240500,
+      "rate" : 0.0,
+      "taxCents" : 20800
+    }, {
+      "upToCents" : 243500,
+      "rate" : 0.0,
+      "taxCents" : 21200
+    }, {
+      "upToCents" : 246500,
+      "rate" : 0.0,
+      "taxCents" : 21600
+    }, {
+      "upToCents" : 249500,
+      "rate" : 0.0,
+      "taxCents" : 22300
+    }, {
+      "upToCents" : 252500,
+      "rate" : 0.0,
+      "taxCents" : 23000
+    }, {
+      "upToCents" : 255500,
+      "rate" : 0.0,
+      "taxCents" : 23600
+    }, {
+      "upToCents" : 258500,
+      "rate" : 0.0,
+      "taxCents" : 24300
+    }, {
+      "upToCents" : 261500,
+      "rate" : 0.0,
+      "taxCents" : 24900
+    }, {
+      "upToCents" : 264500,
+      "rate" : 0.0,
+      "taxCents" : 25600
+    }, {
+      "upToCents" : 267500,
+      "rate" : 0.0,
+      "taxCents" : 26300
+    }, {
+      "upToCents" : 270500,
+      "rate" : 0.0,
+      "taxCents" : 26900
+    }, {
+      "upToCents" : 273500,
+      "rate" : 0.0,
+      "taxCents" : 27600
+    }, {
+      "upToCents" : 276500,
+      "rate" : 0.0,
+      "taxCents" : 28200
+    }, {
+      "upToCents" : 279500,
+      "rate" : 0.0,
+      "taxCents" : 28900
+    }, {
+      "upToCents" : 282500,
+      "rate" : 0.0,
+      "taxCents" : 29600
+    }, {
+      "upToCents" : 285500,
+      "rate" : 0.0,
+      "taxCents" : 30200
+    }, {
+      "upToCents" : 288500,
+      "rate" : 0.0,
+      "taxCents" : 30900
+    }, {
+      "upToCents" : 291500,
+      "rate" : 0.0,
+      "taxCents" : 31500
+    }, {
+      "upToCents" : 294500,
+      "rate" : 0.0,
+      "taxCents" : 32200
+    }, {
+      "upToCents" : 297500,
+      "rate" : 0.0,
+      "taxCents" : 32900
+    }, {
+      "upToCents" : 300500,
+      "rate" : 0.0,
+      "taxCents" : 33500
+    }, {
+      "upToCents" : 303500,
+      "rate" : 0.0,
+      "taxCents" : 34200
+    }, {
+      "upToCents" : 306500,
+      "rate" : 0.0,
+      "taxCents" : 34800
+    }, {
+      "upToCents" : 309500,
+      "rate" : 0.0,
+      "taxCents" : 35500
+    }, {
+      "upToCents" : 312500,
+      "rate" : 0.0,
+      "taxCents" : 36200
+    }, {
+      "upToCents" : 315500,
+      "rate" : 0.0,
+      "taxCents" : 36800
+    }, {
+      "upToCents" : 318500,
+      "rate" : 0.0,
+      "taxCents" : 37500
+    }, {
+      "upToCents" : 321500,
+      "rate" : 0.0,
+      "taxCents" : 38100
+    }, {
+      "upToCents" : 324500,
+      "rate" : 0.0,
+      "taxCents" : 38800
+    }, {
+      "upToCents" : 327500,
+      "rate" : 0.0,
+      "taxCents" : 39500
+    }, {
+      "upToCents" : 330500,
+      "rate" : 0.0,
+      "taxCents" : 40100
+    }, {
+      "upToCents" : 333500,
+      "rate" : 0.0,
+      "taxCents" : 40800
+    }, {
+      "upToCents" : 336500,
+      "rate" : 0.0,
+      "taxCents" : 41400
+    }, {
+      "upToCents" : 339500,
+      "rate" : 0.0,
+      "taxCents" : 42100
+    }, {
+      "upToCents" : 342500,
+      "rate" : 0.0,
+      "taxCents" : 42800
+    }, {
+      "upToCents" : 345500,
+      "rate" : 0.0,
+      "taxCents" : 43400
+    }, {
+      "upToCents" : 348500,
+      "rate" : 0.0,
+      "taxCents" : 44100
+    }, {
+      "upToCents" : 351500,
+      "rate" : 0.0,
+      "taxCents" : 44700
+    }, {
+      "upToCents" : 354500,
+      "rate" : 0.0,
+      "taxCents" : 45400
+    }, {
+      "upToCents" : 357500,
+      "rate" : 0.0,
+      "taxCents" : 46100
+    }, {
+      "upToCents" : 360500,
+      "rate" : 0.0,
+      "taxCents" : 46700
+    }, {
+      "upToCents" : 363500,
+      "rate" : 0.0,
+      "taxCents" : 47400
+    }, {
+      "upToCents" : 366500,
+      "rate" : 0.0,
+      "taxCents" : 48000
+    }, {
+      "upToCents" : 369500,
+      "rate" : 0.0,
+      "taxCents" : 48700
+    }, {
+      "upToCents" : 372500,
+      "rate" : 0.0,
+      "taxCents" : 49400
+    }, {
+      "upToCents" : null,
+      "rate" : 0.0,
+      "taxCents" : 50000
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : "STEP2_CHECKBOX",
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "MARRIED",
+    "residentStateFilter" : null,
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_FED_FIT_2025_PUB15T_WB_HEAD_OF_HOUSEHOLD_BI",
+    "jurisdictionType" : "FEDERAL",
+    "jurisdictionCode" : "US",
+    "basis" : "FederalTaxable",
+    "ruleType" : "WAGE_BRACKET",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 29000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 30000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 31000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 32000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 33000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 34000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 35000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 36000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 37000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 38000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 39000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 40000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 41000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 42000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 43000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 44000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 45000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 46000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 47000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 48000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 49000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 50000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 51000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 52000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 53500,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 55000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 56500,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 58000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 59500,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 61000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 62500,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 64000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 65500,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 67000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 68500,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 70000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 71500,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 73000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 74500,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 76000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 77500,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 79000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 80500,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 82000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 83500,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 85000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 86500,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 88000,
+      "rate" : 0.0,
+      "taxCents" : 100
+    }, {
+      "upToCents" : 89500,
+      "rate" : 0.0,
+      "taxCents" : 200
+    }, {
+      "upToCents" : 91000,
+      "rate" : 0.0,
+      "taxCents" : 400
+    }, {
+      "upToCents" : 92500,
+      "rate" : 0.0,
+      "taxCents" : 500
+    }, {
+      "upToCents" : 94000,
+      "rate" : 0.0,
+      "taxCents" : 700
+    }, {
+      "upToCents" : 95500,
+      "rate" : 0.0,
+      "taxCents" : 800
+    }, {
+      "upToCents" : 97000,
+      "rate" : 0.0,
+      "taxCents" : 1000
+    }, {
+      "upToCents" : 98500,
+      "rate" : 0.0,
+      "taxCents" : 1100
+    }, {
+      "upToCents" : 100000,
+      "rate" : 0.0,
+      "taxCents" : 1300
+    }, {
+      "upToCents" : 101500,
+      "rate" : 0.0,
+      "taxCents" : 1400
+    }, {
+      "upToCents" : 103000,
+      "rate" : 0.0,
+      "taxCents" : 1600
+    }, {
+      "upToCents" : 104500,
+      "rate" : 0.0,
+      "taxCents" : 1700
+    }, {
+      "upToCents" : 106000,
+      "rate" : 0.0,
+      "taxCents" : 1900
+    }, {
+      "upToCents" : 107500,
+      "rate" : 0.0,
+      "taxCents" : 2000
+    }, {
+      "upToCents" : 109000,
+      "rate" : 0.0,
+      "taxCents" : 2200
+    }, {
+      "upToCents" : 110500,
+      "rate" : 0.0,
+      "taxCents" : 2300
+    }, {
+      "upToCents" : 112000,
+      "rate" : 0.0,
+      "taxCents" : 2500
+    }, {
+      "upToCents" : 113500,
+      "rate" : 0.0,
+      "taxCents" : 2600
+    }, {
+      "upToCents" : 115000,
+      "rate" : 0.0,
+      "taxCents" : 2800
+    }, {
+      "upToCents" : 116500,
+      "rate" : 0.0,
+      "taxCents" : 2900
+    }, {
+      "upToCents" : 118000,
+      "rate" : 0.0,
+      "taxCents" : 3100
+    }, {
+      "upToCents" : 119500,
+      "rate" : 0.0,
+      "taxCents" : 3200
+    }, {
+      "upToCents" : 121000,
+      "rate" : 0.0,
+      "taxCents" : 3400
+    }, {
+      "upToCents" : 122500,
+      "rate" : 0.0,
+      "taxCents" : 3500
+    }, {
+      "upToCents" : 124500,
+      "rate" : 0.0,
+      "taxCents" : 3700
+    }, {
+      "upToCents" : 126500,
+      "rate" : 0.0,
+      "taxCents" : 3900
+    }, {
+      "upToCents" : 128500,
+      "rate" : 0.0,
+      "taxCents" : 4100
+    }, {
+      "upToCents" : 130500,
+      "rate" : 0.0,
+      "taxCents" : 4300
+    }, {
+      "upToCents" : 132500,
+      "rate" : 0.0,
+      "taxCents" : 4500
+    }, {
+      "upToCents" : 134500,
+      "rate" : 0.0,
+      "taxCents" : 4700
+    }, {
+      "upToCents" : 136500,
+      "rate" : 0.0,
+      "taxCents" : 4900
+    }, {
+      "upToCents" : 138500,
+      "rate" : 0.0,
+      "taxCents" : 5100
+    }, {
+      "upToCents" : 140500,
+      "rate" : 0.0,
+      "taxCents" : 5300
+    }, {
+      "upToCents" : 142500,
+      "rate" : 0.0,
+      "taxCents" : 5500
+    }, {
+      "upToCents" : 144500,
+      "rate" : 0.0,
+      "taxCents" : 5700
+    }, {
+      "upToCents" : 146500,
+      "rate" : 0.0,
+      "taxCents" : 5900
+    }, {
+      "upToCents" : 148500,
+      "rate" : 0.0,
+      "taxCents" : 6100
+    }, {
+      "upToCents" : 150500,
+      "rate" : 0.0,
+      "taxCents" : 6300
+    }, {
+      "upToCents" : 152500,
+      "rate" : 0.0,
+      "taxCents" : 6500
+    }, {
+      "upToCents" : 154500,
+      "rate" : 0.0,
+      "taxCents" : 6700
+    }, {
+      "upToCents" : 156500,
+      "rate" : 0.0,
+      "taxCents" : 7000
+    }, {
+      "upToCents" : 158500,
+      "rate" : 0.0,
+      "taxCents" : 7200
+    }, {
+      "upToCents" : 160500,
+      "rate" : 0.0,
+      "taxCents" : 7400
+    }, {
+      "upToCents" : 162500,
+      "rate" : 0.0,
+      "taxCents" : 7700
+    }, {
+      "upToCents" : 164500,
+      "rate" : 0.0,
+      "taxCents" : 7900
+    }, {
+      "upToCents" : 166500,
+      "rate" : 0.0,
+      "taxCents" : 8200
+    }, {
+      "upToCents" : 168500,
+      "rate" : 0.0,
+      "taxCents" : 8400
+    }, {
+      "upToCents" : 170500,
+      "rate" : 0.0,
+      "taxCents" : 8600
+    }, {
+      "upToCents" : 172500,
+      "rate" : 0.0,
+      "taxCents" : 8900
+    }, {
+      "upToCents" : 174500,
+      "rate" : 0.0,
+      "taxCents" : 9100
+    }, {
+      "upToCents" : 176500,
+      "rate" : 0.0,
+      "taxCents" : 9400
+    }, {
+      "upToCents" : 178500,
+      "rate" : 0.0,
+      "taxCents" : 9600
+    }, {
+      "upToCents" : 180500,
+      "rate" : 0.0,
+      "taxCents" : 9800
+    }, {
+      "upToCents" : 182500,
+      "rate" : 0.0,
+      "taxCents" : 10100
+    }, {
+      "upToCents" : 184500,
+      "rate" : 0.0,
+      "taxCents" : 10300
+    }, {
+      "upToCents" : 186500,
+      "rate" : 0.0,
+      "taxCents" : 10600
+    }, {
+      "upToCents" : 188500,
+      "rate" : 0.0,
+      "taxCents" : 10800
+    }, {
+      "upToCents" : 190500,
+      "rate" : 0.0,
+      "taxCents" : 11000
+    }, {
+      "upToCents" : 192500,
+      "rate" : 0.0,
+      "taxCents" : 11300
+    }, {
+      "upToCents" : 194500,
+      "rate" : 0.0,
+      "taxCents" : 11500
+    }, {
+      "upToCents" : 196500,
+      "rate" : 0.0,
+      "taxCents" : 11800
+    }, {
+      "upToCents" : 198500,
+      "rate" : 0.0,
+      "taxCents" : 12000
+    }, {
+      "upToCents" : 200500,
+      "rate" : 0.0,
+      "taxCents" : 12200
+    }, {
+      "upToCents" : 202500,
+      "rate" : 0.0,
+      "taxCents" : 12500
+    }, {
+      "upToCents" : 204500,
+      "rate" : 0.0,
+      "taxCents" : 12700
+    }, {
+      "upToCents" : 206500,
+      "rate" : 0.0,
+      "taxCents" : 13000
+    }, {
+      "upToCents" : 208500,
+      "rate" : 0.0,
+      "taxCents" : 13200
+    }, {
+      "upToCents" : 210500,
+      "rate" : 0.0,
+      "taxCents" : 13400
+    }, {
+      "upToCents" : 212500,
+      "rate" : 0.0,
+      "taxCents" : 13700
+    }, {
+      "upToCents" : 214500,
+      "rate" : 0.0,
+      "taxCents" : 13900
+    }, {
+      "upToCents" : 216500,
+      "rate" : 0.0,
+      "taxCents" : 14200
+    }, {
+      "upToCents" : 218500,
+      "rate" : 0.0,
+      "taxCents" : 14400
+    }, {
+      "upToCents" : 220500,
+      "rate" : 0.0,
+      "taxCents" : 14600
+    }, {
+      "upToCents" : 222500,
+      "rate" : 0.0,
+      "taxCents" : 14900
+    }, {
+      "upToCents" : 224500,
+      "rate" : 0.0,
+      "taxCents" : 15100
+    }, {
+      "upToCents" : 226500,
+      "rate" : 0.0,
+      "taxCents" : 15400
+    }, {
+      "upToCents" : 228500,
+      "rate" : 0.0,
+      "taxCents" : 15600
+    }, {
+      "upToCents" : 231500,
+      "rate" : 0.0,
+      "taxCents" : 15900
+    }, {
+      "upToCents" : 234500,
+      "rate" : 0.0,
+      "taxCents" : 16300
+    }, {
+      "upToCents" : 237500,
+      "rate" : 0.0,
+      "taxCents" : 16600
+    }, {
+      "upToCents" : 240500,
+      "rate" : 0.0,
+      "taxCents" : 17000
+    }, {
+      "upToCents" : 243500,
+      "rate" : 0.0,
+      "taxCents" : 17300
+    }, {
+      "upToCents" : 246500,
+      "rate" : 0.0,
+      "taxCents" : 17700
+    }, {
+      "upToCents" : 249500,
+      "rate" : 0.0,
+      "taxCents" : 18100
+    }, {
+      "upToCents" : 252500,
+      "rate" : 0.0,
+      "taxCents" : 18400
+    }, {
+      "upToCents" : 255500,
+      "rate" : 0.0,
+      "taxCents" : 18800
+    }, {
+      "upToCents" : 258500,
+      "rate" : 0.0,
+      "taxCents" : 19100
+    }, {
+      "upToCents" : 261500,
+      "rate" : 0.0,
+      "taxCents" : 19500
+    }, {
+      "upToCents" : 264500,
+      "rate" : 0.0,
+      "taxCents" : 19900
+    }, {
+      "upToCents" : 267500,
+      "rate" : 0.0,
+      "taxCents" : 20200
+    }, {
+      "upToCents" : 270500,
+      "rate" : 0.0,
+      "taxCents" : 20600
+    }, {
+      "upToCents" : 273500,
+      "rate" : 0.0,
+      "taxCents" : 20900
+    }, {
+      "upToCents" : 276500,
+      "rate" : 0.0,
+      "taxCents" : 21300
+    }, {
+      "upToCents" : 279500,
+      "rate" : 0.0,
+      "taxCents" : 21700
+    }, {
+      "upToCents" : 282500,
+      "rate" : 0.0,
+      "taxCents" : 22000
+    }, {
+      "upToCents" : 285500,
+      "rate" : 0.0,
+      "taxCents" : 22400
+    }, {
+      "upToCents" : 288500,
+      "rate" : 0.0,
+      "taxCents" : 22700
+    }, {
+      "upToCents" : 291500,
+      "rate" : 0.0,
+      "taxCents" : 23100
+    }, {
+      "upToCents" : 294500,
+      "rate" : 0.0,
+      "taxCents" : 23500
+    }, {
+      "upToCents" : 297500,
+      "rate" : 0.0,
+      "taxCents" : 23800
+    }, {
+      "upToCents" : 300500,
+      "rate" : 0.0,
+      "taxCents" : 24200
+    }, {
+      "upToCents" : 303500,
+      "rate" : 0.0,
+      "taxCents" : 24500
+    }, {
+      "upToCents" : 306500,
+      "rate" : 0.0,
+      "taxCents" : 24900
+    }, {
+      "upToCents" : 309500,
+      "rate" : 0.0,
+      "taxCents" : 25300
+    }, {
+      "upToCents" : 312500,
+      "rate" : 0.0,
+      "taxCents" : 25600
+    }, {
+      "upToCents" : 315500,
+      "rate" : 0.0,
+      "taxCents" : 26000
+    }, {
+      "upToCents" : 318500,
+      "rate" : 0.0,
+      "taxCents" : 26300
+    }, {
+      "upToCents" : 321500,
+      "rate" : 0.0,
+      "taxCents" : 26700
+    }, {
+      "upToCents" : 324500,
+      "rate" : 0.0,
+      "taxCents" : 27100
+    }, {
+      "upToCents" : 327500,
+      "rate" : 0.0,
+      "taxCents" : 27400
+    }, {
+      "upToCents" : 330500,
+      "rate" : 0.0,
+      "taxCents" : 27800
+    }, {
+      "upToCents" : 333500,
+      "rate" : 0.0,
+      "taxCents" : 28100
+    }, {
+      "upToCents" : 336500,
+      "rate" : 0.0,
+      "taxCents" : 28500
+    }, {
+      "upToCents" : 339500,
+      "rate" : 0.0,
+      "taxCents" : 29100
+    }, {
+      "upToCents" : 342500,
+      "rate" : 0.0,
+      "taxCents" : 29700
+    }, {
+      "upToCents" : 345500,
+      "rate" : 0.0,
+      "taxCents" : 30400
+    }, {
+      "upToCents" : 348500,
+      "rate" : 0.0,
+      "taxCents" : 31100
+    }, {
+      "upToCents" : 351500,
+      "rate" : 0.0,
+      "taxCents" : 31700
+    }, {
+      "upToCents" : 354500,
+      "rate" : 0.0,
+      "taxCents" : 32400
+    }, {
+      "upToCents" : 357500,
+      "rate" : 0.0,
+      "taxCents" : 33000
+    }, {
+      "upToCents" : 360500,
+      "rate" : 0.0,
+      "taxCents" : 33700
+    }, {
+      "upToCents" : 363500,
+      "rate" : 0.0,
+      "taxCents" : 34400
+    }, {
+      "upToCents" : 366500,
+      "rate" : 0.0,
+      "taxCents" : 35000
+    }, {
+      "upToCents" : 369500,
+      "rate" : 0.0,
+      "taxCents" : 35700
+    }, {
+      "upToCents" : 372500,
+      "rate" : 0.0,
+      "taxCents" : 36300
+    }, {
+      "upToCents" : null,
+      "rate" : 0.0,
+      "taxCents" : 37000
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : "STANDARD",
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "HEAD_OF_HOUSEHOLD",
+    "residentStateFilter" : null,
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_FED_FIT_2025_PUB15T_WB_HEAD_OF_HOUSEHOLD_BI_STEP2",
+    "jurisdictionType" : "FEDERAL",
+    "jurisdictionCode" : "US",
+    "basis" : "FederalTaxable",
+    "ruleType" : "WAGE_BRACKET",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 29000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 30000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 31000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 32000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 33000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 34000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 35000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 36000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 37000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 38000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 39000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 40000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 41000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 42000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 43000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 44000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 45000,
+      "rate" : 0.0,
+      "taxCents" : 100
+    }, {
+      "upToCents" : 46000,
+      "rate" : 0.0,
+      "taxCents" : 200
+    }, {
+      "upToCents" : 47000,
+      "rate" : 0.0,
+      "taxCents" : 300
+    }, {
+      "upToCents" : 48000,
+      "rate" : 0.0,
+      "taxCents" : 400
+    }, {
+      "upToCents" : 49000,
+      "rate" : 0.0,
+      "taxCents" : 500
+    }, {
+      "upToCents" : 50000,
+      "rate" : 0.0,
+      "taxCents" : 600
+    }, {
+      "upToCents" : 51000,
+      "rate" : 0.0,
+      "taxCents" : 700
+    }, {
+      "upToCents" : 52000,
+      "rate" : 0.0,
+      "taxCents" : 800
+    }, {
+      "upToCents" : 53500,
+      "rate" : 0.0,
+      "taxCents" : 900
+    }, {
+      "upToCents" : 55000,
+      "rate" : 0.0,
+      "taxCents" : 1100
+    }, {
+      "upToCents" : 56500,
+      "rate" : 0.0,
+      "taxCents" : 1200
+    }, {
+      "upToCents" : 58000,
+      "rate" : 0.0,
+      "taxCents" : 1400
+    }, {
+      "upToCents" : 59500,
+      "rate" : 0.0,
+      "taxCents" : 1500
+    }, {
+      "upToCents" : 61000,
+      "rate" : 0.0,
+      "taxCents" : 1700
+    }, {
+      "upToCents" : 62500,
+      "rate" : 0.0,
+      "taxCents" : 1800
+    }, {
+      "upToCents" : 64000,
+      "rate" : 0.0,
+      "taxCents" : 2000
+    }, {
+      "upToCents" : 65500,
+      "rate" : 0.0,
+      "taxCents" : 2100
+    }, {
+      "upToCents" : 67000,
+      "rate" : 0.0,
+      "taxCents" : 2300
+    }, {
+      "upToCents" : 68500,
+      "rate" : 0.0,
+      "taxCents" : 2400
+    }, {
+      "upToCents" : 70000,
+      "rate" : 0.0,
+      "taxCents" : 2600
+    }, {
+      "upToCents" : 71500,
+      "rate" : 0.0,
+      "taxCents" : 2700
+    }, {
+      "upToCents" : 73000,
+      "rate" : 0.0,
+      "taxCents" : 2900
+    }, {
+      "upToCents" : 74500,
+      "rate" : 0.0,
+      "taxCents" : 3000
+    }, {
+      "upToCents" : 76000,
+      "rate" : 0.0,
+      "taxCents" : 3200
+    }, {
+      "upToCents" : 77500,
+      "rate" : 0.0,
+      "taxCents" : 3400
+    }, {
+      "upToCents" : 79000,
+      "rate" : 0.0,
+      "taxCents" : 3500
+    }, {
+      "upToCents" : 80500,
+      "rate" : 0.0,
+      "taxCents" : 3700
+    }, {
+      "upToCents" : 82000,
+      "rate" : 0.0,
+      "taxCents" : 3900
+    }, {
+      "upToCents" : 83500,
+      "rate" : 0.0,
+      "taxCents" : 4100
+    }, {
+      "upToCents" : 85000,
+      "rate" : 0.0,
+      "taxCents" : 4300
+    }, {
+      "upToCents" : 86500,
+      "rate" : 0.0,
+      "taxCents" : 4400
+    }, {
+      "upToCents" : 88000,
+      "rate" : 0.0,
+      "taxCents" : 4600
+    }, {
+      "upToCents" : 89500,
+      "rate" : 0.0,
+      "taxCents" : 4800
+    }, {
+      "upToCents" : 91000,
+      "rate" : 0.0,
+      "taxCents" : 5000
+    }, {
+      "upToCents" : 92500,
+      "rate" : 0.0,
+      "taxCents" : 5200
+    }, {
+      "upToCents" : 94000,
+      "rate" : 0.0,
+      "taxCents" : 5300
+    }, {
+      "upToCents" : 95500,
+      "rate" : 0.0,
+      "taxCents" : 5500
+    }, {
+      "upToCents" : 97000,
+      "rate" : 0.0,
+      "taxCents" : 5700
+    }, {
+      "upToCents" : 98500,
+      "rate" : 0.0,
+      "taxCents" : 5900
+    }, {
+      "upToCents" : 100000,
+      "rate" : 0.0,
+      "taxCents" : 6100
+    }, {
+      "upToCents" : 101500,
+      "rate" : 0.0,
+      "taxCents" : 6200
+    }, {
+      "upToCents" : 103000,
+      "rate" : 0.0,
+      "taxCents" : 6400
+    }, {
+      "upToCents" : 104500,
+      "rate" : 0.0,
+      "taxCents" : 6600
+    }, {
+      "upToCents" : 106000,
+      "rate" : 0.0,
+      "taxCents" : 6800
+    }, {
+      "upToCents" : 107500,
+      "rate" : 0.0,
+      "taxCents" : 7000
+    }, {
+      "upToCents" : 109000,
+      "rate" : 0.0,
+      "taxCents" : 7100
+    }, {
+      "upToCents" : 110500,
+      "rate" : 0.0,
+      "taxCents" : 7300
+    }, {
+      "upToCents" : 112000,
+      "rate" : 0.0,
+      "taxCents" : 7500
+    }, {
+      "upToCents" : 113500,
+      "rate" : 0.0,
+      "taxCents" : 7700
+    }, {
+      "upToCents" : 115000,
+      "rate" : 0.0,
+      "taxCents" : 7900
+    }, {
+      "upToCents" : 116500,
+      "rate" : 0.0,
+      "taxCents" : 8000
+    }, {
+      "upToCents" : 118000,
+      "rate" : 0.0,
+      "taxCents" : 8200
+    }, {
+      "upToCents" : 119500,
+      "rate" : 0.0,
+      "taxCents" : 8400
+    }, {
+      "upToCents" : 121000,
+      "rate" : 0.0,
+      "taxCents" : 8600
+    }, {
+      "upToCents" : 122500,
+      "rate" : 0.0,
+      "taxCents" : 8800
+    }, {
+      "upToCents" : 124500,
+      "rate" : 0.0,
+      "taxCents" : 9000
+    }, {
+      "upToCents" : 126500,
+      "rate" : 0.0,
+      "taxCents" : 9200
+    }, {
+      "upToCents" : 128500,
+      "rate" : 0.0,
+      "taxCents" : 9500
+    }, {
+      "upToCents" : 130500,
+      "rate" : 0.0,
+      "taxCents" : 9700
+    }, {
+      "upToCents" : 132500,
+      "rate" : 0.0,
+      "taxCents" : 9900
+    }, {
+      "upToCents" : 134500,
+      "rate" : 0.0,
+      "taxCents" : 10200
+    }, {
+      "upToCents" : 136500,
+      "rate" : 0.0,
+      "taxCents" : 10400
+    }, {
+      "upToCents" : 138500,
+      "rate" : 0.0,
+      "taxCents" : 10700
+    }, {
+      "upToCents" : 140500,
+      "rate" : 0.0,
+      "taxCents" : 10900
+    }, {
+      "upToCents" : 142500,
+      "rate" : 0.0,
+      "taxCents" : 11100
+    }, {
+      "upToCents" : 144500,
+      "rate" : 0.0,
+      "taxCents" : 11400
+    }, {
+      "upToCents" : 146500,
+      "rate" : 0.0,
+      "taxCents" : 11600
+    }, {
+      "upToCents" : 148500,
+      "rate" : 0.0,
+      "taxCents" : 11900
+    }, {
+      "upToCents" : 150500,
+      "rate" : 0.0,
+      "taxCents" : 12100
+    }, {
+      "upToCents" : 152500,
+      "rate" : 0.0,
+      "taxCents" : 12300
+    }, {
+      "upToCents" : 154500,
+      "rate" : 0.0,
+      "taxCents" : 12600
+    }, {
+      "upToCents" : 156500,
+      "rate" : 0.0,
+      "taxCents" : 12800
+    }, {
+      "upToCents" : 158500,
+      "rate" : 0.0,
+      "taxCents" : 13100
+    }, {
+      "upToCents" : 160500,
+      "rate" : 0.0,
+      "taxCents" : 13300
+    }, {
+      "upToCents" : 162500,
+      "rate" : 0.0,
+      "taxCents" : 13500
+    }, {
+      "upToCents" : 164500,
+      "rate" : 0.0,
+      "taxCents" : 13800
+    }, {
+      "upToCents" : 166500,
+      "rate" : 0.0,
+      "taxCents" : 14000
+    }, {
+      "upToCents" : 168500,
+      "rate" : 0.0,
+      "taxCents" : 14300
+    }, {
+      "upToCents" : 170500,
+      "rate" : 0.0,
+      "taxCents" : 14600
+    }, {
+      "upToCents" : 172500,
+      "rate" : 0.0,
+      "taxCents" : 15100
+    }, {
+      "upToCents" : 174500,
+      "rate" : 0.0,
+      "taxCents" : 15500
+    }, {
+      "upToCents" : 176500,
+      "rate" : 0.0,
+      "taxCents" : 16000
+    }, {
+      "upToCents" : 178500,
+      "rate" : 0.0,
+      "taxCents" : 16400
+    }, {
+      "upToCents" : 180500,
+      "rate" : 0.0,
+      "taxCents" : 16800
+    }, {
+      "upToCents" : 182500,
+      "rate" : 0.0,
+      "taxCents" : 17300
+    }, {
+      "upToCents" : 184500,
+      "rate" : 0.0,
+      "taxCents" : 17700
+    }, {
+      "upToCents" : 186500,
+      "rate" : 0.0,
+      "taxCents" : 18200
+    }, {
+      "upToCents" : 188500,
+      "rate" : 0.0,
+      "taxCents" : 18600
+    }, {
+      "upToCents" : 190500,
+      "rate" : 0.0,
+      "taxCents" : 19000
+    }, {
+      "upToCents" : 192500,
+      "rate" : 0.0,
+      "taxCents" : 19500
+    }, {
+      "upToCents" : 194500,
+      "rate" : 0.0,
+      "taxCents" : 19900
+    }, {
+      "upToCents" : 196500,
+      "rate" : 0.0,
+      "taxCents" : 20400
+    }, {
+      "upToCents" : 198500,
+      "rate" : 0.0,
+      "taxCents" : 20800
+    }, {
+      "upToCents" : 200500,
+      "rate" : 0.0,
+      "taxCents" : 21200
+    }, {
+      "upToCents" : 202500,
+      "rate" : 0.0,
+      "taxCents" : 21700
+    }, {
+      "upToCents" : 204500,
+      "rate" : 0.0,
+      "taxCents" : 22100
+    }, {
+      "upToCents" : 206500,
+      "rate" : 0.0,
+      "taxCents" : 22600
+    }, {
+      "upToCents" : 208500,
+      "rate" : 0.0,
+      "taxCents" : 23000
+    }, {
+      "upToCents" : 210500,
+      "rate" : 0.0,
+      "taxCents" : 23400
+    }, {
+      "upToCents" : 212500,
+      "rate" : 0.0,
+      "taxCents" : 23900
+    }, {
+      "upToCents" : 214500,
+      "rate" : 0.0,
+      "taxCents" : 24300
+    }, {
+      "upToCents" : 216500,
+      "rate" : 0.0,
+      "taxCents" : 24800
+    }, {
+      "upToCents" : 218500,
+      "rate" : 0.0,
+      "taxCents" : 25200
+    }, {
+      "upToCents" : 220500,
+      "rate" : 0.0,
+      "taxCents" : 25600
+    }, {
+      "upToCents" : 222500,
+      "rate" : 0.0,
+      "taxCents" : 26100
+    }, {
+      "upToCents" : 224500,
+      "rate" : 0.0,
+      "taxCents" : 26500
+    }, {
+      "upToCents" : 226500,
+      "rate" : 0.0,
+      "taxCents" : 27000
+    }, {
+      "upToCents" : 228500,
+      "rate" : 0.0,
+      "taxCents" : 27400
+    }, {
+      "upToCents" : 231500,
+      "rate" : 0.0,
+      "taxCents" : 28000
+    }, {
+      "upToCents" : 234500,
+      "rate" : 0.0,
+      "taxCents" : 28600
+    }, {
+      "upToCents" : 237500,
+      "rate" : 0.0,
+      "taxCents" : 29300
+    }, {
+      "upToCents" : 240500,
+      "rate" : 0.0,
+      "taxCents" : 29900
+    }, {
+      "upToCents" : 243500,
+      "rate" : 0.0,
+      "taxCents" : 30600
+    }, {
+      "upToCents" : 246500,
+      "rate" : 0.0,
+      "taxCents" : 31300
+    }, {
+      "upToCents" : 249500,
+      "rate" : 0.0,
+      "taxCents" : 32000
+    }, {
+      "upToCents" : 252500,
+      "rate" : 0.0,
+      "taxCents" : 32800
+    }, {
+      "upToCents" : 255500,
+      "rate" : 0.0,
+      "taxCents" : 33500
+    }, {
+      "upToCents" : 258500,
+      "rate" : 0.0,
+      "taxCents" : 34200
+    }, {
+      "upToCents" : 261500,
+      "rate" : 0.0,
+      "taxCents" : 34900
+    }, {
+      "upToCents" : 264500,
+      "rate" : 0.0,
+      "taxCents" : 35600
+    }, {
+      "upToCents" : 267500,
+      "rate" : 0.0,
+      "taxCents" : 36400
+    }, {
+      "upToCents" : 270500,
+      "rate" : 0.0,
+      "taxCents" : 37100
+    }, {
+      "upToCents" : 273500,
+      "rate" : 0.0,
+      "taxCents" : 37800
+    }, {
+      "upToCents" : 276500,
+      "rate" : 0.0,
+      "taxCents" : 38500
+    }, {
+      "upToCents" : 279500,
+      "rate" : 0.0,
+      "taxCents" : 39200
+    }, {
+      "upToCents" : 282500,
+      "rate" : 0.0,
+      "taxCents" : 40000
+    }, {
+      "upToCents" : 285500,
+      "rate" : 0.0,
+      "taxCents" : 40700
+    }, {
+      "upToCents" : 288500,
+      "rate" : 0.0,
+      "taxCents" : 41400
+    }, {
+      "upToCents" : 291500,
+      "rate" : 0.0,
+      "taxCents" : 42100
+    }, {
+      "upToCents" : 294500,
+      "rate" : 0.0,
+      "taxCents" : 42800
+    }, {
+      "upToCents" : 297500,
+      "rate" : 0.0,
+      "taxCents" : 43600
+    }, {
+      "upToCents" : 300500,
+      "rate" : 0.0,
+      "taxCents" : 44300
+    }, {
+      "upToCents" : 303500,
+      "rate" : 0.0,
+      "taxCents" : 45000
+    }, {
+      "upToCents" : 306500,
+      "rate" : 0.0,
+      "taxCents" : 45700
+    }, {
+      "upToCents" : 309500,
+      "rate" : 0.0,
+      "taxCents" : 46400
+    }, {
+      "upToCents" : 312500,
+      "rate" : 0.0,
+      "taxCents" : 47200
+    }, {
+      "upToCents" : 315500,
+      "rate" : 0.0,
+      "taxCents" : 47900
+    }, {
+      "upToCents" : 318500,
+      "rate" : 0.0,
+      "taxCents" : 48600
+    }, {
+      "upToCents" : 321500,
+      "rate" : 0.0,
+      "taxCents" : 49300
+    }, {
+      "upToCents" : 324500,
+      "rate" : 0.0,
+      "taxCents" : 50000
+    }, {
+      "upToCents" : 327500,
+      "rate" : 0.0,
+      "taxCents" : 50800
+    }, {
+      "upToCents" : 330500,
+      "rate" : 0.0,
+      "taxCents" : 51500
+    }, {
+      "upToCents" : 333500,
+      "rate" : 0.0,
+      "taxCents" : 52200
+    }, {
+      "upToCents" : 336500,
+      "rate" : 0.0,
+      "taxCents" : 52900
+    }, {
+      "upToCents" : 339500,
+      "rate" : 0.0,
+      "taxCents" : 53600
+    }, {
+      "upToCents" : 342500,
+      "rate" : 0.0,
+      "taxCents" : 54400
+    }, {
+      "upToCents" : 345500,
+      "rate" : 0.0,
+      "taxCents" : 55100
+    }, {
+      "upToCents" : 348500,
+      "rate" : 0.0,
+      "taxCents" : 55800
+    }, {
+      "upToCents" : 351500,
+      "rate" : 0.0,
+      "taxCents" : 56500
+    }, {
+      "upToCents" : 354500,
+      "rate" : 0.0,
+      "taxCents" : 57200
+    }, {
+      "upToCents" : 357500,
+      "rate" : 0.0,
+      "taxCents" : 58000
+    }, {
+      "upToCents" : 360500,
+      "rate" : 0.0,
+      "taxCents" : 58700
+    }, {
+      "upToCents" : 363500,
+      "rate" : 0.0,
+      "taxCents" : 59400
+    }, {
+      "upToCents" : 366500,
+      "rate" : 0.0,
+      "taxCents" : 60100
+    }, {
+      "upToCents" : 369500,
+      "rate" : 0.0,
+      "taxCents" : 60800
+    }, {
+      "upToCents" : 372500,
+      "rate" : 0.0,
+      "taxCents" : 61600
+    }, {
+      "upToCents" : null,
+      "rate" : 0.0,
+      "taxCents" : 62300
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : "STEP2_CHECKBOX",
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "HEAD_OF_HOUSEHOLD",
+    "residentStateFilter" : null,
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_FED_FIT_2025_PUB15T_WB_SINGLE_BI",
+    "jurisdictionType" : "FEDERAL",
+    "jurisdictionCode" : "US",
+    "basis" : "FederalTaxable",
+    "ruleType" : "WAGE_BRACKET",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 29000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 30000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 31000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 32000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 33000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 34000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 35000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 36000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 37000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 38000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 39000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 40000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 41000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 42000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 43000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 44000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 45000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 46000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 47000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 48000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 49000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 50000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 51000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 52000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 53500,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 55000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 56500,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 58000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 59500,
+      "rate" : 0.0,
+      "taxCents" : 100
+    }, {
+      "upToCents" : 61000,
+      "rate" : 0.0,
+      "taxCents" : 300
+    }, {
+      "upToCents" : 62500,
+      "rate" : 0.0,
+      "taxCents" : 400
+    }, {
+      "upToCents" : 64000,
+      "rate" : 0.0,
+      "taxCents" : 600
+    }, {
+      "upToCents" : 65500,
+      "rate" : 0.0,
+      "taxCents" : 700
+    }, {
+      "upToCents" : 67000,
+      "rate" : 0.0,
+      "taxCents" : 900
+    }, {
+      "upToCents" : 68500,
+      "rate" : 0.0,
+      "taxCents" : 1000
+    }, {
+      "upToCents" : 70000,
+      "rate" : 0.0,
+      "taxCents" : 1200
+    }, {
+      "upToCents" : 71500,
+      "rate" : 0.0,
+      "taxCents" : 1300
+    }, {
+      "upToCents" : 73000,
+      "rate" : 0.0,
+      "taxCents" : 1500
+    }, {
+      "upToCents" : 74500,
+      "rate" : 0.0,
+      "taxCents" : 1600
+    }, {
+      "upToCents" : 76000,
+      "rate" : 0.0,
+      "taxCents" : 1800
+    }, {
+      "upToCents" : 77500,
+      "rate" : 0.0,
+      "taxCents" : 1900
+    }, {
+      "upToCents" : 79000,
+      "rate" : 0.0,
+      "taxCents" : 2100
+    }, {
+      "upToCents" : 80500,
+      "rate" : 0.0,
+      "taxCents" : 2200
+    }, {
+      "upToCents" : 82000,
+      "rate" : 0.0,
+      "taxCents" : 2400
+    }, {
+      "upToCents" : 83500,
+      "rate" : 0.0,
+      "taxCents" : 2500
+    }, {
+      "upToCents" : 85000,
+      "rate" : 0.0,
+      "taxCents" : 2700
+    }, {
+      "upToCents" : 86500,
+      "rate" : 0.0,
+      "taxCents" : 2800
+    }, {
+      "upToCents" : 88000,
+      "rate" : 0.0,
+      "taxCents" : 3000
+    }, {
+      "upToCents" : 89500,
+      "rate" : 0.0,
+      "taxCents" : 3100
+    }, {
+      "upToCents" : 91000,
+      "rate" : 0.0,
+      "taxCents" : 3300
+    }, {
+      "upToCents" : 92500,
+      "rate" : 0.0,
+      "taxCents" : 3400
+    }, {
+      "upToCents" : 94000,
+      "rate" : 0.0,
+      "taxCents" : 3600
+    }, {
+      "upToCents" : 95500,
+      "rate" : 0.0,
+      "taxCents" : 3700
+    }, {
+      "upToCents" : 97000,
+      "rate" : 0.0,
+      "taxCents" : 3900
+    }, {
+      "upToCents" : 98500,
+      "rate" : 0.0,
+      "taxCents" : 4000
+    }, {
+      "upToCents" : 100000,
+      "rate" : 0.0,
+      "taxCents" : 4200
+    }, {
+      "upToCents" : 101500,
+      "rate" : 0.0,
+      "taxCents" : 4300
+    }, {
+      "upToCents" : 103000,
+      "rate" : 0.0,
+      "taxCents" : 4500
+    }, {
+      "upToCents" : 104500,
+      "rate" : 0.0,
+      "taxCents" : 4600
+    }, {
+      "upToCents" : 106000,
+      "rate" : 0.0,
+      "taxCents" : 4800
+    }, {
+      "upToCents" : 107500,
+      "rate" : 0.0,
+      "taxCents" : 5000
+    }, {
+      "upToCents" : 109000,
+      "rate" : 0.0,
+      "taxCents" : 5100
+    }, {
+      "upToCents" : 110500,
+      "rate" : 0.0,
+      "taxCents" : 5300
+    }, {
+      "upToCents" : 112000,
+      "rate" : 0.0,
+      "taxCents" : 5500
+    }, {
+      "upToCents" : 113500,
+      "rate" : 0.0,
+      "taxCents" : 5700
+    }, {
+      "upToCents" : 115000,
+      "rate" : 0.0,
+      "taxCents" : 5900
+    }, {
+      "upToCents" : 116500,
+      "rate" : 0.0,
+      "taxCents" : 6000
+    }, {
+      "upToCents" : 118000,
+      "rate" : 0.0,
+      "taxCents" : 6200
+    }, {
+      "upToCents" : 119500,
+      "rate" : 0.0,
+      "taxCents" : 6400
+    }, {
+      "upToCents" : 121000,
+      "rate" : 0.0,
+      "taxCents" : 6600
+    }, {
+      "upToCents" : 122500,
+      "rate" : 0.0,
+      "taxCents" : 6800
+    }, {
+      "upToCents" : 124500,
+      "rate" : 0.0,
+      "taxCents" : 7000
+    }, {
+      "upToCents" : 126500,
+      "rate" : 0.0,
+      "taxCents" : 7200
+    }, {
+      "upToCents" : 128500,
+      "rate" : 0.0,
+      "taxCents" : 7500
+    }, {
+      "upToCents" : 130500,
+      "rate" : 0.0,
+      "taxCents" : 7700
+    }, {
+      "upToCents" : 132500,
+      "rate" : 0.0,
+      "taxCents" : 7900
+    }, {
+      "upToCents" : 134500,
+      "rate" : 0.0,
+      "taxCents" : 8200
+    }, {
+      "upToCents" : 136500,
+      "rate" : 0.0,
+      "taxCents" : 8400
+    }, {
+      "upToCents" : 138500,
+      "rate" : 0.0,
+      "taxCents" : 8700
+    }, {
+      "upToCents" : 140500,
+      "rate" : 0.0,
+      "taxCents" : 8900
+    }, {
+      "upToCents" : 142500,
+      "rate" : 0.0,
+      "taxCents" : 9100
+    }, {
+      "upToCents" : 144500,
+      "rate" : 0.0,
+      "taxCents" : 9400
+    }, {
+      "upToCents" : 146500,
+      "rate" : 0.0,
+      "taxCents" : 9600
+    }, {
+      "upToCents" : 148500,
+      "rate" : 0.0,
+      "taxCents" : 9900
+    }, {
+      "upToCents" : 150500,
+      "rate" : 0.0,
+      "taxCents" : 10100
+    }, {
+      "upToCents" : 152500,
+      "rate" : 0.0,
+      "taxCents" : 10300
+    }, {
+      "upToCents" : 154500,
+      "rate" : 0.0,
+      "taxCents" : 10600
+    }, {
+      "upToCents" : 156500,
+      "rate" : 0.0,
+      "taxCents" : 10800
+    }, {
+      "upToCents" : 158500,
+      "rate" : 0.0,
+      "taxCents" : 11100
+    }, {
+      "upToCents" : 160500,
+      "rate" : 0.0,
+      "taxCents" : 11300
+    }, {
+      "upToCents" : 162500,
+      "rate" : 0.0,
+      "taxCents" : 11500
+    }, {
+      "upToCents" : 164500,
+      "rate" : 0.0,
+      "taxCents" : 11800
+    }, {
+      "upToCents" : 166500,
+      "rate" : 0.0,
+      "taxCents" : 12000
+    }, {
+      "upToCents" : 168500,
+      "rate" : 0.0,
+      "taxCents" : 12300
+    }, {
+      "upToCents" : 170500,
+      "rate" : 0.0,
+      "taxCents" : 12500
+    }, {
+      "upToCents" : 172500,
+      "rate" : 0.0,
+      "taxCents" : 12700
+    }, {
+      "upToCents" : 174500,
+      "rate" : 0.0,
+      "taxCents" : 13000
+    }, {
+      "upToCents" : 176500,
+      "rate" : 0.0,
+      "taxCents" : 13200
+    }, {
+      "upToCents" : 178500,
+      "rate" : 0.0,
+      "taxCents" : 13500
+    }, {
+      "upToCents" : 180500,
+      "rate" : 0.0,
+      "taxCents" : 13700
+    }, {
+      "upToCents" : 182500,
+      "rate" : 0.0,
+      "taxCents" : 13900
+    }, {
+      "upToCents" : 184500,
+      "rate" : 0.0,
+      "taxCents" : 14200
+    }, {
+      "upToCents" : 186500,
+      "rate" : 0.0,
+      "taxCents" : 14400
+    }, {
+      "upToCents" : 188500,
+      "rate" : 0.0,
+      "taxCents" : 14700
+    }, {
+      "upToCents" : 190500,
+      "rate" : 0.0,
+      "taxCents" : 14900
+    }, {
+      "upToCents" : 192500,
+      "rate" : 0.0,
+      "taxCents" : 15100
+    }, {
+      "upToCents" : 194500,
+      "rate" : 0.0,
+      "taxCents" : 15400
+    }, {
+      "upToCents" : 196500,
+      "rate" : 0.0,
+      "taxCents" : 15600
+    }, {
+      "upToCents" : 198500,
+      "rate" : 0.0,
+      "taxCents" : 15900
+    }, {
+      "upToCents" : 200500,
+      "rate" : 0.0,
+      "taxCents" : 16100
+    }, {
+      "upToCents" : 202500,
+      "rate" : 0.0,
+      "taxCents" : 16300
+    }, {
+      "upToCents" : 204500,
+      "rate" : 0.0,
+      "taxCents" : 16600
+    }, {
+      "upToCents" : 206500,
+      "rate" : 0.0,
+      "taxCents" : 16800
+    }, {
+      "upToCents" : 208500,
+      "rate" : 0.0,
+      "taxCents" : 17100
+    }, {
+      "upToCents" : 210500,
+      "rate" : 0.0,
+      "taxCents" : 17300
+    }, {
+      "upToCents" : 212500,
+      "rate" : 0.0,
+      "taxCents" : 17500
+    }, {
+      "upToCents" : 214500,
+      "rate" : 0.0,
+      "taxCents" : 17800
+    }, {
+      "upToCents" : 216500,
+      "rate" : 0.0,
+      "taxCents" : 18000
+    }, {
+      "upToCents" : 218500,
+      "rate" : 0.0,
+      "taxCents" : 18300
+    }, {
+      "upToCents" : 220500,
+      "rate" : 0.0,
+      "taxCents" : 18500
+    }, {
+      "upToCents" : 222500,
+      "rate" : 0.0,
+      "taxCents" : 18700
+    }, {
+      "upToCents" : 224500,
+      "rate" : 0.0,
+      "taxCents" : 19000
+    }, {
+      "upToCents" : 226500,
+      "rate" : 0.0,
+      "taxCents" : 19200
+    }, {
+      "upToCents" : 228500,
+      "rate" : 0.0,
+      "taxCents" : 19500
+    }, {
+      "upToCents" : 231500,
+      "rate" : 0.0,
+      "taxCents" : 19800
+    }, {
+      "upToCents" : 234500,
+      "rate" : 0.0,
+      "taxCents" : 20100
+    }, {
+      "upToCents" : 237500,
+      "rate" : 0.0,
+      "taxCents" : 20500
+    }, {
+      "upToCents" : 240500,
+      "rate" : 0.0,
+      "taxCents" : 20800
+    }, {
+      "upToCents" : 243500,
+      "rate" : 0.0,
+      "taxCents" : 21200
+    }, {
+      "upToCents" : 246500,
+      "rate" : 0.0,
+      "taxCents" : 21600
+    }, {
+      "upToCents" : 249500,
+      "rate" : 0.0,
+      "taxCents" : 22300
+    }, {
+      "upToCents" : 252500,
+      "rate" : 0.0,
+      "taxCents" : 23000
+    }, {
+      "upToCents" : 255500,
+      "rate" : 0.0,
+      "taxCents" : 23600
+    }, {
+      "upToCents" : 258500,
+      "rate" : 0.0,
+      "taxCents" : 24300
+    }, {
+      "upToCents" : 261500,
+      "rate" : 0.0,
+      "taxCents" : 24900
+    }, {
+      "upToCents" : 264500,
+      "rate" : 0.0,
+      "taxCents" : 25600
+    }, {
+      "upToCents" : 267500,
+      "rate" : 0.0,
+      "taxCents" : 26300
+    }, {
+      "upToCents" : 270500,
+      "rate" : 0.0,
+      "taxCents" : 26900
+    }, {
+      "upToCents" : 273500,
+      "rate" : 0.0,
+      "taxCents" : 27600
+    }, {
+      "upToCents" : 276500,
+      "rate" : 0.0,
+      "taxCents" : 28200
+    }, {
+      "upToCents" : 279500,
+      "rate" : 0.0,
+      "taxCents" : 28900
+    }, {
+      "upToCents" : 282500,
+      "rate" : 0.0,
+      "taxCents" : 29600
+    }, {
+      "upToCents" : 285500,
+      "rate" : 0.0,
+      "taxCents" : 30200
+    }, {
+      "upToCents" : 288500,
+      "rate" : 0.0,
+      "taxCents" : 30900
+    }, {
+      "upToCents" : 291500,
+      "rate" : 0.0,
+      "taxCents" : 31500
+    }, {
+      "upToCents" : 294500,
+      "rate" : 0.0,
+      "taxCents" : 32200
+    }, {
+      "upToCents" : 297500,
+      "rate" : 0.0,
+      "taxCents" : 32900
+    }, {
+      "upToCents" : 300500,
+      "rate" : 0.0,
+      "taxCents" : 33500
+    }, {
+      "upToCents" : 303500,
+      "rate" : 0.0,
+      "taxCents" : 34200
+    }, {
+      "upToCents" : 306500,
+      "rate" : 0.0,
+      "taxCents" : 34800
+    }, {
+      "upToCents" : 309500,
+      "rate" : 0.0,
+      "taxCents" : 35500
+    }, {
+      "upToCents" : 312500,
+      "rate" : 0.0,
+      "taxCents" : 36200
+    }, {
+      "upToCents" : 315500,
+      "rate" : 0.0,
+      "taxCents" : 36800
+    }, {
+      "upToCents" : 318500,
+      "rate" : 0.0,
+      "taxCents" : 37500
+    }, {
+      "upToCents" : 321500,
+      "rate" : 0.0,
+      "taxCents" : 38100
+    }, {
+      "upToCents" : 324500,
+      "rate" : 0.0,
+      "taxCents" : 38800
+    }, {
+      "upToCents" : 327500,
+      "rate" : 0.0,
+      "taxCents" : 39500
+    }, {
+      "upToCents" : 330500,
+      "rate" : 0.0,
+      "taxCents" : 40100
+    }, {
+      "upToCents" : 333500,
+      "rate" : 0.0,
+      "taxCents" : 40800
+    }, {
+      "upToCents" : 336500,
+      "rate" : 0.0,
+      "taxCents" : 41400
+    }, {
+      "upToCents" : 339500,
+      "rate" : 0.0,
+      "taxCents" : 42100
+    }, {
+      "upToCents" : 342500,
+      "rate" : 0.0,
+      "taxCents" : 42800
+    }, {
+      "upToCents" : 345500,
+      "rate" : 0.0,
+      "taxCents" : 43400
+    }, {
+      "upToCents" : 348500,
+      "rate" : 0.0,
+      "taxCents" : 44100
+    }, {
+      "upToCents" : 351500,
+      "rate" : 0.0,
+      "taxCents" : 44700
+    }, {
+      "upToCents" : 354500,
+      "rate" : 0.0,
+      "taxCents" : 45400
+    }, {
+      "upToCents" : 357500,
+      "rate" : 0.0,
+      "taxCents" : 46100
+    }, {
+      "upToCents" : 360500,
+      "rate" : 0.0,
+      "taxCents" : 46700
+    }, {
+      "upToCents" : 363500,
+      "rate" : 0.0,
+      "taxCents" : 47400
+    }, {
+      "upToCents" : 366500,
+      "rate" : 0.0,
+      "taxCents" : 48000
+    }, {
+      "upToCents" : 369500,
+      "rate" : 0.0,
+      "taxCents" : 48700
+    }, {
+      "upToCents" : 372500,
+      "rate" : 0.0,
+      "taxCents" : 49400
+    }, {
+      "upToCents" : null,
+      "rate" : 0.0,
+      "taxCents" : 50000
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : "STANDARD",
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "SINGLE",
+    "residentStateFilter" : null,
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_FED_FIT_2025_PUB15T_WB_SINGLE_BI_STEP2",
+    "jurisdictionType" : "FEDERAL",
+    "jurisdictionCode" : "US",
+    "basis" : "FederalTaxable",
+    "ruleType" : "WAGE_BRACKET",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 29000,
+      "rate" : 0.0,
+      "taxCents" : 0
+    }, {
+      "upToCents" : 30000,
+      "rate" : 0.0,
+      "taxCents" : 100
+    }, {
+      "upToCents" : 31000,
+      "rate" : 0.0,
+      "taxCents" : 200
+    }, {
+      "upToCents" : 32000,
+      "rate" : 0.0,
+      "taxCents" : 300
+    }, {
+      "upToCents" : 33000,
+      "rate" : 0.0,
+      "taxCents" : 400
+    }, {
+      "upToCents" : 34000,
+      "rate" : 0.0,
+      "taxCents" : 500
+    }, {
+      "upToCents" : 35000,
+      "rate" : 0.0,
+      "taxCents" : 600
+    }, {
+      "upToCents" : 36000,
+      "rate" : 0.0,
+      "taxCents" : 700
+    }, {
+      "upToCents" : 37000,
+      "rate" : 0.0,
+      "taxCents" : 800
+    }, {
+      "upToCents" : 38000,
+      "rate" : 0.0,
+      "taxCents" : 900
+    }, {
+      "upToCents" : 39000,
+      "rate" : 0.0,
+      "taxCents" : 1000
+    }, {
+      "upToCents" : 40000,
+      "rate" : 0.0,
+      "taxCents" : 1100
+    }, {
+      "upToCents" : 41000,
+      "rate" : 0.0,
+      "taxCents" : 1200
+    }, {
+      "upToCents" : 42000,
+      "rate" : 0.0,
+      "taxCents" : 1300
+    }, {
+      "upToCents" : 43000,
+      "rate" : 0.0,
+      "taxCents" : 1400
+    }, {
+      "upToCents" : 44000,
+      "rate" : 0.0,
+      "taxCents" : 1500
+    }, {
+      "upToCents" : 45000,
+      "rate" : 0.0,
+      "taxCents" : 1600
+    }, {
+      "upToCents" : 46000,
+      "rate" : 0.0,
+      "taxCents" : 1700
+    }, {
+      "upToCents" : 47000,
+      "rate" : 0.0,
+      "taxCents" : 1800
+    }, {
+      "upToCents" : 48000,
+      "rate" : 0.0,
+      "taxCents" : 1900
+    }, {
+      "upToCents" : 49000,
+      "rate" : 0.0,
+      "taxCents" : 2000
+    }, {
+      "upToCents" : 50000,
+      "rate" : 0.0,
+      "taxCents" : 2100
+    }, {
+      "upToCents" : 51000,
+      "rate" : 0.0,
+      "taxCents" : 2200
+    }, {
+      "upToCents" : 52000,
+      "rate" : 0.0,
+      "taxCents" : 2300
+    }, {
+      "upToCents" : 53500,
+      "rate" : 0.0,
+      "taxCents" : 2400
+    }, {
+      "upToCents" : 55000,
+      "rate" : 0.0,
+      "taxCents" : 2600
+    }, {
+      "upToCents" : 56500,
+      "rate" : 0.0,
+      "taxCents" : 2800
+    }, {
+      "upToCents" : 58000,
+      "rate" : 0.0,
+      "taxCents" : 2900
+    }, {
+      "upToCents" : 59500,
+      "rate" : 0.0,
+      "taxCents" : 3100
+    }, {
+      "upToCents" : 61000,
+      "rate" : 0.0,
+      "taxCents" : 3300
+    }, {
+      "upToCents" : 62500,
+      "rate" : 0.0,
+      "taxCents" : 3500
+    }, {
+      "upToCents" : 64000,
+      "rate" : 0.0,
+      "taxCents" : 3700
+    }, {
+      "upToCents" : 65500,
+      "rate" : 0.0,
+      "taxCents" : 3800
+    }, {
+      "upToCents" : 67000,
+      "rate" : 0.0,
+      "taxCents" : 4000
+    }, {
+      "upToCents" : 68500,
+      "rate" : 0.0,
+      "taxCents" : 4200
+    }, {
+      "upToCents" : 70000,
+      "rate" : 0.0,
+      "taxCents" : 4400
+    }, {
+      "upToCents" : 71500,
+      "rate" : 0.0,
+      "taxCents" : 4600
+    }, {
+      "upToCents" : 73000,
+      "rate" : 0.0,
+      "taxCents" : 4700
+    }, {
+      "upToCents" : 74500,
+      "rate" : 0.0,
+      "taxCents" : 4900
+    }, {
+      "upToCents" : 76000,
+      "rate" : 0.0,
+      "taxCents" : 5100
+    }, {
+      "upToCents" : 77500,
+      "rate" : 0.0,
+      "taxCents" : 5300
+    }, {
+      "upToCents" : 79000,
+      "rate" : 0.0,
+      "taxCents" : 5500
+    }, {
+      "upToCents" : 80500,
+      "rate" : 0.0,
+      "taxCents" : 5600
+    }, {
+      "upToCents" : 82000,
+      "rate" : 0.0,
+      "taxCents" : 5800
+    }, {
+      "upToCents" : 83500,
+      "rate" : 0.0,
+      "taxCents" : 6000
+    }, {
+      "upToCents" : 85000,
+      "rate" : 0.0,
+      "taxCents" : 6200
+    }, {
+      "upToCents" : 86500,
+      "rate" : 0.0,
+      "taxCents" : 6400
+    }, {
+      "upToCents" : 88000,
+      "rate" : 0.0,
+      "taxCents" : 6500
+    }, {
+      "upToCents" : 89500,
+      "rate" : 0.0,
+      "taxCents" : 6700
+    }, {
+      "upToCents" : 91000,
+      "rate" : 0.0,
+      "taxCents" : 6900
+    }, {
+      "upToCents" : 92500,
+      "rate" : 0.0,
+      "taxCents" : 7100
+    }, {
+      "upToCents" : 94000,
+      "rate" : 0.0,
+      "taxCents" : 7300
+    }, {
+      "upToCents" : 95500,
+      "rate" : 0.0,
+      "taxCents" : 7400
+    }, {
+      "upToCents" : 97000,
+      "rate" : 0.0,
+      "taxCents" : 7600
+    }, {
+      "upToCents" : 98500,
+      "rate" : 0.0,
+      "taxCents" : 7800
+    }, {
+      "upToCents" : 100000,
+      "rate" : 0.0,
+      "taxCents" : 8000
+    }, {
+      "upToCents" : 101500,
+      "rate" : 0.0,
+      "taxCents" : 8200
+    }, {
+      "upToCents" : 103000,
+      "rate" : 0.0,
+      "taxCents" : 8300
+    }, {
+      "upToCents" : 104500,
+      "rate" : 0.0,
+      "taxCents" : 8500
+    }, {
+      "upToCents" : 106000,
+      "rate" : 0.0,
+      "taxCents" : 8700
+    }, {
+      "upToCents" : 107500,
+      "rate" : 0.0,
+      "taxCents" : 8900
+    }, {
+      "upToCents" : 109000,
+      "rate" : 0.0,
+      "taxCents" : 9100
+    }, {
+      "upToCents" : 110500,
+      "rate" : 0.0,
+      "taxCents" : 9200
+    }, {
+      "upToCents" : 112000,
+      "rate" : 0.0,
+      "taxCents" : 9400
+    }, {
+      "upToCents" : 113500,
+      "rate" : 0.0,
+      "taxCents" : 9600
+    }, {
+      "upToCents" : 115000,
+      "rate" : 0.0,
+      "taxCents" : 9800
+    }, {
+      "upToCents" : 116500,
+      "rate" : 0.0,
+      "taxCents" : 10000
+    }, {
+      "upToCents" : 118000,
+      "rate" : 0.0,
+      "taxCents" : 10100
+    }, {
+      "upToCents" : 119500,
+      "rate" : 0.0,
+      "taxCents" : 10300
+    }, {
+      "upToCents" : 121000,
+      "rate" : 0.0,
+      "taxCents" : 10500
+    }, {
+      "upToCents" : 122500,
+      "rate" : 0.0,
+      "taxCents" : 10700
+    }, {
+      "upToCents" : 124500,
+      "rate" : 0.0,
+      "taxCents" : 11000
+    }, {
+      "upToCents" : 126500,
+      "rate" : 0.0,
+      "taxCents" : 11500
+    }, {
+      "upToCents" : 128500,
+      "rate" : 0.0,
+      "taxCents" : 11900
+    }, {
+      "upToCents" : 130500,
+      "rate" : 0.0,
+      "taxCents" : 12400
+    }, {
+      "upToCents" : 132500,
+      "rate" : 0.0,
+      "taxCents" : 12800
+    }, {
+      "upToCents" : 134500,
+      "rate" : 0.0,
+      "taxCents" : 13200
+    }, {
+      "upToCents" : 136500,
+      "rate" : 0.0,
+      "taxCents" : 13700
+    }, {
+      "upToCents" : 138500,
+      "rate" : 0.0,
+      "taxCents" : 14100
+    }, {
+      "upToCents" : 140500,
+      "rate" : 0.0,
+      "taxCents" : 14600
+    }, {
+      "upToCents" : 142500,
+      "rate" : 0.0,
+      "taxCents" : 15000
+    }, {
+      "upToCents" : 144500,
+      "rate" : 0.0,
+      "taxCents" : 15400
+    }, {
+      "upToCents" : 146500,
+      "rate" : 0.0,
+      "taxCents" : 15900
+    }, {
+      "upToCents" : 148500,
+      "rate" : 0.0,
+      "taxCents" : 16300
+    }, {
+      "upToCents" : 150500,
+      "rate" : 0.0,
+      "taxCents" : 16800
+    }, {
+      "upToCents" : 152500,
+      "rate" : 0.0,
+      "taxCents" : 17200
+    }, {
+      "upToCents" : 154500,
+      "rate" : 0.0,
+      "taxCents" : 17600
+    }, {
+      "upToCents" : 156500,
+      "rate" : 0.0,
+      "taxCents" : 18100
+    }, {
+      "upToCents" : 158500,
+      "rate" : 0.0,
+      "taxCents" : 18500
+    }, {
+      "upToCents" : 160500,
+      "rate" : 0.0,
+      "taxCents" : 19000
+    }, {
+      "upToCents" : 162500,
+      "rate" : 0.0,
+      "taxCents" : 19400
+    }, {
+      "upToCents" : 164500,
+      "rate" : 0.0,
+      "taxCents" : 19800
+    }, {
+      "upToCents" : 166500,
+      "rate" : 0.0,
+      "taxCents" : 20300
+    }, {
+      "upToCents" : 168500,
+      "rate" : 0.0,
+      "taxCents" : 20700
+    }, {
+      "upToCents" : 170500,
+      "rate" : 0.0,
+      "taxCents" : 21200
+    }, {
+      "upToCents" : 172500,
+      "rate" : 0.0,
+      "taxCents" : 21600
+    }, {
+      "upToCents" : 174500,
+      "rate" : 0.0,
+      "taxCents" : 22000
+    }, {
+      "upToCents" : 176500,
+      "rate" : 0.0,
+      "taxCents" : 22500
+    }, {
+      "upToCents" : 178500,
+      "rate" : 0.0,
+      "taxCents" : 22900
+    }, {
+      "upToCents" : 180500,
+      "rate" : 0.0,
+      "taxCents" : 23400
+    }, {
+      "upToCents" : 182500,
+      "rate" : 0.0,
+      "taxCents" : 23800
+    }, {
+      "upToCents" : 184500,
+      "rate" : 0.0,
+      "taxCents" : 24200
+    }, {
+      "upToCents" : 186500,
+      "rate" : 0.0,
+      "taxCents" : 24700
+    }, {
+      "upToCents" : 188500,
+      "rate" : 0.0,
+      "taxCents" : 25100
+    }, {
+      "upToCents" : 190500,
+      "rate" : 0.0,
+      "taxCents" : 25600
+    }, {
+      "upToCents" : 192500,
+      "rate" : 0.0,
+      "taxCents" : 26000
+    }, {
+      "upToCents" : 194500,
+      "rate" : 0.0,
+      "taxCents" : 26400
+    }, {
+      "upToCents" : 196500,
+      "rate" : 0.0,
+      "taxCents" : 26900
+    }, {
+      "upToCents" : 198500,
+      "rate" : 0.0,
+      "taxCents" : 27300
+    }, {
+      "upToCents" : 200500,
+      "rate" : 0.0,
+      "taxCents" : 27800
+    }, {
+      "upToCents" : 202500,
+      "rate" : 0.0,
+      "taxCents" : 28200
+    }, {
+      "upToCents" : 204500,
+      "rate" : 0.0,
+      "taxCents" : 28600
+    }, {
+      "upToCents" : 206500,
+      "rate" : 0.0,
+      "taxCents" : 29100
+    }, {
+      "upToCents" : 208500,
+      "rate" : 0.0,
+      "taxCents" : 29500
+    }, {
+      "upToCents" : 210500,
+      "rate" : 0.0,
+      "taxCents" : 30000
+    }, {
+      "upToCents" : 212500,
+      "rate" : 0.0,
+      "taxCents" : 30400
+    }, {
+      "upToCents" : 214500,
+      "rate" : 0.0,
+      "taxCents" : 30800
+    }, {
+      "upToCents" : 216500,
+      "rate" : 0.0,
+      "taxCents" : 31300
+    }, {
+      "upToCents" : 218500,
+      "rate" : 0.0,
+      "taxCents" : 31700
+    }, {
+      "upToCents" : 220500,
+      "rate" : 0.0,
+      "taxCents" : 32200
+    }, {
+      "upToCents" : 222500,
+      "rate" : 0.0,
+      "taxCents" : 32600
+    }, {
+      "upToCents" : 224500,
+      "rate" : 0.0,
+      "taxCents" : 33000
+    }, {
+      "upToCents" : 226500,
+      "rate" : 0.0,
+      "taxCents" : 33500
+    }, {
+      "upToCents" : 228500,
+      "rate" : 0.0,
+      "taxCents" : 33900
+    }, {
+      "upToCents" : 231500,
+      "rate" : 0.0,
+      "taxCents" : 34500
+    }, {
+      "upToCents" : 234500,
+      "rate" : 0.0,
+      "taxCents" : 35200
+    }, {
+      "upToCents" : 237500,
+      "rate" : 0.0,
+      "taxCents" : 36000
+    }, {
+      "upToCents" : 240500,
+      "rate" : 0.0,
+      "taxCents" : 36700
+    }, {
+      "upToCents" : 243500,
+      "rate" : 0.0,
+      "taxCents" : 37400
+    }, {
+      "upToCents" : 246500,
+      "rate" : 0.0,
+      "taxCents" : 38100
+    }, {
+      "upToCents" : 249500,
+      "rate" : 0.0,
+      "taxCents" : 38800
+    }, {
+      "upToCents" : 252500,
+      "rate" : 0.0,
+      "taxCents" : 39600
+    }, {
+      "upToCents" : 255500,
+      "rate" : 0.0,
+      "taxCents" : 40300
+    }, {
+      "upToCents" : 258500,
+      "rate" : 0.0,
+      "taxCents" : 41000
+    }, {
+      "upToCents" : 261500,
+      "rate" : 0.0,
+      "taxCents" : 41700
+    }, {
+      "upToCents" : 264500,
+      "rate" : 0.0,
+      "taxCents" : 42400
+    }, {
+      "upToCents" : 267500,
+      "rate" : 0.0,
+      "taxCents" : 43200
+    }, {
+      "upToCents" : 270500,
+      "rate" : 0.0,
+      "taxCents" : 43900
+    }, {
+      "upToCents" : 273500,
+      "rate" : 0.0,
+      "taxCents" : 44600
+    }, {
+      "upToCents" : 276500,
+      "rate" : 0.0,
+      "taxCents" : 45300
+    }, {
+      "upToCents" : 279500,
+      "rate" : 0.0,
+      "taxCents" : 46000
+    }, {
+      "upToCents" : 282500,
+      "rate" : 0.0,
+      "taxCents" : 46800
+    }, {
+      "upToCents" : 285500,
+      "rate" : 0.0,
+      "taxCents" : 47500
+    }, {
+      "upToCents" : 288500,
+      "rate" : 0.0,
+      "taxCents" : 48200
+    }, {
+      "upToCents" : 291500,
+      "rate" : 0.0,
+      "taxCents" : 48900
+    }, {
+      "upToCents" : 294500,
+      "rate" : 0.0,
+      "taxCents" : 49600
+    }, {
+      "upToCents" : 297500,
+      "rate" : 0.0,
+      "taxCents" : 50400
+    }, {
+      "upToCents" : 300500,
+      "rate" : 0.0,
+      "taxCents" : 51100
+    }, {
+      "upToCents" : 303500,
+      "rate" : 0.0,
+      "taxCents" : 51800
+    }, {
+      "upToCents" : 306500,
+      "rate" : 0.0,
+      "taxCents" : 52500
+    }, {
+      "upToCents" : 309500,
+      "rate" : 0.0,
+      "taxCents" : 53200
+    }, {
+      "upToCents" : 312500,
+      "rate" : 0.0,
+      "taxCents" : 54000
+    }, {
+      "upToCents" : 315500,
+      "rate" : 0.0,
+      "taxCents" : 54700
+    }, {
+      "upToCents" : 318500,
+      "rate" : 0.0,
+      "taxCents" : 55400
+    }, {
+      "upToCents" : 321500,
+      "rate" : 0.0,
+      "taxCents" : 56100
+    }, {
+      "upToCents" : 324500,
+      "rate" : 0.0,
+      "taxCents" : 56800
+    }, {
+      "upToCents" : 327500,
+      "rate" : 0.0,
+      "taxCents" : 57600
+    }, {
+      "upToCents" : 330500,
+      "rate" : 0.0,
+      "taxCents" : 58300
+    }, {
+      "upToCents" : 333500,
+      "rate" : 0.0,
+      "taxCents" : 59000
+    }, {
+      "upToCents" : 336500,
+      "rate" : 0.0,
+      "taxCents" : 59700
+    }, {
+      "upToCents" : 339500,
+      "rate" : 0.0,
+      "taxCents" : 60400
+    }, {
+      "upToCents" : 342500,
+      "rate" : 0.0,
+      "taxCents" : 61200
+    }, {
+      "upToCents" : 345500,
+      "rate" : 0.0,
+      "taxCents" : 61900
+    }, {
+      "upToCents" : 348500,
+      "rate" : 0.0,
+      "taxCents" : 62600
+    }, {
+      "upToCents" : 351500,
+      "rate" : 0.0,
+      "taxCents" : 63300
+    }, {
+      "upToCents" : 354500,
+      "rate" : 0.0,
+      "taxCents" : 64000
+    }, {
+      "upToCents" : 357500,
+      "rate" : 0.0,
+      "taxCents" : 64800
+    }, {
+      "upToCents" : 360500,
+      "rate" : 0.0,
+      "taxCents" : 65500
+    }, {
+      "upToCents" : 363500,
+      "rate" : 0.0,
+      "taxCents" : 66200
+    }, {
+      "upToCents" : 366500,
+      "rate" : 0.0,
+      "taxCents" : 66900
+    }, {
+      "upToCents" : 369500,
+      "rate" : 0.0,
+      "taxCents" : 67600
+    }, {
+      "upToCents" : 372500,
+      "rate" : 0.0,
+      "taxCents" : 68400
+    }, {
+      "upToCents" : null,
+      "rate" : 0.0,
+      "taxCents" : 69100
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : "STEP2_CHECKBOX",
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "SINGLE",
+    "residentStateFilter" : null,
+    "workStateFilter" : null,
+    "localityFilter" : null
+  } ]
 }

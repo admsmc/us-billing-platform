@@ -116,4 +116,64 @@ class HrHttpIntegrationTest {
                 jsonPath("$.frequency") { value("BIWEEKLY") }
             }
     }
+
+    @Test
+    fun `GET garnishments endpoint returns shape compatible with worker-service DTO`() {
+        mockMvc.get("/employers/${employerId.value}/employees/${employeeId.value}/garnishments") {
+            param("asOf", checkDate.toString())
+        }.andExpect {
+            status { isOk() }
+            // Response is an array; validate first element fields that
+            // worker-service's GarnishmentOrderDto expects.
+            jsonPath("$[0].orderId") { isString() }
+            jsonPath("$[0].planId") { isString() }
+            jsonPath("$[0].type") { value("CREDITOR_GARNISHMENT") }
+            jsonPath("$[0].formula.type") { value("PercentOfDisposable") }
+            jsonPath("$[0].formula.percent.value") { value(0.10) }
+            // Second rule should be CHILD_SUPPORT at 60% with a fixed floor.
+            jsonPath("$[1].type") { value("CHILD_SUPPORT") }
+            jsonPath("$[1].formula.type") { value("PercentOfDisposable") }
+            jsonPath("$[1].formula.percent.value") { value(0.60) }
+            jsonPath("$[1].protectedEarningsRule.type") { value("FixedFloor") }
+            jsonPath("$[1].protectedEarningsRule.amount.amount") { value(300000) }
+            // Third rule: generic federal tax levy backed by LevyWithBands.
+            jsonPath("$[2].type") { value("FEDERAL_TAX_LEVY") }
+            jsonPath("$[2].formula.type") { value("LevyWithBands") }
+            jsonPath("$[2].formula.bands[0].exemptCents") { value(50000) }
+            // Fourth rule: generic CA state tax levy backed by LevyWithBands.
+            jsonPath("$[3].type") { value("STATE_TAX_LEVY") }
+            jsonPath("$[3].formula.type") { value("LevyWithBands") }
+            jsonPath("$[3].formula.bands[0].exemptCents") { value(100000) }
+            // Fifth rule: generic federal student loan garnishment at 15% of disposable.
+            jsonPath("$[4].type") { value("STUDENT_LOAN") }
+            jsonPath("$[4].formula.type") { value("PercentOfDisposable") }
+            jsonPath("$[4].formula.percent.value") { value(0.15) }
+        }
+    }
+
+    @Test
+    fun `GET garnishments endpoint applies employer-specific overrides and lesser-of formula`() {
+        val overrideEmployerId = "EMP-GARN-OVERRIDE"
+        mockMvc.get("/employers/$overrideEmployerId/employees/${employeeId.value}/garnishments") {
+            param("asOf", checkDate.toString())
+        }.andExpect {
+            status { isOk() }
+            // For EMP-GARN-OVERRIDE we expect only employer-scoped rules, not the
+            // generic null-employer ones. The first rule should use the
+            // LESSER_OF_PERCENT_OR_AMOUNT formula variant.
+            jsonPath("$[0].type") { value("CREDITOR_GARNISHMENT") }
+            jsonPath("$[0].formula.type") { value("LesserOfPercentOrAmount") }
+            jsonPath("$[0].formula.percent.value") { value(0.25) }
+            jsonPath("$[0].formula.amount.amount") { value(150000) }
+        }
+    }
+
+    @Test
+    fun `GET garnishment ledger endpoint returns empty map before any withholdings`() {
+        mockMvc.get("/employers/${employerId.value}/employees/${employeeId.value}/garnishments/ledger")
+            .andExpect {
+                status { isOk() }
+                jsonPath("$") { isMap() }
+            }
+    }
 }

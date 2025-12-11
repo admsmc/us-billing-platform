@@ -2,6 +2,7 @@ package com.example.uspayroll.worker.client
 
 import com.example.uspayroll.payroll.model.EmployeeSnapshot
 import com.example.uspayroll.payroll.model.PayPeriod
+import com.example.uspayroll.payroll.model.garnishment.GarnishmentOrder
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
 import org.springframework.boot.context.properties.ConfigurationProperties
@@ -62,5 +63,24 @@ class HttpHrClient(
     ): PayPeriod? {
         val url = "${props.baseUrl}/employers/${employerId.value}/pay-periods/by-check-date?checkDate=$checkDate"
         return restTemplate.getForObject<PayPeriod>(url)
+    }
+
+    override fun getGarnishmentOrders(
+        employerId: EmployerId,
+        employeeId: EmployeeId,
+        asOfDate: LocalDate,
+    ): List<GarnishmentOrder> {
+        val url = "${props.baseUrl}/employers/${employerId.value}/employees/${employeeId.value}/garnishments?asOf=$asOfDate"
+        val dtoArray = restTemplate.getForObject<Array<GarnishmentOrderDto>>(url) ?: return emptyList()
+        return dtoArray.toList().map { it.toDomain() }
+    }
+
+    override fun recordGarnishmentWithholding(
+        employerId: EmployerId,
+        employeeId: EmployeeId,
+        request: GarnishmentWithholdingRequest,
+    ) {
+        val url = "${props.baseUrl}/employers/${employerId.value}/employees/${employeeId.value}/garnishments/withholdings"
+        restTemplate.postForLocation(url, request)
     }
 }

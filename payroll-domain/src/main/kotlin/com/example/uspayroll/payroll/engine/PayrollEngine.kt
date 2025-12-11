@@ -120,8 +120,6 @@ object PayrollEngine {
             repo = deductionConfig,
         )
 
-        val allDeductions = deductionResult.preTaxDeductions + deductionResult.postTaxDeductions
-
         val basisContext = BasisContext(
             earnings = earnings,
             preTaxDeductions = deductionResult.preTaxDeductions,
@@ -133,6 +131,18 @@ object PayrollEngine {
         val taxBases = basisComputation.bases
 
         val taxResult = TaxesCalculator.computeTaxes(input, taxBases, basisComputation.components)
+
+        val garnishmentResult = GarnishmentsCalculator.computeGarnishments(
+            input = input,
+            gross = gross,
+            employeeTaxes = taxResult.employeeTaxes,
+            preTaxDeductions = deductionResult.preTaxDeductions,
+            plansByCode = deductionResult.plansByCode,
+        )
+
+        val allDeductions = deductionResult.preTaxDeductions +
+            garnishmentResult.garnishments +
+            deductionResult.postTaxDeductions
 
         val ytdAfter = YtdAccumulator.update(
             prior = input.priorYtd,
@@ -146,6 +156,7 @@ object PayrollEngine {
 
         val preTaxTotalCents = deductionResult.preTaxDeductions.fold(0L) { acc, d -> acc + d.amount.amount }
         val postTaxTotalCents = deductionResult.postTaxDeductions.fold(0L) { acc, d -> acc + d.amount.amount }
+        val garnishmentTotalCents = garnishmentResult.garnishments.fold(0L) { acc, d -> acc + d.amount.amount }
 
         val trace = CalculationTrace(
             steps = listOfNotNull(
@@ -154,8 +165,9 @@ object PayrollEngine {
                 prorationTraceStep,
             ) + taxResult.traceSteps + listOf(
                 TraceStep.Note("pre_tax_deductions_cents=$preTaxTotalCents"),
+                TraceStep.Note("garnishment_deductions_cents=$garnishmentTotalCents"),
                 TraceStep.Note("post_tax_deductions_cents=$postTaxTotalCents"),
-            ) + deductionResult.traceSteps,
+            ) + deductionResult.traceSteps + garnishmentResult.traceSteps,
         )
 
         val totalEmployeeTaxCents = taxResult.employeeTaxes.fold(0L) { acc, t -> acc + t.amount.amount }

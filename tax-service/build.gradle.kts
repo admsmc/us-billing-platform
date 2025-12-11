@@ -85,3 +85,21 @@ tasks.register<JavaExec>("validateTaxConfig") {
     classpath = sourceSets.getByName("main").runtimeClasspath
     mainClass.set("com.example.uspayroll.tax.tools.TaxConfigValidatorCli")
 }
+
+// Generate 2025 federal Pub. 15-T biweekly wage-bracket JSON from curated CSV.
+// This is a pure data build step and does not start the Spring Boot application.
+tasks.register<JavaExec>("generateFederal2025BiweeklyWageBrackets") {
+    group = "application"
+    description = "Generate 2025 federal Pub. 15-T biweekly wage-bracket TaxRuleFile JSON from IRS-derived CSV."
+
+    classpath = sourceSets.getByName("main").runtimeClasspath
+    mainClass.set("com.example.uspayroll.tax.tools.WageBracketCsvImporter")
+
+    args(
+        "--wageBracketCsv=wage-bracket-2025-biweekly.csv",
+        "--output=tax-config/federal-2025-pub15t-wage-bracket-biweekly.json",
+        "--baseIdPrefix=US_FED_FIT_2025_PUB15T_WB",
+        "--effectiveFrom=2025-01-01",
+        "--effectiveTo=9999-12-31",
+    )
+}

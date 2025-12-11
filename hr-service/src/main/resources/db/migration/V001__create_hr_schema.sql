@@ -28,6 +28,13 @@ CREATE TABLE IF NOT EXISTS employee (
     w4_deductions_cents          BIGINT           NULL,
     w4_step2_multiple_jobs       BOOLEAN      NOT NULL DEFAULT FALSE,
 
+    -- Legacy W-4 metadata for computational bridge and auditability
+    w4_version                   VARCHAR(20)      NULL,
+    legacy_allowances            INTEGER          NULL,
+    legacy_additional_withholding_cents BIGINT    NULL,
+    legacy_marital_status        VARCHAR(32)      NULL,
+    w4_effective_date            DATE             NULL,
+
     additional_withholding_cents BIGINT           NULL,
 
     fica_exempt                  BOOLEAN      NOT NULL DEFAULT FALSE,

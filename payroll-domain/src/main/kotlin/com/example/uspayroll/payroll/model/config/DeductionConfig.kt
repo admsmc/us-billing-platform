@@ -1,6 +1,7 @@
 package com.example.uspayroll.payroll.model.config
 
 import com.example.uspayroll.payroll.model.Percent
+import com.example.uspayroll.payroll.model.garnishment.GarnishmentType
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.shared.Money
 
@@ -47,6 +48,16 @@ data class DeductionPlan(
      * The engine only cares about [kind]; reporting layers can use [subtype].
      */
     val subtype: String? = null,
+    /**
+     * Optional explicit garnishment type for plans where [kind] is
+     * [DeductionKind.GARNISHMENT]. This mirrors [GarnishmentType] and can be
+     * used by configuration and reporting layers to link employer plans to
+     * specific statutory order types (e.g., CHILD_SUPPORT vs CREDITOR_GARNISHMENT).
+     *
+     * The core engine does not currently rely on this field; it derives
+     * garnishment behavior from [GarnishmentOrder.type] and [kind].
+     */
+    val garnishmentType: GarnishmentType? = null,
     val employeeRate: Percent? = null,
     val employeeFlat: Money? = null,
     val employerRate: Percent? = null,

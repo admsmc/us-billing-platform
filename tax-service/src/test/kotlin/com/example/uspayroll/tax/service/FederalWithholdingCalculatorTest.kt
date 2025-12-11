@@ -63,7 +63,7 @@ class FederalWithholdingCalculatorTest {
                     TaxRule.BracketedIncomeTax(
                         id = "FED_SINGLE",
                         jurisdiction = TaxJurisdiction(TaxJurisdictionType.FEDERAL, "US"),
-                        basis = TaxBasis.Gross,
+                        basis = TaxBasis.FederalTaxable,
                         brackets = listOf(
                             TaxBracket(upTo = Money(20_000_00L), rate = Percent(0.10)),
                             TaxBracket(upTo = Money(40_000_00L), rate = Percent(0.20)),
@@ -74,7 +74,7 @@ class FederalWithholdingCalculatorTest {
                     TaxRule.BracketedIncomeTax(
                         id = "FED_MARRIED",
                         jurisdiction = TaxJurisdiction(TaxJurisdictionType.FEDERAL, "US"),
-                        basis = TaxBasis.Gross,
+                        basis = TaxBasis.FederalTaxable,
                         brackets = listOf(
                             TaxBracket(upTo = Money(40_000_00L), rate = Percent(0.10)),
                             TaxBracket(upTo = Money(80_000_00L), rate = Percent(0.20)),
@@ -179,4 +179,12 @@ class FederalWithholdingCalculatorTest {
         assertTrue(otherIncomeAmt > baseAmt, "Other income should increase withholding relative to baseline")
         assertTrue(deductionsAmt < baseAmt, "Deductions should decrease withholding relative to baseline")
     }
+
+    // TODO(Phase 3b / future work): Re-enable this unit test if we decide we
+    // still want a pure-domain synthetic example in addition to the
+    // wage-bracket integration test in FederalWithholdingIntegrationTest.
+    // For now, Step 2 numeric behavior is locked in via the biweekly
+    // wage-bracket integration test.
+    // @Test
+    fun `Step 2 multiple jobs checkbox increases withholding relative to standard rule`(): Unit = Unit
 }

@@ -1,0 +1,60 @@
+[
+  {
+    "employerId": null,
+    "type": "CREDITOR_GARNISHMENT",
+    "jurisdictionType": "STATE",
+    "jurisdictionCode": "CA",
+    "percentOfDisposable": 0.10,
+    "protectedFloorCents": null,
+    "description": "Generic CA creditor garnishment at 10% of disposable income"
+  },
+  {
+    "employerId": null,
+    "type": "CHILD_SUPPORT",
+    "jurisdictionType": "STATE",
+    "jurisdictionCode": "CA",
+    "percentOfDisposable": 0.60,
+    "protectedFloorCents": 300000,
+    "description": "Generic CA child support at 60% of disposable income with a $3,000 protected floor"
+  },
+  {
+    "employerId": null,
+    "type": "FEDERAL_TAX_LEVY",
+    "jurisdictionType": "FEDERAL",
+    "jurisdictionCode": "US",
+    "percentOfDisposable": 1.0,
+    "protectedFloorCents": 50000,
+    "description": "Example federal tax levy: take disposable income above an illustrative $500 per-check exempt floor (not a full Pub. 1494 model)",
+    "formulaType": "LEVY_WITH_BANDS"
+  },
+  {
+    "employerId": null,
+    "type": "STATE_TAX_LEVY",
+    "jurisdictionType": "STATE",
+    "jurisdictionCode": "CA",
+    "percentOfDisposable": 0.25,
+    "protectedFloorCents": 100000,
+    "description": "Example CA state tax levy: 25% of disposable income above an illustrative $1,000 per-check exempt floor",
+    "formulaType": "LEVY_WITH_BANDS"
+  },
+  {
+    "employerId": null,
+    "type": "STUDENT_LOAN",
+    "jurisdictionType": "FEDERAL",
+    "jurisdictionCode": "US",
+    "percentOfDisposable": 0.15,
+    "protectedFloorCents": null,
+    "description": "Generic federal student loan garnishment at 15% of disposable income (ceiling rate from 20 U.S.C. § 1095a)"
+  },
+  {
+    "employerId": "EMP-GARN-OVERRIDE",
+    "type": "CREDITOR_GARNISHMENT",
+    "jurisdictionType": "STATE",
+    "jurisdictionCode": "CA",
+    "percentOfDisposable": 0.25,
+    "protectedFloorCents": null,
+    "description": "Employer-specific CA creditor garnishment: lesser of 25% disposable or $1,500",
+    "formulaType": "LESSER_OF_PERCENT_OR_AMOUNT",
+    "fixedAmountCents": 150000
+  }
+]

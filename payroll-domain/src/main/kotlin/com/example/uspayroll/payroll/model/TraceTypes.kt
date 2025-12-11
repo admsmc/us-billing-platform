@@ -42,6 +42,46 @@ sealed class TraceStep {
         val amount: Money,
     ) : TraceStep()
 
+    /**
+     * Indicates that a protected earnings floor reduced a requested
+     * garnishment amount for a specific order.
+     */
+    data class ProtectedEarningsApplied(
+        val orderId: String,
+        val requestedCents: Long,
+        val adjustedCents: Long,
+        val floorCents: Long,
+    ) : TraceStep()
+
+    /**
+     * Garnishment-specific event capturing the full context of an applied order.
+     */
+    data class GarnishmentApplied(
+        val orderId: String,
+        val type: String,
+        val description: String,
+        val requestedCents: Long,
+        val appliedCents: Long,
+        val disposableBeforeCents: Long,
+        val disposableAfterCents: Long,
+        val protectedEarningsFloorCents: Long?,
+        val protectedFloorConstrained: Boolean,
+        val arrearsBeforeCents: Long?,
+        val arrearsAfterCents: Long?,
+    ) : TraceStep()
+
+    /**
+     * Snapshot of how disposable income was computed for a given order.
+     */
+    data class DisposableIncomeComputed(
+        val orderId: String,
+        val grossCents: Long,
+        val mandatoryPreTaxCents: Long,
+        val employeeTaxCents: Long,
+        val baseDisposableCents: Long,
+        val netForProtectedFloorCents: Long,
+    ) : TraceStep()
+
     data class Note(val message: String) : TraceStep()
 }
 
