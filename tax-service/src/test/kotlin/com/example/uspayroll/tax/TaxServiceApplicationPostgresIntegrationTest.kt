@@ -10,6 +10,7 @@ import org.springframework.test.context.DynamicPropertySource
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
+import java.util.UUID
 import kotlin.test.assertTrue
 
 /**
@@ -27,7 +28,8 @@ class TaxServiceApplicationPostgresIntegrationTest {
         val postgres: PostgreSQLContainer<*> = PostgreSQLContainer("postgres:16-alpine").apply {
             withDatabaseName("us_payroll_tax")
             withUsername("tax_service")
-            withPassword("changeme")
+            // Avoid credential-shaped defaults in the repo (even in tests).
+            withPassword(UUID.randomUUID().toString())
         }
 
         @JvmStatic

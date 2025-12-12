@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Local dev only.
+# Creates per-service DBs/users so services can run with least-privilege creds.
+#
+# Passwords are sourced from environment variables to avoid committing credential-like defaults.
+# NOTE: Keep passwords simple (avoid single quotes) or extend escaping below.
+
+: "${POSTGRES_USER:=postgres}"
+: "${POSTGRES_DB:=postgres}"
+
+HR_DB_PASSWORD="${HR_DB_PASSWORD:-hr_service}"
+TAX_DB_PASSWORD="${TAX_DB_PASSWORD:-tax_service}"
+LABOR_DB_PASSWORD="${LABOR_DB_PASSWORD:-labor_service}"
+
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<SQL
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'hr_service') THEN
+    CREATE USER hr_service WITH PASSWORD '${HR_DB_PASSWORD}';
+  END IF;
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'tax_service') THEN
+    CREATE USER tax_service WITH PASSWORD '${TAX_DB_PASSWORD}';
+  END IF;
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'labor_service') THEN
+    CREATE USER labor_service WITH PASSWORD '${LABOR_DB_PASSWORD}';
+  END IF;
+END
+$$;
+
+-- Create databases (idempotent in init context; guarded anyway for readability).
+SELECT 'CREATE DATABASE us_payroll_hr OWNER hr_service'
+WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'us_payroll_hr')\gexec
+
+SELECT 'CREATE DATABASE us_payroll_tax OWNER tax_service'
+WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'us_payroll_tax')\gexec
+
+SELECT 'CREATE DATABASE us_payroll_labor OWNER labor_service'
+WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'us_payroll_labor')\gexec
+
+GRANT ALL PRIVILEGES ON DATABASE us_payroll_hr TO hr_service;
+GRANT ALL PRIVILEGES ON DATABASE us_payroll_tax TO tax_service;
+GRANT ALL PRIVILEGES ON DATABASE us_payroll_labor TO labor_service;
+SQL
