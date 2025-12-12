@@ -64,7 +64,7 @@ object WageBracketCsvImporter {
 
     private fun parseArgs(args: List<String>): Params {
         fun argValue(name: String, default: String? = null): String {
-            val prefix = "--${name}="
+            val prefix = "--$name="
             val raw = args.firstOrNull { it.startsWith(prefix) }?.removePrefix(prefix)
             return raw ?: default ?: error("Missing required argument --$name")
         }

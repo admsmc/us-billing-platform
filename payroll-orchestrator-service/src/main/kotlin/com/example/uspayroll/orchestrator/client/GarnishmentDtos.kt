@@ -28,24 +28,22 @@ data class GarnishmentOrderDto(
     val arrearsAtLeast12Weeks: Boolean? = null,
 )
 
-fun GarnishmentOrderDto.toDomain(): GarnishmentOrder =
-    GarnishmentOrder(
-        orderId = GarnishmentOrderId(orderId),
-        planId = planId,
-        type = type,
-        issuingJurisdiction = issuingJurisdiction,
-        caseNumber = caseNumber,
-        servedDate = servedDate,
-        endDate = endDate,
-        priorityClass = priorityClass,
-        sequenceWithinClass = sequenceWithinClass,
-        formula = formula,
-        protectedEarningsRule = protectedEarningsRule,
-        arrearsBefore = arrearsBefore,
-        lifetimeCap = lifetimeCap,
-        supportsOtherDependents = supportsOtherDependents,
-        arrearsAtLeast12Weeks = arrearsAtLeast12Weeks,
-    )
+fun GarnishmentOrderDto.toDomain(): GarnishmentOrder = GarnishmentOrder(
+    orderId = GarnishmentOrderId(orderId),
+    planId = planId,
+    type = type,
+    issuingJurisdiction = issuingJurisdiction,
+    caseNumber = caseNumber,
+    servedDate = servedDate,
+    endDate = endDate,
+    priorityClass = priorityClass,
+    sequenceWithinClass = sequenceWithinClass,
+    formula = formula,
+    protectedEarningsRule = protectedEarningsRule,
+    arrearsBefore = arrearsBefore,
+    lifetimeCap = lifetimeCap,
+    supportsOtherDependents = supportsOtherDependents,
+    arrearsAtLeast12Weeks = arrearsAtLeast12Weeks,
+)
 
-fun List<GarnishmentOrderDto>.toDomainContext(): GarnishmentContext =
-    GarnishmentContext(orders = this.map { it.toDomain() })
+fun List<GarnishmentOrderDto>.toDomainContext(): GarnishmentContext = GarnishmentContext(orders = this.map { it.toDomain() })

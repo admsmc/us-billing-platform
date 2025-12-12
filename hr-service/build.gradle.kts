@@ -22,6 +22,7 @@ dependencies {
     // Spring Boot application + web + JDBC.
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
 
     // Database migrations and testing support for HR schema.
     implementation("org.flywaydb:flyway-core:10.14.0")

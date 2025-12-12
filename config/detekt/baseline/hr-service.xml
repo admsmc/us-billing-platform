@@ -1,0 +1,11 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>InvalidPackageDeclaration:HrPorts.kt$package com.example.uspayroll.hr.api</ID>
+    <ID>MatchingDeclarationName:HrRoutes.kt$HrHttpController</ID>
+    <ID>SpreadOperator:HrApplication.kt$(*args)</ID>
+    <ID>WildcardImport:JdbcHrAdapters.kt$import com.example.uspayroll.payroll.model.*</ID>
+    <ID>WildcardImport:JdbcHrAdaptersTest.kt$import com.example.uspayroll.payroll.model.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

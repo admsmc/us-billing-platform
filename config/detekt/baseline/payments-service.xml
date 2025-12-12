@@ -1,0 +1,13 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>SpreadOperator:OutboxRepository.kt$OutboxRepository$( """ UPDATE outbox_event SET status = ?, locked_by = ?, locked_at = ? WHERE outbox_id IN ($placeholders) """.trimIndent(), *args.toTypedArray(), )</ID>
+    <ID>SpreadOperator:PaycheckPaymentBatchOps.kt$PaycheckPaymentBatchOps$( """ UPDATE paycheck_payment SET status = ?, locked_by = ?, locked_at = ?, submitted_at = ?, updated_at = ? WHERE employer_id = ? AND payment_id IN ($placeholders) """.trimIndent(), *( mutableListOf&lt;Any&gt;( PaycheckPaymentLifecycleStatus.SUBMITTED.name, lockOwner, nowTs, nowTs, nowTs, employerId, ).apply { addAll(ids) }.toTypedArray() ), )</ID>
+    <ID>SpreadOperator:PaycheckPaymentRepository.kt$PaycheckPaymentRepository$( """ UPDATE paycheck_payment SET status = ?, locked_by = ?, locked_at = ?, submitted_at = ?, updated_at = ? WHERE payment_id IN ($placeholders) """.trimIndent(), *args.toTypedArray(), )</ID>
+    <ID>SpreadOperator:PaymentsApplication.kt$(*args)</ID>
+    <ID>TooGenericExceptionCaught:OutboxRelay.kt$OutboxRelay$t: Throwable</ID>
+    <ID>UnusedPrivateProperty:PaymentBatchRepository.kt$PaymentBatchRepository$val batch = findByBatchId(employerId, batchId) ?: return null</ID>
+    <ID>UseCheckOrError:PaymentBatchRepository.kt$PaymentBatchRepository$throw IllegalStateException("batch creation race but mapping not found")</ID>
+  </CurrentIssues>
+</SmellBaseline>

@@ -31,12 +31,16 @@ data class LaborStandardsQuery(
 enum class LaborStandardSourceKind {
     /** U.S. DOL "State Minimum Wage Laws" table. */
     FEDERAL_DOL_MIN_WAGE_TABLE,
+
     /** U.S. DOL "Minimum Wages for Tipped Employees" table. */
     FEDERAL_DOL_TIPPED_WAGE_TABLE,
+
     /** State statute (e.g., state labor code section). */
     STATE_STATUTE,
+
     /** State administrative rule or regulation. */
     STATE_ADMIN_RULE,
+
     /** Other vetted source (agency guidance, official FAQ, etc.). */
     OTHER,
 }

@@ -1,6 +1,6 @@
-import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.tasks.JavaExec
 import org.gradle.api.tasks.SourceSetContainer
+import org.gradle.api.tasks.compile.JavaCompile
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -24,9 +24,14 @@ dependencies {
     // Spring Boot web + JDBC for labor-service HTTP API and DB access.
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+
+    // Flyway for managing Postgres schema migrations (including labor_standard).
+    implementation("org.flywaydb:flyway-core")
 
     // jOOQ for SQL-centric, type-safe access to the labor_standard schema.
     implementation("org.jooq:jooq:3.19.11")
+
     // Postgres driver for runtime connectivity.
     implementation("org.postgresql:postgresql:42.7.3")
 
@@ -39,6 +44,7 @@ dependencies {
 
     testImplementation(kotlin("test"))
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("com.h2database:h2:2.3.232")
 }
 
 val sourceSets = extensions.getByType<SourceSetContainer>()

@@ -1,14 +1,12 @@
 package com.example.uspayroll.tax.service
 
-import com.example.uspayroll.payroll.engine.PayrollEngine
 import com.example.uspayroll.payroll.model.*
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.shared.Money
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 import java.time.LocalDate
+import kotlin.test.Test
+import kotlin.test.assertTrue
 
 class FederalWithholdingCalculatorTest {
 
@@ -116,10 +114,12 @@ class FederalWithholdingCalculatorTest {
 
         // Credit should reduce withholding relative to the no-credit baseline.
         val baseline = DefaultFederalWithholdingCalculator().computeWithholding(
-            baseInput(annualSalaryCents = 30_000_00L, filingStatus = FilingStatus.SINGLE)
+            baseInput(annualSalaryCents = 30_000_00L, filingStatus = FilingStatus.SINGLE),
         )
-        assertTrue(withholding.amount < baseline.amount,
-            "W-4 credit should reduce withholding relative to baseline")
+        assertTrue(
+            withholding.amount < baseline.amount,
+            "W-4 credit should reduce withholding relative to baseline",
+        )
     }
 
     @Test
@@ -134,10 +134,12 @@ class FederalWithholdingCalculatorTest {
         val withholding = calc.computeWithholding(input)
 
         val baseline = DefaultFederalWithholdingCalculator().computeWithholding(
-            baseInput(annualSalaryCents = 30_000_00L, filingStatus = FilingStatus.SINGLE)
+            baseInput(annualSalaryCents = 30_000_00L, filingStatus = FilingStatus.SINGLE),
         )
-        assertTrue(withholding.amount > baseline.amount,
-            "Withholding should include additional per-period amount on top of baseline")
+        assertTrue(
+            withholding.amount > baseline.amount,
+            "Withholding should include additional per-period amount on top of baseline",
+        )
     }
 
     @Test
@@ -152,8 +154,10 @@ class FederalWithholdingCalculatorTest {
 
         // With wider brackets for married, effective annual tax should be lower
         // for the same wages, hence per-period withholding is lower.
-        assertTrue(marriedWithholding.amount < singleWithholding.amount,
-            "Married filing status should produce lower withholding than single for the same wages in this test setup")
+        assertTrue(
+            marriedWithholding.amount < singleWithholding.amount,
+            "Married filing status should produce lower withholding than single for the same wages in this test setup",
+        )
     }
 
     @Test

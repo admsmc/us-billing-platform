@@ -1,10 +1,10 @@
 package com.example.uspayroll.payroll.engine
 
+import com.example.uspayroll.payroll.model.BaseCompensation
 import com.example.uspayroll.payroll.model.EarningCategory
 import com.example.uspayroll.payroll.model.EarningCode
 import com.example.uspayroll.payroll.model.EarningLine
 import com.example.uspayroll.payroll.model.TimeSlice
-import com.example.uspayroll.payroll.model.BaseCompensation
 import com.example.uspayroll.payroll.model.config.EarningConfigRepository
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.shared.Money
@@ -18,12 +18,7 @@ import com.example.uspayroll.shared.Money
  * the core engine.
  */
 fun interface OvertimePolicy {
-    fun computeOvertimeLines(
-        employerId: EmployerId,
-        baseComp: BaseCompensation.Hourly,
-        timeSlice: TimeSlice,
-        earningConfig: EarningConfigRepository?,
-    ): List<EarningLine>
+    fun computeOvertimeLines(employerId: EmployerId, baseComp: BaseCompensation.Hourly, timeSlice: TimeSlice, earningConfig: EarningConfigRepository?): List<EarningLine>
 
     companion object {
         /**

@@ -1,8 +1,8 @@
 package com.example.uspayroll.orchestrator.events.kafka
 
-import com.example.uspayroll.orchestrator.events.PaycheckFinalizedEvent
 import com.example.uspayroll.orchestrator.events.PayRunEventsPublisher
 import com.example.uspayroll.orchestrator.events.PayRunFinalizedEvent
+import com.example.uspayroll.orchestrator.events.PaycheckFinalizedEvent
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.ConfigurationProperties
@@ -24,11 +24,8 @@ class KafkaPayRunEventsConfig {
 
     @Bean
     @ConditionalOnProperty(prefix = "orchestrator.events.kafka", name = ["enabled"], havingValue = "true")
-    fun kafkaPayRunEventsPublisher(
-        kafkaTemplate: KafkaTemplate<String, String>,
-        objectMapper: ObjectMapper,
-        props: KafkaEventsProperties,
-    ): PayRunEventsPublisher = KafkaPayRunEventsPublisher(kafkaTemplate, objectMapper, props)
+    fun kafkaPayRunEventsPublisher(kafkaTemplate: KafkaTemplate<String, String>, objectMapper: ObjectMapper, props: KafkaEventsProperties): PayRunEventsPublisher =
+        KafkaPayRunEventsPublisher(kafkaTemplate, objectMapper, props)
 }
 
 class KafkaPayRunEventsPublisher(

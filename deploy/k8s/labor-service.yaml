@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: labor-service
+  namespace: us-payroll
+spec:
+  selector:
+    app: labor-service
+  ports:
+    - name: http
+      port: 8083
+      targetPort: 8083
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: labor-service
+  namespace: us-payroll
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: labor-service
+  template:
+    metadata:
+      labels:
+        app: labor-service
+    spec:
+      containers:
+        - name: labor-service
+          image: ghcr.io/REPLACE_ME/us-payroll-platform/labor-service:REPLACE_TAG
+          env:
+            - name: SERVER_PORT
+              value: "8083"
+            - name: LABOR_DB_URL
+              value: jdbc:postgresql://postgres:5432/us_payroll_labor
+            - name: LABOR_DB_USERNAME
+              value: labor_service
+            - name: LABOR_DB_PASSWORD
+              value: labor_service
+          ports:
+            - containerPort: 8083
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8083
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8083
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi

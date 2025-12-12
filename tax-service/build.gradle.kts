@@ -1,6 +1,6 @@
-import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.tasks.JavaExec
 import org.gradle.api.tasks.SourceSetContainer
+import org.gradle.api.tasks.compile.JavaCompile
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -24,6 +24,7 @@ dependencies {
     // Spring Boot web + JDBC for tax-service HTTP API and DB access.
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
 
     // Flyway for managing Postgres schema migrations (including tax_rule).
     implementation("org.flywaydb:flyway-core")

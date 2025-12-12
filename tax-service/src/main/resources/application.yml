@@ -1,16 +1,20 @@
+server:
+  port: ${SERVER_PORT:8082}
+
 spring:
   flyway:
     enabled: true
-    locations: classpath:db/migration
+    locations: classpath:db/migration/tax
 
 # Tax service database configuration.
 # Override these values per-environment (e.g., via environment variables or
 # externalized configuration) when running against a real Postgres instance.
 tax:
   db:
-    url: jdbc:postgresql://localhost:5432/us_payroll_tax
-    username: tax_service
-    password: changeme
+    url: ${TAX_DB_URL:jdbc:postgresql://localhost:5432/us_payroll_tax}
+    username: ${TAX_DB_USERNAME:tax_service}
+    # Avoid committing credential-shaped defaults; supply via env/secret manager.
+    password: ${TAX_DB_PASSWORD:}
 
   federalWithholding:
     # Method used for federal income tax withholding. Valid values: PERCENTAGE, WAGE_BRACKET.
@@ -18,3 +22,9 @@ tax:
     method: PERCENTAGE
     # When true, enables stricter Pub 15-T behavior toggles (placeholder for future use).
     pub15tStrictMode: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus

@@ -30,15 +30,7 @@ class OutboxRepository(
     private val jdbcTemplate: JdbcTemplate,
 ) {
 
-    fun enqueue(
-        topic: String,
-        eventKey: String,
-        eventType: String,
-        eventId: String? = null,
-        aggregateId: String? = null,
-        payloadJson: String,
-        now: Instant = Instant.now(),
-    ): String {
+    fun enqueue(topic: String, eventKey: String, eventType: String, eventId: String? = null, aggregateId: String? = null, payloadJson: String, now: Instant = Instant.now()): String {
         val outboxId = "outbox-${UUID.randomUUID()}"
         jdbcTemplate.update(
             """
@@ -66,10 +58,7 @@ class OutboxRepository(
         return outboxId
     }
 
-    fun enqueueBatch(
-        rows: List<PendingOutboxInsert>,
-        now: Instant = Instant.now(),
-    ): List<String> {
+    fun enqueueBatch(rows: List<PendingOutboxInsert>, now: Instant = Instant.now()): List<String> {
         if (rows.isEmpty()) return emptyList()
         val ts = Timestamp.from(now)
 
@@ -123,12 +112,7 @@ class OutboxRepository(
      * many SQL engines and works with H2 for tests.
      */
     @Transactional
-    fun claimBatch(
-        limit: Int,
-        lockOwner: String,
-        lockTtl: Duration,
-        now: Instant = Instant.now(),
-    ): List<OutboxEventRow> {
+    fun claimBatch(limit: Int, lockOwner: String, lockTtl: Duration, now: Instant = Instant.now()): List<OutboxEventRow> {
         val effectiveLimit = limit.coerceIn(1, 500)
         val nowTs = Timestamp.from(now)
         val cutoffTs = Timestamp.from(now.minus(lockTtl))
@@ -202,12 +186,7 @@ class OutboxRepository(
         )
     }
 
-    fun markFailed(
-        outboxId: String,
-        error: String,
-        nextAttemptAt: Instant,
-        now: Instant = Instant.now(),
-    ) {
+    fun markFailed(outboxId: String, error: String, nextAttemptAt: Instant, now: Instant = Instant.now()) {
         val truncated = if (error.length <= 2000) error else error.take(2000)
 
         jdbcTemplate.update(

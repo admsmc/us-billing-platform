@@ -21,10 +21,7 @@ class GarnishmentReconciliationService(
 
     private val logger = LoggerFactory.getLogger(GarnishmentReconciliationService::class.java)
 
-    fun reconcileForEmployee(
-        employerId: EmployerId,
-        employeeId: EmployeeId,
-    ) {
+    fun reconcileForEmployee(employerId: EmployerId, employeeId: EmployeeId) {
         // Join garnishment_order with garnishment_ledger on order_id for this
         // employer/employee. We only reconcile orders that have an initial
         // arrears value; others are treated as "no arrears tracked".
@@ -59,21 +56,21 @@ class GarnishmentReconciliationService(
             employerId.value,
             employeeId.value,
         )
- 
+
         rows.forEach { row ->
             val remaining = row.initialArrearsCents - row.totalWithheldCents
- 
+
             val arrearsAtLeast12Weeks = if (remaining > 0L && row.servedDate != null && row.lastCheckDate != null) {
                 java.time.temporal.ChronoUnit.DAYS.between(row.servedDate, row.lastCheckDate) >= 84
             } else {
                 false
             }
- 
+
             // Update garnishment_order.current_arrears_cents and status, and
             // derive the arrears_at_least_12_weeks support flag from the
             // combination of served_date and last_check_date.
             val status = if (remaining <= 0L) OrderStatus.COMPLETED.name else OrderStatus.ACTIVE.name
- 
+
             jdbcTemplate.update(
                 """
                 UPDATE garnishment_order
@@ -92,7 +89,7 @@ class GarnishmentReconciliationService(
                 employeeId.value,
                 row.orderId,
             )
- 
+
             // Also update ledger.remaining_arrears_cents for debugging/ops,
             // when a ledger row exists.
             jdbcTemplate.update(
@@ -109,7 +106,7 @@ class GarnishmentReconciliationService(
                 employeeId.value,
                 row.orderId,
             )
- 
+
             logger.info(
                 "garnishment_reconciliation.applied employer={} employee={} order_id={} initial_arrears_cents={} total_withheld_cents={} remaining_arrears_cents={} status=",
                 employerId.value,
@@ -123,7 +120,7 @@ class GarnishmentReconciliationService(
         }
     }
 }
- 
+
 private data class GarnishmentReconciliationRow(
     val orderId: String,
     val initialArrearsCents: Long,

@@ -1,10 +1,12 @@
 package com.example.uspayroll.orchestrator.persistence
 
+import com.example.uspayroll.payroll.model.CalculationTrace
 import com.example.uspayroll.payroll.model.PaycheckResult
 import com.example.uspayroll.shared.EmployerId
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Repository
+import java.sql.Date
 
 @Repository
 class JdbcPaycheckStoreRepository(
@@ -26,7 +28,9 @@ class JdbcPaycheckStoreRepository(
         version: Int,
         payload: PaycheckResult,
     ) {
-        val json = objectMapper.writeValueAsString(payload)
+        // Persist a trace-free payload. `TraceStep` is a sealed class without polymorphic
+        // type info, and we don't need the trace for the current orchestrator read-path.
+        val json = objectMapper.writeValueAsString(payload.copy(trace = CalculationTrace()))
 
         // "Immutable" insert: if the paycheck already exists (retry), we do nothing.
         try {
@@ -47,8 +51,8 @@ class JdbcPaycheckStoreRepository(
                 payPeriodId,
                 runType,
                 runSequence,
-                checkDateIso,
-                payload.gross.currency,
+                Date.valueOf(checkDateIso),
+                payload.gross.currency.name,
                 grossCents,
                 netCents,
                 "FINAL",
@@ -60,10 +64,7 @@ class JdbcPaycheckStoreRepository(
         }
     }
 
-    override fun findPaycheck(
-        employerId: EmployerId,
-        paycheckId: String,
-    ): PaycheckResult? {
+    override fun findPaycheck(employerId: EmployerId, paycheckId: String): PaycheckResult? {
         val json = jdbcTemplate.query(
             """
             SELECT payload_json

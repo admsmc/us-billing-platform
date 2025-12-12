@@ -1,7 +1,7 @@
 package com.example.uspayroll.tax.api
 
-import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.payroll.model.TaxRule
+import com.example.uspayroll.shared.EmployerId
 import java.time.LocalDate
 
 /**

@@ -50,8 +50,7 @@ class HrClientConfig {
     }
 
     @Bean
-    fun httpHrClient(props: HrClientProperties, restTemplate: RestTemplate, meterRegistry: io.micrometer.core.instrument.MeterRegistry): HrClient =
-        HttpHrClient(props, restTemplate, meterRegistry)
+    fun httpHrClient(props: HrClientProperties, restTemplate: RestTemplate, meterRegistry: io.micrometer.core.instrument.MeterRegistry): HrClient = HttpHrClient(props, restTemplate, meterRegistry)
 }
 
 class HttpHrClient(
@@ -62,42 +61,28 @@ class HttpHrClient(
 
     private val logger = LoggerFactory.getLogger(HttpHrClient::class.java)
 
-    override fun getEmployeeSnapshot(
-        employerId: EmployerId,
-        employeeId: EmployeeId,
-        asOfDate: LocalDate,
-    ): EmployeeSnapshot? {
+    override fun getEmployeeSnapshot(employerId: EmployerId, employeeId: EmployeeId, asOfDate: LocalDate): EmployeeSnapshot? {
         val url = "${props.baseUrl}/employers/${employerId.value}/employees/${employeeId.value}/snapshot?asOf=$asOfDate"
         return executeWithRetry("GET employee snapshot", url) {
             restTemplate.getForObject<EmployeeSnapshot>(url)
         }
     }
 
-    override fun getPayPeriod(
-        employerId: EmployerId,
-        payPeriodId: String,
-    ): PayPeriod? {
+    override fun getPayPeriod(employerId: EmployerId, payPeriodId: String): PayPeriod? {
         val url = "${props.baseUrl}/employers/${employerId.value}/pay-periods/$payPeriodId"
         return executeWithRetry("GET pay period", url) {
             restTemplate.getForObject<PayPeriod>(url)
         }
     }
 
-    override fun findPayPeriodByCheckDate(
-        employerId: EmployerId,
-        checkDate: LocalDate,
-    ): PayPeriod? {
+    override fun findPayPeriodByCheckDate(employerId: EmployerId, checkDate: LocalDate): PayPeriod? {
         val url = "${props.baseUrl}/employers/${employerId.value}/pay-periods/by-check-date?checkDate=$checkDate"
         return executeWithRetry("GET pay period by check date", url) {
             restTemplate.getForObject<PayPeriod>(url)
         }
     }
 
-    override fun getGarnishmentOrders(
-        employerId: EmployerId,
-        employeeId: EmployeeId,
-        asOfDate: LocalDate,
-    ): List<GarnishmentOrder> {
+    override fun getGarnishmentOrders(employerId: EmployerId, employeeId: EmployeeId, asOfDate: LocalDate): List<GarnishmentOrder> {
         val url = "${props.baseUrl}/employers/${employerId.value}/employees/${employeeId.value}/garnishments?asOf=$asOfDate"
 
         // Garnishments are important but not critical enough to fail the
@@ -111,11 +96,7 @@ class HttpHrClient(
         return dtoArray?.toList()?.map { it.toDomain() } ?: emptyList()
     }
 
-    override fun recordGarnishmentWithholding(
-        employerId: EmployerId,
-        employeeId: EmployeeId,
-        request: GarnishmentWithholdingRequest,
-    ) {
+    override fun recordGarnishmentWithholding(employerId: EmployerId, employeeId: EmployeeId, request: GarnishmentWithholdingRequest) {
         val url = "${props.baseUrl}/employers/${employerId.value}/employees/${employeeId.value}/garnishments/withholdings"
 
         // Withholding callbacks must be fire-and-forget from the payroll
@@ -126,12 +107,7 @@ class HttpHrClient(
         }
     }
 
-    private fun <T> executeWithRetry(
-        operation: String,
-        url: String,
-        failOnExhaustion: Boolean = true,
-        block: () -> T?,
-    ): T? {
+    private fun <T> executeWithRetry(operation: String, url: String, failOnExhaustion: Boolean = true, block: () -> T?): T? {
         var attempt = 0
         val maxAttempts = (props.maxRetries + 1).coerceAtLeast(1)
         var lastError: Exception? = null
@@ -149,7 +125,8 @@ class HttpHrClient(
                     meterRegistry
                         ?.counter(
                             "payroll.garnishments.hr_errors",
-                            "endpoint", operation,
+                            "endpoint",
+                            operation,
                         )
                         ?.increment()
 

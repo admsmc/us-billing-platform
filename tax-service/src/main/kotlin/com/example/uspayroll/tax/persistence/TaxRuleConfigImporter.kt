@@ -9,8 +9,8 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -140,6 +140,5 @@ class TaxRuleConfigImporter(
         )
     }
 
-    private fun serializeBrackets(brackets: List<TaxBracketConfig>): String =
-        objectMapper.writeValueAsString(brackets)
+    private fun serializeBrackets(brackets: List<TaxBracketConfig>): String = objectMapper.writeValueAsString(brackets)
 }

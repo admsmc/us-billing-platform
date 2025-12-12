@@ -4,19 +4,30 @@ import com.example.uspayroll.messaging.events.payments.PaycheckPaymentLifecycleS
 import com.example.uspayroll.messaging.events.payments.PaycheckPaymentStatusChangedEvent
 import com.example.uspayroll.orchestrator.http.PayRunController
 import com.example.uspayroll.orchestrator.payrun.model.PaymentStatus
+import com.example.uspayroll.orchestrator.support.StubClientsTestConfig
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
+import org.springframework.context.annotation.Import
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.RequestEntity
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.test.annotation.DirtiesContext
+import org.springframework.test.context.TestConstructor
+import org.springframework.test.context.TestPropertySource
 import java.net.URI
 import java.time.Instant
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@Import(StubClientsTestConfig::class)
+@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
+@TestPropertySource(
+    properties = [
+        "orchestrator.internal-auth.shared-secret=dev-internal-token",
+    ],
+)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class PaymentStatusProjectionIT(
     private val rest: TestRestTemplate,
@@ -34,7 +45,7 @@ class PaymentStatusProjectionIT(
                         payPeriodId = "pp-1",
                         employeeIds = listOf("e-1"),
                         requestedPayRunId = "run-proj-1",
-                    )
+                    ),
                 ),
             PayRunController.StartFinalizeResponse::class.java,
         )
@@ -83,7 +94,7 @@ class PaymentStatusProjectionIT(
                 paycheckId = paycheckId,
                 paymentId = "pmt-$paycheckId",
                 status = PaycheckPaymentLifecycleStatus.SETTLED,
-            )
+            ),
         )
 
         val paycheckStatus = jdbcTemplate.queryForObject(
@@ -114,7 +125,7 @@ class PaymentStatusProjectionIT(
                         payPeriodId = "pp-1",
                         employeeIds = listOf("e-1", "e-2"),
                         requestedPayRunId = "run-proj-2",
-                    )
+                    ),
                 ),
             PayRunController.StartFinalizeResponse::class.java,
         )
@@ -170,7 +181,7 @@ class PaymentStatusProjectionIT(
                 paycheckId = paycheck1,
                 paymentId = "pmt-$paycheck1",
                 status = PaycheckPaymentLifecycleStatus.SETTLED,
-            )
+            ),
         )
 
         projectionService.applyPaymentStatusChanged(
@@ -182,7 +193,7 @@ class PaymentStatusProjectionIT(
                 paycheckId = paycheck2,
                 paymentId = "pmt-$paycheck2",
                 status = PaycheckPaymentLifecycleStatus.FAILED,
-            )
+            ),
         )
 
         val payRunStatus = jdbcTemplate.queryForObject(

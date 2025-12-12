@@ -4,16 +4,13 @@ import com.example.uspayroll.payroll.model.*
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.shared.Money
+import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import java.time.LocalDate
 
 class FicaGatingTest {
 
-    private fun baseSnapshot(
-        employmentType: EmploymentType,
-        grossCents: Long,
-    ): EmployeeSnapshot {
+    private fun baseSnapshot(employmentType: EmploymentType, grossCents: Long): EmployeeSnapshot {
         return EmployeeSnapshot(
             employerId = EmployerId("EMP1"),
             employeeId = EmployeeId("EE1"),
@@ -28,12 +25,7 @@ class FicaGatingTest {
         )
     }
 
-    private fun paycheckInput(
-        snapshot: EmployeeSnapshot,
-        grossCents: Long,
-        priorYtdSsCents: Long,
-        priorYtdMedCents: Long,
-    ): Pair<PaycheckInput, Map<TaxBasis, Money>> {
+    private fun paycheckInput(snapshot: EmployeeSnapshot, grossCents: Long, priorYtdSsCents: Long, priorYtdMedCents: Long): Pair<PaycheckInput, Map<TaxBasis, Money>> {
         val employerId = snapshot.employerId
         val period = PayPeriod(
             id = "P1",

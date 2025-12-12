@@ -13,11 +13,7 @@ import org.springframework.web.client.getForObject
 import java.time.LocalDate
 
 interface TaxClient {
-    fun getTaxContext(
-        employerId: EmployerId,
-        asOfDate: LocalDate,
-        localityCodes: List<String> = emptyList(),
-    ): TaxContext
+    fun getTaxContext(employerId: EmployerId, asOfDate: LocalDate, localityCodes: List<String> = emptyList()): TaxContext
 }
 
 @ConfigurationProperties(prefix = "tax")
@@ -30,8 +26,7 @@ data class TaxClientProperties(
 class TaxClientConfig {
 
     @Bean
-    fun httpTaxClient(props: TaxClientProperties, hrRestTemplate: RestTemplate): TaxClient =
-        HttpTaxClient(props, hrRestTemplate)
+    fun httpTaxClient(props: TaxClientProperties, hrRestTemplate: RestTemplate): TaxClient = HttpTaxClient(props, hrRestTemplate)
 }
 
 class HttpTaxClient(
@@ -39,12 +34,8 @@ class HttpTaxClient(
     private val restTemplate: RestTemplate,
 ) : TaxClient {
 
-    override fun getTaxContext(
-        employerId: EmployerId,
-        asOfDate: LocalDate,
-        localityCodes: List<String>,
-    ): TaxContext {
-        val localityParam = if (localityCodes.isEmpty()) "" else localityCodes.joinToString("&") { "locality=${it}" }
+    override fun getTaxContext(employerId: EmployerId, asOfDate: LocalDate, localityCodes: List<String>): TaxContext {
+        val localityParam = if (localityCodes.isEmpty()) "" else localityCodes.joinToString("&") { "locality=$it" }
         val sep = if (localityParam.isEmpty()) "" else "&"
         val url = "${props.baseUrl}/employers/${employerId.value}/tax-context?asOf=$asOfDate$sep$localityParam"
 

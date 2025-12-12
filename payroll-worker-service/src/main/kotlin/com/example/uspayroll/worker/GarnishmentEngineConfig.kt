@@ -14,8 +14,7 @@ data class GarnishmentEngineProperties(
      */
     var enabledEmployers: Set<String> = emptySet(),
 ) {
-    fun isEnabledFor(employerId: EmployerId): Boolean =
-        enabledEmployers.isEmpty() || enabledEmployers.contains(employerId.value)
+    fun isEnabledFor(employerId: EmployerId): Boolean = enabledEmployers.isEmpty() || enabledEmployers.contains(employerId.value)
 }
 
 @Configuration

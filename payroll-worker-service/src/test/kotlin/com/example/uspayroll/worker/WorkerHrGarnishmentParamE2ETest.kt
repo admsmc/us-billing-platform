@@ -6,6 +6,7 @@ import com.example.uspayroll.payroll.model.garnishment.GarnishmentType
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.worker.client.HrClientProperties
+import com.example.uspayroll.worker.support.StubTaxLaborClientsTestConfig
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
@@ -15,6 +16,7 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
+import org.springframework.context.annotation.Import
 import org.springframework.jdbc.core.JdbcTemplate
 import java.time.LocalDate
 import kotlin.test.assertEquals
@@ -30,7 +32,14 @@ import kotlin.test.assertTrue
 @SpringBootTest(
     classes = [WorkerApplication::class, HrApplication::class],
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+    properties = [
+        // Ensure HR migrations run in this combined context (other services'
+        // application.yml defaults can otherwise leak onto the classpath).
+        "spring.flyway.enabled=true",
+        "spring.flyway.locations=classpath:db/migration/hr",
+    ],
 )
+@Import(StubTaxLaborClientsTestConfig::class)
 @TestInstance(Lifecycle.PER_CLASS)
 class WorkerHrGarnishmentParamE2ETest {
 
@@ -140,7 +149,8 @@ class WorkerHrGarnishmentParamE2ETest {
                 ),
                 expectedOrderId = "ORDER-NY-CRED-1",
                 expectedType = GarnishmentType.CREDITOR_GARNISHMENT,
-                expectedAmountCents = 20_000L,
+                // EMP-GARN-NY has an employer-specific NY creditor rule at 15%.
+                expectedAmountCents = 30_000L,
             ),
 
             // State tax levies (levy-with-bands)
@@ -286,7 +296,6 @@ class WorkerHrGarnishmentParamE2ETest {
 
     @Autowired
     lateinit var jdbcTemplate: JdbcTemplate
-
 
     @Autowired
     lateinit var payrollRunService: PayrollRunService

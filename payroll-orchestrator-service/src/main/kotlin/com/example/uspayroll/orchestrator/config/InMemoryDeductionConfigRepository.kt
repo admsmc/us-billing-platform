@@ -24,6 +24,5 @@ class InMemoryDeductionConfigRepository : DeductionConfigRepository {
         ),
     )
 
-    override fun findPlansForEmployer(employerId: EmployerId): List<DeductionPlan> =
-        data[employerId] ?: emptyList()
+    override fun findPlansForEmployer(employerId: EmployerId): List<DeductionPlan> = data[employerId] ?: emptyList()
 }

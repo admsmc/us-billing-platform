@@ -5,8 +5,8 @@ import com.example.uspayroll.payroll.model.*
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.shared.Money
-import com.example.uspayroll.shared.PaycheckId
 import com.example.uspayroll.shared.PayRunId
+import com.example.uspayroll.shared.PaycheckId
 import com.example.uspayroll.tax.config.TaxBracketConfig
 import com.example.uspayroll.tax.config.TaxRuleConfig
 import com.example.uspayroll.tax.config.TaxRuleFile
@@ -61,14 +61,7 @@ object Pub15TWageBracketGenerator {
      * Programmatic API used by tests and tools: generate a WAGE_BRACKET
      * TaxRuleFile in-memory from the canonical Pub 15-T BRACKETED config.
      */
-    fun generateFromResource(
-        pub15tResource: String,
-        filingStatus: FilingStatus,
-        frequency: PayFrequency,
-        minCents: Long,
-        maxCents: Long,
-        stepCents: Long,
-    ): TaxRuleFile {
+    fun generateFromResource(pub15tResource: String, filingStatus: FilingStatus, frequency: PayFrequency, minCents: Long, maxCents: Long, stepCents: Long): TaxRuleFile {
         val pub15tFile = loadPub15T(pub15tResource)
         val bracketRule = findBracketedFitRule(pub15tFile, filingStatus)
 
@@ -96,7 +89,7 @@ object Pub15TWageBracketGenerator {
 
     private fun parseArgs(args: List<String>): Params {
         fun argValue(name: String, default: String? = null): String {
-            val prefix = "--${name}="
+            val prefix = "--$name="
             val raw = args.firstOrNull { it.startsWith(prefix) }?.removePrefix(prefix)
             return raw ?: default ?: error("Missing required argument --$name")
         }
@@ -138,10 +131,7 @@ object Pub15TWageBracketGenerator {
         }
     }
 
-    private fun findBracketedFitRule(
-        file: TaxRuleFile,
-        filingStatus: FilingStatus,
-    ): TaxRuleConfig {
+    private fun findBracketedFitRule(file: TaxRuleFile, filingStatus: FilingStatus): TaxRuleConfig {
         val targetStatusName = filingStatus.name
         return file.rules.firstOrNull { rule ->
             rule.jurisdictionType == "FEDERAL" &&
@@ -152,14 +142,7 @@ object Pub15TWageBracketGenerator {
         } ?: error("No BRACKETED FederalTaxable FIT rule found for filingStatus=$targetStatusName")
     }
 
-    private fun generateWageBracketRule(
-        bracketRule: TaxRuleConfig,
-        filingStatus: FilingStatus,
-        frequency: PayFrequency,
-        minWageCents: Long,
-        maxWageCents: Long,
-        stepCents: Long,
-    ): TaxRuleConfig {
+    private fun generateWageBracketRule(bracketRule: TaxRuleConfig, filingStatus: FilingStatus, frequency: PayFrequency, minWageCents: Long, maxWageCents: Long, stepCents: Long): TaxRuleConfig {
         val periodsPerYear = when (frequency) {
             PayFrequency.WEEKLY -> 52
             PayFrequency.BIWEEKLY -> 26
@@ -239,12 +222,11 @@ object Pub15TWageBracketGenerator {
         )
     }
 
-    private fun deriveId(baseId: String, frequency: PayFrequency): String =
-        when (frequency) {
-            PayFrequency.BIWEEKLY -> baseId.replace("_2025_", "_2025_WB_BI_")
-            PayFrequency.WEEKLY -> baseId.replace("_2025_", "_2025_WB_WK_")
-            else -> baseId + "_WAGE_BRACKET_${frequency.name}"
-        }
+    private fun deriveId(baseId: String, frequency: PayFrequency): String = when (frequency) {
+        PayFrequency.BIWEEKLY -> baseId.replace("_2025_", "_2025_WB_BI_")
+        PayFrequency.WEEKLY -> baseId.replace("_2025_", "_2025_WB_WK_")
+        else -> baseId + "_WAGE_BRACKET_${frequency.name}"
+    }
 
     private fun toDomainBracketedRule(cfg: TaxRuleConfig): TaxRule.BracketedIncomeTax {
         val jurisdiction = TaxJurisdiction(
@@ -268,11 +250,7 @@ object Pub15TWageBracketGenerator {
         )
     }
 
-    private fun computeAnnualFit(
-        rule: TaxRule.BracketedIncomeTax,
-        filingStatus: FilingStatus,
-        annualWagesCents: Long,
-    ): Long {
+    private fun computeAnnualFit(rule: TaxRule.BracketedIncomeTax, filingStatus: FilingStatus, annualWagesCents: Long): Long {
         val employerId = EmployerId("GEN-PUB15T-WB")
         val asOfDate = LocalDate.of(2025, 6, 30)
 

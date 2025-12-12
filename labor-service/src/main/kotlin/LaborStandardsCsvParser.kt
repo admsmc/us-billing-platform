@@ -232,9 +232,7 @@ object LaborStandardsCsvParser {
         }
     }
 
-    private fun CSVRecord.getRequired(name: String): String =
-        this.get(name) ?: throw IllegalArgumentException("Missing required column '$name' in labor standards CSV")
+    private fun CSVRecord.getRequired(name: String): String = this.get(name) ?: throw IllegalArgumentException("Missing required column '$name' in labor standards CSV")
 
-    private fun CSVRecord.getOrNull(name: String): String? =
-        if (this.isMapped(name)) this.get(name) else null
+    private fun CSVRecord.getOrNull(name: String): String? = if (this.isMapped(name)) this.get(name) else null
 }

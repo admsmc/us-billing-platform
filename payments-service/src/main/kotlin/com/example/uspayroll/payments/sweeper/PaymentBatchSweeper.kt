@@ -124,7 +124,7 @@ class PaymentBatchSweeper(
                 return@forEach
             }
 
-            val reopened = reopenFailedPaymentsForRetry(employerId, batchId, now)
+            val reopened = reopenFailedPaymentsForRetry(employerId, batchId)
             if (reopened > 0) {
                 jdbcTemplate.update(
                     """
@@ -144,9 +144,7 @@ class PaymentBatchSweeper(
         return touched
     }
 
-    private fun reopenFailedPaymentsForRetry(employerId: String, batchId: String, now: Instant): Int {
-        @Suppress("UNUSED_PARAMETER")
-        val _unused = now
+    private fun reopenFailedPaymentsForRetry(employerId: String, batchId: String): Int {
         // Re-open FAILED payments that have remaining retry budget.
         return jdbcTemplate.update(
             """

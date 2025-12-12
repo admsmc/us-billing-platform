@@ -5,8 +5,8 @@ import com.example.uspayroll.payroll.model.*
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.shared.Money
-import com.example.uspayroll.shared.PaycheckId
 import com.example.uspayroll.shared.PayRunId
+import com.example.uspayroll.shared.PaycheckId
 import com.example.uspayroll.tax.impl.CachingTaxCatalog
 import com.example.uspayroll.tax.impl.CatalogBackedTaxContextProvider
 import com.example.uspayroll.tax.impl.DbTaxCatalog
@@ -26,8 +26,7 @@ import kotlin.test.assertTrue
  */
 class EmployerSpecificOverlayGoldenTest {
 
-    private fun createDslContext(dbName: String): DSLContext =
-        H2TaxTestSupport.createDslContext(dbName)
+    private fun createDslContext(dbName: String): DSLContext = H2TaxTestSupport.createDslContext(dbName)
 
     private fun importConfig(dsl: DSLContext, resourcePath: String) {
         H2TaxTestSupport.importConfigFromResource(dsl, resourcePath, javaClass.classLoader)

@@ -11,7 +11,6 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.TestInstance.Lifecycle
@@ -21,11 +20,9 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.util.TestPropertyValues
 import org.springframework.context.ApplicationContextInitializer
 import org.springframework.context.ConfigurableApplicationContext
-import org.springframework.context.annotation.Import
 import org.springframework.test.context.ContextConfiguration
 import java.nio.charset.StandardCharsets
 import java.time.LocalDate
-import javax.sql.DataSource
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -48,15 +45,15 @@ class TaxLaborHttpClientsIntegrationTest {
             override fun initialize(context: ConfigurableApplicationContext) {
                 // Start real tax-service with H2 and import example config.
                 taxContext = SpringApplicationBuilder(TaxServiceApplication::class.java)
-                    .properties(
-                        mapOf(
-                            "server.port" to "8082",
-                            "tax.db.url" to "jdbc:h2:mem:tax_http_worker;DB_CLOSE_DELAY=-1;MODE=PostgreSQL",
-                            "tax.db.username" to "sa",
-                            "tax.db.password" to "",
-                        ),
+                    .run(
+                        "--server.port=0",
+                        // Keep the in-memory DB alive across Flyway + subsequent connections.
+                        "--tax.db.url=jdbc:h2:mem:tax_http_worker;DB_CLOSE_DELAY=-1;MODE=PostgreSQL",
+                        "--tax.db.username=sa",
+                        "--tax.db.password=",
+                        "--spring.flyway.enabled=true",
+                        "--spring.flyway.locations=classpath:db/migration/tax",
                     )
-                    .run()
 
                 val taxDsl = taxContext.getBean(DSLContext::class.java)
                 taxDsl.deleteFrom(DSL.table("tax_rule")).execute()
@@ -80,24 +77,20 @@ class TaxLaborHttpClientsIntegrationTest {
 
                 // Start real labor-service with H2 and seed a couple of rows.
                 laborContext = SpringApplicationBuilder(com.example.uspayroll.labor.LaborServiceApplication::class.java)
-                    .properties(
-                        mapOf(
-                            "server.port" to "8083",
-                            "labor.db.url" to "jdbc:h2:mem:labor_http_worker;DB_CLOSE_DELAY=-1;MODE=PostgreSQL",
-                            "labor.db.username" to "sa",
-                            "labor.db.password" to "",
-                        ),
+                    .run(
+                        "--server.port=0",
+                        // Keep the in-memory DB alive across Flyway + subsequent connections.
+                        "--labor.db.url=jdbc:h2:mem:labor_http_worker;DB_CLOSE_DELAY=-1;MODE=PostgreSQL",
+                        "--labor.db.username=sa",
+                        "--labor.db.password=",
+                        "--spring.flyway.enabled=true",
+                        "--spring.flyway.locations=classpath:db/migration/labor",
                     )
-                    .run()
 
                 val laborDsl = laborContext.getBean(DSLContext::class.java)
                 laborDsl.deleteFrom(DSL.table("labor_standard")).execute()
 
-                fun insertLaborStandard(
-                    state: String,
-                    regularMinCents: Long,
-                    tippedMinCents: Long? = null,
-                ) {
+                fun insertLaborStandard(state: String, regularMinCents: Long, tippedMinCents: Long? = null) {
                     laborDsl.insertInto(DSL.table("labor_standard"))
                         .columns(
                             DSL.field("state_code"),
@@ -119,10 +112,17 @@ class TaxLaborHttpClientsIntegrationTest {
                 insertLaborStandard("CA", 1_650L, null)
                 insertLaborStandard("TX", 725L, 213L)
 
+                val taxPort = requireNotNull(taxContext.environment.getProperty("local.server.port")) {
+                    "Expected tax-service to expose local.server.port"
+                }
+                val laborPort = requireNotNull(laborContext.environment.getProperty("local.server.port")) {
+                    "Expected labor-service to expose local.server.port"
+                }
+
                 // Point worker's HTTP clients at the real services.
                 TestPropertyValues.of(
-                    "tax.base-url=http://localhost:8082",
-                    "labor.base-url=http://localhost:8083",
+                    "tax.base-url=http://localhost:$taxPort",
+                    "labor.base-url=http://localhost:$laborPort",
                 ).applyTo(context.environment)
             }
         }

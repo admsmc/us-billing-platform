@@ -38,11 +38,7 @@ class LaborServiceHttpIntegrationTest {
     fun setupData() {
         dsl.deleteFrom(DSL.table("labor_standard")).execute()
 
-        fun insertLaborStandard(
-            state: String,
-            regularMinCents: Long,
-            tippedMinCents: Long? = null,
-        ) {
+        fun insertLaborStandard(state: String, regularMinCents: Long, tippedMinCents: Long? = null) {
             dsl.insertInto(DSL.table("labor_standard"))
                 .columns(
                     DSL.field("state_code"),
@@ -101,10 +97,7 @@ class LaborServiceHttpIntegrationTest {
             .where(DSL.field("state_code").eq("NY"))
             .execute()
 
-        fun insertNy(
-            localityCode: String?,
-            regularMinCents: Long,
-        ) {
+        fun insertNy(localityCode: String?, regularMinCents: Long) {
             dsl.insertInto(DSL.table("labor_standard"))
                 .columns(
                     DSL.field("state_code"),

@@ -22,13 +22,7 @@ class OrchestratorPayRunJobRunner(
         val lastPoll: PayRunStatusResponse,
     )
 
-    fun runFinalizeJob(
-        employerId: EmployerId,
-        payPeriodId: String,
-        employeeIds: List<String>,
-        requestedPayRunId: String? = null,
-        idempotencyKey: String? = null,
-    ): JobResult {
+    fun runFinalizeJob(employerId: EmployerId, payPeriodId: String, employeeIds: List<String>, requestedPayRunId: String? = null, idempotencyKey: String? = null): JobResult {
         val start = orchestratorClient.startFinalize(
             employerId = employerId,
             payPeriodId = payPeriodId,

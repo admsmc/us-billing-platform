@@ -7,9 +7,8 @@ import com.example.uspayroll.payroll.model.TaxRule.FlatRateTax
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.shared.Money
-import com.example.uspayroll.shared.PaycheckId
 import com.example.uspayroll.shared.PayRunId
-import com.example.uspayroll.tax.api.TaxQuery
+import com.example.uspayroll.shared.PaycheckId
 import com.example.uspayroll.tax.impl.CachingTaxCatalog
 import com.example.uspayroll.tax.impl.CatalogBackedTaxContextProvider
 import com.example.uspayroll.tax.impl.DbTaxCatalog
@@ -17,11 +16,10 @@ import com.example.uspayroll.tax.impl.TaxRuleRepository
 import com.example.uspayroll.tax.support.H2TaxTestSupport
 import com.example.uspayroll.tax.support.H2TaxTestSupport.H2TaxRuleRepository
 import org.jooq.DSLContext
+import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import java.nio.charset.StandardCharsets
-import java.time.LocalDate
 
 class DbTaxCatalogIntegrationTest {
 
@@ -137,18 +135,17 @@ class DbTaxCatalogIntegrationTest {
             frequency = PayFrequency.BIWEEKLY,
         )
 
-        fun baseSnapshot(employeeId: String, homeState: String, workState: String): EmployeeSnapshot =
-            EmployeeSnapshot(
-                employerId = employerId,
-                employeeId = EmployeeId(employeeId),
-                homeState = homeState,
-                workState = workState,
-                filingStatus = FilingStatus.SINGLE,
-                baseCompensation = BaseCompensation.Salaried(
-                    annualSalary = Money(260_000_00L), // $260,000 annual
-                    frequency = PayFrequency.BIWEEKLY,
-                ),
-            )
+        fun baseSnapshot(employeeId: String, homeState: String, workState: String): EmployeeSnapshot = EmployeeSnapshot(
+            employerId = employerId,
+            employeeId = EmployeeId(employeeId),
+            homeState = homeState,
+            workState = workState,
+            filingStatus = FilingStatus.SINGLE,
+            baseCompensation = BaseCompensation.Salaried(
+                annualSalary = Money(260_000_00L), // $260,000 annual
+                frequency = PayFrequency.BIWEEKLY,
+            ),
+        )
 
         val period = basePeriod()
         val caSnapshot = baseSnapshot("EE-CA-DB", homeState = "CA", workState = "CA")
@@ -189,12 +186,11 @@ class DbTaxCatalogIntegrationTest {
         assertEquals(caResult.gross.amount, txResult.gross.amount)
         assertEquals(caResult.gross.amount, nyResult.gross.amount)
 
-        fun stateTaxCents(result: PaycheckResult): Long =
-            result.employeeTaxes
-                .firstOrNull { it.jurisdiction.type == TaxJurisdictionType.STATE }
-                ?.amount
-                ?.amount
-                ?: 0L
+        fun stateTaxCents(result: PaycheckResult): Long = result.employeeTaxes
+            .firstOrNull { it.jurisdiction.type == TaxJurisdictionType.STATE }
+            ?.amount
+            ?.amount
+            ?: 0L
 
         val caStateTax = stateTaxCents(caResult)
         val txStateTax = stateTaxCents(txResult)

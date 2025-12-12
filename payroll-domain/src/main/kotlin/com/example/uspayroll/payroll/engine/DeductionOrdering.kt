@@ -13,8 +13,7 @@ import com.example.uspayroll.payroll.model.config.DeductionPlan
  */
 object DeductionOrdering {
 
-    fun sort(plans: List<DeductionPlan>): List<DeductionPlan> =
-        plans.sortedWith(compareBy({ priority(it.kind) }, { it.id }))
+    fun sort(plans: List<DeductionPlan>): List<DeductionPlan> = plans.sortedWith(compareBy({ priority(it.kind) }, { it.id }))
 
     private fun priority(kind: DeductionKind): Int = when (kind) {
         DeductionKind.HSA, DeductionKind.FSA -> 1
@@ -22,6 +21,7 @@ object DeductionOrdering {
         DeductionKind.GARNISHMENT -> 3
         DeductionKind.ROTH_RETIREMENT_EMPLOYEE,
         DeductionKind.POSTTAX_VOLUNTARY,
-        DeductionKind.OTHER_POSTTAX -> 4
+        DeductionKind.OTHER_POSTTAX,
+        -> 4
     }
 }

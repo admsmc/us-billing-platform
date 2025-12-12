@@ -5,14 +5,14 @@ import com.example.uspayroll.payroll.model.DeductionLine
 import com.example.uspayroll.payroll.model.PaycheckInput
 import com.example.uspayroll.payroll.model.TaxLine
 import com.example.uspayroll.payroll.model.TraceStep
+import com.example.uspayroll.payroll.model.config.DeductionKind
+import com.example.uspayroll.payroll.model.config.DeductionPlan
+import com.example.uspayroll.payroll.model.config.defaultEmployeeEffects
 import com.example.uspayroll.payroll.model.garnishment.GarnishmentFormula
 import com.example.uspayroll.payroll.model.garnishment.GarnishmentOrder
 import com.example.uspayroll.payroll.model.garnishment.GarnishmentType
 import com.example.uspayroll.payroll.model.garnishment.SupportCapContext
 import com.example.uspayroll.payroll.model.garnishment.computeSupportCap
-import com.example.uspayroll.payroll.model.config.DeductionKind
-import com.example.uspayroll.payroll.model.config.DeductionPlan
-import com.example.uspayroll.payroll.model.config.defaultEmployeeEffects
 import com.example.uspayroll.shared.Money
 
 /**
@@ -125,11 +125,7 @@ object GarnishmentsCalculator {
             return finalCents to cappedAt
         }
 
-        fun rawFromFormula(
-            order: GarnishmentOrder,
-            disposableBefore: Long,
-            filingStatus: com.example.uspayroll.payroll.model.FilingStatus?,
-        ): Long {
+        fun rawFromFormula(order: GarnishmentOrder, disposableBefore: Long, filingStatus: com.example.uspayroll.payroll.model.FilingStatus?): Long {
             return when (val f = order.formula) {
                 is GarnishmentFormula.PercentOfDisposable -> (disposableBefore * f.percent.value).toLong()
                 is GarnishmentFormula.FixedAmountPerPeriod -> f.amount.amount
@@ -156,12 +152,7 @@ object GarnishmentsCalculator {
             val netForProtectedFloorCents: Long,
         )
 
-        fun computeDisposableIncome(
-            order: GarnishmentOrder,
-            gross: Money,
-            employeeTaxes: List<TaxLine>,
-            preTaxDeductions: List<DeductionLine>,
-        ): DisposableIncome {
+        fun computeDisposableIncome(order: GarnishmentOrder, gross: Money, employeeTaxes: List<TaxLine>, preTaxDeductions: List<DeductionLine>): DisposableIncome {
             val mandatoryPreTaxCents: Long = preTaxDeductions.sumOf { it.amount.amount }
             val totalEmployeeTaxCents: Long = employeeTaxes.sumOf { it.amount.amount }
 
@@ -203,16 +194,15 @@ object GarnishmentsCalculator {
             }
         }
 
-        fun protectedEarningsFloorCents(order: GarnishmentOrder): Long? =
-            when (val rule = order.protectedEarningsRule) {
-                null -> null
-                is com.example.uspayroll.payroll.model.garnishment.ProtectedEarningsRule.FixedFloor ->
-                    rule.amount.amount
-                is com.example.uspayroll.payroll.model.garnishment.ProtectedEarningsRule.MultipleOfMinWage -> {
-                    val raw = rule.hourlyRate.amount.toDouble() * rule.hours * rule.multiplier
-                    raw.toLong().coerceAtLeast(0L)
-                }
+        fun protectedEarningsFloorCents(order: GarnishmentOrder): Long? = when (val rule = order.protectedEarningsRule) {
+            null -> null
+            is com.example.uspayroll.payroll.model.garnishment.ProtectedEarningsRule.FixedFloor ->
+                rule.amount.amount
+            is com.example.uspayroll.payroll.model.garnishment.ProtectedEarningsRule.MultipleOfMinWage -> {
+                val raw = rule.hourlyRate.amount.toDouble() * rule.hours * rule.multiplier
+                raw.toLong().coerceAtLeast(0L)
             }
+        }
 
         val filingStatus = input.employeeSnapshot.filingStatus
 
@@ -227,7 +217,7 @@ object GarnishmentsCalculator {
         )
 
         val supportRequests = mutableListOf<RequestedSupport>()
- 
+
         // For now we allocate any support caps proportionally across all
         // support orders, in the deterministic order of (priorityClass,
         // sequenceWithinClass, orderId). If a jurisdiction requires
@@ -426,12 +416,7 @@ object GarnishmentsCalculator {
         )
     }
 
-    private fun computeFromPlans(
-        input: PaycheckInput,
-        gross: Money,
-        preTaxDeductions: List<DeductionLine>,
-        plansByCode: Map<DeductionCode, DeductionPlan>,
-    ): GarnishmentCalculationResult {
+    private fun computeFromPlans(input: PaycheckInput, gross: Money, preTaxDeductions: List<DeductionLine>, plansByCode: Map<DeductionCode, DeductionPlan>): GarnishmentCalculationResult {
         val garnishmentPlans = plansByCode.values
             .filter { it.kind == DeductionKind.GARNISHMENT }
             .distinctBy { it.id }

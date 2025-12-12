@@ -1,18 +1,14 @@
 package com.example.uspayroll.payroll.engine
 
-import com.example.uspayroll.shared.Money
 import com.example.uspayroll.payroll.model.*
 import com.example.uspayroll.payroll.model.config.EarningConfigRepository
+import com.example.uspayroll.shared.Money
 
 /**
  * Simple earnings calculator; will be extended with overtime and other earnings.
  */
 object EarningsCalculator {
-    fun computeEarnings(
-        input: PaycheckInput,
-        earningConfig: EarningConfigRepository? = null,
-        overtimePolicy: OvertimePolicy = OvertimePolicy.Default,
-    ): List<EarningLine> {
+    fun computeEarnings(input: PaycheckInput, earningConfig: EarningConfigRepository? = null, overtimePolicy: OvertimePolicy = OvertimePolicy.Default): List<EarningLine> {
         val base = input.employeeSnapshot.baseCompensation
         val period = input.period
         val slice = input.timeSlice

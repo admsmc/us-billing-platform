@@ -8,12 +8,17 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.test.context.TestConstructor
 import org.springframework.test.context.TestPropertySource
 import java.time.Instant
 
 @SpringBootTest
+@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 @TestPropertySource(
     properties = [
+        "spring.task.scheduling.enabled=false",
+        "spring.datasource.url=jdbc:h2:mem:payments_batch_it;DB_CLOSE_DELAY=-1",
+
         "payments.processor.enabled=true",
         "payments.processor.auto-settle=true",
         "payments.processor.fail-if-net-cents-equals=200000",

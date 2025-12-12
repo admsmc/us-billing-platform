@@ -41,81 +41,75 @@ data class TaxBracketDto(
 
 // --- Mapping: domain -> DTO ---
 
-fun TaxContext.toDto(): TaxContextDto =
-    TaxContextDto(
-        federal = federal.map { it.toDto() },
-        state = state.map { it.toDto() },
-        local = local.map { it.toDto() },
-        employerSpecific = employerSpecific.map { it.toDto() },
-    )
+fun TaxContext.toDto(): TaxContextDto = TaxContextDto(
+    federal = federal.map { it.toDto() },
+    state = state.map { it.toDto() },
+    local = local.map { it.toDto() },
+    employerSpecific = employerSpecific.map { it.toDto() },
+)
 
-private fun TaxRule.toDto(): TaxRuleDto =
-    when (this) {
-        is TaxRule.FlatRateTax -> TaxRuleDto(
-            id = id,
-            jurisdictionType = jurisdiction.type,
-            jurisdictionCode = jurisdiction.code,
-            basis = basis.toWireName(),
-            kind = TaxRuleKindDto.FLAT,
-            rate = rate.value,
-            annualWageCapCents = annualWageCap?.amount,
-        )
-        is TaxRule.BracketedIncomeTax -> TaxRuleDto(
-            id = id,
-            jurisdictionType = jurisdiction.type,
-            jurisdictionCode = jurisdiction.code,
-            basis = basis.toWireName(),
-            kind = TaxRuleKindDto.BRACKETED,
-            brackets = brackets.map { it.toDto() },
-            standardDeductionCents = standardDeduction?.amount,
-            additionalWithholdingCents = additionalWithholding?.amount,
-            filingStatus = filingStatus,
-        )
-        is TaxRule.WageBracketTax -> TaxRuleDto(
-            id = id,
-            jurisdictionType = jurisdiction.type,
-            jurisdictionCode = jurisdiction.code,
-            basis = basis.toWireName(),
-            kind = TaxRuleKindDto.WAGE_BRACKET,
-            brackets = brackets.map { it.toDto() },
-            filingStatus = filingStatus,
-        )
-    }
-
-private fun TaxBracket.toDto(): TaxBracketDto =
-    TaxBracketDto(
-        upToCents = upTo?.amount,
+private fun TaxRule.toDto(): TaxRuleDto = when (this) {
+    is TaxRule.FlatRateTax -> TaxRuleDto(
+        id = id,
+        jurisdictionType = jurisdiction.type,
+        jurisdictionCode = jurisdiction.code,
+        basis = basis.toWireName(),
+        kind = TaxRuleKindDto.FLAT,
         rate = rate.value,
-        taxCents = null,
+        annualWageCapCents = annualWageCap?.amount,
     )
-
-private fun WageBracketRow.toDto(): TaxBracketDto =
-    TaxBracketDto(
-        upToCents = upTo?.amount,
-        rate = null,
-        taxCents = tax.amount,
+    is TaxRule.BracketedIncomeTax -> TaxRuleDto(
+        id = id,
+        jurisdictionType = jurisdiction.type,
+        jurisdictionCode = jurisdiction.code,
+        basis = basis.toWireName(),
+        kind = TaxRuleKindDto.BRACKETED,
+        brackets = brackets.map { it.toDto() },
+        standardDeductionCents = standardDeduction?.amount,
+        additionalWithholdingCents = additionalWithholding?.amount,
+        filingStatus = filingStatus,
     )
+    is TaxRule.WageBracketTax -> TaxRuleDto(
+        id = id,
+        jurisdictionType = jurisdiction.type,
+        jurisdictionCode = jurisdiction.code,
+        basis = basis.toWireName(),
+        kind = TaxRuleKindDto.WAGE_BRACKET,
+        brackets = brackets.map { it.toDto() },
+        filingStatus = filingStatus,
+    )
+}
 
-private fun TaxBasis.toWireName(): String =
-    when (this) {
-        TaxBasis.Gross -> "Gross"
-        TaxBasis.FederalTaxable -> "FederalTaxable"
-        TaxBasis.StateTaxable -> "StateTaxable"
-        TaxBasis.SocialSecurityWages -> "SocialSecurityWages"
-        TaxBasis.MedicareWages -> "MedicareWages"
-        TaxBasis.SupplementalWages -> "SupplementalWages"
-        TaxBasis.FutaWages -> "FutaWages"
-    }
+private fun TaxBracket.toDto(): TaxBracketDto = TaxBracketDto(
+    upToCents = upTo?.amount,
+    rate = rate.value,
+    taxCents = null,
+)
+
+private fun WageBracketRow.toDto(): TaxBracketDto = TaxBracketDto(
+    upToCents = upTo?.amount,
+    rate = null,
+    taxCents = tax.amount,
+)
+
+private fun TaxBasis.toWireName(): String = when (this) {
+    TaxBasis.Gross -> "Gross"
+    TaxBasis.FederalTaxable -> "FederalTaxable"
+    TaxBasis.StateTaxable -> "StateTaxable"
+    TaxBasis.SocialSecurityWages -> "SocialSecurityWages"
+    TaxBasis.MedicareWages -> "MedicareWages"
+    TaxBasis.SupplementalWages -> "SupplementalWages"
+    TaxBasis.FutaWages -> "FutaWages"
+}
 
 // --- Mapping: DTO -> domain ---
 
-fun TaxContextDto.toDomain(): TaxContext =
-    TaxContext(
-        federal = federal.map { it.toDomain() },
-        state = state.map { it.toDomain() },
-        local = local.map { it.toDomain() },
-        employerSpecific = employerSpecific.map { it.toDomain() },
-    )
+fun TaxContextDto.toDomain(): TaxContext = TaxContext(
+    federal = federal.map { it.toDomain() },
+    state = state.map { it.toDomain() },
+    local = local.map { it.toDomain() },
+    employerSpecific = employerSpecific.map { it.toDomain() },
+)
 
 fun TaxRuleDto.toDomain(): TaxRule {
     val jurisdiction = TaxJurisdiction(
@@ -166,14 +160,13 @@ private fun TaxBracketDto.toDomainWageRow(): WageBracketRow {
     )
 }
 
-private fun String.toDomainBasis(): TaxBasis =
-    when (this) {
-        "Gross" -> TaxBasis.Gross
-        "FederalTaxable" -> TaxBasis.FederalTaxable
-        "StateTaxable" -> TaxBasis.StateTaxable
-        "SocialSecurityWages" -> TaxBasis.SocialSecurityWages
-        "MedicareWages" -> TaxBasis.MedicareWages
-        "SupplementalWages" -> TaxBasis.SupplementalWages
-        "FutaWages" -> TaxBasis.FutaWages
-        else -> error("Unknown TaxBasis '$this' from TaxRuleDto.basis")
-    }
+private fun String.toDomainBasis(): TaxBasis = when (this) {
+    "Gross" -> TaxBasis.Gross
+    "FederalTaxable" -> TaxBasis.FederalTaxable
+    "StateTaxable" -> TaxBasis.StateTaxable
+    "SocialSecurityWages" -> TaxBasis.SocialSecurityWages
+    "MedicareWages" -> TaxBasis.MedicareWages
+    "SupplementalWages" -> TaxBasis.SupplementalWages
+    "FutaWages" -> TaxBasis.FutaWages
+    else -> error("Unknown TaxBasis '$this' from TaxRuleDto.basis")
+}

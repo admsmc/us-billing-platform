@@ -174,11 +174,15 @@ class JsonGarnishmentRuleConfigRepository(
     }
 
     override fun findRulesForEmployer(employerId: EmployerId): List<GarnishmentRuleConfig> {
-        val specific = rules.filter { it.employerId == employerId.value }
-        return if (specific.isNotEmpty()) {
-            specific.map { it.config }
-        } else {
-            rules.filter { it.employerId == null }.map { it.config }
-        }
+        val global = rules.filter { it.employerId == null }.map { it.config }
+        val specific = rules.filter { it.employerId == employerId.value }.map { it.config }
+
+        // Employer-specific rules should overlay global rules (override on key),
+        // but we keep a deterministic order that puts employer-specific rules first.
+        // This makes the /garnishments fallback mode predictable.
+        val overriddenKeys = specific.map { it.type to it.jurisdiction }.toSet()
+        val globalNotOverridden = global.filterNot { overriddenKeys.contains(it.type to it.jurisdiction) }
+
+        return specific + globalNotOverridden
     }
 }

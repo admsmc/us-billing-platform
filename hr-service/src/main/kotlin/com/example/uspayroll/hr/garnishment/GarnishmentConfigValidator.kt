@@ -49,10 +49,7 @@ object GarnishmentConfigValidator {
         val bands: List<LevyBandJson>,
     )
 
-    fun validate(
-        rules: List<RuleJson>,
-        levyConfigs: List<LevyConfigJson>,
-    ): ValidationResult {
+    fun validate(rules: List<RuleJson>, levyConfigs: List<LevyConfigJson>): ValidationResult {
         val errors = mutableListOf<ValidationError>()
 
         validateRules(rules, levyConfigs, errors)
@@ -61,11 +58,7 @@ object GarnishmentConfigValidator {
         return ValidationResult(errors)
     }
 
-    private fun validateRules(
-        rules: List<RuleJson>,
-        levyConfigs: List<LevyConfigJson>,
-        errors: MutableList<ValidationError>,
-    ) {
+    private fun validateRules(rules: List<RuleJson>, levyConfigs: List<LevyConfigJson>, errors: MutableList<ValidationError>) {
         if (rules.isEmpty()) return
 
         val validFormulaTypes = setOf(
@@ -108,14 +101,12 @@ object GarnishmentConfigValidator {
                 )
             }
 
-            fun pctOk(): Boolean =
-                rule.percentOfDisposable != null &&
-                    rule.percentOfDisposable > 0.0 &&
-                    rule.percentOfDisposable <= 1.0
+            fun pctOk(): Boolean = rule.percentOfDisposable != null &&
+                rule.percentOfDisposable > 0.0 &&
+                rule.percentOfDisposable <= 1.0
 
-            fun amtOk(): Boolean =
-                rule.fixedAmountCents != null &&
-                    rule.fixedAmountCents > 0L
+            fun amtOk(): Boolean = rule.fixedAmountCents != null &&
+                rule.fixedAmountCents > 0L
 
             when (rawFormulaType) {
                 "PERCENT_OF_DISPOSABLE" -> {
@@ -160,10 +151,7 @@ object GarnishmentConfigValidator {
         }
     }
 
-    private fun validateLevyBands(
-        levyConfigs: List<LevyConfigJson>,
-        errors: MutableList<ValidationError>,
-    ) {
+    private fun validateLevyBands(levyConfigs: List<LevyConfigJson>, errors: MutableList<ValidationError>) {
         if (levyConfigs.isEmpty()) return
 
         levyConfigs.forEach { cfg ->

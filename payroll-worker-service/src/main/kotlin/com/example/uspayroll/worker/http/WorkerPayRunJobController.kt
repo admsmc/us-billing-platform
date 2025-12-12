@@ -27,10 +27,7 @@ class WorkerPayRunJobController(
     )
 
     @PostMapping("/finalize")
-    fun finalize(
-        @PathVariable employerId: String,
-        @RequestBody request: FinalizeJobRequest,
-    ): ResponseEntity<Map<String, Any?>> {
+    fun finalize(@PathVariable employerId: String, @RequestBody request: FinalizeJobRequest): ResponseEntity<Map<String, Any?>> {
         val jobId = "job-${UUID.randomUUID()}"
         val job = FinalizePayRunJob(
             jobId = jobId,
@@ -48,15 +45,12 @@ class WorkerPayRunJobController(
             mapOf(
                 "jobId" to jobId,
                 "status" to "QUEUED",
-            )
+            ),
         )
     }
 
     @GetMapping("/finalize/{jobId}")
-    fun getFinalizeJobStatus(
-        @PathVariable employerId: String,
-        @PathVariable jobId: String,
-    ): ResponseEntity<Map<String, Any?>> {
+    fun getFinalizeJobStatus(@PathVariable employerId: String, @PathVariable jobId: String): ResponseEntity<Map<String, Any?>> {
         val result = store.get(jobId) ?: return ResponseEntity.notFound().build()
         return ResponseEntity.ok(
             mapOf(
@@ -65,7 +59,7 @@ class WorkerPayRunJobController(
                 "payRunId" to result.payRunId,
                 "finalStatus" to result.finalStatus,
                 "error" to result.error,
-            )
+            ),
         )
     }
 }

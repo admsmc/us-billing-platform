@@ -9,11 +9,7 @@ import org.springframework.stereotype.Repository
 class PaycheckLifecycleRepository(
     private val jdbcTemplate: JdbcTemplate,
 ) {
-    fun setApprovalStatusForPayRun(
-        employerId: String,
-        payRunId: String,
-        approvalStatus: ApprovalStatus,
-    ): Int {
+    fun setApprovalStatusForPayRun(employerId: String, payRunId: String, approvalStatus: ApprovalStatus): Int {
         return jdbcTemplate.update(
             """
             UPDATE paycheck
@@ -29,11 +25,7 @@ class PaycheckLifecycleRepository(
         )
     }
 
-    fun setPaymentStatusForPayRun(
-        employerId: String,
-        payRunId: String,
-        paymentStatus: PaymentStatus,
-    ): Int {
+    fun setPaymentStatusForPayRun(employerId: String, payRunId: String, paymentStatus: PaymentStatus): Int {
         return jdbcTemplate.update(
             """
             UPDATE paycheck

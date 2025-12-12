@@ -4,16 +4,13 @@ import com.example.uspayroll.payroll.model.*
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.shared.Money
+import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import java.time.LocalDate
 
 class AdditionalMedicareTest {
 
-    private fun paycheckInput(
-        currentMedicareWagesCents: Long,
-        priorMedicareWagesCents: Long,
-    ): Pair<PaycheckInput, Map<TaxBasis, Money>> {
+    private fun paycheckInput(currentMedicareWagesCents: Long, priorMedicareWagesCents: Long): Pair<PaycheckInput, Map<TaxBasis, Money>> {
         val employerId = EmployerId("EMP-MED")
         val employeeId = EmployeeId("EE-MED")
         val period = PayPeriod(

@@ -1,11 +1,11 @@
 package com.example.uspayroll.tax.impl
 
+import com.example.uspayroll.payroll.model.TaxContext
+import com.example.uspayroll.payroll.model.TaxJurisdictionType
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.tax.api.TaxCatalog
 import com.example.uspayroll.tax.api.TaxContextProvider
 import com.example.uspayroll.tax.api.TaxQuery
-import com.example.uspayroll.payroll.model.TaxContext
-import com.example.uspayroll.payroll.model.TaxJurisdictionType
 import java.time.LocalDate
 
 /**
@@ -20,10 +20,7 @@ class CatalogBackedTaxContextProvider(
     private val catalog: TaxCatalog,
 ) : TaxContextProvider {
 
-    override fun getTaxContext(
-        employerId: EmployerId,
-        asOfDate: LocalDate,
-    ): TaxContext {
+    override fun getTaxContext(employerId: EmployerId, asOfDate: LocalDate): TaxContext {
         // In a later iteration, this query can be enriched with employee-level
         // state/locality and filing information.
         val query = TaxQuery(

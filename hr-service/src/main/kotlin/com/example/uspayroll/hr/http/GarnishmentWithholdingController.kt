@@ -22,11 +22,7 @@ class GarnishmentWithholdingController(
 ) {
 
     @PostMapping("/employees/{employeeId}/garnishments/withholdings")
-    fun recordWithholdings(
-        @PathVariable employerId: String,
-        @PathVariable employeeId: String,
-        @RequestBody request: GarnishmentWithholdingRequestHr,
-    ) {
+    fun recordWithholdings(@PathVariable employerId: String, @PathVariable employeeId: String, @RequestBody request: GarnishmentWithholdingRequestHr) {
         val employer = EmployerId(employerId)
         val employee = EmployeeId(employeeId)
         val views = request.events.map {
@@ -49,10 +45,7 @@ class GarnishmentWithholdingController(
      * visibility; not part of the worker-service contract.
      */
     @GetMapping("/employees/{employeeId}/garnishments/ledger")
-    fun getLedger(
-        @PathVariable employerId: String,
-        @PathVariable employeeId: String,
-    ): Map<String, GarnishmentLedgerEntryHr> {
+    fun getLedger(@PathVariable employerId: String, @PathVariable employeeId: String): Map<String, GarnishmentLedgerEntryHr> {
         val employer = EmployerId(employerId)
         val employee = EmployeeId(employeeId)
         val entries = ledgerRepository.findByEmployee(employer, employee)

@@ -37,8 +37,7 @@ class HrClientConfig {
     }
 
     @Bean
-    fun httpHrClient(props: HrClientProperties, hrRestTemplate: RestTemplate): HrClient =
-        HttpHrClient(props, hrRestTemplate)
+    fun httpHrClient(props: HrClientProperties, hrRestTemplate: RestTemplate): HrClient = HttpHrClient(props, hrRestTemplate)
 }
 
 class HttpHrClient(
@@ -46,28 +45,17 @@ class HttpHrClient(
     private val restTemplate: RestTemplate,
 ) : HrClient {
 
-    override fun getEmployeeSnapshot(
-        employerId: EmployerId,
-        employeeId: EmployeeId,
-        asOfDate: LocalDate,
-    ): EmployeeSnapshot? {
+    override fun getEmployeeSnapshot(employerId: EmployerId, employeeId: EmployeeId, asOfDate: LocalDate): EmployeeSnapshot? {
         val url = "${props.baseUrl}/employers/${employerId.value}/employees/${employeeId.value}/snapshot?asOf=$asOfDate"
         return restTemplate.getForObject<EmployeeSnapshot>(url)
     }
 
-    override fun getPayPeriod(
-        employerId: EmployerId,
-        payPeriodId: String,
-    ): PayPeriod? {
+    override fun getPayPeriod(employerId: EmployerId, payPeriodId: String): PayPeriod? {
         val url = "${props.baseUrl}/employers/${employerId.value}/pay-periods/$payPeriodId"
         return restTemplate.getForObject<PayPeriod>(url)
     }
 
-    override fun getGarnishmentOrders(
-        employerId: EmployerId,
-        employeeId: EmployeeId,
-        asOfDate: LocalDate,
-    ): List<com.example.uspayroll.payroll.model.garnishment.GarnishmentOrder> {
+    override fun getGarnishmentOrders(employerId: EmployerId, employeeId: EmployeeId, asOfDate: LocalDate): List<com.example.uspayroll.payroll.model.garnishment.GarnishmentOrder> {
         val url = "${props.baseUrl}/employers/${employerId.value}/employees/${employeeId.value}/garnishments?asOf=$asOfDate"
         val dtoArray = restTemplate.getForObject<Array<GarnishmentOrderDto>>(url)
             ?: return emptyList()

@@ -8,20 +8,9 @@ import com.example.uspayroll.shared.EmployerId
 import java.time.LocalDate
 
 interface HrClient {
-    fun getEmployeeSnapshot(
-        employerId: EmployerId,
-        employeeId: EmployeeId,
-        asOfDate: LocalDate,
-    ): EmployeeSnapshot?
+    fun getEmployeeSnapshot(employerId: EmployerId, employeeId: EmployeeId, asOfDate: LocalDate): EmployeeSnapshot?
 
-    fun getPayPeriod(
-        employerId: EmployerId,
-        payPeriodId: String,
-    ): PayPeriod?
+    fun getPayPeriod(employerId: EmployerId, payPeriodId: String): PayPeriod?
 
-    fun getGarnishmentOrders(
-        employerId: EmployerId,
-        employeeId: EmployeeId,
-        asOfDate: LocalDate,
-    ): List<GarnishmentOrder>
+    fun getGarnishmentOrders(employerId: EmployerId, employeeId: EmployeeId, asOfDate: LocalDate): List<GarnishmentOrder>
 }

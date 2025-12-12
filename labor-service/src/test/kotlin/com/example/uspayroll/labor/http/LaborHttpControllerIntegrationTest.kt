@@ -75,33 +75,26 @@ class LaborHttpControllerIntegrationTest {
     class TestConfig {
 
         @Bean
-        fun laborStandardsContextProvider(): LaborStandardsContextProvider =
-            object : LaborStandardsContextProvider {
-                override fun getLaborStandards(
-                    employerId: EmployerId,
-                    asOfDate: LocalDate,
-                    workState: String?,
-                    homeState: String?,
-                    localityCodes: List<String>,
-                ): LaborStandardsContext? {
-                    return when (workState) {
-                        "CA" -> LaborStandardsContext(
-                            federalMinimumWage = Money(1_650L), // 16.50
-                            federalTippedCashMinimum = null,
-                            tippedMonthlyThreshold = null,
-                        )
-                        "TX" -> LaborStandardsContext(
-                            federalMinimumWage = Money(7_25L),
-                            federalTippedCashMinimum = Money(2_13L),
-                            tippedMonthlyThreshold = null,
-                        )
-                        else -> LaborStandardsContext(
-                            federalMinimumWage = Money(7_25L),
-                            federalTippedCashMinimum = null,
-                            tippedMonthlyThreshold = null,
-                        )
-                    }
+        fun laborStandardsContextProvider(): LaborStandardsContextProvider = object : LaborStandardsContextProvider {
+            override fun getLaborStandards(employerId: EmployerId, asOfDate: LocalDate, workState: String?, homeState: String?, localityCodes: List<String>): LaborStandardsContext? {
+                return when (workState) {
+                    "CA" -> LaborStandardsContext(
+                        federalMinimumWage = Money(1_650L), // 16.50
+                        federalTippedCashMinimum = null,
+                        tippedMonthlyThreshold = null,
+                    )
+                    "TX" -> LaborStandardsContext(
+                        federalMinimumWage = Money(7_25L),
+                        federalTippedCashMinimum = Money(2_13L),
+                        tippedMonthlyThreshold = null,
+                    )
+                    else -> LaborStandardsContext(
+                        federalMinimumWage = Money(7_25L),
+                        federalTippedCashMinimum = null,
+                        tippedMonthlyThreshold = null,
+                    )
                 }
             }
+        }
     }
 }

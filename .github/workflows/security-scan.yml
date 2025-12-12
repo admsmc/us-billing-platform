@@ -1,0 +1,25 @@
+name: security-scan
+
+on:
+  pull_request:
+  schedule:
+    - cron: '0 7 * * 1'  # weekly (Mondays)
+
+permissions:
+  contents: read
+
+jobs:
+  trivy-fs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Trivy filesystem scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
+          format: table
+          exit-code: '1'

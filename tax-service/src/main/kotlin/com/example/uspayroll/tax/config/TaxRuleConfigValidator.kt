@@ -59,8 +59,7 @@ object TaxRuleConfigValidator {
         "MULTNOMAH_PFA",
     )
 
-    fun validateFile(file: TaxRuleFile): ValidationResult =
-        validateRules(file.rules)
+    fun validateFile(file: TaxRuleFile): ValidationResult = validateRules(file.rules)
 
     fun validateRules(rules: List<TaxRuleConfig>): ValidationResult {
         val errors = mutableListOf<ValidationError>()
@@ -220,9 +219,9 @@ object TaxRuleConfigValidator {
                     errors += ValidationError(
                         ruleId = current.id,
                         message =
-                            "Overlapping effective date ranges for key $key between ${previous.id} " +
-                                "[${previous.effectiveFrom}, ${previous.effectiveTo}) and ${current.id} " +
-                                "[${current.effectiveFrom}, ${current.effectiveTo})",
+                        "Overlapping effective date ranges for key $key between ${previous.id} " +
+                            "[${previous.effectiveFrom}, ${previous.effectiveTo}) and ${current.id} " +
+                            "[${current.effectiveFrom}, ${current.effectiveTo})",
                     )
                 }
                 if (current.effectiveTo.isAfter(previous.effectiveTo)) {

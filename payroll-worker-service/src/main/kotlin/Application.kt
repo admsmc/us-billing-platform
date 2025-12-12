@@ -1,7 +1,9 @@
 package com.example.uspayroll.worker
 
+import com.example.uspayroll.labor.impl.LaborStandardsContextProvider
 import com.example.uspayroll.payroll.engine.PayrollEngine
 import com.example.uspayroll.payroll.model.*
+import com.example.uspayroll.payroll.model.garnishment.GarnishmentContext
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.shared.Money
@@ -9,10 +11,7 @@ import com.example.uspayroll.shared.PayRunId
 import com.example.uspayroll.shared.toLocalityCodeStrings
 import com.example.uspayroll.tax.api.TaxContextProvider
 import com.example.uspayroll.tax.service.FederalWithholdingCalculator
-import com.example.uspayroll.payroll.model.garnishment.GarnishmentContext
 import com.example.uspayroll.tax.service.FederalWithholdingInput
-import com.example.uspayroll.labor.impl.LaborStandardsContextProvider
-import com.example.uspayroll.worker.GarnishmentEngineProperties
 import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -144,11 +143,7 @@ class PayrollRunService(
      * snapshots over HTTP, then runs the payroll engine. This is intended for
      * integration tests and future real flows.
      */
-    fun runHrBackedPayForPeriod(
-        employerId: EmployerId,
-        payPeriodId: String,
-        employeeIds: List<EmployeeId>,
-    ): List<PaycheckResult> {
+    fun runHrBackedPayForPeriod(employerId: EmployerId, payPeriodId: String, employeeIds: List<EmployeeId>): List<PaycheckResult> {
         val client = requireNotNull(hrClient) { "HrClient is required for HR-backed flows" }
 
         val payPeriod = client.getPayPeriod(employerId, payPeriodId)
@@ -210,7 +205,8 @@ class PayrollRunService(
                 )
                 meterRegistry.counter(
                     "payroll.garnishments.employees_with_orders",
-                    "employer_id", employerId.value,
+                    "employer_id",
+                    employerId.value,
                 ).increment()
             }
 
@@ -255,7 +251,8 @@ class PayrollRunService(
             if (protectedSteps.isNotEmpty()) {
                 meterRegistry.counter(
                     "payroll.garnishments.protected_floor_applied",
-                    "employer_id", employerId.value,
+                    "employer_id",
+                    employerId.value,
                 ).increment(protectedSteps.size.toDouble())
             }
 

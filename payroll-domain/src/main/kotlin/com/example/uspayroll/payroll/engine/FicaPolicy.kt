@@ -8,23 +8,18 @@ package com.example.uspayroll.payroll.engine
 object FicaPolicy {
 
     /**
-        * Compute Additional Medicare tax for a single payroll period.
-        *
-        * IRS rule (summarized): An employer must withhold Additional Medicare
-        * Tax (0.9%) on wages it pays to an employee in excess of
-        * $200,000 in a calendar year, regardless of filing status or wages
-        * from other employers.
-        *
-        * This helper takes the prior YTD Medicare wages paid by this employer
-        * and the current-period Medicare wages, and returns the number of
-        * cents subject to the Additional Medicare rate of [rate].
-        */
-    fun additionalMedicareForPeriod(
-        priorMedicareYtdCents: Long,
-        currentMedicareCents: Long,
-        thresholdCents: Long = 200_000_00L,
-        rate: Double = 0.009,
-    ): Long {
+     * Compute Additional Medicare tax for a single payroll period.
+     *
+     * IRS rule (summarized): An employer must withhold Additional Medicare
+     * Tax (0.9%) on wages it pays to an employee in excess of
+     * $200,000 in a calendar year, regardless of filing status or wages
+     * from other employers.
+     *
+     * This helper takes the prior YTD Medicare wages paid by this employer
+     * and the current-period Medicare wages, and returns the number of
+     * cents subject to the Additional Medicare rate of [rate].
+     */
+    fun additionalMedicareForPeriod(priorMedicareYtdCents: Long, currentMedicareCents: Long, thresholdCents: Long = 200_000_00L, rate: Double = 0.009): Long {
         if (currentMedicareCents <= 0L) return 0L
 
         val totalAfterThisPeriod = priorMedicareYtdCents + currentMedicareCents

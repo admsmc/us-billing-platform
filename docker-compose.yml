@@ -1,0 +1,89 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+  hr-service:
+    build:
+      context: .
+      dockerfile: hr-service/Dockerfile
+    depends_on:
+      - postgres
+    environment:
+      SERVER_PORT: 8081
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/us_payroll_hr
+      SPRING_DATASOURCE_USERNAME: hr_service
+      SPRING_DATASOURCE_PASSWORD: hr_service
+
+  tax-service:
+    build:
+      context: .
+      dockerfile: tax-service/Dockerfile
+    depends_on:
+      - postgres
+    environment:
+      SERVER_PORT: 8082
+      TAX_DB_URL: jdbc:postgresql://postgres:5432/us_payroll_tax
+      TAX_DB_USERNAME: tax_service
+      TAX_DB_PASSWORD: tax_service
+
+  labor-service:
+    build:
+      context: .
+      dockerfile: labor-service/Dockerfile
+    depends_on:
+      - postgres
+    environment:
+      SERVER_PORT: 8083
+      LABOR_DB_URL: jdbc:postgresql://postgres:5432/us_payroll_labor
+      LABOR_DB_USERNAME: labor_service
+      LABOR_DB_PASSWORD: labor_service
+
+  payroll-orchestrator-service:
+    build:
+      context: .
+      dockerfile: payroll-orchestrator-service/Dockerfile
+    depends_on:
+      - postgres
+    environment:
+      SERVER_PORT: 8085
+      # For now we keep orchestrator internal auth enabled only when explicitly set.
+      ORCHESTRATOR_INTERNAL_AUTH_SHAREDSECRET: ${ORCHESTRATOR_INTERNAL_AUTH_SHAREDSECRET:-}
+
+  payroll-worker-service:
+    build:
+      context: .
+      dockerfile: payroll-worker-service/Dockerfile
+    depends_on:
+      - hr-service
+      - tax-service
+      - labor-service
+    environment:
+      # Keep worker internal; gateway will expose 8080.
+      SERVER_PORT: 8088
+      HR_BASE_URL: http://hr-service:8081
+      TAX_BASE_URL: http://tax-service:8082
+      LABOR_BASE_URL: http://labor-service:8083
+      ORCHESTRATOR_BASE_URL: http://payroll-orchestrator-service:8085
+      ORCHESTRATOR_INTERNAL_TOKEN: ${ORCHESTRATOR_INTERNAL_AUTH_SHAREDSECRET:-}
+
+  edge-service:
+    build:
+      context: .
+      dockerfile: edge-service/Dockerfile
+    depends_on:
+      - payroll-worker-service
+    environment:
+      SERVER_PORT: 8080
+      WORKER_BASE_URL: http://payroll-worker-service:8088
+      # Gateway auth is disabled by default; set EDGE_AUTH_MODE=HS256 and EDGE_AUTH_HS256_SECRET for dev JWT validation.
+      EDGE_AUTH_MODE: ${EDGE_AUTH_MODE:-DISABLED}
+      EDGE_AUTH_HS256_SECRET: ${EDGE_AUTH_HS256_SECRET:-}
+    ports:
+      - "8080:8080"

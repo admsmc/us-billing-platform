@@ -24,11 +24,7 @@ object NraAdjustment {
      *                             2020 (used to distinguish certain table
      *                             variants in Pub. 15-T)
      */
-    fun extraWagesForNra(
-        frequency: PayFrequency,
-        w4Version: W4Version,
-        firstPaidBefore2020: Boolean,
-    ): Money {
+    fun extraWagesForNra(frequency: PayFrequency, w4Version: W4Version, firstPaidBefore2020: Boolean): Money {
         // Pub. 15-T 2025 "Withholding Adjustment for Nonresident Alien
         // Employees" defines two tables:
         // - Table 1: pre-2020 Form W-4, first paid before 2020.

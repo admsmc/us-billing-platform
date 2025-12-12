@@ -5,8 +5,8 @@ import com.example.uspayroll.payroll.model.*
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.shared.Money
-import com.example.uspayroll.shared.PaycheckId
 import com.example.uspayroll.shared.PayRunId
+import com.example.uspayroll.shared.PaycheckId
 import com.example.uspayroll.tax.impl.CachingTaxCatalog
 import com.example.uspayroll.tax.impl.CatalogBackedTaxContextProvider
 import com.example.uspayroll.tax.impl.DbTaxCatalog
@@ -25,8 +25,7 @@ import kotlin.test.assertTrue
  */
 class Pub15TFrequencySpecificGoldenTest {
 
-    private fun createDslContext(dbName: String): DSLContext =
-        H2TaxTestSupport.createDslContext(dbName)
+    private fun createDslContext(dbName: String): DSLContext = H2TaxTestSupport.createDslContext(dbName)
 
     private fun importWeeklyConfig(dsl: DSLContext) {
         H2TaxTestSupport.importConfigFromResource(
@@ -88,10 +87,7 @@ class Pub15TFrequencySpecificGoldenTest {
 
         val taxContext = provider.getTaxContext(employerId, asOfDate)
 
-        fun computeWeeklyFit(
-            filingStatus: FilingStatus,
-            weeklyWagesCents: Long,
-        ): Long {
+        fun computeWeeklyFit(filingStatus: FilingStatus, weeklyWagesCents: Long): Long {
             val annualized = weeklyWagesCents * 52
 
             val bases: Map<TaxBasis, Money> = mapOf(

@@ -7,9 +7,6 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.junit.jupiter.api.Test
 import java.io.StringReader
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -26,14 +23,16 @@ class LaborCatalogValidationTest {
         .registerModule(JavaTimeModule())
         .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
 
-    private val resourcesDir: Path = Paths.get("labor-service", "src", "main", "resources")
+    private fun readResourceText(name: String): String {
+        val stream = requireNotNull(javaClass.classLoader.getResourceAsStream(name)) {
+            "Expected resource '$name' on the classpath (labor-service/src/main/resources/$name)"
+        }
+        return stream.bufferedReader().use { it.readText() }
+    }
 
     @Test
     fun `labor-standards-2025 csv parses successfully`() {
-        val csvPath = resourcesDir.resolve("labor-standards-2025.csv")
-        assertTrue(Files.exists(csvPath), "Expected labor-standards-2025.csv at $csvPath")
-
-        val csv = Files.readString(csvPath)
+        val csv = readResourceText("labor-standards-2025.csv")
         val standards = LaborStandardsCsvParser.parse(StringReader(csv))
 
         assertTrue(standards.isNotEmpty(), "Expected at least one state labor standard from CSV")
@@ -45,16 +44,10 @@ class LaborCatalogValidationTest {
 
     @Test
     fun `labor-standards-2025 json matches CSV-derived standards`() {
-        val csvPath = resourcesDir.resolve("labor-standards-2025.csv")
-        val jsonPath = resourcesDir.resolve("labor-standards-2025.json")
+        val csv = readResourceText("labor-standards-2025.csv")
+        val json = readResourceText("labor-standards-2025.json")
 
-        assertTrue(Files.exists(csvPath), "Expected labor-standards-2025.csv at $csvPath")
-        assertTrue(Files.exists(jsonPath), "Expected labor-standards-2025.json at $jsonPath")
-
-        val csv = Files.readString(csvPath)
         val fromCsv: List<StateLaborStandard> = LaborStandardsCsvParser.parse(StringReader(csv))
-
-        val json = Files.readString(jsonPath)
         val fromJson: List<StateLaborStandard> = objectMapper.readValue(json)
 
         // Compare just (stateCode, effectiveFrom, effectiveTo) sets to avoid
@@ -69,10 +62,7 @@ class LaborCatalogValidationTest {
 
     @Test
     fun `labor locality codes in JSON are uppercase and scoped by state`() {
-        val jsonPath = resourcesDir.resolve("labor-standards-2025.json")
-        assertTrue(Files.exists(jsonPath), "Expected labor-standards-2025.json at $jsonPath")
-
-        val json = Files.readString(jsonPath)
+        val json = readResourceText("labor-standards-2025.json")
         val standards: List<StateLaborStandard> = objectMapper.readValue(json)
 
         val localityStandards = standards.filter { it.localityCode != null }

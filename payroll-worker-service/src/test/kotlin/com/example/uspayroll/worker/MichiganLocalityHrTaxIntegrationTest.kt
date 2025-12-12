@@ -4,7 +4,6 @@ import com.example.uspayroll.hr.HrApplication
 import com.example.uspayroll.payroll.model.*
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
-import com.example.uspayroll.shared.Money
 import com.example.uspayroll.tax.api.TaxCatalog
 import com.example.uspayroll.tax.api.TaxQuery
 import com.example.uspayroll.tax.config.TaxRuleFile
@@ -13,10 +12,12 @@ import com.example.uspayroll.tax.impl.DbTaxCatalog
 import com.example.uspayroll.tax.impl.TaxRuleRecord
 import com.example.uspayroll.tax.impl.TaxRuleRepository
 import com.example.uspayroll.tax.persistence.TaxRuleConfigImporter
+import com.example.uspayroll.worker.support.StubLaborClientTestConfig
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import org.flywaydb.core.Flyway
 import org.h2.jdbcx.JdbcDataSource
 import org.jooq.DSLContext
 import org.jooq.SQLDialect
@@ -32,8 +33,8 @@ import org.springframework.boot.test.util.TestPropertyValues
 import org.springframework.context.ApplicationContextInitializer
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Primary
 import org.springframework.context.annotation.Import
+import org.springframework.context.annotation.Primary
 import org.springframework.test.context.ContextConfiguration
 import java.nio.charset.StandardCharsets
 import java.sql.Connection
@@ -45,7 +46,7 @@ import kotlin.test.assertTrue
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ContextConfiguration(initializers = [MichiganLocalityHrTaxIntegrationTest.Companion.Initializer::class])
 @TestInstance(Lifecycle.PER_CLASS)
-@Import(MichiganLocalityHrTaxIntegrationTest.TestTaxConfig::class)
+@Import(MichiganLocalityHrTaxIntegrationTest.TestTaxConfig::class, StubLaborClientTestConfig::class)
 class MichiganLocalityHrTaxIntegrationTest {
 
     companion object {
@@ -54,17 +55,15 @@ class MichiganLocalityHrTaxIntegrationTest {
         class Initializer : ApplicationContextInitializer<ConfigurableApplicationContext> {
             override fun initialize(context: ConfigurableApplicationContext) {
                 hrContext = SpringApplicationBuilder(HrApplication::class.java)
-                    .properties(
-                        mapOf(
-                            "server.port" to "8087",
-                            "spring.datasource.url" to "jdbc:h2:mem:hr_mi_local_tax;DB_CLOSE_DELAY=-1",
-                            "spring.datasource.driverClassName" to "org.h2.Driver",
-                            "spring.datasource.username" to "sa",
-                            "spring.datasource.password" to "",
-                            "spring.flyway.locations" to "classpath:db/migration",
-                        ),
+                    .run(
+                        "--server.port=0",
+                        "--spring.datasource.url=jdbc:h2:mem:hr_mi_local_tax",
+                        "--spring.datasource.driverClassName=org.h2.Driver",
+                        "--spring.datasource.username=sa",
+                        "--spring.datasource.password=",
+                        "--spring.flyway.enabled=true",
+                        "--spring.flyway.locations=classpath:db/migration/hr",
                     )
-                    .run()
 
                 val dataSource = hrContext.getBean(DataSource::class.java)
 
@@ -160,7 +159,15 @@ class MichiganLocalityHrTaxIntegrationTest {
                     )
                 }
 
-                TestPropertyValues.of("hr.base-url=http://localhost:8087").applyTo(context.environment)
+                val hrPort = requireNotNull(hrContext.environment.getProperty("local.server.port")) {
+                    "Expected hr-service to expose local.server.port"
+                }
+
+                TestPropertyValues.of(
+                    "hr.base-url=http://localhost:$hrPort",
+                    // Avoid incidental garnishment application from HR demo rules.
+                    "worker.garnishments.enabled-employers=EMP-NOT-MI-LOCAL-TAX",
+                ).applyTo(context.environment)
             }
         }
     }
@@ -170,8 +177,7 @@ class MichiganLocalityHrTaxIntegrationTest {
 
         @Bean
         @Primary
-        fun h2BackedTaxClient(): com.example.uspayroll.worker.client.TaxClient =
-            H2CatalogTaxClient()
+        fun h2BackedTaxClient(): com.example.uspayroll.worker.client.TaxClient = H2CatalogTaxClient()
     }
 
     class H2CatalogTaxClient : com.example.uspayroll.worker.client.TaxClient {
@@ -190,11 +196,7 @@ class MichiganLocalityHrTaxIntegrationTest {
             catalog = CachingTaxCatalog(dbCatalog)
         }
 
-        override fun getTaxContext(
-            employerId: EmployerId,
-            asOfDate: LocalDate,
-            localityCodes: List<String>,
-        ): TaxContext {
+        override fun getTaxContext(employerId: EmployerId, asOfDate: LocalDate, localityCodes: List<String>): TaxContext {
             val query = TaxQuery(
                 employerId = employerId,
                 asOfDate = asOfDate,
@@ -224,6 +226,13 @@ class MichiganLocalityHrTaxIntegrationTest {
                 user = "sa"
                 password = ""
             }
+
+            // Create the tax_rule schema using the real Flyway migration.
+            Flyway.configure()
+                .dataSource(ds)
+                .locations("classpath:db/migration/tax")
+                .load()
+                .migrate()
 
             return DSL.using(ds, SQLDialect.H2)
         }
@@ -355,10 +364,9 @@ class MichiganLocalityHrTaxIntegrationTest {
 
         assertEquals(detroitPaycheck.gross.amount, annArborPaycheck.gross.amount)
 
-        fun totalByType(result: PaycheckResult, type: TaxJurisdictionType): Long =
-            result.employeeTaxes
-                .filter { it.jurisdiction.type == type }
-                .sumOf { it.amount.amount }
+        fun totalByType(result: PaycheckResult, type: TaxJurisdictionType): Long = result.employeeTaxes
+            .filter { it.jurisdiction.type == type }
+            .sumOf { it.amount.amount }
 
         val detroitFederal = totalByType(detroitPaycheck, TaxJurisdictionType.FEDERAL)
         val annArborFederal = totalByType(annArborPaycheck, TaxJurisdictionType.FEDERAL)
@@ -401,10 +409,9 @@ class MichiganLocalityHrTaxIntegrationTest {
 
         assertEquals(grPaycheck.gross.amount, lansingPaycheck.gross.amount)
 
-        fun localTotal(result: PaycheckResult): Long =
-            result.employeeTaxes
-                .filter { it.jurisdiction.type == TaxJurisdictionType.LOCAL }
-                .sumOf { it.amount.amount }
+        fun localTotal(result: PaycheckResult): Long = result.employeeTaxes
+            .filter { it.jurisdiction.type == TaxJurisdictionType.LOCAL }
+            .sumOf { it.amount.amount }
 
         val grLocal = localTotal(grPaycheck)
         val lansingLocal = localTotal(lansingPaycheck)

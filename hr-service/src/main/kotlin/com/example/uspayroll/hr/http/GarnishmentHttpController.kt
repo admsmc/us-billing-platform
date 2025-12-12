@@ -41,9 +41,13 @@ class GarnishmentHttpController(
         val activeOrders = orderRepository.findActiveOrdersForEmployee(employer, employee, asOf)
         val rules = ruleConfigRepository.findRulesForEmployer(employer)
 
-        // Legacy fallback: if there are no persisted orders for this employee,
-        // synthesize one order per rule.
+        // Legacy fallback: only synthesize if there are no persisted orders at all.
+        // If the employee has orders but none are active (e.g., all COMPLETED),
+        // return an empty list.
         if (activeOrders.isEmpty()) {
+            if (orderRepository.hasAnyOrdersForEmployee(employer, employee)) {
+                return emptyList()
+            }
             if (rules.isEmpty()) return emptyList()
 
             return rules.mapIndexed { index, rule ->

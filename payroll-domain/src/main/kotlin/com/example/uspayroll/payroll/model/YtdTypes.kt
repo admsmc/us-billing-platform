@@ -22,6 +22,5 @@ data class YtdSnapshot(
      * Create a fresh YTD snapshot for a new tax year, resetting all
      * accumulated amounts while preserving only the target year.
      */
-    fun resetForYear(newYear: Int): YtdSnapshot =
-        YtdSnapshot(year = newYear)
+    fun resetForYear(newYear: Int): YtdSnapshot = YtdSnapshot(year = newYear)
 }

@@ -41,14 +41,7 @@ class PaycheckPaymentBatchOps(
     }
 
     @Transactional
-    fun claimCreatedByBatch(
-        employerId: String,
-        batchId: String,
-        limit: Int,
-        lockOwner: String,
-        lockTtl: Duration,
-        now: Instant = Instant.now(),
-    ): List<PaymentRow> {
+    fun claimCreatedByBatch(employerId: String, batchId: String, limit: Int, lockOwner: String, lockTtl: Duration, now: Instant = Instant.now()): List<PaymentRow> {
         val effectiveLimit = limit.coerceIn(1, 500)
         val nowTs = Timestamp.from(now)
         val cutoffTs = Timestamp.from(now.minus(lockTtl))
@@ -119,7 +112,7 @@ class PaycheckPaymentBatchOps(
                     nowTs,
                     employerId,
                 ).apply { addAll(ids) }.toTypedArray()
-            ),
+                ),
         )
 
         return rows

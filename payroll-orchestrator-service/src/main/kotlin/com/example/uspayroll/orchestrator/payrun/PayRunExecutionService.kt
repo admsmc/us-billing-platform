@@ -72,7 +72,7 @@ class PayRunExecutionService(
             employerId = employerId,
             payRunId = payRunId,
             cutoff = cutoff,
-            reason = "requeued_stale_running cutoffMs=${requeueStaleMillis}",
+            reason = "requeued_stale_running cutoffMs=$requeueStaleMillis",
         )
 
         val startMs = System.currentTimeMillis()

@@ -3,11 +3,13 @@ package com.example.uspayroll.orchestrator.payments.kafka
 import com.example.uspayroll.messaging.events.payments.PaycheckPaymentLifecycleStatus
 import com.example.uspayroll.messaging.events.payments.PaycheckPaymentStatusChangedEvent
 import com.example.uspayroll.orchestrator.http.PayRunController
+import com.example.uspayroll.orchestrator.support.StubClientsTestConfig
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
+import org.springframework.context.annotation.Import
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.RequestEntity
@@ -17,11 +19,14 @@ import org.springframework.kafka.support.KafkaHeaders
 import org.springframework.kafka.test.context.EmbeddedKafka
 import org.springframework.messaging.support.MessageBuilder
 import org.springframework.test.annotation.DirtiesContext
+import org.springframework.test.context.TestConstructor
 import org.springframework.test.context.TestPropertySource
 import java.net.URI
 import java.time.Instant
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@Import(StubClientsTestConfig::class)
+@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 @EmbeddedKafka(
     partitions = 1,
     topics = ["paycheck.payment.status_changed"],
@@ -32,6 +37,7 @@ import java.time.Instant
         "orchestrator.payments.consumer-name=payroll-orchestrator-service-it",
         "orchestrator.payments.group-id=payroll-orchestrator-payments-it",
         "orchestrator.payments.payment-status-changed-topic=paycheck.payment.status_changed",
+        "orchestrator.internal-auth.shared-secret=dev-internal-token",
         "spring.kafka.bootstrap-servers=\${spring.embedded.kafka.brokers}",
         "spring.kafka.consumer.auto-offset-reset=earliest",
         "spring.kafka.consumer.enable-auto-commit=false",
@@ -55,7 +61,7 @@ class PaymentsStatusKafkaConsumerIT(
                         payPeriodId = "pp-1",
                         employeeIds = listOf("e-1"),
                         requestedPayRunId = "run-kafka-it-1",
-                    )
+                    ),
                 ),
             PayRunController.StartFinalizeResponse::class.java,
         )
@@ -106,7 +112,8 @@ class PaymentsStatusKafkaConsumerIT(
             status = PaycheckPaymentLifecycleStatus.SETTLED,
         )
 
-        val msg = MessageBuilder.withPayload(com.fasterxml.jackson.module.kotlin.jacksonObjectMapper().writeValueAsString(evt))
+        val mapper = com.fasterxml.jackson.module.kotlin.jacksonObjectMapper().findAndRegisterModules()
+        val msg = MessageBuilder.withPayload(mapper.writeValueAsString(evt))
             .setHeader(KafkaHeaders.TOPIC, "paycheck.payment.status_changed")
             .setHeader(KafkaHeaders.KEY, "$employerId:run-kafka-it-1")
             .setHeader("X-Event-Id", evt.eventId)

@@ -1,12 +1,12 @@
 package com.example.uspayroll.worker.client
 
+import com.example.uspayroll.payroll.model.TaxJurisdiction
 import com.example.uspayroll.payroll.model.garnishment.GarnishmentContext
 import com.example.uspayroll.payroll.model.garnishment.GarnishmentFormula
 import com.example.uspayroll.payroll.model.garnishment.GarnishmentOrder
 import com.example.uspayroll.payroll.model.garnishment.GarnishmentOrderId
 import com.example.uspayroll.payroll.model.garnishment.GarnishmentType
 import com.example.uspayroll.payroll.model.garnishment.ProtectedEarningsRule
-import com.example.uspayroll.payroll.model.TaxJurisdiction
 import com.example.uspayroll.shared.Money
 import java.time.LocalDate
 
@@ -33,24 +33,22 @@ data class GarnishmentOrderDto(
     val arrearsAtLeast12Weeks: Boolean? = null,
 )
 
-fun GarnishmentOrderDto.toDomain(): GarnishmentOrder =
-    GarnishmentOrder(
-        orderId = GarnishmentOrderId(orderId),
-        planId = planId,
-        type = type,
-        issuingJurisdiction = issuingJurisdiction,
-        caseNumber = caseNumber,
-        servedDate = servedDate,
-        endDate = endDate,
-        priorityClass = priorityClass,
-        sequenceWithinClass = sequenceWithinClass,
-        formula = formula,
-        protectedEarningsRule = protectedEarningsRule,
-        arrearsBefore = arrearsBefore,
-        lifetimeCap = lifetimeCap,
-        supportsOtherDependents = supportsOtherDependents,
-        arrearsAtLeast12Weeks = arrearsAtLeast12Weeks,
-    )
+fun GarnishmentOrderDto.toDomain(): GarnishmentOrder = GarnishmentOrder(
+    orderId = GarnishmentOrderId(orderId),
+    planId = planId,
+    type = type,
+    issuingJurisdiction = issuingJurisdiction,
+    caseNumber = caseNumber,
+    servedDate = servedDate,
+    endDate = endDate,
+    priorityClass = priorityClass,
+    sequenceWithinClass = sequenceWithinClass,
+    formula = formula,
+    protectedEarningsRule = protectedEarningsRule,
+    arrearsBefore = arrearsBefore,
+    lifetimeCap = lifetimeCap,
+    supportsOtherDependents = supportsOtherDependents,
+    arrearsAtLeast12Weeks = arrearsAtLeast12Weeks,
+)
 
-fun List<GarnishmentOrderDto>.toDomainContext(): GarnishmentContext =
-    GarnishmentContext(orders = this.map { it.toDomain() })
+fun List<GarnishmentOrderDto>.toDomainContext(): GarnishmentContext = GarnishmentContext(orders = this.map { it.toDomain() })

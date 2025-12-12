@@ -1,15 +1,15 @@
 package com.example.uspayroll.payroll.engine
 
+import com.example.uspayroll.payroll.model.*
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.shared.Money
-import com.example.uspayroll.shared.PaycheckId
 import com.example.uspayroll.shared.PayRunId
-import com.example.uspayroll.payroll.model.*
+import com.example.uspayroll.shared.PaycheckId
+import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import java.time.LocalDate
 
 class StateIncomeTaxIntegrationTest {
 
@@ -21,18 +21,17 @@ class StateIncomeTaxIntegrationTest {
         frequency = PayFrequency.BIWEEKLY,
     )
 
-    private fun baseSnapshot(employerId: EmployerId, employeeId: EmployeeId, homeState: String, workState: String): EmployeeSnapshot =
-        EmployeeSnapshot(
-            employerId = employerId,
-            employeeId = employeeId,
-            homeState = homeState,
-            workState = workState,
-            filingStatus = FilingStatus.SINGLE,
-            baseCompensation = BaseCompensation.Salaried(
-                annualSalary = Money(260_000_00L), // $260,000 annual
-                frequency = PayFrequency.BIWEEKLY,
-            ),
-        )
+    private fun baseSnapshot(employerId: EmployerId, employeeId: EmployeeId, homeState: String, workState: String): EmployeeSnapshot = EmployeeSnapshot(
+        employerId = employerId,
+        employeeId = employeeId,
+        homeState = homeState,
+        workState = workState,
+        filingStatus = FilingStatus.SINGLE,
+        baseCompensation = BaseCompensation.Salaried(
+            annualSalary = Money(260_000_00L), // $260,000 annual
+            frequency = PayFrequency.BIWEEKLY,
+        ),
+    )
 
     private fun caSingleRule(): TaxRule.BracketedIncomeTax = TaxRule.BracketedIncomeTax(
         id = "US_CA_SIT_2025_SINGLE",

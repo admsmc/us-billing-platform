@@ -1,9 +1,11 @@
 package com.example.uspayroll.payroll.model
 
+import com.example.uspayroll.payroll.engine.pub15t.W4Version
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.shared.Money
-import com.example.uspayroll.payroll.engine.pub15t.W4Version
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonTypeInfo
 import java.time.LocalDate
 
 // Employee snapshot and compensation
@@ -33,6 +35,15 @@ enum class FlsaExemptStatus {
     PUBLIC_SECTOR_COMP_TIME,
 }
 
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    include = JsonTypeInfo.As.PROPERTY,
+    property = "type",
+)
+@JsonSubTypes(
+    JsonSubTypes.Type(value = BaseCompensation.Salaried::class, name = "SALARIED"),
+    JsonSubTypes.Type(value = BaseCompensation.Hourly::class, name = "HOURLY"),
+)
 sealed class BaseCompensation {
     data class Salaried(
         val annualSalary: Money,

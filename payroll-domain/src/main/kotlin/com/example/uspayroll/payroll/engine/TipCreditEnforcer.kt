@@ -16,11 +16,7 @@ import com.example.uspayroll.shared.Money
  */
 object TipCreditEnforcer {
 
-    fun applyTipCreditMakeup(
-        input: PaycheckInput,
-        laborStandards: LaborStandardsContext?,
-        earnings: MutableList<EarningLine>,
-    ) {
+    fun applyTipCreditMakeup(input: PaycheckInput, laborStandards: LaborStandardsContext?, earnings: MutableList<EarningLine>) {
         val snapshot = input.employeeSnapshot
         val baseComp = snapshot.baseCompensation
         if (baseComp !is com.example.uspayroll.payroll.model.BaseCompensation.Hourly) return

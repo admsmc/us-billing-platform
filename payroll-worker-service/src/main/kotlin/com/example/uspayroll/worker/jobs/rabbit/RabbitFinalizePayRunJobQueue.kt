@@ -38,10 +38,7 @@ class RabbitFinalizePayRunJobQueueConfig {
     @Bean
     @Primary
     @ConditionalOnProperty(prefix = "worker.jobs.rabbit", name = ["enabled"], havingValue = "true")
-    fun rabbitFinalizePayRunJobQueue(
-        rabbitTemplate: RabbitTemplate,
-        props: RabbitJobsProperties,
-    ): FinalizePayRunJobQueue {
+    fun rabbitFinalizePayRunJobQueue(rabbitTemplate: RabbitTemplate, props: RabbitJobsProperties): FinalizePayRunJobQueue {
         rabbitTemplate.messageConverter = rabbitJobMessageConverter()
         return RabbitFinalizePayRunJobQueue(rabbitTemplate, props)
     }

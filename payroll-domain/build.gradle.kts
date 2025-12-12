@@ -15,6 +15,10 @@ kotlin {
 dependencies {
     implementation(project(":shared-kernel"))
 
+    // Jackson annotations only (no Spring dependency) to support polymorphic JSON
+    // for a small set of domain types that cross service boundaries.
+    implementation("com.fasterxml.jackson.core:jackson-annotations:2.17.0")
+
     testImplementation(kotlin("test"))
 }
 

@@ -1,9 +1,9 @@
 package com.example.uspayroll.tax.tools
 
+import java.io.InputStreamReader
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import java.io.InputStreamReader
 
 class StateIncomeTaxCsvParserTest {
 

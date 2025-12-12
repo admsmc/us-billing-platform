@@ -40,10 +40,7 @@ class PayRunController(
     )
 
     @PostMapping("/finalize")
-    fun startFinalize(
-        @PathVariable employerId: String,
-        @RequestBody request: StartFinalizeRequest,
-    ): ResponseEntity<StartFinalizeResponse> {
+    fun startFinalize(@PathVariable employerId: String, @RequestBody request: StartFinalizeRequest): ResponseEntity<StartFinalizeResponse> {
         val runType = request.runType?.let { com.example.uspayroll.orchestrator.payrun.model.PayRunType.valueOf(it) }
             ?: com.example.uspayroll.orchestrator.payrun.model.PayRunType.REGULAR
         val runSequence = request.runSequence ?: 1
@@ -68,7 +65,7 @@ class PayRunController(
                 status = status,
                 totalItems = result.counts.total,
                 created = result.wasCreated,
-            )
+            ),
         )
     }
 
@@ -118,7 +115,7 @@ class PayRunController(
                     failed = view.counts.failed,
                 ),
                 failures = view.failures.map { PayRunStatusResponse.FailureItem(it.employeeId, it.error) },
-            )
+            ),
         )
     }
 
@@ -131,10 +128,7 @@ class PayRunController(
     )
 
     @PostMapping("/{payRunId}/approve")
-    fun approve(
-        @PathVariable employerId: String,
-        @PathVariable payRunId: String,
-    ): ResponseEntity<ApprovePayRunResponse> {
+    fun approve(@PathVariable employerId: String, @PathVariable payRunId: String): ResponseEntity<ApprovePayRunResponse> {
         val result = payRunService.approvePayRun(employerId, payRunId)
         return ResponseEntity.ok(
             ApprovePayRunResponse(
@@ -143,7 +137,7 @@ class PayRunController(
                 status = result.effectiveStatus,
                 approvalStatus = result.payRun.approvalStatus,
                 paymentStatus = result.payRun.paymentStatus,
-            )
+            ),
         )
     }
 
@@ -158,10 +152,7 @@ class PayRunController(
     )
 
     @PostMapping("/{payRunId}/payments/initiate")
-    fun initiatePayments(
-        @PathVariable employerId: String,
-        @PathVariable payRunId: String,
-    ): ResponseEntity<InitiatePaymentsResponse> {
+    fun initiatePayments(@PathVariable employerId: String, @PathVariable payRunId: String): ResponseEntity<InitiatePaymentsResponse> {
         val result = payRunService.initiatePayments(employerId, payRunId)
         return ResponseEntity.ok(
             InitiatePaymentsResponse(
@@ -172,7 +163,7 @@ class PayRunController(
                 paymentStatus = result.payRun.paymentStatus,
                 candidates = result.candidates,
                 enqueuedEvents = result.enqueuedEvents,
-            )
+            ),
         )
     }
 
@@ -208,7 +199,7 @@ class PayRunController(
                 "processed" to result.processed,
                 "finalStatus" to result.finalStatus?.name,
                 "moreWork" to result.moreWork,
-            )
+            ),
         )
     }
 }

@@ -4,8 +4,8 @@ import com.example.uspayroll.payroll.model.*
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.shared.Money
-import com.example.uspayroll.shared.PaycheckId
 import com.example.uspayroll.shared.PayRunId
+import com.example.uspayroll.shared.PaycheckId
 import com.example.uspayroll.tax.impl.CachingTaxCatalog
 import com.example.uspayroll.tax.impl.CatalogBackedTaxContextProvider
 import com.example.uspayroll.tax.impl.DbTaxCatalog
@@ -13,9 +13,9 @@ import com.example.uspayroll.tax.impl.TaxRuleRepository
 import com.example.uspayroll.tax.support.H2TaxTestSupport
 import com.example.uspayroll.tax.support.H2TaxTestSupport.H2TaxRuleRepository
 import org.jooq.DSLContext
+import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertTrue
-import java.time.LocalDate
 
 /**
  * H2-backed integration tests for [DefaultFederalWithholdingCalculator] that go
@@ -25,8 +25,7 @@ import java.time.LocalDate
  */
 class FederalWithholdingIntegrationTest {
 
-    private fun createDslContext(dbName: String): DSLContext =
-        H2TaxTestSupport.createDslContext(dbName)
+    private fun createDslContext(dbName: String): DSLContext = H2TaxTestSupport.createDslContext(dbName)
 
     private fun importFederalConfig(dsl: DSLContext) {
         H2TaxTestSupport.importConfigFromResource(
@@ -70,12 +69,18 @@ class FederalWithholdingIntegrationTest {
                     rule.basis == TaxBasis.FederalTaxable
             }
 
-        assertTrue(fitRules.any { it.id == "US_FED_FIT_2025_SINGLE" && it.filingStatus == FilingStatus.SINGLE },
-            "Expected SINGLE FIT rule with filingStatus SINGLE from DB-backed catalog")
-        assertTrue(fitRules.any { it.id == "US_FED_FIT_2025_MARRIED" && it.filingStatus == FilingStatus.MARRIED },
-            "Expected MARRIED FIT rule with filingStatus MARRIED from DB-backed catalog")
-        assertTrue(fitRules.any { it.id == "US_FED_FIT_2025_HEAD_OF_HOUSEHOLD" && it.filingStatus == FilingStatus.HEAD_OF_HOUSEHOLD },
-            "Expected HOH FIT rule with filingStatus HEAD_OF_HOUSEHOLD from DB-backed catalog")
+        assertTrue(
+            fitRules.any { it.id == "US_FED_FIT_2025_SINGLE" && it.filingStatus == FilingStatus.SINGLE },
+            "Expected SINGLE FIT rule with filingStatus SINGLE from DB-backed catalog",
+        )
+        assertTrue(
+            fitRules.any { it.id == "US_FED_FIT_2025_MARRIED" && it.filingStatus == FilingStatus.MARRIED },
+            "Expected MARRIED FIT rule with filingStatus MARRIED from DB-backed catalog",
+        )
+        assertTrue(
+            fitRules.any { it.id == "US_FED_FIT_2025_HEAD_OF_HOUSEHOLD" && it.filingStatus == FilingStatus.HEAD_OF_HOUSEHOLD },
+            "Expected HOH FIT rule with filingStatus HEAD_OF_HOUSEHOLD from DB-backed catalog",
+        )
     }
 
     @Test
@@ -141,8 +146,10 @@ class FederalWithholdingIntegrationTest {
         // are more favorable than SINGLE, so at the same wage level we expect
         // lower withholding for MARRIED when the calculator correctly selects
         // the filing-status-specific rule from the catalog.
-        assertTrue(marriedWithholding.amount < singleWithholding.amount,
-            "Expected married withholding to be lower than single for the same wages using DB-backed FIT rules")
+        assertTrue(
+            marriedWithholding.amount < singleWithholding.amount,
+            "Expected married withholding to be lower than single for the same wages using DB-backed FIT rules",
+        )
     }
 
     @Test
@@ -164,11 +171,7 @@ class FederalWithholdingIntegrationTest {
             frequency = PayFrequency.ANNUAL,
         )
 
-        fun paycheckWithW4(
-            w4CreditCents: Long? = null,
-            w4OtherIncomeCents: Long? = null,
-            w4DeductionsCents: Long? = null,
-        ): FederalWithholdingInput {
+        fun paycheckWithW4(w4CreditCents: Long? = null, w4OtherIncomeCents: Long? = null, w4DeductionsCents: Long? = null): FederalWithholdingInput {
             val wagesCents = 50_000_00L // $50,000 annual wages
 
             val snapshot = EmployeeSnapshot(
@@ -220,12 +223,18 @@ class FederalWithholdingIntegrationTest {
 
         // Directional assertions only: we are not locking in specific dollar
         // amounts, just the monotonic behavior of the W-4 inputs.
-        assertTrue(withCredit.amount < baseline.amount,
-            "W-4 credits should reduce DB-backed federal withholding relative to baseline")
-        assertTrue(withOtherIncome.amount > baseline.amount,
-            "W-4 other income should increase DB-backed federal withholding relative to baseline")
-        assertTrue(withDeductions.amount < baseline.amount,
-            "W-4 deductions should decrease DB-backed federal withholding relative to baseline")
+        assertTrue(
+            withCredit.amount < baseline.amount,
+            "W-4 credits should reduce DB-backed federal withholding relative to baseline",
+        )
+        assertTrue(
+            withOtherIncome.amount > baseline.amount,
+            "W-4 other income should increase DB-backed federal withholding relative to baseline",
+        )
+        assertTrue(
+            withDeductions.amount < baseline.amount,
+            "W-4 deductions should decrease DB-backed federal withholding relative to baseline",
+        )
     }
 
     @Test
@@ -287,8 +296,10 @@ class FederalWithholdingIntegrationTest {
         val resident = calc.computeWithholding(paycheck(isNra = false))
         val nra = calc.computeWithholding(paycheck(isNra = true))
 
-        assertTrue(nra.amount > resident.amount,
-            "Expected nonresident alien withholding to exceed resident withholding for the same biweekly wages using DB-backed FIT rules")
+        assertTrue(
+            nra.amount > resident.amount,
+            "Expected nonresident alien withholding to exceed resident withholding for the same biweekly wages using DB-backed FIT rules",
+        )
     }
 
     @Test
@@ -350,8 +361,10 @@ class FederalWithholdingIntegrationTest {
         val resident = calc.computeWithholding(paycheck(isNra = false))
         val nra = calc.computeWithholding(paycheck(isNra = true))
 
-        assertTrue(nra.amount > resident.amount,
-            "Expected nonresident alien withholding to exceed resident withholding for the same weekly wages using DB-backed FIT rules")
+        assertTrue(
+            nra.amount > resident.amount,
+            "Expected nonresident alien withholding to exceed resident withholding for the same weekly wages using DB-backed FIT rules",
+        )
     }
 
     @Test
@@ -417,8 +430,10 @@ class FederalWithholdingIntegrationTest {
         val standard = calc.computeWithholding(paycheck(step2 = false))
         val withStep2 = calc.computeWithholding(paycheck(step2 = true))
 
-        assertTrue(withStep2.amount > standard.amount,
-            "Expected wage-bracket Step 2 multiple-jobs withholding to exceed STANDARD withholding for the same biweekly wages")
+        assertTrue(
+            withStep2.amount > standard.amount,
+            "Expected wage-bracket Step 2 multiple-jobs withholding to exceed STANDARD withholding for the same biweekly wages",
+        )
     }
 
     @Test

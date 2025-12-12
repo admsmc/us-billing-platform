@@ -20,11 +20,7 @@ class InternalAuthFilter(
         return !path.contains("/payruns/internal/")
     }
 
-    override fun doFilterInternal(
-        request: HttpServletRequest,
-        response: HttpServletResponse,
-        filterChain: FilterChain,
-    ) {
+    override fun doFilterInternal(request: HttpServletRequest, response: HttpServletResponse, filterChain: FilterChain) {
         val expected = props.sharedSecret
         val headerValue = request.getHeader(props.headerName)
 

@@ -1,12 +1,22 @@
+server:
+  port: ${SERVER_PORT:8083}
+
 spring:
   flyway:
     enabled: true
-    locations: classpath:db/migration
+    locations: classpath:db/migration/labor
 
 # Labor service database configuration.
 # Override these values per-environment when running against a real Postgres instance.
 labor:
   db:
-    url: jdbc:postgresql://localhost:5432/us_payroll_labor
-    username: labor_service
-    password: changeme
+    url: ${LABOR_DB_URL:jdbc:postgresql://localhost:5432/us_payroll_labor}
+    username: ${LABOR_DB_USERNAME:labor_service}
+    # Avoid committing credential-shaped defaults; supply via env/secret manager.
+    password: ${LABOR_DB_PASSWORD:}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus

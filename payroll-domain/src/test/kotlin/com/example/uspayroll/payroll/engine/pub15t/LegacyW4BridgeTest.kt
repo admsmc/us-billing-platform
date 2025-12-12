@@ -8,19 +8,16 @@ import com.example.uspayroll.payroll.model.PayFrequency
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.shared.Money
+import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import java.time.LocalDate
 
 class LegacyW4BridgeTest {
 
-    private fun baseLegacySnapshot(
-        hireDate: LocalDate? = null,
-        w4EffectiveDate: LocalDate? = null,
-    ): EmployeeSnapshot = EmployeeSnapshot(
+    private fun baseLegacySnapshot(hireDate: LocalDate? = null, w4EffectiveDate: LocalDate? = null): EmployeeSnapshot = EmployeeSnapshot(
         employerId = EmployerId("EMP-LEGACY"),
         employeeId = EmployeeId("EE-LEGACY"),
         homeState = "CA",

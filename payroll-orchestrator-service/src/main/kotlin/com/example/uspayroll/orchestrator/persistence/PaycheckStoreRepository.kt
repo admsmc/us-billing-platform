@@ -19,8 +19,5 @@ interface PaycheckStoreRepository {
         payload: PaycheckResult,
     )
 
-    fun findPaycheck(
-        employerId: EmployerId,
-        paycheckId: String,
-    ): PaycheckResult?
+    fun findPaycheck(employerId: EmployerId, paycheckId: String): PaycheckResult?
 }

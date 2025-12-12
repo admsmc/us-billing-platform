@@ -8,6 +8,7 @@ import com.example.uspayroll.tax.impl.TaxRuleRecord
 import com.example.uspayroll.tax.impl.TaxRuleRepository
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
@@ -26,6 +27,20 @@ class JooqTaxRuleRepository(
 ) : TaxRuleRepository {
 
     private val logger = LoggerFactory.getLogger(JooqTaxRuleRepository::class.java)
+
+    private fun <T> Record.getCaseInsensitive(fieldName: String, type: Class<T>): T? {
+        val candidates = listOf(fieldName, fieldName.lowercase(), fieldName.uppercase())
+        for (candidate in candidates) {
+            val value = runCatching { get(candidate, type) }.getOrNull()
+            if (value != null) return value
+        }
+        // If the field exists but the value is NULL, the above will keep trying. Handle that case.
+        for (candidate in candidates) {
+            val exists = runCatching { fields().any { it.name == candidate } }.getOrDefault(false)
+            if (exists) return runCatching { get(candidate, type) }.getOrNull()
+        }
+        return null
+    }
 
     override fun findRulesFor(query: TaxQuery): List<TaxRuleRecord> {
         val t = DSL.table("tax_rule")
@@ -95,24 +110,24 @@ class JooqTaxRuleRepository(
 
         return records.map { r ->
             TaxRuleRecord(
-                id = r.get("id", String::class.java)!!,
-                jurisdictionType = TaxJurisdictionType.valueOf(r.get("jurisdiction_type", String::class.java)!!),
-                jurisdictionCode = r.get("jurisdiction_code", String::class.java)!!,
-                basis = parseTaxBasis(r.get("basis", String::class.java)!!),
-                ruleType = TaxRuleRecord.RuleType.valueOf(r.get("rule_type", String::class.java)!!),
-                rate = r.get("rate", Double::class.java),
-                annualWageCapCents = r.get("annual_wage_cap_cents", Long::class.java),
-                bracketsJson = r.get("brackets_json", String::class.java),
-                standardDeductionCents = r.get("standard_deduction_cents", Long::class.java),
-                additionalWithholdingCents = r.get("additional_withholding_cents", Long::class.java),
-                employerId = r.get("employer_id", String::class.java)?.let(::EmployerId),
-                effectiveFrom = r.get("effective_from", LocalDate::class.java),
-                effectiveTo = r.get("effective_to", LocalDate::class.java),
-                filingStatus = r.get("filing_status", String::class.java),
-                residentStateFilter = r.get("resident_state_filter", String::class.java),
-                workStateFilter = r.get("work_state_filter", String::class.java),
-                localityFilter = r.get("locality_filter", String::class.java),
-                fitVariant = r.get("fit_variant", String::class.java),
+                id = requireNotNull(r.getCaseInsensitive("id", String::class.java)),
+                jurisdictionType = TaxJurisdictionType.valueOf(requireNotNull(r.getCaseInsensitive("jurisdiction_type", String::class.java))),
+                jurisdictionCode = requireNotNull(r.getCaseInsensitive("jurisdiction_code", String::class.java)),
+                basis = parseTaxBasis(requireNotNull(r.getCaseInsensitive("basis", String::class.java))),
+                ruleType = TaxRuleRecord.RuleType.valueOf(requireNotNull(r.getCaseInsensitive("rule_type", String::class.java))),
+                rate = r.getCaseInsensitive("rate", java.lang.Double::class.java)?.toDouble(),
+                annualWageCapCents = r.getCaseInsensitive("annual_wage_cap_cents", java.lang.Long::class.java)?.toLong(),
+                bracketsJson = r.getCaseInsensitive("brackets_json", String::class.java),
+                standardDeductionCents = r.getCaseInsensitive("standard_deduction_cents", java.lang.Long::class.java)?.toLong(),
+                additionalWithholdingCents = r.getCaseInsensitive("additional_withholding_cents", java.lang.Long::class.java)?.toLong(),
+                employerId = r.getCaseInsensitive("employer_id", String::class.java)?.let(::EmployerId),
+                effectiveFrom = r.getCaseInsensitive("effective_from", LocalDate::class.java),
+                effectiveTo = r.getCaseInsensitive("effective_to", LocalDate::class.java),
+                filingStatus = r.getCaseInsensitive("filing_status", String::class.java),
+                residentStateFilter = r.getCaseInsensitive("resident_state_filter", String::class.java),
+                workStateFilter = r.getCaseInsensitive("work_state_filter", String::class.java),
+                localityFilter = r.getCaseInsensitive("locality_filter", String::class.java),
+                fitVariant = r.getCaseInsensitive("fit_variant", String::class.java),
             )
         }
     }
@@ -124,6 +139,7 @@ class JooqTaxRuleRepository(
         "SocialSecurityWages" -> TaxBasis.SocialSecurityWages
         "MedicareWages" -> TaxBasis.MedicareWages
         "SupplementalWages" -> TaxBasis.SupplementalWages
+        "FutaWages" -> TaxBasis.FutaWages
         else -> error("Unknown TaxBasis '$raw' from tax_rule.basis")
     }
 }

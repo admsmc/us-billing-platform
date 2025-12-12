@@ -16,10 +16,7 @@ class PaycheckController(
 ) {
 
     @GetMapping("/{paycheckId}")
-    fun getPaycheck(
-        @PathVariable employerId: String,
-        @PathVariable paycheckId: String,
-    ): ResponseEntity<PaycheckResult> {
+    fun getPaycheck(@PathVariable employerId: String, @PathVariable paycheckId: String): ResponseEntity<PaycheckResult> {
         val paycheck = paycheckStoreRepository.findPaycheck(
             employerId = EmployerId(employerId),
             paycheckId = paycheckId,

@@ -35,10 +35,7 @@ class HrHttpController(
     }
 
     @GetMapping("/pay-periods/{payPeriodId}")
-    fun getPayPeriod(
-        @PathVariable employerId: String,
-        @PathVariable payPeriodId: String,
-    ): PayPeriod? {
+    fun getPayPeriod(@PathVariable employerId: String, @PathVariable payPeriodId: String): PayPeriod? {
         return payPeriodProvider.getPayPeriod(
             employerId = EmployerId(employerId),
             payPeriodId = payPeriodId,

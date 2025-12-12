@@ -31,6 +31,5 @@ class InMemoryEarningConfigRepository : EarningConfigRepository {
         ),
     )
 
-    override fun findByEmployerAndCode(employerId: EmployerId, code: EarningCode): EarningDefinition? =
-        data[employerId]?.find { it.code == code }
+    override fun findByEmployerAndCode(employerId: EmployerId, code: EarningCode): EarningDefinition? = data[employerId]?.find { it.code == code }
 }

@@ -71,10 +71,7 @@ object StateIncomeTaxCsvParser {
         val rate: Double,
     )
 
-    fun parse(
-        rulesReader: Reader,
-        bracketsReader: Reader,
-    ): List<TaxRuleConfig> {
+    fun parse(rulesReader: Reader, bracketsReader: Reader): List<TaxRuleConfig> {
         val rules = csvFormat.parse(rulesReader).mapNotNull { toRuleRow(it) }
         val brackets = csvFormat.parse(bracketsReader).mapNotNull { toBracketRow(it) }
 
@@ -170,10 +167,7 @@ object StateIncomeTaxCsvParser {
         )
     }
 
-    private fun toTaxRuleConfig(
-        rule: RuleRow,
-        brackets: List<TaxBracketConfig>?,
-    ): TaxRuleConfig {
+    private fun toTaxRuleConfig(rule: RuleRow, brackets: List<TaxBracketConfig>?): TaxRuleConfig {
         val idSuffix = buildString {
             append(rule.stateCode)
             append("_SIT_")
@@ -229,6 +223,5 @@ object StateIncomeTaxCsvParser {
         }
     }
 
-    private fun CSVRecord.getOrNull(name: String): String? =
-        if (this.isMapped(name)) this.get(name) else null
+    private fun CSVRecord.getOrNull(name: String): String? = if (this.isMapped(name)) this.get(name) else null
 }

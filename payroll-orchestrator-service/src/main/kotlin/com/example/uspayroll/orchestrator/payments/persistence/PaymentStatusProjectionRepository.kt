@@ -8,11 +8,7 @@ import org.springframework.stereotype.Repository
 class PaymentStatusProjectionRepository(
     private val jdbcTemplate: JdbcTemplate,
 ) {
-    fun updatePaycheckPaymentStatus(
-        employerId: String,
-        paycheckId: String,
-        paymentStatus: PaymentStatus,
-    ): Int {
+    fun updatePaycheckPaymentStatus(employerId: String, paycheckId: String, paymentStatus: PaymentStatus): Int {
         return jdbcTemplate.update(
             """
             UPDATE paycheck

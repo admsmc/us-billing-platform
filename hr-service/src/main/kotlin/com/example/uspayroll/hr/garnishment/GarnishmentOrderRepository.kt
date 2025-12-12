@@ -20,56 +20,54 @@ import java.time.LocalDate
  * authoritative lifecycle model for per-employee orders; rule config provides
  * statutory behavior such as formulas and protected earnings.
  */
- data class GarnishmentOrderRow(
-     val employerId: EmployerId,
-     val employeeId: EmployeeId,
-     val orderId: String,
-     val type: GarnishmentType,
-     val issuingJurisdiction: TaxJurisdiction?,
-     val caseNumber: String?,
-     val status: OrderStatus,
-     val servedDate: LocalDate?,
-     val endDate: LocalDate?,
-     val priorityClass: Int,
-     val sequenceWithinClass: Int,
-     val initialArrears: Money?,
-     val currentArrears: Money?,
-     val supportsOtherDependents: Boolean?,
-     val arrearsAtLeast12Weeks: Boolean?,
-     /** Optional per-order override for statutory formula (JSON-encoded GarnishmentFormula). */
-     val formulaOverride: GarnishmentFormula? = null,
-     /** Optional per-order override for protected earnings rule (JSON-encoded ProtectedEarningsRule). */
-     val protectedEarningsRuleOverride: ProtectedEarningsRule? = null,
- )
+data class GarnishmentOrderRow(
+    val employerId: EmployerId,
+    val employeeId: EmployeeId,
+    val orderId: String,
+    val type: GarnishmentType,
+    val issuingJurisdiction: TaxJurisdiction?,
+    val caseNumber: String?,
+    val status: OrderStatus,
+    val servedDate: LocalDate?,
+    val endDate: LocalDate?,
+    val priorityClass: Int,
+    val sequenceWithinClass: Int,
+    val initialArrears: Money?,
+    val currentArrears: Money?,
+    val supportsOtherDependents: Boolean?,
+    val arrearsAtLeast12Weeks: Boolean?,
+    /** Optional per-order override for statutory formula (JSON-encoded GarnishmentFormula). */
+    val formulaOverride: GarnishmentFormula? = null,
+    /** Optional per-order override for protected earnings rule (JSON-encoded ProtectedEarningsRule). */
+    val protectedEarningsRuleOverride: ProtectedEarningsRule? = null,
+)
 
- enum class OrderStatus {
-     ACTIVE,
-     SUSPENDED,
-     COMPLETED,
- }
+enum class OrderStatus {
+    ACTIVE,
+    SUSPENDED,
+    COMPLETED,
+}
 
- interface GarnishmentOrderRepository {
+interface GarnishmentOrderRepository {
 
-     fun findActiveOrdersForEmployee(
-         employerId: EmployerId,
-         employeeId: EmployeeId,
-         asOf: LocalDate,
-     ): List<GarnishmentOrderRow>
- }
+    fun findActiveOrdersForEmployee(employerId: EmployerId, employeeId: EmployeeId, asOf: LocalDate): List<GarnishmentOrderRow>
+
+    /**
+     * True if the employee has any persisted garnishment orders in HR (active or not).
+     * Used to distinguish demo fallback behavior from real but currently-inactive orders.
+     */
+    fun hasAnyOrdersForEmployee(employerId: EmployerId, employeeId: EmployeeId): Boolean
+}
 
 @Repository
- class JdbcGarnishmentOrderRepository(
-     private val jdbcTemplate: JdbcTemplate,
-     private val objectMapper: ObjectMapper,
- ) : GarnishmentOrderRepository {
+class JdbcGarnishmentOrderRepository(
+    private val jdbcTemplate: JdbcTemplate,
+    private val objectMapper: ObjectMapper,
+) : GarnishmentOrderRepository {
 
-     override fun findActiveOrdersForEmployee(
-         employerId: EmployerId,
-         employeeId: EmployeeId,
-         asOf: LocalDate,
-     ): List<GarnishmentOrderRow> {
+    override fun findActiveOrdersForEmployee(employerId: EmployerId, employeeId: EmployeeId, asOf: LocalDate): List<GarnishmentOrderRow> {
         val sql =
-             """
+            """
              SELECT employer_id,
                     employee_id,
                     order_id,
@@ -103,41 +101,55 @@ import java.time.LocalDate
                AND status = 'ACTIVE'
                AND (served_date IS NULL OR served_date <= ?)
                AND (end_date IS NULL OR end_date >= ?)
-             """.trimIndent()
+            """.trimIndent()
 
-         val rows = jdbcTemplate.query(
-             sql,
-             RowMapper { rs: ResultSet, _: Int ->
-                 mapRow(rs)
-             },
-             employerId.value,
-             employeeId.value,
-             asOf,
-             asOf,
-         )
+        val rows = jdbcTemplate.query(
+            sql,
+            RowMapper { rs: ResultSet, _: Int ->
+                mapRow(rs)
+            },
+            employerId.value,
+            employeeId.value,
+            asOf,
+            asOf,
+        )
 
-         return rows
-     }
+        return rows
+    }
 
-     private fun mapRow(rs: ResultSet): GarnishmentOrderRow {
-         val employerId = EmployerId(rs.getString("employer_id"))
-         val employeeId = EmployeeId(rs.getString("employee_id"))
-         val orderId = rs.getString("order_id")
+    override fun hasAnyOrdersForEmployee(employerId: EmployerId, employeeId: EmployeeId): Boolean {
+        val sql =
+            """
+            SELECT 1
+            FROM garnishment_order
+            WHERE employer_id = ?
+              AND employee_id = ?
+            LIMIT 1
+            """.trimIndent()
 
-         val type = GarnishmentType.valueOf(rs.getString("type"))
+        val rows = jdbcTemplate.queryForList(sql, Int::class.java, employerId.value, employeeId.value)
+        return rows.isNotEmpty()
+    }
 
-         val jurisdictionTypeRaw = rs.getString("issuing_jurisdiction_type")
-         val jurisdictionCodeRaw = rs.getString("issuing_jurisdiction_code")
-         val jurisdiction = if (!jurisdictionTypeRaw.isNullOrBlank() && !jurisdictionCodeRaw.isNullOrBlank()) {
-             TaxJurisdiction(
-                 TaxJurisdictionType.valueOf(jurisdictionTypeRaw),
-                 jurisdictionCodeRaw,
-             )
-         } else {
-             null
-         }
+    private fun mapRow(rs: ResultSet): GarnishmentOrderRow {
+        val employerId = EmployerId(rs.getString("employer_id"))
+        val employeeId = EmployeeId(rs.getString("employee_id"))
+        val orderId = rs.getString("order_id")
 
-         val status = OrderStatus.valueOf(rs.getString("status"))
+        val type = GarnishmentType.valueOf(rs.getString("type"))
+
+        val jurisdictionTypeRaw = rs.getString("issuing_jurisdiction_type")
+        val jurisdictionCodeRaw = rs.getString("issuing_jurisdiction_code")
+        val jurisdiction = if (!jurisdictionTypeRaw.isNullOrBlank() && !jurisdictionCodeRaw.isNullOrBlank()) {
+            TaxJurisdiction(
+                TaxJurisdictionType.valueOf(jurisdictionTypeRaw),
+                jurisdictionCodeRaw,
+            )
+        } else {
+            null
+        }
+
+        val status = OrderStatus.valueOf(rs.getString("status"))
 
         val servedDate = rs.getDate("served_date")?.toLocalDate()
         val endDate = rs.getDate("end_date")?.toLocalDate()
@@ -162,20 +174,32 @@ import java.time.LocalDate
         val typedFormulaOverride: GarnishmentFormula? = when (formulaTypeRaw) {
             null, "" -> null
             "PERCENT_OF_DISPOSABLE" -> {
-                if (percentRaw == null) null else GarnishmentFormula.PercentOfDisposable(
-                    com.example.uspayroll.payroll.model.Percent(percentRaw),
-                )
+                if (percentRaw == null) {
+                    null
+                } else {
+                    GarnishmentFormula.PercentOfDisposable(
+                        com.example.uspayroll.payroll.model.Percent(percentRaw),
+                    )
+                }
             }
             "FIXED_AMOUNT_PER_PERIOD" -> {
-                if (fixedAmountRaw == null) null else GarnishmentFormula.FixedAmountPerPeriod(
-                    Money(fixedAmountRaw),
-                )
+                if (fixedAmountRaw == null) {
+                    null
+                } else {
+                    GarnishmentFormula.FixedAmountPerPeriod(
+                        Money(fixedAmountRaw),
+                    )
+                }
             }
             "LESSER_OF_PERCENT_OR_AMOUNT" -> {
-                if (percentRaw == null || fixedAmountRaw == null) null else GarnishmentFormula.LesserOfPercentOrAmount(
-                    percent = com.example.uspayroll.payroll.model.Percent(percentRaw),
-                    amount = Money(fixedAmountRaw),
-                )
+                if (percentRaw == null || fixedAmountRaw == null) {
+                    null
+                } else {
+                    GarnishmentFormula.LesserOfPercentOrAmount(
+                        percent = com.example.uspayroll.payroll.model.Percent(percentRaw),
+                        amount = Money(fixedAmountRaw),
+                    )
+                }
             }
             // For levy-with-bands, the typical path is still rule-config-driven by
             // (type, jurisdiction). If a per-order override is needed, use JSON.
@@ -220,5 +244,5 @@ import java.time.LocalDate
             formulaOverride = formulaOverride,
             protectedEarningsRuleOverride = protectedOverride,
         )
-     }
- }
+    }
+}

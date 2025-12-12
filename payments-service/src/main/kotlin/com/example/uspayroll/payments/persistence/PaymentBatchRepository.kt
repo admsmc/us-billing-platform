@@ -38,9 +38,8 @@ data class PaymentBatchRow(
 class PaymentBatchRepository(
     private val jdbcTemplate: JdbcTemplate,
 ) {
-    fun findByBatchId(employerId: String, batchId: String): PaymentBatchRow? =
-        jdbcTemplate.query(
-            """
+    fun findByBatchId(employerId: String, batchId: String): PaymentBatchRow? = jdbcTemplate.query(
+        """
             SELECT employer_id, batch_id, pay_run_id, status,
                    total_payments, settled_payments, failed_payments,
                    attempts, next_attempt_at, last_error,
@@ -48,45 +47,44 @@ class PaymentBatchRepository(
                    created_at, updated_at
             FROM payment_batch
             WHERE employer_id = ? AND batch_id = ?
-            """.trimIndent(),
-            { rs, _ ->
-                val lockedAtTs = rs.getTimestamp("locked_at")
-                val nextAttemptTs = rs.getTimestamp("next_attempt_at")
-                val createdAtTs = rs.getTimestamp("created_at")
-                val updatedAtTs = rs.getTimestamp("updated_at")
+        """.trimIndent(),
+        { rs, _ ->
+            val lockedAtTs = rs.getTimestamp("locked_at")
+            val nextAttemptTs = rs.getTimestamp("next_attempt_at")
+            val createdAtTs = rs.getTimestamp("created_at")
+            val updatedAtTs = rs.getTimestamp("updated_at")
 
-                PaymentBatchRow(
-                    employerId = rs.getString("employer_id"),
-                    batchId = rs.getString("batch_id"),
-                    payRunId = rs.getString("pay_run_id"),
-                    status = PaymentBatchStatus.valueOf(rs.getString("status")),
-                    totalPayments = rs.getInt("total_payments"),
-                    settledPayments = rs.getInt("settled_payments"),
-                    failedPayments = rs.getInt("failed_payments"),
-                    attempts = rs.getInt("attempts"),
-                    nextAttemptAt = nextAttemptTs?.toInstant(),
-                    lastError = rs.getString("last_error"),
-                    lockedBy = rs.getString("locked_by"),
-                    lockedAt = lockedAtTs?.toInstant(),
-                    createdAt = createdAtTs.toInstant(),
-                    updatedAt = updatedAtTs.toInstant(),
-                )
-            },
-            employerId,
-            batchId,
-        ).firstOrNull()
+            PaymentBatchRow(
+                employerId = rs.getString("employer_id"),
+                batchId = rs.getString("batch_id"),
+                payRunId = rs.getString("pay_run_id"),
+                status = PaymentBatchStatus.valueOf(rs.getString("status")),
+                totalPayments = rs.getInt("total_payments"),
+                settledPayments = rs.getInt("settled_payments"),
+                failedPayments = rs.getInt("failed_payments"),
+                attempts = rs.getInt("attempts"),
+                nextAttemptAt = nextAttemptTs?.toInstant(),
+                lastError = rs.getString("last_error"),
+                lockedBy = rs.getString("locked_by"),
+                lockedAt = lockedAtTs?.toInstant(),
+                createdAt = createdAtTs.toInstant(),
+                updatedAt = updatedAtTs.toInstant(),
+            )
+        },
+        employerId,
+        batchId,
+    ).firstOrNull()
 
-    fun findBatchIdForPayRun(employerId: String, payRunId: String): String? =
-        jdbcTemplate.query(
-            """
+    fun findBatchIdForPayRun(employerId: String, payRunId: String): String? = jdbcTemplate.query(
+        """
             SELECT batch_id
             FROM pay_run_payment_batch
             WHERE employer_id = ? AND pay_run_id = ?
-            """.trimIndent(),
-            { rs, _ -> rs.getString("batch_id") },
-            employerId,
-            payRunId,
-        ).firstOrNull()
+        """.trimIndent(),
+        { rs, _ -> rs.getString("batch_id") },
+        employerId,
+        payRunId,
+    ).firstOrNull()
 
     /**
      * Creates a new batch and mapping for a payrun if one does not already exist.
@@ -205,12 +203,7 @@ class PaymentBatchRepository(
      * Claims batches to process.
      */
     @Transactional
-    fun claimActiveBatches(
-        limit: Int,
-        lockOwner: String,
-        lockTtl: Duration,
-        now: Instant = Instant.now(),
-    ): List<PaymentBatchRow> {
+    fun claimActiveBatches(limit: Int, lockOwner: String, lockTtl: Duration, now: Instant = Instant.now()): List<PaymentBatchRow> {
         val effectiveLimit = limit.coerceIn(1, 100)
         val nowTs = Timestamp.from(now)
         val cutoffTs = Timestamp.from(now.minus(lockTtl))

@@ -1,14 +1,14 @@
 package com.example.uspayroll.payroll.engine
 
+import com.example.uspayroll.payroll.model.*
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.shared.Money
-import com.example.uspayroll.shared.PaycheckId
 import com.example.uspayroll.shared.PayRunId
-import com.example.uspayroll.payroll.model.*
+import com.example.uspayroll.shared.PaycheckId
+import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import java.time.LocalDate
 
 class EmployerContributionsAndImputedIncomeTest {
 
@@ -129,24 +129,20 @@ class EmployerContributionsAndImputedIncomeTest {
 
         // Config repository that marks IMPUTED_GTL as imputed income
         val earningConfig = object : com.example.uspayroll.payroll.model.config.EarningConfigRepository {
-            override fun findByEmployerAndCode(
-                employerId: EmployerId,
-                code: EarningCode,
-            ): com.example.uspayroll.payroll.model.config.EarningDefinition? =
-                when (code.value) {
-                    "HOURLY" -> com.example.uspayroll.payroll.model.config.EarningDefinition(
-                        code = code,
-                        displayName = "Hourly Wages",
-                        category = EarningCategory.REGULAR,
-                        defaultRate = Money(50_00L),
-                    )
-                    "IMPUTED_GTL" -> com.example.uspayroll.payroll.model.config.EarningDefinition(
-                        code = code,
-                        displayName = "Imputed GTL",
-                        category = EarningCategory.IMPUTED,
-                    )
-                    else -> null
-                }
+            override fun findByEmployerAndCode(employerId: EmployerId, code: EarningCode): com.example.uspayroll.payroll.model.config.EarningDefinition? = when (code.value) {
+                "HOURLY" -> com.example.uspayroll.payroll.model.config.EarningDefinition(
+                    code = code,
+                    displayName = "Hourly Wages",
+                    category = EarningCategory.REGULAR,
+                    defaultRate = Money(50_00L),
+                )
+                "IMPUTED_GTL" -> com.example.uspayroll.payroll.model.config.EarningDefinition(
+                    code = code,
+                    displayName = "Imputed GTL",
+                    category = EarningCategory.IMPUTED,
+                )
+                else -> null
+            }
         }
 
         val result = PayrollEngine.calculatePaycheck(

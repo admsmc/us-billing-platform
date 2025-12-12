@@ -1,10 +1,11 @@
 package com.example.uspayroll.worker
 
-import com.example.uspayroll.payroll.engine.PayrollEngine
 import com.example.uspayroll.payroll.model.*
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.shared.Money
+import com.example.uspayroll.tax.service.DefaultFederalWithholdingCalculator
+import com.example.uspayroll.tax.service.FederalWithholdingInput
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import kotlin.test.assertTrue
@@ -16,14 +17,13 @@ import kotlin.test.assertTrue
  */
 class FederalWithholdingWorkerIntegrationTest {
 
-    private fun basePeriod(employerId: EmployerId, checkDate: LocalDate, frequency: PayFrequency): PayPeriod =
-        PayPeriod(
-            id = "FW-WORKER-${frequency}",
-            employerId = employerId,
-            dateRange = LocalDateRange(checkDate, checkDate),
-            checkDate = checkDate,
-            frequency = frequency,
-        )
+    private fun basePeriod(employerId: EmployerId, checkDate: LocalDate, frequency: PayFrequency): PayPeriod = PayPeriod(
+        id = "FW-WORKER-$frequency",
+        employerId = employerId,
+        dateRange = LocalDateRange(checkDate, checkDate),
+        checkDate = checkDate,
+        frequency = frequency,
+    )
 
     @Test
     fun `married filing status yields lower withholding than single for same annual wages`() {
@@ -31,21 +31,39 @@ class FederalWithholdingWorkerIntegrationTest {
         val checkDate = LocalDate.of(2025, 6, 30)
         val period = basePeriod(employerId, checkDate, PayFrequency.ANNUAL)
 
-        fun snapshot(status: FilingStatus): EmployeeSnapshot =
-            EmployeeSnapshot(
-                employerId = employerId,
-                employeeId = EmployeeId("ee-fw-worker-$status"),
-                homeState = "CA",
-                workState = "CA",
-                filingStatus = status,
-                baseCompensation = BaseCompensation.Salaried(
-                    annualSalary = Money(60_000_00L),
-                    frequency = period.frequency,
-                ),
-                // Use modern W-4 semantics by default; legacy bridge numerics are
-                // covered separately in a deferred Phase 3b.
-                w4Version = com.example.uspayroll.payroll.engine.pub15t.W4Version.MODERN_2020_PLUS,
-            )
+        val fitSingle = TaxRule.BracketedIncomeTax(
+            id = "US_FIT_SINGLE",
+            jurisdiction = TaxJurisdiction(TaxJurisdictionType.FEDERAL, "US"),
+            basis = TaxBasis.FederalTaxable,
+            brackets = listOf(TaxBracket(upTo = null, rate = Percent(0.10))),
+            standardDeduction = Money(12_000_00L),
+            filingStatus = FilingStatus.SINGLE,
+        )
+
+        val fitMarried = TaxRule.BracketedIncomeTax(
+            id = "US_FIT_MARRIED",
+            jurisdiction = TaxJurisdiction(TaxJurisdictionType.FEDERAL, "US"),
+            basis = TaxBasis.FederalTaxable,
+            brackets = listOf(TaxBracket(upTo = null, rate = Percent(0.10))),
+            standardDeduction = Money(24_000_00L),
+            filingStatus = FilingStatus.MARRIED,
+        )
+
+        val taxContext = TaxContext(federal = listOf(fitSingle, fitMarried))
+        val calculator = DefaultFederalWithholdingCalculator(method = "PERCENTAGE")
+
+        fun snapshot(status: FilingStatus): EmployeeSnapshot = EmployeeSnapshot(
+            employerId = employerId,
+            employeeId = EmployeeId("ee-fw-worker-$status"),
+            homeState = "CA",
+            workState = "CA",
+            filingStatus = status,
+            baseCompensation = BaseCompensation.Salaried(
+                annualSalary = Money(60_000_00L),
+                frequency = period.frequency,
+            ),
+            w4Version = com.example.uspayroll.payroll.engine.pub15t.W4Version.MODERN_2020_PLUS,
+        )
 
         fun inputFor(status: FilingStatus): PaycheckInput {
             val snap = snapshot(status)
@@ -61,26 +79,18 @@ class FederalWithholdingWorkerIntegrationTest {
                     regularHours = 0.0,
                     overtimeHours = 0.0,
                 ),
-                // For this worker-service level test we rely on the real tax
-                // catalogs and DefaultFederalWithholdingCalculator wiring
-                // exercised by PayrollEngine via TaxContext.
-                taxContext = TaxContext(),
+                taxContext = taxContext,
                 priorYtd = YtdSnapshot(year = period.checkDate.year),
             )
         }
 
-        val singleResult = PayrollEngine.calculatePaycheck(inputFor(FilingStatus.SINGLE))
-        val marriedResult = PayrollEngine.calculatePaycheck(inputFor(FilingStatus.MARRIED))
+        val singleWithholding = calculator.computeWithholding(FederalWithholdingInput(inputFor(FilingStatus.SINGLE))).amount
+        val marriedWithholding = calculator.computeWithholding(FederalWithholdingInput(inputFor(FilingStatus.MARRIED))).amount
 
-        val singleFit = singleResult.employeeTaxes
-            .filter { it.jurisdiction.type == TaxJurisdictionType.FEDERAL && it.jurisdiction.code == "US" }
-            .sumOf { it.amount.amount }
-        val marriedFit = marriedResult.employeeTaxes
-            .filter { it.jurisdiction.type == TaxJurisdictionType.FEDERAL && it.jurisdiction.code == "US" }
-            .sumOf { it.amount.amount }
-
-        assertTrue(marriedFit < singleFit,
-            "Expected married withholding to be lower than single for the same wages at the worker-service level")
+        assertTrue(
+            marriedWithholding < singleWithholding,
+            "Expected married withholding to be lower than single for the same wages at the worker-service level",
+        )
     }
 
     @Test
@@ -89,32 +99,34 @@ class FederalWithholdingWorkerIntegrationTest {
         val checkDate = LocalDate.of(2025, 6, 30)
         val period = basePeriod(employerId, checkDate, PayFrequency.ANNUAL)
 
-        fun snapshot(
-            creditCents: Long? = null,
-            otherIncomeCents: Long? = null,
-            deductionsCents: Long? = null,
-        ): EmployeeSnapshot =
-            EmployeeSnapshot(
-                employerId = employerId,
-                employeeId = EmployeeId("ee-fw-worker-w4"),
-                homeState = "CA",
-                workState = "CA",
-                filingStatus = FilingStatus.SINGLE,
-                baseCompensation = BaseCompensation.Salaried(
-                    annualSalary = Money(50_000_00L),
-                    frequency = period.frequency,
-                ),
-                w4AnnualCreditAmount = creditCents?.let { Money(it) },
-                w4OtherIncomeAnnual = otherIncomeCents?.let { Money(it) },
-                w4DeductionsAnnual = deductionsCents?.let { Money(it) },
-                w4Version = com.example.uspayroll.payroll.engine.pub15t.W4Version.MODERN_2020_PLUS,
-            )
+        val fitSingle = TaxRule.BracketedIncomeTax(
+            id = "US_FIT_SINGLE",
+            jurisdiction = TaxJurisdiction(TaxJurisdictionType.FEDERAL, "US"),
+            basis = TaxBasis.FederalTaxable,
+            brackets = listOf(TaxBracket(upTo = null, rate = Percent(0.10))),
+            standardDeduction = Money(12_000_00L),
+            filingStatus = FilingStatus.SINGLE,
+        )
+        val taxContext = TaxContext(federal = listOf(fitSingle))
+        val calculator = DefaultFederalWithholdingCalculator(method = "PERCENTAGE")
 
-        fun runWith(
-            creditCents: Long? = null,
-            otherIncomeCents: Long? = null,
-            deductionsCents: Long? = null,
-        ): Long {
+        fun snapshot(creditCents: Long? = null, otherIncomeCents: Long? = null, deductionsCents: Long? = null): EmployeeSnapshot = EmployeeSnapshot(
+            employerId = employerId,
+            employeeId = EmployeeId("ee-fw-worker-w4"),
+            homeState = "CA",
+            workState = "CA",
+            filingStatus = FilingStatus.SINGLE,
+            baseCompensation = BaseCompensation.Salaried(
+                annualSalary = Money(50_000_00L),
+                frequency = period.frequency,
+            ),
+            w4AnnualCreditAmount = creditCents?.let { Money(it) },
+            w4OtherIncomeAnnual = otherIncomeCents?.let { Money(it) },
+            w4DeductionsAnnual = deductionsCents?.let { Money(it) },
+            w4Version = com.example.uspayroll.payroll.engine.pub15t.W4Version.MODERN_2020_PLUS,
+        )
+
+        fun runWith(creditCents: Long? = null, otherIncomeCents: Long? = null, deductionsCents: Long? = null): Long {
             val snap = snapshot(creditCents, otherIncomeCents, deductionsCents)
             val input = PaycheckInput(
                 paycheckId = com.example.uspayroll.shared.PaycheckId("chk-fw-worker-w4"),
@@ -128,14 +140,11 @@ class FederalWithholdingWorkerIntegrationTest {
                     regularHours = 0.0,
                     overtimeHours = 0.0,
                 ),
-                taxContext = TaxContext(),
+                taxContext = taxContext,
                 priorYtd = YtdSnapshot(year = period.checkDate.year),
             )
 
-            val result = PayrollEngine.calculatePaycheck(input)
-            return result.employeeTaxes
-                .filter { it.jurisdiction.type == TaxJurisdictionType.FEDERAL && it.jurisdiction.code == "US" }
-                .sumOf { it.amount.amount }
+            return calculator.computeWithholding(FederalWithholdingInput(input)).amount
         }
 
         val baseline = runWith()
@@ -143,11 +152,17 @@ class FederalWithholdingWorkerIntegrationTest {
         val withOtherIncome = runWith(otherIncomeCents = 5_000_00L)
         val withDeductions = runWith(deductionsCents = 5_000_00L)
 
-        assertTrue(withCredit < baseline,
-            "Credits should reduce worker-level federal withholding relative to baseline")
-        assertTrue(withOtherIncome > baseline,
-            "Other income should increase worker-level federal withholding relative to baseline")
-        assertTrue(withDeductions < baseline,
-            "Deductions should decrease worker-level federal withholding relative to baseline")
+        assertTrue(
+            withCredit < baseline,
+            "Credits should reduce worker-level federal withholding relative to baseline",
+        )
+        assertTrue(
+            withOtherIncome > baseline,
+            "Other income should increase worker-level federal withholding relative to baseline",
+        )
+        assertTrue(
+            withDeductions < baseline,
+            "Deductions should decrease worker-level federal withholding relative to baseline",
+        )
     }
 }

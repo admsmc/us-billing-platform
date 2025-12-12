@@ -5,6 +5,7 @@ import com.example.uspayroll.labor.api.LaborStandardsQuery
 import com.example.uspayroll.labor.api.StateLaborStandard
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record
 import org.jooq.impl.DSL
 import java.time.LocalDate
 
@@ -16,6 +17,20 @@ import java.time.LocalDate
 class JooqLaborStandardsCatalog(
     private val dsl: DSLContext,
 ) : LaborStandardsCatalog {
+
+    private fun <T> Record.getCaseInsensitive(fieldName: String, type: Class<T>): T? {
+        val candidates = listOf(fieldName, fieldName.lowercase(), fieldName.uppercase())
+        for (candidate in candidates) {
+            val value = runCatching { get(candidate, type) }.getOrNull()
+            if (value != null) return value
+        }
+        // If the field exists but the value is NULL, the above will keep trying. Handle that case.
+        for (candidate in candidates) {
+            val exists = runCatching { fields().any { it.name == candidate } }.getOrDefault(false)
+            if (exists) return runCatching { get(candidate, type) }.getOrNull()
+        }
+        return null
+    }
 
     override fun loadStateStandard(query: LaborStandardsQuery): StateLaborStandard? {
         val state = query.workState ?: return null
@@ -66,17 +81,17 @@ class JooqLaborStandardsCatalog(
             .fetchOne() ?: return null
 
         return StateLaborStandard(
-            stateCode = record.get("state_code", String::class.java)!!,
-            effectiveFrom = record.get("effective_from", LocalDate::class.java)!!,
-            effectiveTo = record.get("effective_to", LocalDate::class.java),
-            regularMinimumWageCents = record.get("regular_minimum_wage_cents", Long::class.java),
-            tippedMinimumCashWageCents = record.get("tipped_minimum_cash_wage_cents", Long::class.java),
-            maxTipCreditCents = record.get("max_tip_credit_cents", Long::class.java),
-            weeklyOvertimeThresholdHours = record.get("weekly_ot_threshold_hours", Double::class.java) ?: 40.0,
-            dailyOvertimeThresholdHours = record.get("daily_ot_threshold_hours", Double::class.java),
-            dailyDoubleTimeThresholdHours = record.get("daily_dt_threshold_hours", Double::class.java),
-            localityCode = record.get("locality_code", String::class.java),
-            localityKind = record.get("locality_kind", String::class.java),
+            stateCode = requireNotNull(record.getCaseInsensitive("state_code", String::class.java)),
+            effectiveFrom = requireNotNull(record.getCaseInsensitive("effective_from", LocalDate::class.java)),
+            effectiveTo = record.getCaseInsensitive("effective_to", LocalDate::class.java),
+            regularMinimumWageCents = record.getCaseInsensitive("regular_minimum_wage_cents", java.lang.Long::class.java)?.toLong(),
+            tippedMinimumCashWageCents = record.getCaseInsensitive("tipped_minimum_cash_wage_cents", java.lang.Long::class.java)?.toLong(),
+            maxTipCreditCents = record.getCaseInsensitive("max_tip_credit_cents", java.lang.Long::class.java)?.toLong(),
+            weeklyOvertimeThresholdHours = record.getCaseInsensitive("weekly_ot_threshold_hours", java.lang.Double::class.java)?.toDouble() ?: 40.0,
+            dailyOvertimeThresholdHours = record.getCaseInsensitive("daily_ot_threshold_hours", java.lang.Double::class.java)?.toDouble(),
+            dailyDoubleTimeThresholdHours = record.getCaseInsensitive("daily_dt_threshold_hours", java.lang.Double::class.java)?.toDouble(),
+            localityCode = record.getCaseInsensitive("locality_code", String::class.java),
+            localityKind = record.getCaseInsensitive("locality_kind", String::class.java),
         )
     }
 
@@ -101,17 +116,17 @@ class JooqLaborStandardsCatalog(
 
         return records.map { r ->
             StateLaborStandard(
-                stateCode = r.get("state_code", String::class.java)!!,
-                effectiveFrom = r.get("effective_from", LocalDate::class.java)!!,
-                effectiveTo = r.get("effective_to", LocalDate::class.java),
-                regularMinimumWageCents = r.get("regular_minimum_wage_cents", Long::class.java),
-                tippedMinimumCashWageCents = r.get("tipped_minimum_cash_wage_cents", Long::class.java),
-                maxTipCreditCents = r.get("max_tip_credit_cents", Long::class.java),
-                weeklyOvertimeThresholdHours = r.get("weekly_ot_threshold_hours", Double::class.java) ?: 40.0,
-                dailyOvertimeThresholdHours = r.get("daily_ot_threshold_hours", Double::class.java),
-                dailyDoubleTimeThresholdHours = r.get("daily_dt_threshold_hours", Double::class.java),
-                localityCode = r.get("locality_code", String::class.java),
-                localityKind = r.get("locality_kind", String::class.java),
+                stateCode = requireNotNull(r.getCaseInsensitive("state_code", String::class.java)),
+                effectiveFrom = requireNotNull(r.getCaseInsensitive("effective_from", LocalDate::class.java)),
+                effectiveTo = r.getCaseInsensitive("effective_to", LocalDate::class.java),
+                regularMinimumWageCents = r.getCaseInsensitive("regular_minimum_wage_cents", java.lang.Long::class.java)?.toLong(),
+                tippedMinimumCashWageCents = r.getCaseInsensitive("tipped_minimum_cash_wage_cents", java.lang.Long::class.java)?.toLong(),
+                maxTipCreditCents = r.getCaseInsensitive("max_tip_credit_cents", java.lang.Long::class.java)?.toLong(),
+                weeklyOvertimeThresholdHours = r.getCaseInsensitive("weekly_ot_threshold_hours", java.lang.Double::class.java)?.toDouble() ?: 40.0,
+                dailyOvertimeThresholdHours = r.getCaseInsensitive("daily_ot_threshold_hours", java.lang.Double::class.java)?.toDouble(),
+                dailyDoubleTimeThresholdHours = r.getCaseInsensitive("daily_dt_threshold_hours", java.lang.Double::class.java)?.toDouble(),
+                localityCode = r.getCaseInsensitive("locality_code", String::class.java),
+                localityKind = r.getCaseInsensitive("locality_kind", String::class.java),
             )
         }
     }

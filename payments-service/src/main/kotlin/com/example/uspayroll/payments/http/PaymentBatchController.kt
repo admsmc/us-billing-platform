@@ -40,10 +40,7 @@ class PaymentBatchController(
     )
 
     @GetMapping("/payruns/{payRunId}/payment-batch")
-    fun getByPayRun(
-        @PathVariable employerId: String,
-        @PathVariable payRunId: String,
-    ): ResponseEntity<BatchView> {
+    fun getByPayRun(@PathVariable employerId: String, @PathVariable payRunId: String): ResponseEntity<BatchView> {
         val batchId = batches.findBatchIdForPayRun(employerId, payRunId)
             ?: return ResponseEntity.notFound().build()
 
@@ -59,15 +56,12 @@ class PaymentBatchController(
                 totalPayments = batch.totalPayments,
                 settledPayments = batch.settledPayments,
                 failedPayments = batch.failedPayments,
-            )
+            ),
         )
     }
 
     @GetMapping("/payment-batches/{batchId}")
-    fun getByBatchId(
-        @PathVariable employerId: String,
-        @PathVariable batchId: String,
-    ): ResponseEntity<BatchView> {
+    fun getByBatchId(@PathVariable employerId: String, @PathVariable batchId: String): ResponseEntity<BatchView> {
         val batch = batches.findByBatchId(employerId, batchId)
             ?: return ResponseEntity.notFound().build()
 
@@ -80,15 +74,12 @@ class PaymentBatchController(
                 totalPayments = batch.totalPayments,
                 settledPayments = batch.settledPayments,
                 failedPayments = batch.failedPayments,
-            )
+            ),
         )
     }
 
     @GetMapping("/payruns/{payRunId}/payment-batch/dashboard")
-    fun getDashboardByPayRun(
-        @PathVariable employerId: String,
-        @PathVariable payRunId: String,
-    ): ResponseEntity<BatchDashboardView> {
+    fun getDashboardByPayRun(@PathVariable employerId: String, @PathVariable payRunId: String): ResponseEntity<BatchDashboardView> {
         val batchId = batches.findBatchIdForPayRun(employerId, payRunId)
             ?: return ResponseEntity.notFound().build()
 
@@ -96,10 +87,7 @@ class PaymentBatchController(
     }
 
     @GetMapping("/payment-batches/{batchId}/dashboard")
-    fun getDashboardByBatchId(
-        @PathVariable employerId: String,
-        @PathVariable batchId: String,
-    ): ResponseEntity<BatchDashboardView> {
+    fun getDashboardByBatchId(@PathVariable employerId: String, @PathVariable batchId: String): ResponseEntity<BatchDashboardView> {
         val batch = batches.findByBatchId(employerId, batchId)
             ?: return ResponseEntity.notFound().build()
 
@@ -119,7 +107,7 @@ class PaymentBatchController(
                 lockedAt = batch.lockedAt,
                 createdAt = batch.createdAt,
                 updatedAt = batch.updatedAt,
-            )
+            ),
         )
     }
 }

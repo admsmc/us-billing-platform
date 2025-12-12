@@ -5,9 +5,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.junit.jupiter.api.Test
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver
 import kotlin.test.assertTrue
 
 /**
@@ -21,17 +19,11 @@ class TaxRuleNamingConventionsTest {
         .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
 
     private fun loadAllRules(): List<TaxRuleConfig> {
-        val dir: Path = Paths.get("tax-service", "src", "main", "resources", "tax-config")
-        require(Files.exists(dir)) { "Expected tax-config directory at $dir" }
+        val resolver = PathMatchingResourcePatternResolver()
+        val resources = resolver.getResources("classpath*:tax-config/*.json")
 
-        val jsonFiles: List<Path> = Files.list(dir).use { stream ->
-            stream
-                .filter { Files.isRegularFile(it) && it.toString().endsWith(".json") }
-                .toList()
-        }
-
-        return jsonFiles.flatMap { path ->
-            val json = Files.readString(path)
+        return resources.flatMap { resource ->
+            val json = resource.inputStream.bufferedReader().use { it.readText() }
             val file: TaxRuleFile = objectMapper.readValue(json)
             file.rules
         }

@@ -41,7 +41,7 @@ data class PayPeriod(
 data class EarningInput(
     val code: EarningCode,
     val units: Double,
-    val rate: Money?,  // null if amount is provided directly
+    val rate: Money?, // null if amount is provided directly
     val amount: Money?,
 )
 

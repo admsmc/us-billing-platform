@@ -4,11 +4,13 @@ import com.example.uspayroll.payroll.model.*
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.shared.Money
+import com.example.uspayroll.worker.support.StubTaxLaborClientsTestConfig
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.TestInstance.Lifecycle
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.context.annotation.Import
 import java.time.LocalDate
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -27,6 +29,7 @@ import kotlin.test.assertTrue
  * emp-1 is lower than for emp-2 due solely to the configured deduction plan.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@Import(StubTaxLaborClientsTestConfig::class)
 @TestInstance(Lifecycle.PER_CLASS)
 class EmployerSpecificConfigWorkerIntegrationTest {
 
@@ -85,14 +88,18 @@ class EmployerSpecificConfigWorkerIntegrationTest {
 
             return com.example.uspayroll.payroll.engine.PayrollEngine.calculatePaycheck(
                 input = input,
-                earningConfig = payrollRunService.let { it.javaClass.getDeclaredField("earningConfigRepository").let { f ->
-                    f.isAccessible = true
-                    f.get(it) as com.example.uspayroll.payroll.model.config.EarningConfigRepository
-                } },
-                deductionConfig = payrollRunService.let { it.javaClass.getDeclaredField("deductionConfigRepository").let { f ->
-                    f.isAccessible = true
-                    f.get(it) as com.example.uspayroll.payroll.model.config.DeductionConfigRepository
-                } },
+                earningConfig = payrollRunService.let {
+                    it.javaClass.getDeclaredField("earningConfigRepository").let { f ->
+                        f.isAccessible = true
+                        f.get(it) as com.example.uspayroll.payroll.model.config.EarningConfigRepository
+                    }
+                },
+                deductionConfig = payrollRunService.let {
+                    it.javaClass.getDeclaredField("deductionConfigRepository").let { f ->
+                        f.isAccessible = true
+                        f.get(it) as com.example.uspayroll.payroll.model.config.DeductionConfigRepository
+                    }
+                },
             )
         }
 

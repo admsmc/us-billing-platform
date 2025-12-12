@@ -13,13 +13,7 @@ import org.springframework.web.client.getForObject
 import java.time.LocalDate
 
 interface LaborStandardsClient {
-    fun getLaborStandards(
-        employerId: EmployerId,
-        asOfDate: LocalDate,
-        workState: String?,
-        homeState: String?,
-        localityCodes: List<String> = emptyList(),
-    ): LaborStandardsContext?
+    fun getLaborStandards(employerId: EmployerId, asOfDate: LocalDate, workState: String?, homeState: String?, localityCodes: List<String> = emptyList()): LaborStandardsContext?
 }
 
 @ConfigurationProperties(prefix = "labor")
@@ -32,8 +26,7 @@ data class LaborClientProperties(
 class LaborClientConfig {
 
     @Bean
-    fun httpLaborStandardsClient(props: LaborClientProperties, restTemplate: RestTemplate): LaborStandardsClient =
-        HttpLaborStandardsClient(props, restTemplate)
+    fun httpLaborStandardsClient(props: LaborClientProperties, restTemplate: RestTemplate): LaborStandardsClient = HttpLaborStandardsClient(props, restTemplate)
 }
 
 class HttpLaborStandardsClient(
@@ -41,13 +34,7 @@ class HttpLaborStandardsClient(
     private val restTemplate: RestTemplate,
 ) : LaborStandardsClient {
 
-    override fun getLaborStandards(
-        employerId: EmployerId,
-        asOfDate: LocalDate,
-        workState: String?,
-        homeState: String?,
-        localityCodes: List<String>,
-    ): LaborStandardsContext? {
+    override fun getLaborStandards(employerId: EmployerId, asOfDate: LocalDate, workState: String?, homeState: String?, localityCodes: List<String>): LaborStandardsContext? {
         if (workState == null) return null
         val base = "${props.baseUrl}/employers/${employerId.value}/labor-standards"
 

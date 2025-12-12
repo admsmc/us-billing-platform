@@ -12,13 +12,7 @@ import org.springframework.web.client.exchange
 import java.net.URI
 
 interface OrchestratorClient {
-    fun startFinalize(
-        employerId: EmployerId,
-        payPeriodId: String,
-        employeeIds: List<String>,
-        requestedPayRunId: String? = null,
-        idempotencyKey: String? = null,
-    ): StartFinalizeResponse
+    fun startFinalize(employerId: EmployerId, payPeriodId: String, employeeIds: List<String>, requestedPayRunId: String? = null, idempotencyKey: String? = null): StartFinalizeResponse
 
     fun execute(
         employerId: EmployerId,
@@ -30,18 +24,14 @@ interface OrchestratorClient {
         leaseOwner: String = "worker",
     ): Map<String, Any?>
 
-    fun getStatus(
-        employerId: EmployerId,
-        payRunId: String,
-        failureLimit: Int = 25,
-    ): PayRunStatusResponse
+    fun getStatus(employerId: EmployerId, payRunId: String, failureLimit: Int = 25): PayRunStatusResponse
 }
 
 @ConfigurationProperties(prefix = "orchestrator")
 data class OrchestratorClientProperties(
     var baseUrl: String = "http://localhost:8085",
     /** Shared-secret token sent to orchestrator internal endpoints. */
-    var internalToken: String = "dev-internal-token",
+    var internalToken: String = "",
     /** Header name for internal auth token. */
     var internalTokenHeader: String = "X-Internal-Token",
 )
@@ -51,8 +41,7 @@ data class OrchestratorClientProperties(
 class OrchestratorClientConfig {
 
     @Bean
-    fun httpOrchestratorClient(props: OrchestratorClientProperties, restTemplate: RestTemplate): OrchestratorClient =
-        HttpOrchestratorClient(props, restTemplate)
+    fun httpOrchestratorClient(props: OrchestratorClientProperties, restTemplate: RestTemplate): OrchestratorClient = HttpOrchestratorClient(props, restTemplate)
 }
 
 class HttpOrchestratorClient(
@@ -60,13 +49,7 @@ class HttpOrchestratorClient(
     private val restTemplate: RestTemplate,
 ) : OrchestratorClient {
 
-    override fun startFinalize(
-        employerId: EmployerId,
-        payPeriodId: String,
-        employeeIds: List<String>,
-        requestedPayRunId: String?,
-        idempotencyKey: String?,
-    ): StartFinalizeResponse {
+    override fun startFinalize(employerId: EmployerId, payPeriodId: String, employeeIds: List<String>, requestedPayRunId: String?, idempotencyKey: String?): StartFinalizeResponse {
         val url = "${props.baseUrl}/employers/${employerId.value}/payruns/finalize"
         val request = StartFinalizeRequest(
             payPeriodId = payPeriodId,
@@ -82,15 +65,7 @@ class HttpOrchestratorClient(
         return response.body ?: error("Orchestrator startFinalize returned null body")
     }
 
-    override fun execute(
-        employerId: EmployerId,
-        payRunId: String,
-        batchSize: Int,
-        maxItems: Int,
-        maxMillis: Long,
-        requeueStaleMillis: Long,
-        leaseOwner: String,
-    ): Map<String, Any?> {
+    override fun execute(employerId: EmployerId, payRunId: String, batchSize: Int, maxItems: Int, maxMillis: Long, requeueStaleMillis: Long, leaseOwner: String): Map<String, Any?> {
         val url = "${props.baseUrl}/employers/${employerId.value}/payruns/internal/$payRunId/execute?batchSize=$batchSize&maxItems=$maxItems&maxMillis=$maxMillis&requeueStaleMillis=$requeueStaleMillis&leaseOwner=$leaseOwner"
 
         val headers = HttpHeaders().apply {
@@ -108,11 +83,7 @@ class HttpOrchestratorClient(
             ?: error("Orchestrator execute returned null body")
     }
 
-    override fun getStatus(
-        employerId: EmployerId,
-        payRunId: String,
-        failureLimit: Int,
-    ): PayRunStatusResponse {
+    override fun getStatus(employerId: EmployerId, payRunId: String, failureLimit: Int): PayRunStatusResponse {
         val url = "${props.baseUrl}/employers/${employerId.value}/payruns/$payRunId?failureLimit=$failureLimit"
         return restTemplate.getForObject(url, PayRunStatusResponse::class.java)
             ?: error("Orchestrator getStatus returned null body")

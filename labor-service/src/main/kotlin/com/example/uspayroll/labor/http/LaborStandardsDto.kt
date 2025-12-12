@@ -16,22 +16,20 @@ data class LaborStandardsContextDto(
     val tippedMonthlyThresholdCents: Long? = null,
 )
 
-fun LaborStandardsContext.toDto(): LaborStandardsContextDto =
-    LaborStandardsContextDto(
-        federalMinimumWageCents = federalMinimumWage.amount,
-        youthMinimumWageCents = youthMinimumWage?.amount,
-        youthMaxAgeYears = youthMaxAgeYears,
-        youthMaxConsecutiveDaysFromHire = youthMaxConsecutiveDaysFromHire,
-        federalTippedCashMinimumCents = federalTippedCashMinimum?.amount,
-        tippedMonthlyThresholdCents = tippedMonthlyThreshold?.amount,
-    )
+fun LaborStandardsContext.toDto(): LaborStandardsContextDto = LaborStandardsContextDto(
+    federalMinimumWageCents = federalMinimumWage.amount,
+    youthMinimumWageCents = youthMinimumWage?.amount,
+    youthMaxAgeYears = youthMaxAgeYears,
+    youthMaxConsecutiveDaysFromHire = youthMaxConsecutiveDaysFromHire,
+    federalTippedCashMinimumCents = federalTippedCashMinimum?.amount,
+    tippedMonthlyThresholdCents = tippedMonthlyThreshold?.amount,
+)
 
-fun LaborStandardsContextDto.toDomain(): LaborStandardsContext =
-    LaborStandardsContext(
-        federalMinimumWage = Money(federalMinimumWageCents),
-        youthMinimumWage = youthMinimumWageCents?.let { Money(it) },
-        youthMaxAgeYears = youthMaxAgeYears,
-        youthMaxConsecutiveDaysFromHire = youthMaxConsecutiveDaysFromHire,
-        federalTippedCashMinimum = federalTippedCashMinimumCents?.let { Money(it) },
-        tippedMonthlyThreshold = tippedMonthlyThresholdCents?.let { Money(it) },
-    )
+fun LaborStandardsContextDto.toDomain(): LaborStandardsContext = LaborStandardsContext(
+    federalMinimumWage = Money(federalMinimumWageCents),
+    youthMinimumWage = youthMinimumWageCents?.let { Money(it) },
+    youthMaxAgeYears = youthMaxAgeYears,
+    youthMaxConsecutiveDaysFromHire = youthMaxConsecutiveDaysFromHire,
+    federalTippedCashMinimum = federalTippedCashMinimumCents?.let { Money(it) },
+    tippedMonthlyThreshold = tippedMonthlyThresholdCents?.let { Money(it) },
+)

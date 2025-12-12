@@ -1,12 +1,7 @@
 package com.example.uspayroll.tax.persistence
 
-import com.example.uspayroll.payroll.engine.TaxesCalculator
 import com.example.uspayroll.payroll.model.*
-import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
-import com.example.uspayroll.shared.Money
-import com.example.uspayroll.shared.PaycheckId
-import com.example.uspayroll.shared.PayRunId
 import com.example.uspayroll.tax.impl.CachingTaxCatalog
 import com.example.uspayroll.tax.impl.CatalogBackedTaxContextProvider
 import com.example.uspayroll.tax.impl.DbTaxCatalog
@@ -16,7 +11,6 @@ import com.example.uspayroll.tax.support.H2TaxTestSupport.H2TaxRuleRepository
 import org.jooq.DSLContext
 import java.time.LocalDate
 import kotlin.test.Test
-import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
@@ -26,8 +20,7 @@ import kotlin.test.assertTrue
  */
 class Pub15TWageBracketBiweeklyGoldenTest {
 
-    private fun createDslContext(dbName: String): DSLContext =
-        H2TaxTestSupport.createDslContext(dbName)
+    private fun createDslContext(dbName: String): DSLContext = H2TaxTestSupport.createDslContext(dbName)
 
     private fun importConfig(dsl: DSLContext) {
         H2TaxTestSupport.importConfigFromResource(
@@ -67,10 +60,14 @@ class Pub15TWageBracketBiweeklyGoldenTest {
         fun assertMonotonicWithOpenEnded(rule: TaxRule.WageBracketTax) {
             val amounts = rule.brackets.map { it.upTo?.amount }
             val finite = amounts.filterNotNull()
-            assertTrue(finite.zipWithNext().all { (a, b) -> a < b },
-                "Expected strictly increasing upToCents for ${rule.id}")
-            assertTrue(amounts.any { it == null },
-                "Expected at least one open-ended bracket for ${rule.id}")
+            assertTrue(
+                finite.zipWithNext().all { (a, b) -> a < b },
+                "Expected strictly increasing upToCents for ${rule.id}",
+            )
+            assertTrue(
+                amounts.any { it == null },
+                "Expected at least one open-ended bracket for ${rule.id}",
+            )
         }
 
         wageRules.forEach { assertMonotonicWithOpenEnded(it) }
@@ -82,4 +79,3 @@ class Pub15TWageBracketBiweeklyGoldenTest {
         assertTrue(canonicalTaxes.zipWithNext().all { (a, b) -> a <= b })
     }
 }
-

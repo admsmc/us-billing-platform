@@ -47,10 +47,7 @@ data class SupportCapContext(
  * setting [SupportCapParams.stateAggregateCapRate] and taking the minimum of
  * the CCPA cap and the state cap.
  */
-fun computeSupportCap(
-    disposable: Money,
-    context: SupportCapContext,
-): Money {
+fun computeSupportCap(disposable: Money, context: SupportCapContext): Money {
     val p = context.params
 
     // Base CCPA rate depending on whether the payer supports others.

@@ -8,13 +8,7 @@ import com.example.uspayroll.shared.Money
  * partial-period proration.
  */
 fun interface SalaryProrationPolicy {
-    fun amountForPeriod(
-        annualSalary: Money,
-        schedule: PaySchedule,
-        period: PayPeriod,
-        employeeSnapshot: EmployeeSnapshot,
-        explicitProration: Proration?,
-    ): Money
+    fun amountForPeriod(annualSalary: Money, schedule: PaySchedule, period: PayPeriod, employeeSnapshot: EmployeeSnapshot, explicitProration: Proration?): Money
 
     companion object {
         /**

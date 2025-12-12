@@ -14,21 +14,19 @@ data class ProrationSummary(
 /**
  * Extract the first proration summary (if any) from a CalculationTrace.
  */
-fun CalculationTrace.prorationSummary(): ProrationSummary? =
-    steps.filterIsInstance<TraceStep.ProrationApplied>()
-        .firstOrNull()
-        ?.let { s ->
-            ProrationSummary(
-                strategy = s.strategy,
-                explicitOverride = s.explicitOverride,
-                fraction = s.fraction,
-                fullCents = s.fullCents,
-                appliedCents = s.appliedCents,
-            )
-        }
+fun CalculationTrace.prorationSummary(): ProrationSummary? = steps.filterIsInstance<TraceStep.ProrationApplied>()
+    .firstOrNull()
+    ?.let { s ->
+        ProrationSummary(
+            strategy = s.strategy,
+            explicitOverride = s.explicitOverride,
+            fraction = s.fraction,
+            fullCents = s.fullCents,
+            appliedCents = s.appliedCents,
+        )
+    }
 
 /**
  * Convenience helper to access proration summary directly from a PaycheckResult.
  */
-fun PaycheckResult.prorationSummary(): ProrationSummary? =
-    trace.prorationSummary()
+fun PaycheckResult.prorationSummary(): ProrationSummary? = trace.prorationSummary()

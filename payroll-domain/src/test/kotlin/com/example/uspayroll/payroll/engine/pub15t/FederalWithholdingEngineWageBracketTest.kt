@@ -5,12 +5,12 @@ import com.example.uspayroll.payroll.model.*
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.shared.Money
-import com.example.uspayroll.shared.PaycheckId
 import com.example.uspayroll.shared.PayRunId
+import com.example.uspayroll.shared.PaycheckId
+import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import java.time.LocalDate
 
 class FederalWithholdingEngineWageBracketTest {
 
@@ -60,18 +60,17 @@ class FederalWithholdingEngineWageBracketTest {
         return input to bases
     }
 
-    private fun simpleWageBracketRule(id: String = "US_FED_FIT_WB_TEST"): TaxRule.WageBracketTax =
-        TaxRule.WageBracketTax(
-            id = id,
-            jurisdiction = TaxJurisdiction(TaxJurisdictionType.FEDERAL, "US"),
-            basis = TaxBasis.FederalTaxable,
-            brackets = listOf(
-                WageBracketRow(upTo = Money(1_000_00L), tax = Money(50_00L)),   // up to 1,000 -> 50
-                WageBracketRow(upTo = Money(2_000_00L), tax = Money(150_00L)),  // up to 2,000 -> 150
-                WageBracketRow(upTo = null,               tax = Money(300_00L)),  // above 2,000 -> 300
-            ),
-            filingStatus = FilingStatus.SINGLE,
-        )
+    private fun simpleWageBracketRule(id: String = "US_FED_FIT_WB_TEST"): TaxRule.WageBracketTax = TaxRule.WageBracketTax(
+        id = id,
+        jurisdiction = TaxJurisdiction(TaxJurisdictionType.FEDERAL, "US"),
+        basis = TaxBasis.FederalTaxable,
+        brackets = listOf(
+            WageBracketRow(upTo = Money(1_000_00L), tax = Money(50_00L)), // up to 1,000 -> 50
+            WageBracketRow(upTo = Money(2_000_00L), tax = Money(150_00L)), // up to 2,000 -> 150
+            WageBracketRow(upTo = null, tax = Money(300_00L)), // above 2,000 -> 300
+        ),
+        filingStatus = FilingStatus.SINGLE,
+    )
 
     @Test
     fun `wage-bracket method is monotonic across wage bands`() {

@@ -4,9 +4,9 @@ import com.example.uspayroll.payroll.model.TaxBasis
 import com.example.uspayroll.payroll.model.TaxJurisdictionType
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.tax.api.TaxQuery
+import com.example.uspayroll.tax.config.TaxRuleFile
 import com.example.uspayroll.tax.impl.TaxRuleRecord
 import com.example.uspayroll.tax.impl.TaxRuleRepository
-import com.example.uspayroll.tax.config.TaxRuleFile
 import com.example.uspayroll.tax.persistence.TaxRuleConfigImporter
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule

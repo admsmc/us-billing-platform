@@ -5,8 +5,8 @@ import com.example.uspayroll.payroll.model.*
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.shared.Money
-import com.example.uspayroll.shared.PaycheckId
 import com.example.uspayroll.shared.PayRunId
+import com.example.uspayroll.shared.PaycheckId
 import com.example.uspayroll.tax.impl.CachingTaxCatalog
 import com.example.uspayroll.tax.impl.CatalogBackedTaxContextProvider
 import com.example.uspayroll.tax.impl.DbTaxCatalog
@@ -25,20 +25,13 @@ import kotlin.test.assertTrue
  */
 class MichiganLocalTaxGoldenTest {
 
-    private fun createDslContext(dbName: String): DSLContext =
-        H2TaxTestSupport.createDslContext(dbName)
+    private fun createDslContext(dbName: String): DSLContext = H2TaxTestSupport.createDslContext(dbName)
 
     private fun importConfig(dsl: DSLContext, resourcePath: String) {
         H2TaxTestSupport.importConfigFromResource(dsl, resourcePath, javaClass.classLoader)
     }
 
-    private fun taxContext(
-        employerId: EmployerId,
-        asOfDate: LocalDate,
-        residentState: String?,
-        localJurisdictions: List<String>,
-        dsl: DSLContext,
-    ): TaxContext {
+    private fun taxContext(employerId: EmployerId, asOfDate: LocalDate, residentState: String?, localJurisdictions: List<String>, dsl: DSLContext): TaxContext {
         val repository: TaxRuleRepository = H2TaxRuleRepository(dsl)
         val dbCatalog = DbTaxCatalog(repository)
         val cachingCatalog = CachingTaxCatalog(dbCatalog)
@@ -77,13 +70,7 @@ class MichiganLocalTaxGoldenTest {
         )
     }
 
-    private fun computeLocalTax(
-        context: TaxContext,
-        employerId: EmployerId,
-        asOfDate: LocalDate,
-        residentState: String,
-        localJurisdictions: List<String>,
-    ): Map<String, Long> {
+    private fun computeLocalTax(context: TaxContext, employerId: EmployerId, asOfDate: LocalDate, residentState: String, localJurisdictions: List<String>): Map<String, Long> {
         val wagesCents = 100_000_00L // $100,000 state taxable wages
         val bases: Map<TaxBasis, Money> = mapOf(
             TaxBasis.StateTaxable to Money(wagesCents),

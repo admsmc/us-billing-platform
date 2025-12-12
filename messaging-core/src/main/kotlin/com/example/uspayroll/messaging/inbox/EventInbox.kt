@@ -32,7 +32,7 @@ class JdbcEventInbox(
     fun tryMarkProcessed(consumer: String, eventId: String): Boolean {
         dataSource.connection.use { conn ->
             conn.prepareStatement(
-                "INSERT INTO $tableName (consumer, event_id) VALUES (?, ?)"
+                "INSERT INTO $tableName (consumer, event_id) VALUES (?, ?)",
             ).use { ps ->
                 ps.setString(1, consumer)
                 ps.setString(2, eventId)

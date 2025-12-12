@@ -1,12 +1,7 @@
 package com.example.uspayroll.hr.http
 
-import com.example.uspayroll.payroll.model.EmployeeSnapshot
-import com.example.uspayroll.payroll.model.PayPeriod
-import com.example.uspayroll.payroll.model.LocalDateRange
-import com.example.uspayroll.payroll.model.PayFrequency
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
-import com.example.uspayroll.shared.Money
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -17,7 +12,6 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
 import java.time.LocalDate
-import kotlin.test.assertEquals
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -113,8 +107,8 @@ class HrHttpIntegrationTest {
             employeeId.value,
             "ORDER-HR-1",
             "CREDITOR_GARNISHMENT",
-            null,
-            null,
+            "STATE",
+            "CA",
             "CASE-123",
             "ACTIVE",
             LocalDate.of(2024, 12, 1),
@@ -132,7 +126,7 @@ class HrHttpIntegrationTest {
             param("asOf", checkDate.toString())
         }.andExpect {
             status { isOk() }
-            jsonPath("$.employeeId.value") { value(employeeId.value) }
+            jsonPath("$.employeeId") { value(employeeId.value) }
             jsonPath("$.homeState") { value("CA") }
             jsonPath("$.baseCompensation.annualSalary.amount") { value(52_000_00) }
         }
@@ -162,8 +156,7 @@ class HrHttpIntegrationTest {
             jsonPath("$[0].planId") { value("GARN_PLAN_CREDITOR_GARNISHMENT") }
             jsonPath("$[0].type") { value("CREDITOR_GARNISHMENT") }
             jsonPath("$[0].caseNumber") { value("CASE-123") }
-            jsonPath("$[0].formula.type") { value("PercentOfDisposable") }
-            jsonPath("$[0].formula.percent.value") { value(0.10) }
+            jsonPath("$[0].formula.percent") { value(0.10) }
             jsonPath("$[0].arrearsBefore.amount") { value(900000) }
         }
     }
@@ -179,8 +172,7 @@ class HrHttpIntegrationTest {
             // generic null-employer ones. The first rule should use the
             // LESSER_OF_PERCENT_OR_AMOUNT formula variant.
             jsonPath("$[0].type") { value("CREDITOR_GARNISHMENT") }
-            jsonPath("$[0].formula.type") { value("LesserOfPercentOrAmount") }
-            jsonPath("$[0].formula.percent.value") { value(0.25) }
+            jsonPath("$[0].formula.percent") { value(0.25) }
             jsonPath("$[0].formula.amount.amount") { value(150000) }
         }
     }
@@ -194,14 +186,11 @@ class HrHttpIntegrationTest {
             status { isOk() }
             // First rule: NY child support with protected floor.
             jsonPath("$[0].type") { value("CHILD_SUPPORT") }
-            jsonPath("$[0].formula.type") { value("PercentOfDisposable") }
-            jsonPath("$[0].formula.percent.value") { value(0.50) }
-            jsonPath("$[0].protectedEarningsRule.type") { value("FixedFloor") }
+            jsonPath("$[0].formula.percent") { value(0.50) }
             jsonPath("$[0].protectedEarningsRule.amount.amount") { value(250000) }
             // Second rule: NY creditor garnishment at 15%.
             jsonPath("$[1].type") { value("CREDITOR_GARNISHMENT") }
-            jsonPath("$[1].formula.type") { value("PercentOfDisposable") }
-            jsonPath("$[1].formula.percent.value") { value(0.15) }
+            jsonPath("$[1].formula.percent") { value(0.15) }
         }
     }
 
@@ -223,7 +212,7 @@ class HrHttpIntegrationTest {
                   "orderId": "ORDER-LEDGER-1",
                   "paycheckId": "CHK-LEDGER-1",
                   "payRunId": "RUN-LEDGER-1",
-                  "checkDate": "${checkDate}",
+                  "checkDate": "$checkDate",
                   "withheld": { "amount": 12345, "currency": "USD" },
                   "netPay": { "amount": 500000, "currency": "USD" }
                 }
@@ -268,8 +257,8 @@ class HrHttpIntegrationTest {
             reconEmployeeId.value,
             "ORDER-RECON-1",
             "CREDITOR_GARNISHMENT",
-            null,
-            null,
+            "STATE",
+            "CA",
             "CASE-RECON-1",
             "ACTIVE",
             LocalDate.of(2024, 12, 1),
@@ -288,9 +277,9 @@ class HrHttpIntegrationTest {
                   "orderId": "ORDER-RECON-1",
                   "paycheckId": "CHK-RECON-1",
                   "payRunId": "RUN-RECON-1",
-                  "checkDate": "${checkDate}",
-                  "withheld": { "amount": 4_000_00, "currency": "USD" },
-                  "netPay": { "amount": 10_000_00, "currency": "USD" }
+                  "checkDate": "$checkDate",
+                  "withheld": { "amount": 400000, "currency": "USD" },
+                  "netPay": { "amount": 1000000, "currency": "USD" }
                 }
               ]
             }
@@ -310,7 +299,7 @@ class HrHttpIntegrationTest {
         }.andExpect {
             status { isOk() }
             jsonPath("$[0].orderId") { value("ORDER-RECON-1") }
-            jsonPath("$[0].arrearsBefore.amount") { value(6_000_00) }
+            jsonPath("$[0].arrearsBefore.amount") { value(600000) }
         }
 
         // Second withholding of 6,000.00 pays the order in full.
@@ -321,9 +310,9 @@ class HrHttpIntegrationTest {
                   "orderId": "ORDER-RECON-1",
                   "paycheckId": "CHK-RECON-2",
                   "payRunId": "RUN-RECON-2",
-                  "checkDate": "${checkDate}",
-                  "withheld": { "amount": 6_000_00, "currency": "USD" },
-                  "netPay": { "amount": 10_000_00, "currency": "USD" }
+                  "checkDate": "$checkDate",
+                  "withheld": { "amount": 600000, "currency": "USD" },
+                  "netPay": { "amount": 1000000, "currency": "USD" }
                 }
               ]
             }

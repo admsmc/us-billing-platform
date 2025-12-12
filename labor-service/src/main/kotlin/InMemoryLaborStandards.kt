@@ -41,11 +41,14 @@ class InMemoryLaborStandardsCatalog : LaborStandardsCatalog {
         }
     }
 
-    override fun listStateStandards(asOfDate: LocalDate?): List<StateLaborStandard> =
-        if (asOfDate == null) standards else standards.filter { s ->
+    override fun listStateStandards(asOfDate: LocalDate?): List<StateLaborStandard> = if (asOfDate == null) {
+        standards
+    } else {
+        standards.filter { s ->
             !asOfDate.isBefore(s.effectiveFrom) &&
                 (s.effectiveTo == null || !asOfDate.isAfter(s.effectiveTo))
         }
+    }
 }
 
 interface LaborStandardsContextProvider {

@@ -1,12 +1,12 @@
 package com.example.uspayroll.tax.persistence
 
-import com.example.uspayroll.payroll.model.*
 import com.example.uspayroll.payroll.engine.TaxesCalculator
+import com.example.uspayroll.payroll.model.*
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.shared.Money
-import com.example.uspayroll.shared.PaycheckId
 import com.example.uspayroll.shared.PayRunId
+import com.example.uspayroll.shared.PaycheckId
 import com.example.uspayroll.tax.api.TaxQuery
 import com.example.uspayroll.tax.impl.CachingTaxCatalog
 import com.example.uspayroll.tax.impl.CatalogBackedTaxContextProvider
@@ -15,10 +15,10 @@ import com.example.uspayroll.tax.impl.TaxRuleRepository
 import com.example.uspayroll.tax.support.H2TaxTestSupport
 import com.example.uspayroll.tax.support.H2TaxTestSupport.H2TaxRuleRepository
 import org.jooq.DSLContext
+import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import java.time.LocalDate
 
 /**
  * Golden H2-backed tests that assert actual tax dollar amounts for canonical
@@ -30,8 +30,7 @@ import java.time.LocalDate
  */
 class GoldenTaxScenariosTest {
 
-    private fun createDslContext(dbName: String): DSLContext =
-        H2TaxTestSupport.createDslContext(dbName)
+    private fun createDslContext(dbName: String): DSLContext = H2TaxTestSupport.createDslContext(dbName)
 
     private fun importConfig(dsl: DSLContext, resourcePath: String) {
         H2TaxTestSupport.importConfigFromResource(dsl, resourcePath, javaClass.classLoader)
@@ -170,10 +169,7 @@ class GoldenTaxScenariosTest {
 
         val taxContext = provider.getTaxContext(employerId, asOfDate)
 
-        fun computeFit(
-            filingStatus: FilingStatus,
-            wagesCents: Long,
-        ): Long {
+        fun computeFit(filingStatus: FilingStatus, wagesCents: Long): Long {
             val bases: Map<TaxBasis, Money> = mapOf(
                 TaxBasis.FederalTaxable to Money(wagesCents),
             )
@@ -377,10 +373,7 @@ class GoldenTaxScenariosTest {
             },
         )
 
-        fun computeStateTax(
-            stateCode: String,
-            taxableCents: Long,
-        ): Long {
+        fun computeStateTax(stateCode: String, taxableCents: Long): Long {
             val stateTaxContext = taxContextFor(stateCode)
 
             val bases: Map<TaxBasis, Money> = mapOf(
@@ -552,7 +545,6 @@ class GoldenTaxScenariosTest {
         val repository: TaxRuleRepository = H2TaxRuleRepository(dsl)
         val dbCatalog = DbTaxCatalog(repository)
 
-
         val employerId = EmployerId("EMP-LOCAL-NYC")
         val asOfDate = LocalDate.of(2025, 1, 15)
 
@@ -564,11 +556,7 @@ class GoldenTaxScenariosTest {
             TaxBasis.StateTaxable to mapOf("stateTaxable" to Money(stateTaxableCents)),
         )
 
-        fun loadTaxContext(
-            residentState: String,
-            workState: String,
-            localJurisdictions: List<String>,
-        ): TaxContext {
+        fun loadTaxContext(residentState: String, workState: String, localJurisdictions: List<String>): TaxContext {
             val query = TaxQuery(
                 employerId = employerId,
                 asOfDate = asOfDate,
@@ -586,12 +574,7 @@ class GoldenTaxScenariosTest {
             )
         }
 
-        fun computeLocalTax(
-            employeeIdSuffix: String,
-            residentState: String,
-            workState: String,
-            localJurisdictions: List<String>,
-        ): Long {
+        fun computeLocalTax(employeeIdSuffix: String, residentState: String, workState: String, localJurisdictions: List<String>): Long {
             val period = PayPeriod(
                 id = "LOCAL-NYC-$employeeIdSuffix",
                 employerId = employerId,

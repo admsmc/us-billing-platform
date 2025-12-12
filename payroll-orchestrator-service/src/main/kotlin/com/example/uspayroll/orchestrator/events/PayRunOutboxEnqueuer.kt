@@ -25,15 +25,7 @@ class PayRunOutboxEnqueuer(
      * 2) enqueues outbox events for payrun + each succeeded paycheck
      */
     @Transactional
-    fun finalizePayRunAndEnqueueOutboxEvents(
-        employerId: String,
-        payRunId: String,
-        payPeriodId: String,
-        status: PayRunStatus,
-        total: Int,
-        succeeded: Int,
-        failed: Int,
-    ) {
+    fun finalizePayRunAndEnqueueOutboxEvents(employerId: String, payRunId: String, payPeriodId: String, status: PayRunStatus, total: Int, succeeded: Int, failed: Int) {
         payRunRepository.setFinalStatusAndReleaseLease(
             employerId = employerId,
             payRunId = payRunId,
@@ -57,7 +49,7 @@ class PayRunOutboxEnqueuer(
         outboxRepository.enqueue(
             topic = kafkaProps.payRunFinalizedTopic,
             // Partition key: per (employer, payRun) to preserve ordering for a run.
-            eventKey = "${employerId}:${payRunId}",
+            eventKey = "$employerId:$payRunId",
             eventType = "PayRunFinalized",
             eventId = payRunFinalized.eventId,
             aggregateId = payRunId,
@@ -80,7 +72,7 @@ class PayRunOutboxEnqueuer(
             OutboxRepository.PendingOutboxInsert(
                 topic = kafkaProps.paycheckFinalizedTopic,
                 // Partition key: per (employer, payRun) to keep paychecks for a run ordered.
-                eventKey = "${employerId}:${payRunId}",
+                eventKey = "$employerId:$payRunId",
                 eventType = "PaycheckFinalized",
                 eventId = evt.eventId,
                 aggregateId = paycheckId,

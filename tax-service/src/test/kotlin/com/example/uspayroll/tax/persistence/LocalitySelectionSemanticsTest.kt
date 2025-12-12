@@ -2,8 +2,8 @@ package com.example.uspayroll.tax.persistence
 
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.tax.api.TaxQuery
-import com.example.uspayroll.tax.impl.TaxRuleRepository
 import com.example.uspayroll.tax.impl.TaxRuleRecord
+import com.example.uspayroll.tax.impl.TaxRuleRepository
 import com.example.uspayroll.tax.support.H2TaxTestSupport
 import com.example.uspayroll.tax.support.H2TaxTestSupport.H2TaxRuleRepository
 import org.jooq.DSLContext
@@ -25,20 +25,13 @@ import kotlin.test.assertTrue
  */
 class LocalitySelectionSemanticsTest {
 
-    private fun createDslContext(dbName: String): DSLContext =
-        H2TaxTestSupport.createDslContext(dbName)
+    private fun createDslContext(dbName: String): DSLContext = H2TaxTestSupport.createDslContext(dbName)
 
     private fun importConfig(dsl: DSLContext, resourcePath: String) {
         H2TaxTestSupport.importConfigFromResource(dsl, resourcePath, javaClass.classLoader)
     }
 
-    private fun rulesFor(
-        dsl: DSLContext,
-        employerId: EmployerId,
-        residentState: String?,
-        workState: String?,
-        locals: List<String>,
-    ): List<TaxRuleRecord> {
+    private fun rulesFor(dsl: DSLContext, employerId: EmployerId, residentState: String?, workState: String?, locals: List<String>): List<TaxRuleRecord> {
         val repo: TaxRuleRepository = H2TaxRuleRepository(dsl)
         val query = TaxQuery(
             employerId = employerId,

@@ -26,10 +26,7 @@ class PaymentsController(
     )
 
     @GetMapping("/payruns/{payRunId}/payments")
-    fun listForPayRun(
-        @PathVariable employerId: String,
-        @PathVariable payRunId: String,
-    ): ResponseEntity<List<PaymentView>> {
+    fun listForPayRun(@PathVariable employerId: String, @PathVariable payRunId: String): ResponseEntity<List<PaymentView>> {
         val rows = repo.listByPayRun(employerId, payRunId)
         return ResponseEntity.ok(
             rows.map {
@@ -45,15 +42,12 @@ class PaymentsController(
                     status = it.status.name,
                     attempts = it.attempts,
                 )
-            }
+            },
         )
     }
 
     @GetMapping("/payments/by-paycheck/{paycheckId}")
-    fun getByPaycheck(
-        @PathVariable employerId: String,
-        @PathVariable paycheckId: String,
-    ): ResponseEntity<PaymentView> {
+    fun getByPaycheck(@PathVariable employerId: String, @PathVariable paycheckId: String): ResponseEntity<PaymentView> {
         val row = repo.findByPaycheck(employerId, paycheckId)
             ?: return ResponseEntity.notFound().build()
 
@@ -69,7 +63,7 @@ class PaymentsController(
                 netCents = row.netCents,
                 status = row.status.name,
                 attempts = row.attempts,
-            )
+            ),
         )
     }
 }

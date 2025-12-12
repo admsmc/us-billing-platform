@@ -1,0 +1,54 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>FunctionOnlyReturningConstant:PayrollEngine.kt$PayrollEngine$fun version(): String</ID>
+    <ID>LargeClass:GarnishmentsCalculatorTest.kt$GarnishmentsCalculatorTest</ID>
+    <ID>LoopWithTooManyJumpStatements:DeductionsCalculator.kt$DeductionsCalculator$for</ID>
+    <ID>LoopWithTooManyJumpStatements:GarnishmentsCalculator.kt$GarnishmentsCalculator$for</ID>
+    <ID>LoopWithTooManyJumpStatements:TaxesCalculator.kt$TaxesCalculator$for</ID>
+    <ID>MatchingDeclarationName:InputTypes.kt$PaycheckInput</ID>
+    <ID>MatchingDeclarationName:PayScheduleTypes.kt$PaySchedule</ID>
+    <ID>MatchingDeclarationName:ProrationTypes.kt$Proration</ID>
+    <ID>MatchingDeclarationName:TraceHelpers.kt$ProrationSummary</ID>
+    <ID>MatchingDeclarationName:YtdTypes.kt$YtdSnapshot</ID>
+    <ID>UnusedPrivateProperty:BasisBuilderTest.kt$BasisBuilderTest$val period = PayPeriod( id = "PERIOD-1", employerId = employerId, dateRange = LocalDateRange(java.time.LocalDate.of(2025, 1, 1), java.time.LocalDate.of(2025, 1, 14)), checkDate = java.time.LocalDate.of(2025, 1, 15), frequency = PayFrequency.BIWEEKLY, )</ID>
+    <ID>UnusedPrivateProperty:GarnishmentsCalculator.kt$GarnishmentsCalculator$val nonSupportOrders = sortedOrders.filter { it.type != GarnishmentType.CHILD_SUPPORT }</ID>
+    <ID>UnusedPrivateProperty:GarnishmentsCalculatorPropertiesTest.kt$GarnishmentsCalculatorPropertiesTest$val employer = EmployerId("EMP-PROP")</ID>
+    <ID>UseRequire:PayrollEngine.kt$PayrollEngine$throw IllegalArgumentException("YTD year $ytdYear does not match check year $checkYear")</ID>
+    <ID>VariableNaming:GarnishmentsCalculatorTest.kt$GarnishmentsCalculatorTest$// Biweekly, Married Filing Jointly, 2 dependents: $1,646.16 exempt take-home pay private val IRS_2026_PUB1494_BIWEEKLY_MFJ_2 = Money(1_646_16L)</ID>
+    <ID>VariableNaming:GarnishmentsCalculatorTest.kt$GarnishmentsCalculatorTest$// California FTB EWOT 2025 payment tables – top-band 25% rate is shared across // weekly, biweekly, semimonthly, and monthly frequencies; thresholds are applied // in service configuration, so here we just assert the 25% behavior once we are // "in" the top band. private val FTB_EWOT_PERCENT = Percent(0.25)</ID>
+    <ID>VariableNaming:GarnishmentsCalculatorTest.kt$GarnishmentsCalculatorTest$// IRS Publication 1494 (Rev. 12-2025), example exempt amounts for 2026 levies // Weekly, Single, 3 dependents: $615.38 exempt take-home pay private val IRS_2026_PUB1494_WEEKLY_SINGLE_3 = Money(615_38L)</ID>
+    <ID>WildcardImport:AdditionalEarningsAndOvertimePolicyTest.kt$import com.example.uspayroll.payroll.model.*</ID>
+    <ID>WildcardImport:AdditionalMedicareTest.kt$import com.example.uspayroll.payroll.model.*</ID>
+    <ID>WildcardImport:AdditionalWithholdingTest.kt$import com.example.uspayroll.payroll.model.*</ID>
+    <ID>WildcardImport:BasisBuilderEffectsTest.kt$import com.example.uspayroll.payroll.model.*</ID>
+    <ID>WildcardImport:BasisBuilderImputedComponentsTest.kt$import com.example.uspayroll.payroll.model.*</ID>
+    <ID>WildcardImport:BasisBuilderSupplementalTest.kt$import com.example.uspayroll.payroll.model.*</ID>
+    <ID>WildcardImport:BasisBuilderTest.kt$import com.example.uspayroll.payroll.model.*</ID>
+    <ID>WildcardImport:BracketedTaxTest.kt$import com.example.uspayroll.payroll.model.*</ID>
+    <ID>WildcardImport:DeductionBehaviorTest.kt$import com.example.uspayroll.payroll.model.*</ID>
+    <ID>WildcardImport:DeductionsCalculator.kt$import com.example.uspayroll.payroll.model.*</ID>
+    <ID>WildcardImport:DeductionsCalculatorTest.kt$import com.example.uspayroll.payroll.model.*</ID>
+    <ID>WildcardImport:EarningsCalculator.kt$import com.example.uspayroll.payroll.model.*</ID>
+    <ID>WildcardImport:EarningsCalculatorTest.kt$import com.example.uspayroll.payroll.model.*</ID>
+    <ID>WildcardImport:EmployerContributionsAndImputedIncomeTest.kt$import com.example.uspayroll.payroll.model.*</ID>
+    <ID>WildcardImport:EmployerSpecificDeductionsGoldenTest.kt$import com.example.uspayroll.payroll.model.*</ID>
+    <ID>WildcardImport:EmployerSpecificHsaFsaGoldenTest.kt$import com.example.uspayroll.payroll.model.*</ID>
+    <ID>WildcardImport:FederalWithholdingEnginePercentageMethodTest.kt$import com.example.uspayroll.payroll.model.*</ID>
+    <ID>WildcardImport:FederalWithholdingEngineWageBracketTest.kt$import com.example.uspayroll.payroll.model.*</ID>
+    <ID>WildcardImport:FicaGatingTest.kt$import com.example.uspayroll.payroll.model.*</ID>
+    <ID>WildcardImport:FicaTaxTest.kt$import com.example.uspayroll.payroll.model.*</ID>
+    <ID>WildcardImport:GarnishmentsCalculatorPropertiesTest.kt$import com.example.uspayroll.payroll.model.*</ID>
+    <ID>WildcardImport:GarnishmentsCalculatorTest.kt$import com.example.uspayroll.payroll.model.*</ID>
+    <ID>WildcardImport:PayrollEngine.kt$import com.example.uspayroll.payroll.model.*</ID>
+    <ID>WildcardImport:PreTaxDeductionTest.kt$import com.example.uspayroll.payroll.model.*</ID>
+    <ID>WildcardImport:RegularRateCalculatorTest.kt$import com.example.uspayroll.payroll.model.*</ID>
+    <ID>WildcardImport:StateIncomeTaxIntegrationTest.kt$import com.example.uspayroll.payroll.model.*</ID>
+    <ID>WildcardImport:SupplementalTaxTest.kt$import com.example.uspayroll.payroll.model.*</ID>
+    <ID>WildcardImport:TaxesCalculator.kt$import com.example.uspayroll.payroll.model.*</ID>
+    <ID>WildcardImport:TaxesCalculatorTest.kt$import com.example.uspayroll.payroll.model.*</ID>
+    <ID>WildcardImport:TipCreditEnforcerTest.kt$import com.example.uspayroll.payroll.model.*</ID>
+    <ID>WildcardImport:YtdYearBoundaryTest.kt$import com.example.uspayroll.payroll.model.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

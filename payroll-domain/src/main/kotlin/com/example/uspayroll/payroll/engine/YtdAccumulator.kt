@@ -1,12 +1,12 @@
 package com.example.uspayroll.payroll.engine
 
-import com.example.uspayroll.shared.Money
 import com.example.uspayroll.payroll.model.DeductionLine
 import com.example.uspayroll.payroll.model.EarningLine
 import com.example.uspayroll.payroll.model.EmployerContributionLine
 import com.example.uspayroll.payroll.model.TaxBasis
 import com.example.uspayroll.payroll.model.TaxLine
 import com.example.uspayroll.payroll.model.YtdSnapshot
+import com.example.uspayroll.shared.Money
 
 /**
  * Updates YtdSnapshot based on the current paycheck's earnings, taxes, and deductions.

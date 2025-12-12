@@ -1,7 +1,7 @@
 package com.example.uspayroll.worker.client
 
-import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.payroll.model.TaxContext
+import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.tax.http.TaxContextDto
 import com.example.uspayroll.tax.http.toDomain
 import org.springframework.boot.context.properties.ConfigurationProperties
@@ -16,11 +16,7 @@ import java.time.LocalDate
  * Client-side abstraction for talking to the Tax service.
  */
 interface TaxClient {
-    fun getTaxContext(
-        employerId: EmployerId,
-        asOfDate: LocalDate,
-        localityCodes: List<String> = emptyList(),
-    ): TaxContext
+    fun getTaxContext(employerId: EmployerId, asOfDate: LocalDate, localityCodes: List<String> = emptyList()): TaxContext
 }
 
 @ConfigurationProperties(prefix = "tax")
@@ -33,8 +29,7 @@ data class TaxClientProperties(
 class TaxClientConfig {
 
     @Bean
-    fun httpTaxClient(props: TaxClientProperties, restTemplate: RestTemplate): TaxClient =
-        HttpTaxClient(props, restTemplate)
+    fun httpTaxClient(props: TaxClientProperties, restTemplate: RestTemplate): TaxClient = HttpTaxClient(props, restTemplate)
 }
 
 class HttpTaxClient(
@@ -42,12 +37,8 @@ class HttpTaxClient(
     private val restTemplate: RestTemplate,
 ) : TaxClient {
 
-    override fun getTaxContext(
-        employerId: EmployerId,
-        asOfDate: LocalDate,
-        localityCodes: List<String>,
-    ): TaxContext {
-        val localityParam = if (localityCodes.isEmpty()) "" else localityCodes.joinToString("&") { "locality=${it}" }
+    override fun getTaxContext(employerId: EmployerId, asOfDate: LocalDate, localityCodes: List<String>): TaxContext {
+        val localityParam = if (localityCodes.isEmpty()) "" else localityCodes.joinToString("&") { "locality=$it" }
         val sep = if (localityParam.isEmpty()) "" else "&"
         val url = "${props.baseUrl}/employers/${employerId.value}/tax-context?asOf=$asOfDate$sep$localityParam"
 

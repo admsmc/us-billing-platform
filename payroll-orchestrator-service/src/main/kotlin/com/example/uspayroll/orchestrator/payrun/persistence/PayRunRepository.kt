@@ -57,77 +57,69 @@ class PayRunRepository(
             ?: error("pay_run insert succeeded but row not found employer=$employerId payRunId=$payRunId")
     }
 
-    fun findPayRun(employerId: String, payRunId: String): PayRunRecord? =
-        jdbcTemplate.query(
-            """
+    fun findPayRun(employerId: String, payRunId: String): PayRunRecord? = jdbcTemplate.query(
+        """
             SELECT employer_id, pay_run_id, pay_period_id, run_type, run_sequence, status,
                    approval_status, payment_status,
                    requested_idempotency_key,
                    lease_owner, lease_expires_at_epoch_ms
             FROM pay_run
             WHERE employer_id = ? AND pay_run_id = ?
-            """.trimIndent(),
-            { rs, _ ->
-                val leaseEpoch = rs.getLong("lease_expires_at_epoch_ms")
-                val leaseInstant = if (rs.wasNull()) null else Instant.ofEpochMilli(leaseEpoch)
+        """.trimIndent(),
+        { rs, _ ->
+            val leaseEpoch = rs.getLong("lease_expires_at_epoch_ms")
+            val leaseInstant = if (rs.wasNull()) null else Instant.ofEpochMilli(leaseEpoch)
 
-                PayRunRecord(
-                    employerId = rs.getString("employer_id"),
-                    payRunId = rs.getString("pay_run_id"),
-                    payPeriodId = rs.getString("pay_period_id"),
-                    runType = com.example.uspayroll.orchestrator.payrun.model.PayRunType.valueOf(rs.getString("run_type")),
-                    runSequence = rs.getInt("run_sequence"),
-                    status = PayRunStatus.valueOf(rs.getString("status")),
-                    approvalStatus = com.example.uspayroll.orchestrator.payrun.model.ApprovalStatus.valueOf(rs.getString("approval_status")),
-                    paymentStatus = com.example.uspayroll.orchestrator.payrun.model.PaymentStatus.valueOf(rs.getString("payment_status")),
-                    requestedIdempotencyKey = rs.getString("requested_idempotency_key"),
-                    leaseOwner = rs.getString("lease_owner"),
-                    leaseExpiresAt = leaseInstant,
-                )
-            },
-            employerId,
-            payRunId,
-        ).firstOrNull()
+            PayRunRecord(
+                employerId = rs.getString("employer_id"),
+                payRunId = rs.getString("pay_run_id"),
+                payPeriodId = rs.getString("pay_period_id"),
+                runType = com.example.uspayroll.orchestrator.payrun.model.PayRunType.valueOf(rs.getString("run_type")),
+                runSequence = rs.getInt("run_sequence"),
+                status = PayRunStatus.valueOf(rs.getString("status")),
+                approvalStatus = com.example.uspayroll.orchestrator.payrun.model.ApprovalStatus.valueOf(rs.getString("approval_status")),
+                paymentStatus = com.example.uspayroll.orchestrator.payrun.model.PaymentStatus.valueOf(rs.getString("payment_status")),
+                requestedIdempotencyKey = rs.getString("requested_idempotency_key"),
+                leaseOwner = rs.getString("lease_owner"),
+                leaseExpiresAt = leaseInstant,
+            )
+        },
+        employerId,
+        payRunId,
+    ).firstOrNull()
 
-    fun findByIdempotencyKey(employerId: String, requestedIdempotencyKey: String): PayRunRecord? =
-        jdbcTemplate.query(
-            """
+    fun findByIdempotencyKey(employerId: String, requestedIdempotencyKey: String): PayRunRecord? = jdbcTemplate.query(
+        """
             SELECT employer_id, pay_run_id, pay_period_id, run_type, run_sequence, status,
                    approval_status, payment_status,
                    requested_idempotency_key,
                    lease_owner, lease_expires_at_epoch_ms
             FROM pay_run
             WHERE employer_id = ? AND requested_idempotency_key = ?
-            """.trimIndent(),
-            { rs, _ ->
-                val leaseEpoch = rs.getLong("lease_expires_at_epoch_ms")
-                val leaseInstant = if (rs.wasNull()) null else Instant.ofEpochMilli(leaseEpoch)
+        """.trimIndent(),
+        { rs, _ ->
+            val leaseEpoch = rs.getLong("lease_expires_at_epoch_ms")
+            val leaseInstant = if (rs.wasNull()) null else Instant.ofEpochMilli(leaseEpoch)
 
-                PayRunRecord(
-                    employerId = rs.getString("employer_id"),
-                    payRunId = rs.getString("pay_run_id"),
-                    payPeriodId = rs.getString("pay_period_id"),
-                    runType = com.example.uspayroll.orchestrator.payrun.model.PayRunType.valueOf(rs.getString("run_type")),
-                    runSequence = rs.getInt("run_sequence"),
-                    status = PayRunStatus.valueOf(rs.getString("status")),
-                    approvalStatus = com.example.uspayroll.orchestrator.payrun.model.ApprovalStatus.valueOf(rs.getString("approval_status")),
-                    paymentStatus = com.example.uspayroll.orchestrator.payrun.model.PaymentStatus.valueOf(rs.getString("payment_status")),
-                    requestedIdempotencyKey = rs.getString("requested_idempotency_key"),
-                    leaseOwner = rs.getString("lease_owner"),
-                    leaseExpiresAt = leaseInstant,
-                )
-            },
-            employerId,
-            requestedIdempotencyKey,
-        ).firstOrNull()
+            PayRunRecord(
+                employerId = rs.getString("employer_id"),
+                payRunId = rs.getString("pay_run_id"),
+                payPeriodId = rs.getString("pay_period_id"),
+                runType = com.example.uspayroll.orchestrator.payrun.model.PayRunType.valueOf(rs.getString("run_type")),
+                runSequence = rs.getInt("run_sequence"),
+                status = PayRunStatus.valueOf(rs.getString("status")),
+                approvalStatus = com.example.uspayroll.orchestrator.payrun.model.ApprovalStatus.valueOf(rs.getString("approval_status")),
+                paymentStatus = com.example.uspayroll.orchestrator.payrun.model.PaymentStatus.valueOf(rs.getString("payment_status")),
+                requestedIdempotencyKey = rs.getString("requested_idempotency_key"),
+                leaseOwner = rs.getString("lease_owner"),
+                leaseExpiresAt = leaseInstant,
+            )
+        },
+        employerId,
+        requestedIdempotencyKey,
+    ).firstOrNull()
 
-    fun tryAcquireLease(
-        employerId: String,
-        payRunId: String,
-        leaseOwner: String,
-        leaseDuration: Duration,
-        now: Instant = Instant.now(),
-    ): Boolean {
+    fun tryAcquireLease(employerId: String, payRunId: String, leaseOwner: String, leaseDuration: Duration, now: Instant = Instant.now()): Boolean {
         val nowEpoch = now.toEpochMilli()
         val leaseUntilEpoch = now.plus(leaseDuration).toEpochMilli()
 
@@ -159,13 +151,7 @@ class PayRunRepository(
     /**
      * Heartbeat: extend the lease if the caller still owns it and it hasn't expired.
      */
-    fun renewLeaseIfOwned(
-        employerId: String,
-        payRunId: String,
-        leaseOwner: String,
-        leaseDuration: Duration,
-        now: Instant = Instant.now(),
-    ): Boolean {
+    fun renewLeaseIfOwned(employerId: String, payRunId: String, leaseOwner: String, leaseDuration: Duration, now: Instant = Instant.now()): Boolean {
         val nowEpoch = now.toEpochMilli()
         val leaseUntilEpoch = now.plus(leaseDuration).toEpochMilli()
 
@@ -192,11 +178,7 @@ class PayRunRepository(
         return updated == 1
     }
 
-    fun setFinalStatusAndReleaseLease(
-        employerId: String,
-        payRunId: String,
-        status: PayRunStatus,
-    ) {
+    fun setFinalStatusAndReleaseLease(employerId: String, payRunId: String, status: PayRunStatus) {
         jdbcTemplate.update(
             """
             UPDATE pay_run
@@ -212,10 +194,7 @@ class PayRunRepository(
         )
     }
 
-    fun markApprovedIfPending(
-        employerId: String,
-        payRunId: String,
-    ): Boolean {
+    fun markApprovedIfPending(employerId: String, payRunId: String): Boolean {
         val updated = jdbcTemplate.update(
             """
             UPDATE pay_run
@@ -231,11 +210,7 @@ class PayRunRepository(
         return updated == 1
     }
 
-    fun setPaymentStatus(
-        employerId: String,
-        payRunId: String,
-        paymentStatus: com.example.uspayroll.orchestrator.payrun.model.PaymentStatus,
-    ): Boolean {
+    fun setPaymentStatus(employerId: String, payRunId: String, paymentStatus: com.example.uspayroll.orchestrator.payrun.model.PaymentStatus): Boolean {
         val updated = jdbcTemplate.update(
             """
             UPDATE pay_run

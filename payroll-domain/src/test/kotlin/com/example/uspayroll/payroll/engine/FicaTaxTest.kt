@@ -1,23 +1,18 @@
 package com.example.uspayroll.payroll.engine
 
+import com.example.uspayroll.payroll.model.*
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.shared.Money
-import com.example.uspayroll.shared.PaycheckId
 import com.example.uspayroll.shared.PayRunId
-import com.example.uspayroll.payroll.model.*
+import com.example.uspayroll.shared.PaycheckId
+import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import java.time.LocalDate
 
 class FicaTaxTest {
 
-    private fun baseInput(
-        employerId: EmployerId,
-        employeeId: EmployeeId,
-        priorYtd: YtdSnapshot,
-        grossAnnual: Long = 260_000_00L,
-    ): PaycheckInput {
+    private fun baseInput(employerId: EmployerId, employeeId: EmployeeId, priorYtd: YtdSnapshot, grossAnnual: Long = 260_000_00L): PaycheckInput {
         val period = PayPeriod(
             id = "FICA-PERIOD",
             employerId = employerId,

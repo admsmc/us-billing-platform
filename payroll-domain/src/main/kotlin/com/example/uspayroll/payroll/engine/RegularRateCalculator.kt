@@ -29,10 +29,7 @@ object RegularRateCalculator {
      * - Only considers earnings categorized as [EarningCategory.BONUS].
      * - Assumes the pay period aligns with the FLSA workweek.
      */
-    fun additionalOvertimePremiumForBonus(
-        input: PaycheckInput,
-        earnings: List<EarningLine>,
-    ): Money {
+    fun additionalOvertimePremiumForBonus(input: PaycheckInput, earnings: List<EarningLine>): Money {
         val snapshot = input.employeeSnapshot
         val baseComp = snapshot.baseCompensation
         if (baseComp !is BaseCompensation.Hourly) return Money(0L)

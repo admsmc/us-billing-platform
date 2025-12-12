@@ -5,9 +5,6 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.junit.jupiter.api.Test
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
 import kotlin.test.assertTrue
 
 /**
@@ -23,14 +20,14 @@ class TaxConfigCombinedValidationTest {
         .registerModule(JavaTimeModule())
         .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
 
-    private fun loadRules(vararg relativeNames: String): List<TaxRuleConfig> =
-        relativeNames.flatMap { name ->
-            val path: Path = Paths.get("tax-service", "src", "main", "resources", "tax-config", name)
-            require(Files.exists(path)) { "Missing tax-config file: $path" }
-            val json = Files.readString(path)
-            val file: TaxRuleFile = objectMapper.readValue(json)
-            file.rules
+    private fun loadRules(vararg relativeNames: String): List<TaxRuleConfig> = relativeNames.flatMap { name ->
+        val stream = requireNotNull(javaClass.classLoader.getResourceAsStream("tax-config/$name")) {
+            "Missing classpath resource tax-config/$name"
         }
+        val json = stream.bufferedReader().use { it.readText() }
+        val file: TaxRuleFile = objectMapper.readValue(json)
+        file.rules
+    }
 
     @Test
     fun `core 2025 catalog (example federal plus state income) validates as a set`() {

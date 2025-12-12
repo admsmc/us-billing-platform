@@ -1,12 +1,7 @@
 package com.example.uspayroll.tax.persistence
 
-import com.example.uspayroll.payroll.engine.TaxesCalculator
 import com.example.uspayroll.payroll.model.*
-import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
-import com.example.uspayroll.shared.Money
-import com.example.uspayroll.shared.PaycheckId
-import com.example.uspayroll.shared.PayRunId
 import com.example.uspayroll.tax.support.H2TaxTestSupport
 import com.example.uspayroll.tax.support.H2TaxTestSupport.H2TaxRuleRepository
 import com.example.uspayroll.tax.tools.WageBracketCsvParser
@@ -24,8 +19,7 @@ import kotlin.test.assertEquals
  */
 class Pub15TWageBracketBiweeklyExactValuesTest {
 
-    private fun createDslContext(dbName: String): DSLContext =
-        H2TaxTestSupport.createDslContext(dbName)
+    private fun createDslContext(dbName: String): DSLContext = H2TaxTestSupport.createDslContext(dbName)
 
     private fun importConfig(dsl: DSLContext) {
         H2TaxTestSupport.importConfigFromResource(
@@ -121,7 +115,7 @@ class Pub15TWageBracketBiweeklyExactValuesTest {
                 "STEP2_CHECKBOX" -> "${statusSuffix}_BI_STEP2"
                 else -> "${statusSuffix}_BI_${case.variant.uppercase()}"
             }
-            return "${base}_${variantSuffix}"
+            return "${base}_$variantSuffix"
         }
 
         fun computeTaxFor(case: Case): Long {

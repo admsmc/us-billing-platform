@@ -4,8 +4,7 @@ import com.example.uspayroll.hr.HrApplication
 import com.example.uspayroll.payroll.model.*
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
-import com.example.uspayroll.shared.Money
-import com.example.uspayroll.shared.PayRunId
+import com.example.uspayroll.worker.support.StubLaborClientTestConfig
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -17,8 +16,8 @@ import org.springframework.boot.test.util.TestPropertyValues
 import org.springframework.context.ApplicationContextInitializer
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Primary
 import org.springframework.context.annotation.Import
+import org.springframework.context.annotation.Primary
 import org.springframework.test.context.ContextConfiguration
 import java.time.LocalDate
 import javax.sql.DataSource
@@ -39,7 +38,7 @@ import kotlin.test.assertTrue
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ContextConfiguration(initializers = [MichiganLocalityHrWorkerIntegrationTest.Companion.Initializer::class])
 @TestInstance(Lifecycle.PER_CLASS)
-@Import(MichiganLocalityHrWorkerIntegrationTest.TestTaxConfig::class)
+@Import(MichiganLocalityHrWorkerIntegrationTest.TestTaxConfig::class, StubLaborClientTestConfig::class)
 class MichiganLocalityHrWorkerIntegrationTest {
 
     companion object {
@@ -47,19 +46,17 @@ class MichiganLocalityHrWorkerIntegrationTest {
 
         class Initializer : ApplicationContextInitializer<ConfigurableApplicationContext> {
             override fun initialize(context: ConfigurableApplicationContext) {
-                // Start real hr-service on a fixed test port with H2.
+                // Start real hr-service on an ephemeral port with H2.
                 hrContext = SpringApplicationBuilder(HrApplication::class.java)
-                    .properties(
-                        mapOf(
-                            "server.port" to "8086",
-                            "spring.datasource.url" to "jdbc:h2:mem:hr_mi_local;DB_CLOSE_DELAY=-1",
-                            "spring.datasource.driverClassName" to "org.h2.Driver",
-                            "spring.datasource.username" to "sa",
-                            "spring.datasource.password" to "",
-                            "spring.flyway.locations" to "classpath:db/migration",
-                        ),
+                    .run(
+                        "--server.port=0",
+                        "--spring.datasource.url=jdbc:h2:mem:hr_mi_local",
+                        "--spring.datasource.driverClassName=org.h2.Driver",
+                        "--spring.datasource.username=sa",
+                        "--spring.datasource.password=",
+                        "--spring.flyway.enabled=true",
+                        "--spring.flyway.locations=classpath:db/migration/hr",
                     )
-                    .run()
 
                 // Seed HR data with an MI employee working in Detroit.
                 val dataSource = hrContext.getBean(DataSource::class.java)
@@ -137,8 +134,15 @@ class MichiganLocalityHrWorkerIntegrationTest {
                     )
                 }
 
-                // Point worker's HrClient at the real hr-service.
-                TestPropertyValues.of("hr.base-url=http://localhost:8086").applyTo(context.environment)
+                val hrPort = requireNotNull(hrContext.environment.getProperty("local.server.port")) {
+                    "Expected hr-service to expose local.server.port"
+                }
+
+                TestPropertyValues.of(
+                    "hr.base-url=http://localhost:$hrPort",
+                    // Avoid incidental garnishment application from HR demo rules.
+                    "worker.garnishments.enabled-employers=EMP-NOT-MI-LOCAL",
+                ).applyTo(context.environment)
             }
         }
     }
@@ -146,11 +150,7 @@ class MichiganLocalityHrWorkerIntegrationTest {
     class CapturingTaxClient : com.example.uspayroll.worker.client.TaxClient {
         val capturedLocalityCodes = mutableListOf<List<String>>()
 
-        override fun getTaxContext(
-            employerId: EmployerId,
-            asOfDate: LocalDate,
-            localityCodes: List<String>,
-        ): TaxContext {
+        override fun getTaxContext(employerId: EmployerId, asOfDate: LocalDate, localityCodes: List<String>): TaxContext {
             capturedLocalityCodes += localityCodes
             // Return an empty TaxContext; this test only cares about localityCodes.
             return TaxContext()

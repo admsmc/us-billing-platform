@@ -31,11 +31,7 @@ class PaymentRequestService(
      * - outbox_event should have a unique constraint on event_id so duplicates are a no-op
      */
     @Transactional
-    fun requestPaymentsForPayRun(
-        employerId: String,
-        payRunId: String,
-        paymentStatus: com.example.uspayroll.orchestrator.payrun.model.PaymentStatus,
-    ): Result {
+    fun requestPaymentsForPayRun(employerId: String, payRunId: String, paymentStatus: com.example.uspayroll.orchestrator.payrun.model.PaymentStatus): Result {
         // Reflect that we are now in-flight on paychecks (projection only; payments-service is system of record).
         paycheckLifecycleRepository.setPaymentStatusForPayRun(
             employerId = employerId,
@@ -49,7 +45,7 @@ class PaymentRequestService(
         var enqueued = 0
         candidates.forEach { c ->
             val evt = PaycheckPaymentRequestedEvent(
-                eventId = "paycheck-payment-requested:${employerId}:${c.paycheckId}",
+                eventId = "paycheck-payment-requested:$employerId:${c.paycheckId}",
                 occurredAt = now,
                 employerId = employerId,
                 payRunId = payRunId,
@@ -64,7 +60,7 @@ class PaymentRequestService(
                 outbox.enqueue(
                     topic = props.paymentRequestedTopic,
                     // Partition key per (employer, payRun) to preserve run ordering.
-                    eventKey = "${employerId}:${payRunId}",
+                    eventKey = "$employerId:$payRunId",
                     eventType = "PaycheckPaymentRequested",
                     eventId = evt.eventId,
                     aggregateId = c.paycheckId,

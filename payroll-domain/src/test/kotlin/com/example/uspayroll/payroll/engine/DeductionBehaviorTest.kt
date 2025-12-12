@@ -1,26 +1,21 @@
 package com.example.uspayroll.payroll.engine
 
-import com.example.uspayroll.shared.EmployeeId
-import com.example.uspayroll.shared.EmployerId
-import com.example.uspayroll.shared.Money
-import com.example.uspayroll.shared.PaycheckId
-import com.example.uspayroll.shared.PayRunId
 import com.example.uspayroll.payroll.model.*
 import com.example.uspayroll.payroll.model.config.DeductionConfigRepository
 import com.example.uspayroll.payroll.model.config.DeductionKind
 import com.example.uspayroll.payroll.model.config.DeductionPlan
+import com.example.uspayroll.shared.EmployeeId
+import com.example.uspayroll.shared.EmployerId
+import com.example.uspayroll.shared.Money
+import com.example.uspayroll.shared.PayRunId
+import com.example.uspayroll.shared.PaycheckId
+import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import java.time.LocalDate
 
 class DeductionBehaviorTest {
 
-    private fun baseInput(
-        employerId: EmployerId,
-        employeeId: EmployeeId,
-        priorYtd: YtdSnapshot,
-        annualSalaryCents: Long = 260_000_00L,
-    ): PaycheckInput {
+    private fun baseInput(employerId: EmployerId, employeeId: EmployeeId, priorYtd: YtdSnapshot, annualSalaryCents: Long = 260_000_00L): PaycheckInput {
         val period = PayPeriod(
             id = "DED-BEHAVIOR",
             employerId = employerId,

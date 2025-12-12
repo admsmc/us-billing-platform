@@ -2,11 +2,13 @@ package com.example.uspayroll.payments.processor
 
 import com.example.uspayroll.messaging.events.payments.PaycheckPaymentLifecycleStatus
 import com.example.uspayroll.messaging.events.payments.PaycheckPaymentStatusChangedEvent
+import com.example.uspayroll.payments.events.PaymentBatchEventPublisher
 import com.example.uspayroll.payments.events.PaymentsEventsProperties
 import com.example.uspayroll.payments.outbox.OutboxRepository
 import com.example.uspayroll.payments.persistence.PaycheckPaymentBatchOps
 import com.example.uspayroll.payments.persistence.PaycheckPaymentRepository
 import com.example.uspayroll.payments.persistence.PaymentBatchRepository
+import com.example.uspayroll.payments.persistence.PaymentBatchStatus
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -50,6 +52,7 @@ class PaymentsProcessor(
     private val payments: PaycheckPaymentRepository,
     private val outbox: OutboxRepository,
     private val events: PaymentsEventsProperties,
+    private val batchEvents: PaymentBatchEventPublisher,
     private val objectMapper: ObjectMapper,
 ) {
     private val logger = LoggerFactory.getLogger(PaymentsProcessor::class.java)
@@ -111,7 +114,12 @@ class PaymentsProcessor(
             }
 
             // Always reconcile batch state/counters after processing.
-            batchRepository.reconcileBatch(batch.employerId, batch.batchId)
+            val reconciled = batchRepository.reconcileBatch(batch.employerId, batch.batchId)
+
+            // Ensure terminal batch lifecycle events are emitted (COMPLETED/FAILED).
+            if (reconciled != null && (reconciled.status == PaymentBatchStatus.COMPLETED || reconciled.status == PaymentBatchStatus.FAILED)) {
+                batchEvents.publishBatchStatusChanged(reconciled, now = now)
+            }
         }
 
         logger.info(
@@ -124,16 +132,9 @@ class PaymentsProcessor(
         return processed
     }
 
-    private fun enqueueStatusChanged(
-        employerId: String,
-        payRunId: String,
-        paycheckId: String,
-        paymentId: String,
-        status: PaycheckPaymentLifecycleStatus,
-        now: Instant,
-    ) {
+    private fun enqueueStatusChanged(employerId: String, payRunId: String, paycheckId: String, paymentId: String, status: PaycheckPaymentLifecycleStatus, now: Instant) {
         val evt = PaycheckPaymentStatusChangedEvent(
-            eventId = "paycheck-payment-status-changed:${employerId}:${paycheckId}:${status.name}",
+            eventId = "paycheck-payment-status-changed:$employerId:$paycheckId:${status.name}",
             occurredAt = now,
             employerId = employerId,
             payRunId = payRunId,
@@ -145,7 +146,7 @@ class PaymentsProcessor(
         try {
             outbox.enqueue(
                 topic = events.paymentStatusChangedTopic,
-                eventKey = "${employerId}:${payRunId}",
+                eventKey = "$employerId:$payRunId",
                 eventType = "PaycheckPaymentStatusChanged",
                 eventId = evt.eventId,
                 aggregateId = paycheckId,

@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: payroll-worker-service
+  namespace: us-payroll
+spec:
+  selector:
+    app: payroll-worker-service
+  ports:
+    - name: http
+      port: 8088
+      targetPort: 8088
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payroll-worker-service
+  namespace: us-payroll
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: payroll-worker-service
+  template:
+    metadata:
+      labels:
+        app: payroll-worker-service
+    spec:
+      containers:
+        - name: payroll-worker-service
+          image: ghcr.io/REPLACE_ME/us-payroll-platform/payroll-worker-service:REPLACE_TAG
+          env:
+            - name: SERVER_PORT
+              value: "8088"
+            - name: HR_BASE_URL
+              value: http://hr-service:8081
+            - name: TAX_BASE_URL
+              value: http://tax-service:8082
+            - name: LABOR_BASE_URL
+              value: http://labor-service:8083
+          ports:
+            - containerPort: 8088
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8088
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8088
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi

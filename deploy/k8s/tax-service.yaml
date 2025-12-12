@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: tax-service
+  namespace: us-payroll
+spec:
+  selector:
+    app: tax-service
+  ports:
+    - name: http
+      port: 8082
+      targetPort: 8082
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tax-service
+  namespace: us-payroll
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tax-service
+  template:
+    metadata:
+      labels:
+        app: tax-service
+    spec:
+      containers:
+        - name: tax-service
+          image: ghcr.io/REPLACE_ME/us-payroll-platform/tax-service:REPLACE_TAG
+          env:
+            - name: SERVER_PORT
+              value: "8082"
+            - name: TAX_DB_URL
+              value: jdbc:postgresql://postgres:5432/us_payroll_tax
+            - name: TAX_DB_USERNAME
+              value: tax_service
+            - name: TAX_DB_PASSWORD
+              value: tax_service
+          ports:
+            - containerPort: 8082
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8082
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8082
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi

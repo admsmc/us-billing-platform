@@ -1,12 +1,11 @@
 package com.example.uspayroll.payroll.engine.pub15t
 
 import com.example.uspayroll.payroll.engine.BasisComputation
-import com.example.uspayroll.payroll.model.FilingStatus
 import com.example.uspayroll.payroll.model.PayFrequency
 import com.example.uspayroll.payroll.model.PaycheckInput
-import com.example.uspayroll.payroll.model.TaxRule
 import com.example.uspayroll.payroll.model.TaxBasis
 import com.example.uspayroll.payroll.model.TaxContext
+import com.example.uspayroll.payroll.model.TaxRule
 import com.example.uspayroll.payroll.model.TraceStep
 import com.example.uspayroll.shared.Money
 
@@ -22,6 +21,7 @@ object FederalWithholdingEngine {
     enum class WithholdingMethod {
         /** Percentage method for automated payroll systems (Pub. 15-T Worksheet 1A). */
         PERCENTAGE,
+
         /** Wage-bracket method tables where available. */
         WAGE_BRACKET,
     }
@@ -36,13 +36,7 @@ object FederalWithholdingEngine {
      * paycheck. For now this is a stub that returns zero; later phases will
      * implement the full Pub. 15-T logic.
      */
-    fun computeWithholding(
-        input: PaycheckInput,
-        bases: BasisComputation,
-        profile: WithholdingProfile,
-        federalRules: List<TaxRule>,
-        method: WithholdingMethod,
-    ): FederalWithholdingResult {
+    fun computeWithholding(input: PaycheckInput, bases: BasisComputation, profile: WithholdingProfile, federalRules: List<TaxRule>, method: WithholdingMethod): FederalWithholdingResult {
         // For now we only select which rule would be applied and emit a trace
         // note; the actual tax computation is implemented in later phases.
         val trace = mutableListOf<TraceStep>()
@@ -80,7 +74,8 @@ object FederalWithholdingEngine {
                     trace += pctTrace
                 } else {
                     trace += TraceStep.Note(
-                        "No percentage-method FIT rule found for filingStatus=${profile.filingStatus} step2MultipleJobs=${profile.step2MultipleJobs}")
+                        "No percentage-method FIT rule found for filingStatus=${profile.filingStatus} step2MultipleJobs=${profile.step2MultipleJobs}",
+                    )
                 }
             }
             WithholdingMethod.WAGE_BRACKET -> {
@@ -194,10 +189,7 @@ object FederalWithholdingEngine {
         return totalPerPeriodCents to trace
     }
 
-    private fun selectBracketedFitRule(
-        federalRules: List<TaxRule>,
-        profile: WithholdingProfile,
-    ): TaxRule.BracketedIncomeTax? {
+    private fun selectBracketedFitRule(federalRules: List<TaxRule>, profile: WithholdingProfile): TaxRule.BracketedIncomeTax? {
         val all = federalRules.filterIsInstance<TaxRule.BracketedIncomeTax>()
         val byStatus = all.filter { rule ->
             val fs = rule.filingStatus
@@ -216,10 +208,7 @@ object FederalWithholdingEngine {
         }
     }
 
-    private fun selectWageBracketFitRule(
-        federalRules: List<TaxRule>,
-        profile: WithholdingProfile,
-    ): TaxRule.WageBracketTax? {
+    private fun selectWageBracketFitRule(federalRules: List<TaxRule>, profile: WithholdingProfile): TaxRule.WageBracketTax? {
         val all = federalRules.filterIsInstance<TaxRule.WageBracketTax>()
         val byStatus = all.filter { rule ->
             val fs = rule.filingStatus

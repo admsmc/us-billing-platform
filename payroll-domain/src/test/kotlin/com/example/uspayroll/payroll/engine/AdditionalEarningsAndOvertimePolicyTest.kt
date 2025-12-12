@@ -1,34 +1,33 @@
 package com.example.uspayroll.payroll.engine
 
-import com.example.uspayroll.shared.EmployeeId
-import com.example.uspayroll.shared.EmployerId
-import com.example.uspayroll.shared.Money
-import com.example.uspayroll.shared.PaycheckId
-import com.example.uspayroll.shared.PayRunId
 import com.example.uspayroll.payroll.model.*
 import com.example.uspayroll.payroll.model.config.EarningConfigRepository
 import com.example.uspayroll.payroll.model.config.EarningDefinition
+import com.example.uspayroll.shared.EmployeeId
+import com.example.uspayroll.shared.EmployerId
+import com.example.uspayroll.shared.Money
+import com.example.uspayroll.shared.PayRunId
+import com.example.uspayroll.shared.PaycheckId
+import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import java.time.LocalDate
 
 private class TestEarningConfigRepository : EarningConfigRepository {
-    override fun findByEmployerAndCode(employerId: EmployerId, code: EarningCode): EarningDefinition? =
-        when (code.value) {
-            "HOURLY" -> EarningDefinition(
-                code = code,
-                displayName = "Hourly Wages",
-                category = EarningCategory.REGULAR,
-                defaultRate = Money(50_00L),
-                overtimeMultiplier = 2.0, // for overtime policy test
-            )
-            "BONUS" -> EarningDefinition(
-                code = code,
-                displayName = "Bonus",
-                category = EarningCategory.BONUS,
-            )
-            else -> null
-        }
+    override fun findByEmployerAndCode(employerId: EmployerId, code: EarningCode): EarningDefinition? = when (code.value) {
+        "HOURLY" -> EarningDefinition(
+            code = code,
+            displayName = "Hourly Wages",
+            category = EarningCategory.REGULAR,
+            defaultRate = Money(50_00L),
+            overtimeMultiplier = 2.0, // for overtime policy test
+        )
+        "BONUS" -> EarningDefinition(
+            code = code,
+            displayName = "Bonus",
+            category = EarningCategory.BONUS,
+        )
+        else -> null
+    }
 }
 
 class AdditionalEarningsAndOvertimePolicyTest {

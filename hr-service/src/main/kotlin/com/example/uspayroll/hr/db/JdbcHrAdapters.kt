@@ -18,11 +18,7 @@ class JdbcEmployeeSnapshotProvider(
     private val jdbcTemplate: JdbcTemplate,
 ) : EmployeeSnapshotProvider {
 
-    override fun getEmployeeSnapshot(
-        employerId: EmployerId,
-        employeeId: EmployeeId,
-        asOfDate: LocalDate,
-    ): EmployeeSnapshot? {
+    override fun getEmployeeSnapshot(employerId: EmployerId, employeeId: EmployeeId, asOfDate: LocalDate): EmployeeSnapshot? {
         val sql =
             """
             SELECT e.*, c.compensation_type, c.annual_salary_cents, c.hourly_rate_cents, c.pay_frequency
@@ -47,15 +43,19 @@ class JdbcEmployeeSnapshotProvider(
 
         val baseCompensation: BaseCompensation = when (row.compensationType) {
             "SALARIED" -> BaseCompensation.Salaried(
-                annualSalary = Money(requireNotNull(row.annualSalaryCents) {
-                    "SALARIED compensation requires annual_salary_cents"
-                }),
+                annualSalary = Money(
+                    requireNotNull(row.annualSalaryCents) {
+                        "SALARIED compensation requires annual_salary_cents"
+                    },
+                ),
                 frequency = PayFrequency.valueOf(row.payFrequency!!),
             )
             "HOURLY" -> BaseCompensation.Hourly(
-                hourlyRate = Money(requireNotNull(row.hourlyRateCents) {
-                    "HOURLY compensation requires hourly_rate_cents"
-                }),
+                hourlyRate = Money(
+                    requireNotNull(row.hourlyRateCents) {
+                        "HOURLY compensation requires hourly_rate_cents"
+                    },
+                ),
             )
             else -> error("Unknown compensation_type='${row.compensationType}' for employee ${row.employerId}/${row.employeeId}")
         }
@@ -165,10 +165,7 @@ class JdbcPayPeriodProvider(
     private val jdbcTemplate: JdbcTemplate,
 ) : PayPeriodProvider {
 
-    override fun getPayPeriod(
-        employerId: EmployerId,
-        payPeriodId: String,
-    ): PayPeriod? {
+    override fun getPayPeriod(employerId: EmployerId, payPeriodId: String): PayPeriod? {
         val sql =
             """
             SELECT *
@@ -181,10 +178,7 @@ class JdbcPayPeriodProvider(
         return rows.firstOrNull()?.toDomain()
     }
 
-    override fun findPayPeriodByCheckDate(
-        employerId: EmployerId,
-        checkDate: LocalDate,
-    ): PayPeriod? {
+    override fun findPayPeriodByCheckDate(employerId: EmployerId, checkDate: LocalDate): PayPeriod? {
         val sql =
             """
             SELECT *

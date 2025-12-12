@@ -1,38 +1,30 @@
 package com.example.uspayroll.orchestrator.http
 
-import com.example.uspayroll.orchestrator.client.HrClient
-import com.example.uspayroll.orchestrator.client.LaborStandardsClient
-import com.example.uspayroll.orchestrator.client.TaxClient
 import com.example.uspayroll.orchestrator.payrun.model.PayRunStatus
-import com.example.uspayroll.payroll.model.BaseCompensation
-import com.example.uspayroll.payroll.model.EmployeeSnapshot
-import com.example.uspayroll.payroll.model.FilingStatus
-import com.example.uspayroll.payroll.model.PayFrequency
-import com.example.uspayroll.payroll.model.PayPeriod
-import com.example.uspayroll.payroll.model.TaxContext
-import com.example.uspayroll.payroll.model.garnishment.GarnishmentOrder
-import com.example.uspayroll.shared.EmployeeId
-import com.example.uspayroll.shared.EmployerId
-import com.example.uspayroll.payroll.model.LocalDateRange
-import com.example.uspayroll.shared.Money
+import com.example.uspayroll.orchestrator.support.StubClientsTestConfig
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.boot.test.web.client.TestRestTemplate
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Primary
+import org.springframework.context.annotation.Import
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.RequestEntity
-import org.springframework.http.ResponseEntity
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.test.annotation.DirtiesContext
+import org.springframework.test.context.TestConstructor
+import org.springframework.test.context.TestPropertySource
 import java.net.URI
-import java.time.LocalDate
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@Import(StubClientsTestConfig::class)
+@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
+@TestPropertySource(
+    properties = [
+        "orchestrator.internal-auth.shared-secret=dev-internal-token",
+    ],
+)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class PayRunWorkflowIT(
     private val rest: TestRestTemplate,
@@ -50,7 +42,7 @@ class PayRunWorkflowIT(
                         payPeriodId = "pp-1",
                         employeeIds = listOf("e-1", "e-2"),
                         requestedPayRunId = "run-it-1",
-                    )
+                    ),
                 ),
             PayRunController.StartFinalizeResponse::class.java,
         )
@@ -115,7 +107,7 @@ class PayRunWorkflowIT(
                         payPeriodId = "pp-1",
                         employeeIds = listOf("e-1", "e-bad"),
                         requestedPayRunId = "run-it-2",
-                    )
+                    ),
                 ),
             PayRunController.StartFinalizeResponse::class.java,
         )
@@ -161,7 +153,7 @@ class PayRunWorkflowIT(
                         employeeIds = listOf("e-1"),
                         requestedPayRunId = "run-it-3",
                         idempotencyKey = "idem-1",
-                    )
+                    ),
                 ),
             PayRunController.StartFinalizeResponse::class.java,
         )
@@ -175,7 +167,7 @@ class PayRunWorkflowIT(
                         employeeIds = listOf("e-2"),
                         requestedPayRunId = "run-it-3-different",
                         idempotencyKey = "idem-1",
-                    )
+                    ),
                 ),
             PayRunController.StartFinalizeResponse::class.java,
         )
@@ -196,7 +188,7 @@ class PayRunWorkflowIT(
                         payPeriodId = "pp-1",
                         employeeIds = listOf("e-1"),
                         requestedPayRunId = "run-it-4",
-                    )
+                    ),
                 ),
             PayRunController.StartFinalizeResponse::class.java,
         )
@@ -254,7 +246,7 @@ class PayRunWorkflowIT(
                         payPeriodId = "pp-1",
                         employeeIds = listOf("e-1"),
                         requestedPayRunId = "run-it-pay-1",
-                    )
+                    ),
                 ),
             PayRunController.StartFinalizeResponse::class.java,
         )
@@ -302,80 +294,5 @@ class PayRunWorkflowIT(
 
         // One succeeded paycheck -> one payment request event.
         assertEquals(1L, requestEventCount)
-    }
-
-    @TestConfiguration
-    class StubClientsConfig {
-
-        @Bean
-        @Primary
-        fun stubHrClient(): HrClient = object : HrClient {
-            override fun getEmployeeSnapshot(
-                employerId: EmployerId,
-                employeeId: EmployeeId,
-                asOfDate: LocalDate,
-            ): EmployeeSnapshot? {
-                if (employeeId.value == "e-bad") return null
-
-                return EmployeeSnapshot(
-                    employerId = employerId,
-                    employeeId = employeeId,
-                    homeState = "CA",
-                    workState = "CA",
-                    filingStatus = FilingStatus.SINGLE,
-                    baseCompensation = BaseCompensation.Salaried(
-                        annualSalary = Money(120_000_00L),
-                        frequency = PayFrequency.BIWEEKLY,
-                    ),
-                    workCity = "Detroit",
-                )
-            }
-
-            override fun getPayPeriod(
-                employerId: EmployerId,
-                payPeriodId: String,
-            ): PayPeriod? {
-                if (payPeriodId != "pp-1") return null
-
-                return PayPeriod(
-                    id = payPeriodId,
-                    employerId = employerId,
-                    dateRange = LocalDateRange(
-                        startInclusive = LocalDate.parse("2025-01-01"),
-                        endInclusive = LocalDate.parse("2025-01-14"),
-                    ),
-                    checkDate = LocalDate.parse("2025-01-17"),
-                    frequency = PayFrequency.BIWEEKLY,
-                )
-            }
-
-            override fun getGarnishmentOrders(
-                employerId: EmployerId,
-                employeeId: EmployeeId,
-                asOfDate: LocalDate,
-            ): List<GarnishmentOrder> = emptyList()
-        }
-
-        @Bean
-        @Primary
-        fun stubTaxClient(): TaxClient = object : TaxClient {
-            override fun getTaxContext(
-                employerId: EmployerId,
-                asOfDate: LocalDate,
-                localityCodes: List<String>,
-            ): TaxContext = TaxContext()
-        }
-
-        @Bean
-        @Primary
-        fun stubLaborClient(): LaborStandardsClient = object : LaborStandardsClient {
-            override fun getLaborStandards(
-                employerId: EmployerId,
-                asOfDate: LocalDate,
-                workState: String?,
-                homeState: String?,
-                localityCodes: List<String>,
-            ) = null
-        }
     }
 }

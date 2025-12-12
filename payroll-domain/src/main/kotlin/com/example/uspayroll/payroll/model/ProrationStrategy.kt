@@ -8,11 +8,7 @@ import java.time.temporal.ChronoUnit
  * employee lifecycle dates (hire/termination) and the period's date range.
  */
 fun interface ProrationStrategy {
-    fun computeProration(
-        period: PayPeriod,
-        hireDate: LocalDate?,
-        terminationDate: LocalDate?,
-    ): Proration?
+    fun computeProration(period: PayPeriod, hireDate: LocalDate?, terminationDate: LocalDate?): Proration?
 
     companion object {
         /**

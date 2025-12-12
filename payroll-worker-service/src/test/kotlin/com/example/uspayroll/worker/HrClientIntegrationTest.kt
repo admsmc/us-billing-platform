@@ -7,11 +7,13 @@ import com.example.uspayroll.payroll.model.garnishment.ProtectedEarningsRule
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.shared.Money
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.example.uspayroll.worker.support.StubTaxLaborClientsTestConfig
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.micrometer.core.instrument.MeterRegistry
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.TestInstance.Lifecycle
@@ -20,13 +22,16 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.util.TestPropertyValues
 import org.springframework.context.ApplicationContextInitializer
 import org.springframework.context.ConfigurableApplicationContext
+import org.springframework.context.annotation.Import
 import org.springframework.test.context.ContextConfiguration
 import java.time.LocalDate
+import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@Import(StubTaxLaborClientsTestConfig::class)
 @ContextConfiguration(initializers = [HrClientIntegrationTest.Companion.Initializer::class])
 @TestInstance(Lifecycle.PER_CLASS)
 class HrClientIntegrationTest {
@@ -54,7 +59,19 @@ class HrClientIntegrationTest {
     @Autowired
     lateinit var meterRegistry: MeterRegistry
 
-    private val objectMapper = ObjectMapper()
+    private val objectMapper = jacksonObjectMapper().findAndRegisterModules()
+
+    @BeforeEach
+    fun drainRequests() {
+        // MockWebServer is shared across test methods; ensure no leftover
+        // requests from prior tests remain in the queue before we assert
+        // request ordering.
+        while (true) {
+            val req = server.takeRequest(10, TimeUnit.MILLISECONDS) ?: break
+            // discard
+            req
+        }
+    }
 
     @Test
     fun `computes paycheck using HTTP-backed HR client`() {
@@ -87,16 +104,22 @@ class HrClientIntegrationTest {
             ),
         )
 
-        // Enqueue responses for pay period and employee snapshot
+        // Enqueue responses for pay period, employee snapshot, and empty garnishments.
+        // PayrollRunService always calls the garnishments endpoint as part of the HR-backed flow.
         server.enqueue(
             MockResponse()
                 .setHeader("Content-Type", "application/json")
-                .setBody(objectMapper.writeValueAsString(payPeriod) as String)
+                .setBody(objectMapper.writeValueAsString(payPeriod) as String),
         )
         server.enqueue(
             MockResponse()
                 .setHeader("Content-Type", "application/json")
-                .setBody(objectMapper.writeValueAsString(snapshot) as String)
+                .setBody(objectMapper.writeValueAsString(snapshot) as String),
+        )
+        server.enqueue(
+            MockResponse()
+                .setHeader("Content-Type", "application/json")
+                .setBody("[]"),
         )
 
         val results = payrollRunService.runHrBackedPayForPeriod(
@@ -152,7 +175,7 @@ class HrClientIntegrationTest {
             formula = GarnishmentFormula.PercentOfDisposable(Percent(0.10)),
         )
 
-        // Enqueue responses for pay period, employee snapshot, and garnishments
+        // Enqueue responses for pay period, employee snapshot, garnishments, and the withholdings callback.
         server.enqueue(
             MockResponse()
                 .setHeader("Content-Type", "application/json")
@@ -167,6 +190,11 @@ class HrClientIntegrationTest {
             MockResponse()
                 .setHeader("Content-Type", "application/json")
                 .setBody(objectMapper.writeValueAsString(listOf(garnDto)) as String),
+        )
+        server.enqueue(
+            MockResponse()
+                .setResponseCode(201)
+                .setHeader("Location", "/ok"),
         )
 
         val beforeCount = meterRegistry.find("payroll.garnishments.employees_with_orders")
@@ -196,18 +224,24 @@ class HrClientIntegrationTest {
         val third = server.takeRequest() // garnishments
         val fourth = server.takeRequest() // withholdings callback
 
-        assertTrue(fourth.path!!.contains("/garnishments/withholdings"),
-            "Expected HR callback to garnishments withholdings endpoint but was ${fourth.path}")
+        assertTrue(
+            fourth.path!!.contains("/garnishments/withholdings"),
+            "Expected HR callback to garnishments withholdings endpoint but was ${fourth.path}",
+        )
         val body = fourth.body.readUtf8()
-        assertTrue(body.contains("ORDER-HR-1"),
-            "Expected withholding payload to reference ORDER-HR-1 but body was: $body")
+        assertTrue(
+            body.contains("ORDER-HR-1"),
+            "Expected withholding payload to reference ORDER-HR-1 but body was: $body",
+        )
 
         val afterCount = meterRegistry.find("payroll.garnishments.employees_with_orders")
             .tag("employer_id", employerId.value)
             .counter()
             ?.count() ?: 0.0
-        assertTrue(afterCount > beforeCount,
-            "Expected employees_with_orders metric to increase for employer ${employerId.value}")
+        assertTrue(
+            afterCount > beforeCount,
+            "Expected employees_with_orders metric to increase for employer ${employerId.value}",
+        )
     }
 
     @Test
@@ -269,6 +303,12 @@ class HrClientIntegrationTest {
                 .setHeader("Content-Type", "application/json")
                 .setBody(objectMapper.writeValueAsString(listOf(garnDto)) as String),
         )
+        // Withholdings callback response
+        server.enqueue(
+            MockResponse()
+                .setResponseCode(201)
+                .setHeader("Location", "/ok"),
+        )
 
         val beforeProtected = meterRegistry.find("payroll.garnishments.protected_floor_applied")
             .tag("employer_id", employerId.value)
@@ -296,8 +336,10 @@ class HrClientIntegrationTest {
             .tag("employer_id", employerId.value)
             .counter()
             ?.count() ?: 0.0
-        assertTrue(afterProtected > beforeProtected,
-            "Expected protected_floor_applied metric to increase for employer ${employerId.value}")
+        assertTrue(
+            afterProtected > beforeProtected,
+            "Expected protected_floor_applied metric to increase for employer ${employerId.value}",
+        )
     }
 
     @Test

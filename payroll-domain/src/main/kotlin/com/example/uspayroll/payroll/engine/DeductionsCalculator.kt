@@ -1,11 +1,11 @@
 package com.example.uspayroll.payroll.engine
 
-import com.example.uspayroll.shared.Money
 import com.example.uspayroll.payroll.model.*
 import com.example.uspayroll.payroll.model.config.DeductionConfigRepository
 import com.example.uspayroll.payroll.model.config.DeductionKind
 import com.example.uspayroll.payroll.model.config.DeductionPlan
 import com.example.uspayroll.payroll.model.config.defaultEmployeeEffects
+import com.example.uspayroll.shared.Money
 
 /** Result of deduction computation for a single paycheck. */
 data class DeductionComputationResult(
@@ -21,11 +21,7 @@ data class DeductionComputationResult(
  */
 object DeductionsCalculator {
 
-    fun computeDeductions(
-        input: PaycheckInput,
-        earnings: List<EarningLine>,
-        repo: DeductionConfigRepository? = null,
-    ): DeductionComputationResult {
+    fun computeDeductions(input: PaycheckInput, earnings: List<EarningLine>, repo: DeductionConfigRepository? = null): DeductionComputationResult {
         if (repo == null) {
             return DeductionComputationResult(
                 preTaxDeductions = emptyList(),
@@ -103,11 +99,13 @@ object DeductionsCalculator {
             val targetList = when (plan.kind) {
                 DeductionKind.PRETAX_RETIREMENT_EMPLOYEE,
                 DeductionKind.HSA,
-                DeductionKind.FSA -> preTax
+                DeductionKind.FSA,
+                -> preTax
 
                 DeductionKind.ROTH_RETIREMENT_EMPLOYEE,
                 DeductionKind.POSTTAX_VOLUNTARY,
-                DeductionKind.OTHER_POSTTAX -> postTax
+                DeductionKind.OTHER_POSTTAX,
+                -> postTax
 
                 // GARNISHMENT plans are filtered out above and handled by
                 // GarnishmentsCalculator; this branch is unreachable but kept

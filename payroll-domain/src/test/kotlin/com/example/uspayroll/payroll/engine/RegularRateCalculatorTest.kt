@@ -6,9 +6,9 @@ import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.shared.Money
 import com.example.uspayroll.shared.PayRunId
 import com.example.uspayroll.shared.PaycheckId
+import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import java.time.LocalDate
 
 class RegularRateCalculatorTest {
 

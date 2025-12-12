@@ -85,9 +85,11 @@ class DbTaxCatalog(
                 id = id,
                 jurisdiction = jurisdiction,
                 basis = basis,
-                rate = Percent(requireNotNull(rate) {
-                    "Flat tax rule '$id' is missing rate"
-                }),
+                rate = Percent(
+                    requireNotNull(rate) {
+                        "Flat tax rule '$id' is missing rate"
+                    },
+                ),
                 annualWageCap = normalizedCapCents?.let { Money(it) },
             )
             TaxRuleRecord.RuleType.BRACKETED -> TaxRule.BracketedIncomeTax(

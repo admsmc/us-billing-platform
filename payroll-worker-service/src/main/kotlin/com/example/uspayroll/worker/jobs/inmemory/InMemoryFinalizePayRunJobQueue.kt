@@ -45,12 +45,8 @@ class InMemoryFinalizePayRunJobQueueConfig {
 
     @Bean
     @ConditionalOnExpression("\${worker.jobs.inmemory.enabled:true} and !\${worker.jobs.rabbit.enabled:false}")
-    fun inMemoryFinalizePayRunJobConsumer(
-        props: InMemoryJobQueueProperties,
-        queue: FinalizePayRunJobQueue,
-        store: FinalizePayRunJobStore,
-        runner: OrchestratorPayRunJobRunner,
-    ): SmartLifecycle = InMemoryFinalizePayRunJobConsumer(props, queue, store, runner)
+    fun inMemoryFinalizePayRunJobConsumer(props: InMemoryJobQueueProperties, queue: FinalizePayRunJobQueue, store: FinalizePayRunJobStore, runner: OrchestratorPayRunJobRunner): SmartLifecycle =
+        InMemoryFinalizePayRunJobConsumer(props, queue, store, runner)
 }
 
 class InMemoryFinalizePayRunJobQueue : FinalizePayRunJobQueue {

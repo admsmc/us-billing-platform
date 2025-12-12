@@ -5,12 +5,12 @@ import com.example.uspayroll.payroll.model.*
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.shared.Money
-import com.example.uspayroll.shared.PaycheckId
 import com.example.uspayroll.shared.PayRunId
+import com.example.uspayroll.shared.PaycheckId
+import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import java.time.LocalDate
 
 class FederalWithholdingEnginePercentageMethodTest {
 
@@ -60,18 +60,17 @@ class FederalWithholdingEnginePercentageMethodTest {
         return input to bases
     }
 
-    private fun simpleFitRule(id: String = "US_FED_FIT_TEST"): TaxRule.BracketedIncomeTax =
-        TaxRule.BracketedIncomeTax(
-            id = id,
-            jurisdiction = TaxJurisdiction(TaxJurisdictionType.FEDERAL, "US"),
-            basis = TaxBasis.FederalTaxable,
-            brackets = listOf(
-                TaxBracket(upTo = null, rate = Percent(0.10)),
-            ),
-            standardDeduction = null,
-            additionalWithholding = null,
-            filingStatus = FilingStatus.SINGLE,
-        )
+    private fun simpleFitRule(id: String = "US_FED_FIT_TEST"): TaxRule.BracketedIncomeTax = TaxRule.BracketedIncomeTax(
+        id = id,
+        jurisdiction = TaxJurisdiction(TaxJurisdictionType.FEDERAL, "US"),
+        basis = TaxBasis.FederalTaxable,
+        brackets = listOf(
+            TaxBracket(upTo = null, rate = Percent(0.10)),
+        ),
+        standardDeduction = null,
+        additionalWithholding = null,
+        filingStatus = FilingStatus.SINGLE,
+    )
 
     @Test
     fun `percentage method is monotonic in wages`() {

@@ -1,7 +1,7 @@
 package com.example.uspayroll.payments.kafka
 
-import com.example.uspayroll.messaging.inbox.JdbcEventInbox
 import com.example.uspayroll.messaging.events.payments.PaycheckPaymentRequestedEvent
+import com.example.uspayroll.messaging.inbox.JdbcEventInbox
 import com.example.uspayroll.payments.service.PaymentIntakeService
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper

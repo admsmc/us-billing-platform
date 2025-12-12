@@ -94,5 +94,23 @@
     "description": "Employer-specific CA creditor garnishment: lesser of 25% disposable or $1,500",
     "formulaType": "LESSER_OF_PERCENT_OR_AMOUNT",
     "fixedAmountCents": 150000
+  },
+  {
+    "employerId": "EMP-GARN-NY",
+    "type": "CHILD_SUPPORT",
+    "jurisdictionType": "STATE",
+    "jurisdictionCode": "NY",
+    "percentOfDisposable": 0.50,
+    "protectedFloorCents": 250000,
+    "description": "Employer-specific NY child support at 50% of disposable income with a $2,500 protected floor"
+  },
+  {
+    "employerId": "EMP-GARN-NY",
+    "type": "CREDITOR_GARNISHMENT",
+    "jurisdictionType": "STATE",
+    "jurisdictionCode": "NY",
+    "percentOfDisposable": 0.15,
+    "protectedFloorCents": null,
+    "description": "Employer-specific NY creditor garnishment at 15% of disposable income"
   }
 ]

@@ -5,9 +5,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.junit.jupiter.api.Test
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver
 import kotlin.test.assertTrue
 
 /**
@@ -26,19 +24,13 @@ class TaxConfigFilesValidationTest {
 
     @Test
     fun `all tax-config JSON files validate successfully`() {
-        val dir: Path = Paths.get("tax-service", "src", "main", "resources", "tax-config")
-        require(Files.exists(dir)) { "Expected tax-config directory at $dir" }
-
-        val jsonFiles: List<Path> = Files.list(dir).use { stream ->
-            stream
-                .filter { Files.isRegularFile(it) && it.toString().endsWith(".json") }
-                .toList()
-        }
+        val resolver = PathMatchingResourcePatternResolver()
+        val resources = resolver.getResources("classpath*:tax-config/*.json")
 
         val failures = mutableListOf<String>()
 
-        for (path in jsonFiles.sortedBy { it.fileName.toString() }) {
-            val json = Files.readString(path)
+        for (resource in resources.sortedBy { it.filename.orEmpty() }) {
+            val json = resource.inputStream.bufferedReader().use { it.readText() }
             val file: TaxRuleFile = objectMapper.readValue(json)
             val result = TaxRuleConfigValidator.validateFile(file)
             if (!result.isValid) {
@@ -49,7 +41,7 @@ class TaxConfigFilesValidationTest {
                     val idPart = err.ruleId?.let { "id=$it: " } ?: ""
                     idPart + err.message
                 }
-                failures += "${path.fileName}: $errorSummary"
+                failures += "${resource.filename}: $errorSummary"
             }
         }
 

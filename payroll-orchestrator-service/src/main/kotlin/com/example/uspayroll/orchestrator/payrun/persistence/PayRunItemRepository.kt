@@ -15,11 +15,7 @@ class PayRunItemRepository(
     private val jdbcTemplate: JdbcTemplate,
 ) {
 
-    fun upsertQueuedItems(
-        employerId: String,
-        payRunId: String,
-        employeeIds: List<String>,
-    ) {
+    fun upsertQueuedItems(employerId: String, payRunId: String, employeeIds: List<String>) {
         // Do not overwrite existing rows (especially paycheck_id) on retries.
         employeeIds.distinct().forEach { employeeId ->
             try {
@@ -46,11 +42,7 @@ class PayRunItemRepository(
     /**
      * Returns an already-assigned paycheck_id for the item, or assigns a new one.
      */
-    fun getOrAssignPaycheckId(
-        employerId: String,
-        payRunId: String,
-        employeeId: String,
-    ): String {
+    fun getOrAssignPaycheckId(employerId: String, payRunId: String, employeeId: String): String {
         val existing = jdbcTemplate.query(
             """
             SELECT paycheck_id
@@ -99,11 +91,7 @@ class PayRunItemRepository(
      * row locks and updating their status within a single transaction.
      */
     @Transactional
-    fun claimQueuedItems(
-        employerId: String,
-        payRunId: String,
-        batchSize: Int,
-    ): List<String> {
+    fun claimQueuedItems(employerId: String, payRunId: String, batchSize: Int): List<String> {
         if (batchSize <= 0) return emptyList()
 
         // Row-lock the candidate set. This makes concurrent claimers block
@@ -171,12 +159,7 @@ class PayRunItemRepository(
         }
     }
 
-    fun markSucceeded(
-        employerId: String,
-        payRunId: String,
-        employeeId: String,
-        paycheckId: String,
-    ) {
+    fun markSucceeded(employerId: String, payRunId: String, employeeId: String, paycheckId: String) {
         jdbcTemplate.update(
             """
             UPDATE pay_run_item
@@ -195,12 +178,7 @@ class PayRunItemRepository(
         )
     }
 
-    fun markFailed(
-        employerId: String,
-        payRunId: String,
-        employeeId: String,
-        error: String,
-    ) {
+    fun markFailed(employerId: String, payRunId: String, employeeId: String, error: String) {
         val truncated = if (error.length <= 2000) error else error.take(2000)
 
         jdbcTemplate.update(
@@ -227,12 +205,7 @@ class PayRunItemRepository(
      * [cutoff]. This is conservative: normal execution should keep updating
      * rows as they transition to SUCCEEDED/FAILED.
      */
-    fun requeueStaleRunningItems(
-        employerId: String,
-        payRunId: String,
-        cutoff: Instant,
-        reason: String = "requeued_stale_running",
-    ): Int {
+    fun requeueStaleRunningItems(employerId: String, payRunId: String, cutoff: Instant, reason: String = "requeued_stale_running"): Int {
         val cutoffTs = Timestamp.from(cutoff)
         val msg = if (reason.length <= 2000) reason else reason.take(2000)
 
@@ -263,10 +236,7 @@ class PayRunItemRepository(
         )
     }
 
-    fun countsForPayRun(
-        employerId: String,
-        payRunId: String,
-    ): PayRunStatusCounts {
+    fun countsForPayRun(employerId: String, payRunId: String): PayRunStatusCounts {
         val row = jdbcTemplate.query(
             """
             SELECT
@@ -314,11 +284,7 @@ class PayRunItemRepository(
         return (n ?: 0L) > 0L
     }
 
-    fun listFailedItems(
-        employerId: String,
-        payRunId: String,
-        limit: Int = 50,
-    ): List<Pair<String, String?>> {
+    fun listFailedItems(employerId: String, payRunId: String, limit: Int = 50): List<Pair<String, String?>> {
         val effectiveLimit = limit.coerceIn(1, 500)
         return jdbcTemplate.query(
             """
@@ -336,11 +302,7 @@ class PayRunItemRepository(
         )
     }
 
-    fun listSucceededPaychecks(
-        employerId: String,
-        payRunId: String,
-        limit: Int = 10_000,
-    ): List<Pair<String, String>> {
+    fun listSucceededPaychecks(employerId: String, payRunId: String, limit: Int = 10_000): List<Pair<String, String>> {
         val effectiveLimit = limit.coerceIn(1, 100_000)
         return jdbcTemplate.query(
             """

@@ -37,19 +37,12 @@ interface GarnishmentLedgerRepository {
      * Apply a batch of withholding events for a single employee and employer,
      * updating per-order ledger entries.
      */
-    fun recordWithholdings(
-        employerId: EmployerId,
-        employeeId: EmployeeId,
-        events: List<GarnishmentWithholdingEventView>,
-    )
+    fun recordWithholdings(employerId: EmployerId, employeeId: EmployeeId, events: List<GarnishmentWithholdingEventView>)
 
     /**
-        * Return the current ledger entries for an employee, keyed by order id.
-        */
-    fun findByEmployee(
-        employerId: EmployerId,
-        employeeId: EmployeeId,
-    ): Map<String, GarnishmentLedgerEntry>
+     * Return the current ledger entries for an employee, keyed by order id.
+     */
+    fun findByEmployee(employerId: EmployerId, employeeId: EmployeeId): Map<String, GarnishmentLedgerEntry>
 }
 
 /**
@@ -61,65 +54,80 @@ class JdbcGarnishmentLedgerRepository(
     private val jdbcTemplate: JdbcTemplate,
 ) : GarnishmentLedgerRepository {
 
-    override fun recordWithholdings(
-        employerId: EmployerId,
-        employeeId: EmployeeId,
-        events: List<GarnishmentWithholdingEventView>,
-    ) {
+    override fun recordWithholdings(employerId: EmployerId, employeeId: EmployeeId, events: List<GarnishmentWithholdingEventView>) {
         if (events.isEmpty()) return
 
         events.forEach { event ->
-            // Insert event history with idempotent semantics via UNIQUE constraint
-            jdbcTemplate.update(
+            // Insert event history. For local tests we use H2 which does not support
+            // Postgres's ON CONFLICT syntax; instead we attempt the insert and ignore
+            // duplicates (idempotency is still enforced by the UNIQUE constraint).
+            try {
+                jdbcTemplate.update(
+                    """
+                    INSERT INTO garnishment_withholding_event (
+                      employer_id, employee_id, order_id,
+                      paycheck_id, pay_run_id, check_date,
+                      withheld_cents, net_pay_cents
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    """.trimIndent(),
+                    employerId.value,
+                    employeeId.value,
+                    event.orderId,
+                    event.paycheckId,
+                    event.payRunId,
+                    event.checkDate,
+                    event.withheld.amount,
+                    event.netPay.amount,
+                )
+            } catch (_: org.springframework.dao.DataIntegrityViolationException) {
+                // Duplicate event; ignore.
+            }
+
+            // Upsert aggregate ledger row in a dialect-portable way.
+            val updated = jdbcTemplate.update(
                 """
-                INSERT INTO garnishment_withholding_event (
-                  employer_id, employee_id, order_id,
-                  paycheck_id, pay_run_id, check_date,
-                  withheld_cents, net_pay_cents
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                ON CONFLICT (employer_id, employee_id, order_id, paycheck_id) DO NOTHING
+                UPDATE garnishment_ledger
+                SET total_withheld_cents = total_withheld_cents + ?,
+                    last_check_date = ?,
+                    last_paycheck_id = ?,
+                    last_pay_run_id = ?,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE employer_id = ?
+                  AND employee_id = ?
+                  AND order_id = ?
                 """.trimIndent(),
+                event.withheld.amount,
+                event.checkDate,
+                event.paycheckId,
+                event.payRunId,
                 employerId.value,
                 employeeId.value,
                 event.orderId,
-                event.paycheckId,
-                event.payRunId,
-                event.checkDate,
-                event.withheld.amount,
-                event.netPay.amount,
             )
 
-            // Upsert aggregate ledger row.
-            jdbcTemplate.update(
-                """
-                INSERT INTO garnishment_ledger (
-                  employer_id, employee_id, order_id,
-                  total_withheld_cents, initial_arrears_cents, remaining_arrears_cents,
-                  last_check_date, last_paycheck_id, last_pay_run_id,
-                  created_at, updated_at
-                ) VALUES (?, ?, ?, ?, NULL, NULL, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-                ON CONFLICT (employer_id, employee_id, order_id) DO UPDATE
-                SET total_withheld_cents = garnishment_ledger.total_withheld_cents + EXCLUDED.total_withheld_cents,
-                    last_check_date = EXCLUDED.last_check_date,
-                    last_paycheck_id = EXCLUDED.last_paycheck_id,
-                    last_pay_run_id = EXCLUDED.last_pay_run_id,
-                    updated_at = CURRENT_TIMESTAMP
-                """.trimIndent(),
-                employerId.value,
-                employeeId.value,
-                event.orderId,
-                event.withheld.amount,
-                event.checkDate,
-                event.paycheckId,
-                event.payRunId,
-            )
+            if (updated == 0) {
+                jdbcTemplate.update(
+                    """
+                    INSERT INTO garnishment_ledger (
+                      employer_id, employee_id, order_id,
+                      total_withheld_cents, initial_arrears_cents, remaining_arrears_cents,
+                      last_check_date, last_paycheck_id, last_pay_run_id,
+                      created_at, updated_at
+                    ) VALUES (?, ?, ?, ?, NULL, NULL, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                    """.trimIndent(),
+                    employerId.value,
+                    employeeId.value,
+                    event.orderId,
+                    event.withheld.amount,
+                    event.checkDate,
+                    event.paycheckId,
+                    event.payRunId,
+                )
+            }
         }
     }
 
-    override fun findByEmployee(
-        employerId: EmployerId,
-        employeeId: EmployeeId,
-    ): Map<String, GarnishmentLedgerEntry> {
+    override fun findByEmployee(employerId: EmployerId, employeeId: EmployeeId): Map<String, GarnishmentLedgerEntry> {
         val sql =
             """
             SELECT employer_id, employee_id, order_id,
@@ -196,11 +204,7 @@ class InMemoryGarnishmentLedgerRepository : GarnishmentLedgerRepository {
 
     private val store = ConcurrentHashMap<Key, GarnishmentLedgerEntry>()
 
-    override fun recordWithholdings(
-        employerId: EmployerId,
-        employeeId: EmployeeId,
-        events: List<GarnishmentWithholdingEventView>,
-    ) {
+    override fun recordWithholdings(employerId: EmployerId, employeeId: EmployeeId, events: List<GarnishmentWithholdingEventView>) {
         events.forEach { event ->
             val key = Key(employerId.value, employeeId.value, event.orderId)
             val existing = store[key]
@@ -222,10 +226,7 @@ class InMemoryGarnishmentLedgerRepository : GarnishmentLedgerRepository {
         }
     }
 
-    override fun findByEmployee(
-        employerId: EmployerId,
-        employeeId: EmployeeId,
-    ): Map<String, GarnishmentLedgerEntry> {
+    override fun findByEmployee(employerId: EmployerId, employeeId: EmployeeId): Map<String, GarnishmentLedgerEntry> {
         return store.filterKeys { it.employerId == employerId.value && it.employeeId == employeeId.value }
             .mapKeys { (key, _) -> key.orderId }
     }

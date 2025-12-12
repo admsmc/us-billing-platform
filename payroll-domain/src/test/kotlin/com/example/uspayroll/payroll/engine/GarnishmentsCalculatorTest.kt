@@ -1,10 +1,5 @@
 package com.example.uspayroll.payroll.engine
 
-import com.example.uspayroll.shared.EmployeeId
-import com.example.uspayroll.shared.EmployerId
-import com.example.uspayroll.shared.Money
-import com.example.uspayroll.shared.PaycheckId
-import com.example.uspayroll.shared.PayRunId
 import com.example.uspayroll.payroll.model.*
 import com.example.uspayroll.payroll.model.config.DeductionKind
 import com.example.uspayroll.payroll.model.config.DeductionPlan
@@ -13,9 +8,14 @@ import com.example.uspayroll.payroll.model.garnishment.GarnishmentFormula
 import com.example.uspayroll.payroll.model.garnishment.GarnishmentOrder
 import com.example.uspayroll.payroll.model.garnishment.GarnishmentOrderId
 import com.example.uspayroll.payroll.model.garnishment.GarnishmentType
+import com.example.uspayroll.shared.EmployeeId
+import com.example.uspayroll.shared.EmployerId
+import com.example.uspayroll.shared.Money
+import com.example.uspayroll.shared.PayRunId
+import com.example.uspayroll.shared.PaycheckId
+import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import java.time.LocalDate
 
 class GarnishmentsCalculatorTest {
 
@@ -32,13 +32,7 @@ class GarnishmentsCalculatorTest {
     // "in" the top band.
     private val FTB_EWOT_PERCENT = Percent(0.25)
 
-    private fun baseInput(
-        employerId: EmployerId,
-        employeeId: EmployeeId,
-        priorYtd: YtdSnapshot,
-        garnishmentContext: GarnishmentContext,
-        annualSalaryCents: Long = 260_000_00L,
-    ): PaycheckInput {
+    private fun baseInput(employerId: EmployerId, employeeId: EmployeeId, priorYtd: YtdSnapshot, garnishmentContext: GarnishmentContext, annualSalaryCents: Long = 260_000_00L): PaycheckInput {
         val period = PayPeriod(
             id = "GARN-CALC",
             employerId = employerId,
@@ -447,7 +441,7 @@ class GarnishmentsCalculatorTest {
         val protectedSteps = result.traceSteps.filterIsInstance<TraceStep.ProtectedEarningsApplied>()
         val step = protectedSteps.single { it.orderId == orderId.value }
         assertEquals(5_000_00L, step.requestedCents) // post-cap request
-        assertEquals(4_000_00L, step.adjustedCents)  // floor-reduced amount
+        assertEquals(4_000_00L, step.adjustedCents) // floor-reduced amount
         assertEquals(6_000_00L, step.floorCents)
     }
 
@@ -1624,5 +1618,4 @@ class GarnishmentsCalculatorTest {
         val garnishments = result.garnishments
         assertEquals(0, garnishments.size)
     }
-
 }

@@ -12,10 +12,10 @@ import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.shared.Money
 import com.example.uspayroll.shared.PayRunId
 import com.example.uspayroll.shared.PaycheckId
+import java.time.LocalDate
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertTrue
-import java.time.LocalDate
 
 /**
  * Lightweight property-style tests for GarnishmentsCalculator to exercise
@@ -24,19 +24,18 @@ import java.time.LocalDate
  */
 class GarnishmentsCalculatorPropertiesTest {
 
-    private fun randomMoney(rng: Random, maxCents: Long = 20_000_00L): Money =
-        Money(rng.nextLong(0, maxCents))
+    private fun randomMoney(rng: Random, maxCents: Long = 20_000_00L): Money = Money(rng.nextLong(0, maxCents))
 
-    private fun randomPercent(rng: Random): Percent =
-        Percent(rng.nextDouble(from = 0.0, until = 0.6)) // up to 60%
+    private fun randomPercent(rng: Random): Percent = Percent(rng.nextDouble(from = 0.0, until = 0.6)) // up to 60%
 
     private fun randomOrder(rng: Random, idSuffix: Int): GarnishmentOrder {
         val employer = EmployerId("EMP-PROP")
         val orderId = GarnishmentOrderId("ORDER-PROP-$idSuffix")
-        val type = if (rng.nextBoolean())
+        val type = if (rng.nextBoolean()) {
             com.example.uspayroll.payroll.model.garnishment.GarnishmentType.CREDITOR_GARNISHMENT
-        else
+        } else {
             com.example.uspayroll.payroll.model.garnishment.GarnishmentType.CHILD_SUPPORT
+        }
 
         val formula = if (rng.nextBoolean()) {
             GarnishmentFormula.PercentOfDisposable(randomPercent(rng))
@@ -166,8 +165,10 @@ class GarnishmentsCalculatorPropertiesTest {
 
             val protectedSteps = result.traceSteps.filterIsInstance<TraceStep.ProtectedEarningsApplied>()
             protectedSteps.forEach { step ->
-                assertTrue(step.adjustedCents <= step.requestedCents,
-                    "Protected earnings floor must not increase requested amount")
+                assertTrue(
+                    step.adjustedCents <= step.requestedCents,
+                    "Protected earnings floor must not increase requested amount",
+                )
             }
 
             // For each protected-order garnishment, ensure net cash after
@@ -180,8 +181,10 @@ class GarnishmentsCalculatorPropertiesTest {
                 val ga = gaByOrder[orderId]
                 if (ga != null) {
                     val netAfterGarnishments = ga.disposableAfterCents
-                    assertTrue(netAfterGarnishments >= floor,
-                        "Net cash after garnishments ($netAfterGarnishments) should be >= floor $floor for $orderId")
+                    assertTrue(
+                        netAfterGarnishments >= floor,
+                        "Net cash after garnishments ($netAfterGarnishments) should be >= floor $floor for $orderId",
+                    )
                 }
             }
         }

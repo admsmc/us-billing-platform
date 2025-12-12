@@ -11,7 +11,7 @@ class TaxRuleConfigValidatorTest {
     @Test
     fun `all supported bases and ruleTypes are accepted`() {
         val effectiveFrom = LocalDate.of(2025, 1, 1)
-        val effectiveTo = LocalDate.of(9999, 12, 31)
+        val farFuture = LocalDate.of(9999, 12, 31)
 
         val bases = listOf(
             "Gross",
@@ -42,7 +42,7 @@ class TaxRuleConfigValidatorTest {
                 additionalWithholdingCents = null,
                 employerId = null,
                 effectiveFrom = effectiveFrom.plusDays(index.toLong()),
-                effectiveTo = effectiveTo,
+                effectiveTo = effectiveFrom.plusDays(index.toLong() + 1),
                 filingStatus = null,
                 residentStateFilter = null,
                 workStateFilter = null,
@@ -67,7 +67,7 @@ class TaxRuleConfigValidatorTest {
             additionalWithholdingCents = null,
             employerId = null,
             effectiveFrom = effectiveFrom,
-            effectiveTo = effectiveTo,
+            effectiveTo = farFuture,
             filingStatus = "SINGLE",
             residentStateFilter = null,
             workStateFilter = null,
@@ -90,7 +90,7 @@ class TaxRuleConfigValidatorTest {
             additionalWithholdingCents = null,
             employerId = null,
             effectiveFrom = effectiveFrom,
-            effectiveTo = effectiveTo,
+            effectiveTo = farFuture,
             filingStatus = "SINGLE",
             residentStateFilter = null,
             workStateFilter = null,

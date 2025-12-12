@@ -4,9 +4,9 @@ import com.example.uspayroll.payroll.model.TaxBasis
 import com.example.uspayroll.payroll.model.TaxJurisdictionType
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.tax.api.TaxQuery
+import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import java.time.LocalDate
 
 class CatalogBackedTaxContextProviderTest {
 

@@ -7,7 +7,8 @@ import com.example.uspayroll.payroll.model.garnishment.ProtectedEarningsRule
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.shared.Money
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.example.uspayroll.worker.support.StubTaxLaborClientsTestConfig
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.jupiter.api.AfterAll
@@ -19,11 +20,11 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.util.TestPropertyValues
 import org.springframework.context.ApplicationContextInitializer
 import org.springframework.context.ConfigurableApplicationContext
+import org.springframework.context.annotation.Import
 import org.springframework.test.context.ContextConfiguration
 import java.time.LocalDate
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 /**
  * Integration test focused on the GarnishmentEngineV2 feature flag behavior in
@@ -33,6 +34,7 @@ import kotlin.test.assertTrue
  * callbacks.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@Import(StubTaxLaborClientsTestConfig::class)
 @ContextConfiguration(initializers = [GarnishmentFeatureFlagIntegrationTest.Companion.Initializer::class])
 @TestInstance(Lifecycle.PER_CLASS)
 class GarnishmentFeatureFlagIntegrationTest {
@@ -62,7 +64,7 @@ class GarnishmentFeatureFlagIntegrationTest {
     @Autowired
     lateinit var payrollRunService: PayrollRunService
 
-    private val objectMapper = ObjectMapper()
+    private val objectMapper = jacksonObjectMapper().findAndRegisterModules()
 
     @Test
     fun `employer not in feature flag allow-list does not apply garnishments or send withholdings`() {
@@ -138,7 +140,10 @@ class GarnishmentFeatureFlagIntegrationTest {
 
         // HR should see only three requests: pay period, snapshot, and
         // garnishment orders. There should be no withholdings callback.
-        assertEquals(3, server.requestCount,
-            "Expected no garnishment withholdings callback when engine is disabled for employer")
+        assertEquals(
+            3,
+            server.requestCount,
+            "Expected no garnishment withholdings callback when engine is disabled for employer",
+        )
     }
 }

@@ -5,7 +5,6 @@ import com.example.uspayroll.hr.api.PayPeriodProvider
 import com.example.uspayroll.payroll.model.*
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
-import com.example.uspayroll.shared.Money
 import org.flywaydb.core.Flyway
 import org.h2.jdbcx.JdbcDataSource
 import org.junit.jupiter.api.Test

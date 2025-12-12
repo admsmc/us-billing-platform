@@ -61,8 +61,8 @@ object LegacyW4Bridge {
             step4OtherIncomeAnnual = com.example.uspayroll.shared.Money(step4aCents),
             step4DeductionsAnnual = if (step4bCents > 0L) com.example.uspayroll.shared.Money(step4bCents) else null,
             extraWithholdingPerPeriod =
-                employee.legacyAdditionalWithholdingPerPeriod
-                    ?: employee.additionalWithholdingPerPeriod,
+            employee.legacyAdditionalWithholdingPerPeriod
+                ?: employee.additionalWithholdingPerPeriod,
             step2MultipleJobs = employee.w4Step2MultipleJobs,
             federalWithholdingExempt = employee.federalWithholdingExempt,
             isNonresidentAlien = employee.isNonresidentAlien,

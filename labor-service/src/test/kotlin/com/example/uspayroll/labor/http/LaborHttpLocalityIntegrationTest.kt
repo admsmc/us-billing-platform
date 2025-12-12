@@ -9,7 +9,6 @@ import com.example.uspayroll.labor.api.StateLaborStandard
 import com.example.uspayroll.labor.impl.CatalogBackedLaborStandardsContextProvider
 import com.example.uspayroll.labor.impl.LaborStandardsContextProvider
 import com.example.uspayroll.labor.web.CorrelationIdFilter
-import com.example.uspayroll.shared.EmployerId
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
@@ -64,62 +63,60 @@ class LaborHttpLocalityIntegrationTest {
     class TestConfig {
 
         @Bean
-        fun laborStandardsCatalog(): LaborStandardsCatalog =
-            object : LaborStandardsCatalog {
-                override fun loadStateStandard(query: LaborStandardsQuery): StateLaborStandard? {
-                    if (!"NY".equals(query.workState, ignoreCase = true)) return null
+        fun laborStandardsCatalog(): LaborStandardsCatalog = object : LaborStandardsCatalog {
+            override fun loadStateStandard(query: LaborStandardsQuery): StateLaborStandard? {
+                if (!"NY".equals(query.workState, ignoreCase = true)) return null
 
-                    val asOf = query.asOfDate
-                    val hasNyC = query.localityCodes.any { it.equals("NYC", ignoreCase = true) }
+                val asOf = query.asOfDate
+                val hasNyC = query.localityCodes.any { it.equals("NYC", ignoreCase = true) }
 
-                    return if (hasNyC) {
-                        // Local NYC standard: 16.50
-                        StateLaborStandard(
-                            stateCode = "NY",
-                            effectiveFrom = LocalDate.of(2025, 1, 1),
-                            effectiveTo = null,
-                            regularMinimumWageCents = 1_650L,
-                            tippedMinimumCashWageCents = null,
-                            maxTipCreditCents = null,
-                            weeklyOvertimeThresholdHours = 40.0,
-                            dailyOvertimeThresholdHours = null,
-                            dailyDoubleTimeThresholdHours = null,
-                            sources = listOf(
-                                LaborStandardSourceRef(
-                                    kind = LaborStandardSourceKind.STATE_STATUTE,
-                                    citation = "NYC local override for test",
-                                ),
+                return if (hasNyC) {
+                    // Local NYC standard: 16.50
+                    StateLaborStandard(
+                        stateCode = "NY",
+                        effectiveFrom = LocalDate.of(2025, 1, 1),
+                        effectiveTo = null,
+                        regularMinimumWageCents = 1_650L,
+                        tippedMinimumCashWageCents = null,
+                        maxTipCreditCents = null,
+                        weeklyOvertimeThresholdHours = 40.0,
+                        dailyOvertimeThresholdHours = null,
+                        dailyDoubleTimeThresholdHours = null,
+                        sources = listOf(
+                            LaborStandardSourceRef(
+                                kind = LaborStandardSourceKind.STATE_STATUTE,
+                                citation = "NYC local override for test",
                             ),
-                            localityCode = "NYC",
-                            localityKind = "CITY",
-                        )
-                    } else {
-                        // Statewide NY baseline: 15.50
-                        StateLaborStandard(
-                            stateCode = "NY",
-                            effectiveFrom = LocalDate.of(2025, 1, 1),
-                            effectiveTo = null,
-                            regularMinimumWageCents = 1_550L,
-                            tippedMinimumCashWageCents = null,
-                            maxTipCreditCents = null,
-                            weeklyOvertimeThresholdHours = 40.0,
-                            dailyOvertimeThresholdHours = null,
-                            dailyDoubleTimeThresholdHours = null,
-                            sources = listOf(
-                                LaborStandardSourceRef(
-                                    kind = LaborStandardSourceKind.FEDERAL_DOL_MIN_WAGE_TABLE,
-                                    citation = "NY statewide baseline for test",
-                                ),
+                        ),
+                        localityCode = "NYC",
+                        localityKind = "CITY",
+                    )
+                } else {
+                    // Statewide NY baseline: 15.50
+                    StateLaborStandard(
+                        stateCode = "NY",
+                        effectiveFrom = LocalDate.of(2025, 1, 1),
+                        effectiveTo = null,
+                        regularMinimumWageCents = 1_550L,
+                        tippedMinimumCashWageCents = null,
+                        maxTipCreditCents = null,
+                        weeklyOvertimeThresholdHours = 40.0,
+                        dailyOvertimeThresholdHours = null,
+                        dailyDoubleTimeThresholdHours = null,
+                        sources = listOf(
+                            LaborStandardSourceRef(
+                                kind = LaborStandardSourceKind.FEDERAL_DOL_MIN_WAGE_TABLE,
+                                citation = "NY statewide baseline for test",
                             ),
-                        )
-                    }
+                        ),
+                    )
                 }
-
-                override fun listStateStandards(asOfDate: LocalDate?): List<StateLaborStandard> = emptyList()
             }
 
+            override fun listStateStandards(asOfDate: LocalDate?): List<StateLaborStandard> = emptyList()
+        }
+
         @Bean
-        fun laborStandardsContextProvider(catalog: LaborStandardsCatalog): LaborStandardsContextProvider =
-            CatalogBackedLaborStandardsContextProvider(catalog)
+        fun laborStandardsContextProvider(catalog: LaborStandardsCatalog): LaborStandardsContextProvider = CatalogBackedLaborStandardsContextProvider(catalog)
     }
 }

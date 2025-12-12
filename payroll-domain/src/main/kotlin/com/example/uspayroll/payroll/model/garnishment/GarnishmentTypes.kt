@@ -4,6 +4,8 @@ import com.example.uspayroll.payroll.model.FilingStatus
 import com.example.uspayroll.payroll.model.Percent
 import com.example.uspayroll.payroll.model.TaxJurisdiction
 import com.example.uspayroll.shared.Money
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonTypeInfo
 import java.time.LocalDate
 
 /**
@@ -29,6 +31,17 @@ value class GarnishmentOrderId(val value: String)
  * or other bases. Jurisdiction-specific content is converted into one of
  * these primitives by upstream services.
  */
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    include = JsonTypeInfo.As.PROPERTY,
+    property = "type",
+)
+@JsonSubTypes(
+    JsonSubTypes.Type(value = GarnishmentFormula.PercentOfDisposable::class, name = "PERCENT_OF_DISPOSABLE"),
+    JsonSubTypes.Type(value = GarnishmentFormula.FixedAmountPerPeriod::class, name = "FIXED_AMOUNT_PER_PERIOD"),
+    JsonSubTypes.Type(value = GarnishmentFormula.LesserOfPercentOrAmount::class, name = "LESSER_OF_PERCENT_OR_AMOUNT"),
+    JsonSubTypes.Type(value = GarnishmentFormula.LevyWithBands::class, name = "LEVY_WITH_BANDS"),
+)
 sealed class GarnishmentFormula {
     data class PercentOfDisposable(val percent: Percent) : GarnishmentFormula()
 
@@ -64,6 +77,15 @@ data class LevyBand(
  * Protected earnings rules that limit how far garnishments can reduce net
  * cash pay in a given paycheck.
  */
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    include = JsonTypeInfo.As.PROPERTY,
+    property = "type",
+)
+@JsonSubTypes(
+    JsonSubTypes.Type(value = ProtectedEarningsRule.FixedFloor::class, name = "FIXED_FLOOR"),
+    JsonSubTypes.Type(value = ProtectedEarningsRule.MultipleOfMinWage::class, name = "MULTIPLE_OF_MIN_WAGE"),
+)
 sealed class ProtectedEarningsRule {
     /** Never reduce net cash below this fixed floor for the paycheck. */
     data class FixedFloor(val amount: Money) : ProtectedEarningsRule()

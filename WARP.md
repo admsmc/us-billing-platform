@@ -4,7 +4,12 @@ This file provides guidance to WARP (warp.dev) when working with code in this re
 
 ## Build, test, and run commands
 
-The project is a Kotlin/JVM Gradle multi-module build targeting Java 21. Use the Gradle wrapper from the repo root.
+The project is a Kotlin/JVM Gradle multi-module build targeting Java 21.
+
+IMPORTANT: Ensure Gradle is run with a Java 21 runtime. If your system `java` is newer (and Kotlin tooling fails), use:
+- `./scripts/gradlew-java21.sh <task>`
+
+Use the Gradle wrapper from the repo root.
 
 ### Global Gradle tasks
 

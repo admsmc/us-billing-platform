@@ -87,11 +87,7 @@ class PayRunService(
         }
     }
 
-    fun getStatus(
-        employerId: String,
-        payRunId: String,
-        failureLimit: Int = 25,
-    ): PayRunStatusView? {
+    fun getStatus(employerId: String, payRunId: String, failureLimit: Int = 25): PayRunStatusView? {
         val payRun = payRunRepository.findPayRun(employerId, payRunId)
             ?: return null
 

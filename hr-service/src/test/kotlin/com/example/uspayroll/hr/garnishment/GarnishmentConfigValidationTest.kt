@@ -5,9 +5,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.junit.jupiter.api.Test
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
+import java.io.InputStream
 import kotlin.test.assertTrue
 
 /**
@@ -21,25 +19,23 @@ import kotlin.test.assertTrue
  */
 class GarnishmentConfigValidationTest {
 
+    private fun readResource(name: String): String {
+        val stream: InputStream = requireNotNull(this::class.java.classLoader.getResourceAsStream(name)) {
+            "Expected $name on test classpath"
+        }
+        return stream.use { it.readBytes().toString(Charsets.UTF_8) }
+    }
+
     private val objectMapper = jacksonObjectMapper()
         .registerModule(JavaTimeModule())
         .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
 
     @Test
     fun `garnishment rules and levy bands validate successfully`() {
-        val resourcesDir: Path = Paths.get("hr-service", "src", "main", "resources")
-        require(Files.exists(resourcesDir)) { "Expected resources directory at $resourcesDir" }
-
-        val rulesPath = resourcesDir.resolve("garnishment-rules.json")
-        val bandsPath = resourcesDir.resolve("garnishment-levy-bands.json")
-
-        require(Files.exists(rulesPath)) { "Expected garnishment-rules.json at $rulesPath" }
-        require(Files.exists(bandsPath)) { "Expected garnishment-levy-bands.json at $bandsPath" }
-
-        val rulesJson = Files.readString(rulesPath)
+        val rulesJson = readResource("garnishment-rules.json")
         val rules: List<GarnishmentConfigValidator.RuleJson> = objectMapper.readValue(rulesJson)
 
-        val bandsJson = Files.readString(bandsPath)
+        val bandsJson = readResource("garnishment-levy-bands.json")
         val levyConfigs: List<GarnishmentConfigValidator.LevyConfigJson> = objectMapper.readValue(bandsJson)
 
         val result = GarnishmentConfigValidator.validate(rules, levyConfigs)

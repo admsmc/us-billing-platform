@@ -1,19 +1,18 @@
 package com.example.uspayroll.payroll.model
 
+import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import java.time.LocalDate
 
 class ProrationStrategyTest {
 
-    private fun period(start: LocalDate, end: LocalDate): PayPeriod =
-        PayPeriod(
-            id = "P",
-            employerId = com.example.uspayroll.shared.EmployerId("E"),
-            dateRange = LocalDateRange(start, end),
-            checkDate = end,
-            frequency = PayFrequency.SEMI_MONTHLY,
-        )
+    private fun period(start: LocalDate, end: LocalDate): PayPeriod = PayPeriod(
+        id = "P",
+        employerId = com.example.uspayroll.shared.EmployerId("E"),
+        dateRange = LocalDateRange(start, end),
+        checkDate = end,
+        frequency = PayFrequency.SEMI_MONTHLY,
+    )
 
     @Test
     fun `calendar days proration with mid-period termination`() {

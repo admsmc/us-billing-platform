@@ -118,7 +118,7 @@ object WageBracketCsvParser {
                 }
 
                 TaxRuleConfig(
-                    id = "${baseIdPrefix}_${idSuffix}",
+                    id = "${baseIdPrefix}_$idSuffix",
                     jurisdictionType = jurisdictionType,
                     jurisdictionCode = jurisdictionCode,
                     basis = basis,

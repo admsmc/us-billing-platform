@@ -1,15 +1,14 @@
 package com.example.uspayroll.payroll.engine
 
-import com.example.uspayroll.shared.Money
-import com.example.uspayroll.payroll.model.DeductionLine
 import com.example.uspayroll.payroll.model.DeductionCode
+import com.example.uspayroll.payroll.model.DeductionLine
 import com.example.uspayroll.payroll.model.EarningLine
 import com.example.uspayroll.payroll.model.TaxBasis
 import com.example.uspayroll.payroll.model.YtdSnapshot
 import com.example.uspayroll.payroll.model.config.DeductionEffect
-import com.example.uspayroll.payroll.model.config.DeductionKind
 import com.example.uspayroll.payroll.model.config.DeductionPlan
 import com.example.uspayroll.payroll.model.config.defaultEmployeeEffects
+import com.example.uspayroll.shared.Money
 
 /**
  * Input to tax basis computation.
@@ -109,48 +108,69 @@ object BasisBuilder {
         }
 
         val components = buildMap<TaxBasis, Map<String, Money>> {
-            put(TaxBasis.Gross, buildMap {
-                put("gross", gross)
-                if (supplementalAmount != 0L) {
+            put(
+                TaxBasis.Gross,
+                buildMap {
+                    put("gross", gross)
+                    if (supplementalAmount != 0L) {
+                        put("supplemental", Money(supplementalAmount, gross.currency))
+                    }
+                    if (holidayAmount != 0L) {
+                        put("holiday", Money(holidayAmount, gross.currency))
+                    }
+                    if (imputedAmount != 0L) {
+                        put("imputed", Money(imputedAmount, gross.currency))
+                    }
+                },
+            )
+            put(
+                TaxBasis.FederalTaxable,
+                buildMap {
+                    put("gross", gross)
+                    if (federalReductions != 0L) {
+                        put("lessFederalTaxableDeductions", Money(federalReductions, gross.currency))
+                    }
+                },
+            )
+            put(
+                TaxBasis.StateTaxable,
+                buildMap {
+                    put("gross", gross)
+                    if (stateReductions != 0L) {
+                        put("lessStateTaxableDeductions", Money(stateReductions, gross.currency))
+                    }
+                },
+            )
+            put(
+                TaxBasis.SocialSecurityWages,
+                buildMap {
+                    put("gross", gross)
+                    if (ssReductions != 0L) {
+                        put("lessFicaDeductions", Money(ssReductions, gross.currency))
+                    }
+                },
+            )
+            put(
+                TaxBasis.MedicareWages,
+                buildMap {
+                    put("gross", gross)
+                    if (medicareReductions != 0L) {
+                        put("lessMedicareDeductions", Money(medicareReductions, gross.currency))
+                    }
+                },
+            )
+            put(
+                TaxBasis.SupplementalWages,
+                buildMap {
                     put("supplemental", Money(supplementalAmount, gross.currency))
-                }
-                if (holidayAmount != 0L) {
-                    put("holiday", Money(holidayAmount, gross.currency))
-                }
-                if (imputedAmount != 0L) {
-                    put("imputed", Money(imputedAmount, gross.currency))
-                }
-            })
-            put(TaxBasis.FederalTaxable, buildMap {
-                put("gross", gross)
-                if (federalReductions != 0L) {
-                    put("lessFederalTaxableDeductions", Money(federalReductions, gross.currency))
-                }
-            })
-            put(TaxBasis.StateTaxable, buildMap {
-                put("gross", gross)
-                if (stateReductions != 0L) {
-                    put("lessStateTaxableDeductions", Money(stateReductions, gross.currency))
-                }
-            })
-            put(TaxBasis.SocialSecurityWages, buildMap {
-                put("gross", gross)
-                if (ssReductions != 0L) {
-                    put("lessFicaDeductions", Money(ssReductions, gross.currency))
-                }
-            })
-            put(TaxBasis.MedicareWages, buildMap {
-                put("gross", gross)
-                if (medicareReductions != 0L) {
-                    put("lessMedicareDeductions", Money(medicareReductions, gross.currency))
-                }
-            })
-            put(TaxBasis.SupplementalWages, buildMap {
-                put("supplemental", Money(supplementalAmount, gross.currency))
-            })
-            put(TaxBasis.FutaWages, buildMap {
-                put("gross", gross)
-            })
+                },
+            )
+            put(
+                TaxBasis.FutaWages,
+                buildMap {
+                    put("gross", gross)
+                },
+            )
         }
 
         return BasisComputation(bases = bases, components = components)

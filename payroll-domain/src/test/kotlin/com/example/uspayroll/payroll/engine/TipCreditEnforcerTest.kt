@@ -6,24 +6,24 @@ import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.shared.Money
 import com.example.uspayroll.shared.PayRunId
 import com.example.uspayroll.shared.PaycheckId
+import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import java.time.LocalDate
 
 class TipCreditEnforcerTest {
 
     private fun txLaborStandards(): LaborStandardsContext = LaborStandardsContext(
-        federalMinimumWage = Money(7_25L),      // $7.25/hr TX baseline
+        federalMinimumWage = Money(7_25L), // $7.25/hr TX baseline
         youthMinimumWage = null,
         youthMaxAgeYears = null,
         youthMaxConsecutiveDaysFromHire = null,
-        federalTippedCashMinimum = Money(2_13L),// $2.13/hr TX tipped cash minimum
+        federalTippedCashMinimum = Money(2_13L), // $2.13/hr TX tipped cash minimum
         tippedMonthlyThreshold = Money(30_00L),
     )
 
     private fun caLaborStandards(): LaborStandardsContext = LaborStandardsContext(
-        federalMinimumWage = Money(16_50L),     // $16.50/hr CA statewide minimum
+        federalMinimumWage = Money(16_50L), // $16.50/hr CA statewide minimum
         youthMinimumWage = null,
         youthMaxAgeYears = null,
         youthMaxConsecutiveDaysFromHire = null,

@@ -6,9 +6,19 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.test.context.TestConstructor
 import java.time.Instant
 
 @SpringBootTest
+@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
+@org.springframework.test.context.TestPropertySource(
+    properties = [
+        "spring.task.scheduling.enabled=false",
+        "spring.datasource.url=jdbc:h2:mem:payments_intake_it;DB_CLOSE_DELAY=-1",
+        "payments.kafka.enabled=false",
+        "payments.outbox.relay.enabled=false",
+    ],
+)
 class PaymentIntakeIT(
     private val intake: PaymentIntakeService,
     private val jdbcTemplate: JdbcTemplate,

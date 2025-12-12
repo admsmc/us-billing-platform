@@ -1,0 +1,15 @@
+# Test-scoped defaults for payroll-worker-service.
+#
+# Several other service modules (tax-service, labor-service, etc.) are on the
+# test classpath and include their own application.yml with defaults like
+# server.port and spring.flyway.*. Those can leak into worker tests when Spring
+# Boot loads config resources from the classpath.
+#
+# We keep worker tests isolated by disabling Flyway by default and using an
+# ephemeral server port when a web server is started.
+server:
+  port: 0
+
+spring:
+  flyway:
+    enabled: false

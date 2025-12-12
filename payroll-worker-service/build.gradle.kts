@@ -42,6 +42,9 @@ dependencies {
     testImplementation("org.jooq:jooq:3.19.11")
     testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.17.0")
     testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.0")
+
+    // Flyway for running tax-service schema migrations in test-local H2 databases.
+    testImplementation("org.flywaydb:flyway-core:10.14.0")
 }
 
 tasks.withType<JavaCompile> {

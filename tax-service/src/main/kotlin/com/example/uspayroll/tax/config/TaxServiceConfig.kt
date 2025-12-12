@@ -28,24 +28,31 @@ import javax.sql.DataSource
 class TaxServiceConfig {
 
     @Bean
-    fun dataSource(
-        @Value("\${tax.db.url}") url: String,
-        @Value("\${tax.db.username}") username: String,
-        @Value("\${tax.db.password}") password: String,
-    ): DataSource = DriverManagerDataSource().apply {
-        this.setDriverClassName("org.postgresql.Driver")
-        this.url = url
-        this.username = username
-        this.password = password
+    fun dataSource(@Value("\${tax.db.url}") url: String, @Value("\${tax.db.username}") username: String, @Value("\${tax.db.password}") password: String): DataSource {
+        val driverClassName = when {
+            url.startsWith("jdbc:h2:") -> "org.h2.Driver"
+            url.startsWith("jdbc:postgresql:") -> "org.postgresql.Driver"
+            else -> null
+        }
+
+        return DriverManagerDataSource().apply {
+            if (driverClassName != null) {
+                setDriverClassName(driverClassName)
+            }
+            this.url = url
+            this.username = username
+            this.password = password
+        }
     }
 
     @Bean
-    fun dslContext(dataSource: DataSource): DSLContext =
-        DSL.using(dataSource, org.jooq.SQLDialect.POSTGRES)
+    fun dslContext(dataSource: DataSource, @Value("\${tax.db.url}") url: String): DSLContext {
+        val dialect = if (url.startsWith("jdbc:h2:")) org.jooq.SQLDialect.H2 else org.jooq.SQLDialect.POSTGRES
+        return DSL.using(dataSource, dialect)
+    }
 
     @Bean
-    fun taxRuleRepository(dsl: DSLContext): TaxRuleRepository =
-        JooqTaxRuleRepository(dsl)
+    fun taxRuleRepository(dsl: DSLContext): TaxRuleRepository = JooqTaxRuleRepository(dsl)
 
     @Bean
     fun taxCatalog(repository: TaxRuleRepository): TaxCatalog {
@@ -62,9 +69,8 @@ class TaxServiceConfig {
     fun federalWithholdingCalculator(
         @Value("\${tax.federalWithholding.method:PERCENTAGE}") method: String,
         @Value("\${tax.federalWithholding.pub15tStrictMode:false}") strictMode: Boolean,
-    ): FederalWithholdingCalculator =
-        DefaultFederalWithholdingCalculator(
-            method = method,
-            pub15tStrictMode = strictMode,
-        )
+    ): FederalWithholdingCalculator = DefaultFederalWithholdingCalculator(
+        method = method,
+        pub15tStrictMode = strictMode,
+    )
 }

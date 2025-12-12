@@ -107,7 +107,7 @@ class GarnishmentReconciliationServiceTest {
             5_000_00L,
         )
 
-        // Period 1: as of 2024-05-01 (< 12 weeks from served date), withhold 2,000.
+        // Period 1: as of 2024-02-15 (< 12 weeks from served date), withhold 2,000.
         jdbcTemplate.update(
             """
             INSERT INTO garnishment_ledger (
@@ -122,7 +122,7 @@ class GarnishmentReconciliationServiceTest {
             2_000_00L,
             5_000_00L,
             5_000_00L,
-            java.sql.Date.valueOf("2024-05-01"),
+            java.sql.Date.valueOf("2024-02-15"),
             null,
             null,
         )

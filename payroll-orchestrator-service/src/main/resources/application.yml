@@ -1,0 +1,13 @@
+server:
+  port: ${SERVER_PORT:8086}
+
+spring:
+  flyway:
+    enabled: true
+    locations: classpath:db/migration/orchestrator
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus

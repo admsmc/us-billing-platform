@@ -1,7 +1,7 @@
 package com.example.uspayroll.payroll.model
 
-import com.example.uspayroll.shared.Money
 import com.example.uspayroll.payroll.model.config.DeductionEffect
+import com.example.uspayroll.shared.Money
 
 // Calculation trace
 

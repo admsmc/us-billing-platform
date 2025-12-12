@@ -1,22 +1,18 @@
 package com.example.uspayroll.payroll.engine
 
+import com.example.uspayroll.payroll.model.*
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.shared.Money
-import com.example.uspayroll.shared.PaycheckId
 import com.example.uspayroll.shared.PayRunId
-import com.example.uspayroll.payroll.model.*
+import com.example.uspayroll.shared.PaycheckId
+import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import java.time.LocalDate
 
 class BracketedTaxTest {
 
-    private fun baseInput(
-        employerId: EmployerId,
-        employeeId: EmployeeId,
-        priorYtd: YtdSnapshot,
-    ): PaycheckInput {
+    private fun baseInput(employerId: EmployerId, employeeId: EmployeeId, priorYtd: YtdSnapshot): PaycheckInput {
         val period = PayPeriod(
             id = "BR-PERIOD",
             employerId = employerId,
@@ -94,9 +90,9 @@ class BracketedTaxTest {
             jurisdiction = TaxJurisdiction(TaxJurisdictionType.FEDERAL, "US"),
             basis = TaxBasis.Gross,
             brackets = listOf(
-                TaxBracket(upTo = Money(5_000_00L), rate = Percent(0.10)),  // 10% on first 5k
+                TaxBracket(upTo = Money(5_000_00L), rate = Percent(0.10)), // 10% on first 5k
                 TaxBracket(upTo = Money(10_000_00L), rate = Percent(0.20)), // 20% on next 5k
-                TaxBracket(upTo = null, rate = Percent(0.30)),              // 30% above 10k
+                TaxBracket(upTo = null, rate = Percent(0.30)), // 30% above 10k
             ),
             standardDeduction = null,
             additionalWithholding = null,
@@ -164,8 +160,8 @@ class BracketedTaxTest {
             jurisdiction = TaxJurisdiction(TaxJurisdictionType.FEDERAL, "US"),
             basis = TaxBasis.FederalTaxable,
             brackets = listOf(
-                TaxBracket(upTo = Money(9_000_00L), rate = Percent(0.10)),  // 10% up to 9k
-                TaxBracket(upTo = null, rate = Percent(0.20)),              // 20% above 9k
+                TaxBracket(upTo = Money(9_000_00L), rate = Percent(0.10)), // 10% up to 9k
+                TaxBracket(upTo = null, rate = Percent(0.20)), // 20% above 9k
             ),
             standardDeduction = null,
             additionalWithholding = null,

@@ -1,0 +1,18 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>LoopWithTooManyJumpStatements:PayRunExecutionService.kt$PayRunExecutionService$while</ID>
+    <ID>MatchingDeclarationName:GarnishmentDtos.kt$GarnishmentOrderDto</ID>
+    <ID>SpreadOperator:OutboxRepository.kt$OutboxRepository$( """ UPDATE outbox_event SET status = ?, locked_by = ?, locked_at = ? WHERE outbox_id IN ($placeholders) """.trimIndent(), *args.toTypedArray(), )</ID>
+    <ID>SpreadOperator:PayRunItemRepository.kt$PayRunItemRepository$( """ SELECT employee_id FROM pay_run_item WHERE employer_id = ? AND pay_run_id = ? AND status = ? AND employee_id IN ($placeholders) """.trimIndent(), { rs, _ -&gt; rs.getString("employee_id") }, employerId, payRunId, PayRunItemStatus.RUNNING.name, *ids.toTypedArray(), )</ID>
+    <ID>SpreadOperator:PayRunItemRepository.kt$PayRunItemRepository$( """ UPDATE pay_run_item SET status = ?, attempt_count = attempt_count + 1, started_at = COALESCE(started_at, CURRENT_TIMESTAMP), updated_at = CURRENT_TIMESTAMP WHERE employer_id = ? AND pay_run_id = ? AND status = ? AND employee_id IN ($placeholders) """.trimIndent(), *args.toTypedArray(), )</ID>
+    <ID>SpreadOperator:PayrollOrchestratorApplication.kt$(*args)</ID>
+    <ID>SwallowedException:JdbcPaycheckStoreRepository.kt$JdbcPaycheckStoreRepository$e: org.springframework.dao.DataIntegrityViolationException</ID>
+    <ID>SwallowedException:PayRunItemRepository.kt$PayRunItemRepository$e: DataIntegrityViolationException</ID>
+    <ID>ThrowsCount:PayRunService.kt$PayRunService$fun approvePayRun(employerId: String, payRunId: String): ApproveResult</ID>
+    <ID>ThrowsCount:PayRunService.kt$PayRunService$fun initiatePayments(employerId: String, payRunId: String): InitiatePaymentsResult</ID>
+    <ID>TooGenericExceptionCaught:OutboxRelay.kt$OutboxRelay$t: Throwable</ID>
+    <ID>TooGenericExceptionCaught:PayRunExecutionService.kt$PayRunExecutionService$t: Throwable</ID>
+  </CurrentIssues>
+</SmellBaseline>

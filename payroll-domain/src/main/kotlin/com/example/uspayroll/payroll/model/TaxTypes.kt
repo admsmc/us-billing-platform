@@ -17,12 +17,14 @@ sealed class TaxBasis {
     object StateTaxable : TaxBasis()
     object SocialSecurityWages : TaxBasis()
     object MedicareWages : TaxBasis()
+
     /**
      * Wages that are considered supplemental (bonuses, commissions, certain
      * non-regular payments) and may be subject to special flat supplemental
      * tax rules.
      */
     object SupplementalWages : TaxBasis()
+
     /**
      * Wages subject to FUTA (federal unemployment) taxation. For now this is
      * modeled as a separate basis so that FUTA rules can use their own wage
@@ -73,7 +75,7 @@ sealed class TaxRule {
     ) : TaxRule()
 }
 
- data class TaxBracket(
+data class TaxBracket(
     val upTo: Money?, // null = no upper bound
     val rate: Percent,
 )

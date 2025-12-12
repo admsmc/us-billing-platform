@@ -9,7 +9,8 @@ data class InternalAuthProperties(
      *
      * This is intentionally simple for dev; upgrade later to mTLS/JWT.
      */
-    var sharedSecret: String = "dev-internal-token",
+    // Blank by default so we don't commit a real-looking secret; set via env/secret manager.
+    var sharedSecret: String = "",
 
     /** Header name that carries the shared secret. */
     var headerName: String = "X-Internal-Token",

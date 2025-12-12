@@ -1,7 +1,7 @@
 package com.example.uspayroll.payroll.engine
 
-import com.example.uspayroll.shared.Money
 import com.example.uspayroll.payroll.model.*
+import com.example.uspayroll.shared.Money
 
 /** Result of tax computation for a single paycheck. */
 data class TaxComputationResult(
@@ -51,11 +51,7 @@ object TaxesCalculator {
         return Money(totalTaxCents, basisMoney.currency) to applications
     }
 
-    fun computeTaxes(
-        input: PaycheckInput,
-        bases: Map<TaxBasis, Money>,
-        basisComponents: Map<TaxBasis, Map<String, Money>>,
-    ): TaxComputationResult {
+    fun computeTaxes(input: PaycheckInput, bases: Map<TaxBasis, Money>, basisComponents: Map<TaxBasis, Map<String, Money>>): TaxComputationResult {
         val traceSteps = mutableListOf<TraceStep>()
         val employeeTaxes = mutableListOf<TaxLine>()
         val employerTaxes = mutableListOf<TaxLine>()
@@ -80,10 +76,7 @@ object TaxesCalculator {
             )
         }
 
-        fun shouldSkipFicaOrMedicare(
-            basis: TaxBasis,
-            basisMoney: Money,
-        ): Boolean {
+        fun shouldSkipFicaOrMedicare(basis: TaxBasis, basisMoney: Money): Boolean {
             val snapshot = input.employeeSnapshot
             val employmentType = snapshot.employmentType
 

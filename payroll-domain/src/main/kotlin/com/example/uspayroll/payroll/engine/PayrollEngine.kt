@@ -1,10 +1,10 @@
 package com.example.uspayroll.payroll.engine
 
-import com.example.uspayroll.shared.Money
 import com.example.uspayroll.payroll.model.*
-import com.example.uspayroll.payroll.model.config.EarningConfigRepository
 import com.example.uspayroll.payroll.model.config.DeductionConfigRepository
+import com.example.uspayroll.payroll.model.config.EarningConfigRepository
 import com.example.uspayroll.payroll.model.garnishment.SupportCapContext
+import com.example.uspayroll.shared.Money
 
 object PayrollEngine {
     fun version(): String = "0.0.1-SNAPSHOT"
@@ -62,7 +62,7 @@ object PayrollEngine {
         val checkYear = input.period.checkDate.year
         val ytdYearNote: TraceStep.Note? = if (ytdYear != checkYear) {
             if (strictYtdYear) {
-                throw IllegalArgumentException("YTD year ${ytdYear} does not match check year ${checkYear}")
+                throw IllegalArgumentException("YTD year $ytdYear does not match check year $checkYear")
             }
             TraceStep.Note("ytd_year_mismatch prior=$ytdYear checkYear=$checkYear")
         } else {

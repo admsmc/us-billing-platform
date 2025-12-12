@@ -19,21 +19,20 @@ data class PaySchedule(
     }
 
     companion object {
-        fun defaultFor(employerId: EmployerId, frequency: PayFrequency): PaySchedule =
-            PaySchedule(
-                employerId = employerId,
-                frequency = frequency,
-                periodsPerYear = periodsPerYearFor(frequency),
-            )
+        fun defaultFor(employerId: EmployerId, frequency: PayFrequency): PaySchedule = PaySchedule(
+            employerId = employerId,
+            frequency = frequency,
+            periodsPerYear = periodsPerYearFor(frequency),
+        )
 
         fun periodsPerYearFor(frequency: PayFrequency): Int = when (frequency) {
-            PayFrequency.WEEKLY       -> 52
-            PayFrequency.BIWEEKLY     -> 26
-            PayFrequency.FOUR_WEEKLY  -> 13
+            PayFrequency.WEEKLY -> 52
+            PayFrequency.BIWEEKLY -> 26
+            PayFrequency.FOUR_WEEKLY -> 13
             PayFrequency.SEMI_MONTHLY -> 24
-            PayFrequency.MONTHLY      -> 12
-            PayFrequency.QUARTERLY    -> 4
-            PayFrequency.ANNUAL       -> 1
+            PayFrequency.MONTHLY -> 12
+            PayFrequency.QUARTERLY -> 4
+            PayFrequency.ANNUAL -> 1
         }
     }
 }

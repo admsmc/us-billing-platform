@@ -1,10 +1,10 @@
 package com.example.uspayroll.payroll.model
 
+import com.example.uspayroll.payroll.model.garnishment.GarnishmentContext
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
-import com.example.uspayroll.shared.PaycheckId
 import com.example.uspayroll.shared.PayRunId
-import com.example.uspayroll.payroll.model.garnishment.GarnishmentContext
+import com.example.uspayroll.shared.PaycheckId
 
 // High-level input to the engine
 

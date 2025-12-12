@@ -7,9 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
+import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
-import org.testcontainers.containers.PostgreSQLContainer
 import kotlin.test.assertTrue
 
 /**
@@ -17,7 +17,7 @@ import kotlin.test.assertTrue
  * real Postgres instance and that Flyway successfully applies the tax_rule
  * schema migration.
  */
-@Testcontainers
+@Testcontainers(disabledWithoutDocker = true)
 @SpringBootTest
 class TaxServiceApplicationPostgresIntegrationTest {
 

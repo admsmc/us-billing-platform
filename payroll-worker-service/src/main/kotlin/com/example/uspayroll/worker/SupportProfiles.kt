@@ -65,10 +65,7 @@ object SupportProfiles {
      * employee's home state; in future we can refine this using HR-provided
      * support metadata.
      */
-    fun forEmployee(
-        homeState: String,
-        orders: List<GarnishmentOrder>,
-    ): SupportCapContext? {
+    fun forEmployee(homeState: String, orders: List<GarnishmentOrder>): SupportCapContext? {
         val profile = profilesByState[homeState] ?: return null
         val supportOrders = orders.filter { it.type == GarnishmentType.CHILD_SUPPORT }
         if (supportOrders.isEmpty()) return null
