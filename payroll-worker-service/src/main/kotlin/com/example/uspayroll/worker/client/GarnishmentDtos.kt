@@ -29,6 +29,8 @@ data class GarnishmentOrderDto(
     val protectedEarningsRule: ProtectedEarningsRule? = null,
     val arrearsBefore: Money? = null,
     val lifetimeCap: Money? = null,
+    val supportsOtherDependents: Boolean? = null,
+    val arrearsAtLeast12Weeks: Boolean? = null,
 )
 
 fun GarnishmentOrderDto.toDomain(): GarnishmentOrder =
@@ -46,6 +48,8 @@ fun GarnishmentOrderDto.toDomain(): GarnishmentOrder =
         protectedEarningsRule = protectedEarningsRule,
         arrearsBefore = arrearsBefore,
         lifetimeCap = lifetimeCap,
+        supportsOtherDependents = supportsOtherDependents,
+        arrearsAtLeast12Weeks = arrearsAtLeast12Weeks,
     )
 
 fun List<GarnishmentOrderDto>.toDomainContext(): GarnishmentContext =

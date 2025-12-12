@@ -218,6 +218,13 @@ class PayrollRunService(
             val effectiveOrders = if (engineEnabled) garnishmentOrders else emptyList()
             val garnishmentContext = GarnishmentContext(orders = effectiveOrders)
 
+            // Construct a SupportCapContext for employees with support orders,
+            // using support-specific metadata surfaced from HR where present.
+            val supportCapContext = SupportProfiles.forEmployee(
+                homeState = snapshot.homeState,
+                orders = effectiveOrders,
+            )
+
             val input = PaycheckInput(
                 paycheckId = com.example.uspayroll.shared.PaycheckId("chk-${payPeriod.id}-${eid.value}"),
                 payRunId = PayRunId("run-${payPeriod.id}"),
@@ -240,6 +247,7 @@ class PayrollRunService(
                 input = input,
                 earningConfig = earningConfigRepository,
                 deductionConfig = deductionConfigRepository,
+                supportCapContext = supportCapContext,
             )
 
             // Emit metrics for protected-earnings adjustments, if any.

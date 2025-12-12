@@ -32,5 +32,25 @@
       { "upToCents": 500000, "exemptCents": 120000, "filingStatus": "MARRIED" },
       { "upToCents": null, "exemptCents": 170000, "filingStatus": "MARRIED" }
     ]
+  },
+  {
+    "type": "STATE_TAX_LEVY",
+    "jurisdictionType": "STATE",
+    "jurisdictionCode": "NV",
+    "bands": [
+      // Simple illustrative NV levy: single open-ended band per filing status.
+      { "upToCents": null, "exemptCents": 50000, "filingStatus": "SINGLE" },
+      { "upToCents": null, "exemptCents": 80000, "filingStatus": "MARRIED" }
+    ]
+  },
+  {
+    "type": "STATE_TAX_LEVY",
+    "jurisdictionType": "STATE",
+    "jurisdictionCode": "NY",
+    "bands": [
+      // Simple illustrative NY levy: single open-ended band per filing status.
+      { "upToCents": null, "exemptCents": 70000, "filingStatus": "SINGLE" },
+      { "upToCents": null, "exemptCents": 100000, "filingStatus": "MARRIED" }
+    ]
   }
 ]

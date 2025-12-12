@@ -15,6 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
+import org.springframework.test.web.servlet.post
 import java.time.LocalDate
 import kotlin.test.assertEquals
 
@@ -35,6 +36,7 @@ class HrHttpIntegrationTest {
 
     @BeforeEach
     fun seedData() {
+        jdbcTemplate.update("DELETE FROM garnishment_order")
         jdbcTemplate.update("DELETE FROM employment_compensation")
         jdbcTemplate.update("DELETE FROM employee")
         jdbcTemplate.update("DELETE FROM pay_period")
@@ -92,6 +94,36 @@ class HrHttpIntegrationTest {
             LocalDate.of(2025, 1, 14),
             checkDate,
         )
+
+        // Seed a simple garnishment order that matches the generic
+        // CREDITOR_GARNISHMENT rule in garnishment-rules.json. This exercises
+        // the new order-backed path in GarnishmentHttpController.
+        jdbcTemplate.update(
+            """
+            INSERT INTO garnishment_order (
+              employer_id, employee_id, order_id,
+              type, issuing_jurisdiction_type, issuing_jurisdiction_code,
+              case_number, status,
+              served_date, end_date,
+              priority_class, sequence_within_class,
+              initial_arrears_cents, current_arrears_cents
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """.trimIndent(),
+            employerId.value,
+            employeeId.value,
+            "ORDER-HR-1",
+            "CREDITOR_GARNISHMENT",
+            null,
+            null,
+            "CASE-123",
+            "ACTIVE",
+            LocalDate.of(2024, 12, 1),
+            null,
+            0,
+            0,
+            10_000_00L,
+            9_000_00L,
+        )
     }
 
     @Test
@@ -118,36 +150,21 @@ class HrHttpIntegrationTest {
     }
 
     @Test
-    fun `GET garnishments endpoint returns shape compatible with worker-service DTO`() {
+    fun `GET garnishments endpoint returns order-backed data compatible with worker-service DTO`() {
         mockMvc.get("/employers/${employerId.value}/employees/${employeeId.value}/garnishments") {
             param("asOf", checkDate.toString())
         }.andExpect {
             status { isOk() }
             // Response is an array; validate first element fields that
-            // worker-service's GarnishmentOrderDto expects.
-            jsonPath("$[0].orderId") { isString() }
-            jsonPath("$[0].planId") { isString() }
+            // worker-service's GarnishmentOrderDto expects, now backed by
+            // garnishment_order plus rule config.
+            jsonPath("$[0].orderId") { value("ORDER-HR-1") }
+            jsonPath("$[0].planId") { value("GARN_PLAN_CREDITOR_GARNISHMENT") }
             jsonPath("$[0].type") { value("CREDITOR_GARNISHMENT") }
+            jsonPath("$[0].caseNumber") { value("CASE-123") }
             jsonPath("$[0].formula.type") { value("PercentOfDisposable") }
             jsonPath("$[0].formula.percent.value") { value(0.10) }
-            // Second rule should be CHILD_SUPPORT at 60% with a fixed floor.
-            jsonPath("$[1].type") { value("CHILD_SUPPORT") }
-            jsonPath("$[1].formula.type") { value("PercentOfDisposable") }
-            jsonPath("$[1].formula.percent.value") { value(0.60) }
-            jsonPath("$[1].protectedEarningsRule.type") { value("FixedFloor") }
-            jsonPath("$[1].protectedEarningsRule.amount.amount") { value(300000) }
-            // Third rule: generic federal tax levy backed by LevyWithBands.
-            jsonPath("$[2].type") { value("FEDERAL_TAX_LEVY") }
-            jsonPath("$[2].formula.type") { value("LevyWithBands") }
-            jsonPath("$[2].formula.bands[0].exemptCents") { value(50000) }
-            // Fourth rule: generic CA state tax levy backed by LevyWithBands.
-            jsonPath("$[3].type") { value("STATE_TAX_LEVY") }
-            jsonPath("$[3].formula.type") { value("LevyWithBands") }
-            jsonPath("$[3].formula.bands[0].exemptCents") { value(100000) }
-            // Fifth rule: generic federal student loan garnishment at 15% of disposable.
-            jsonPath("$[4].type") { value("STUDENT_LOAN") }
-            jsonPath("$[4].formula.type") { value("PercentOfDisposable") }
-            jsonPath("$[4].formula.percent.value") { value(0.15) }
+            jsonPath("$[0].arrearsBefore.amount") { value(900000) }
         }
     }
 
@@ -169,11 +186,163 @@ class HrHttpIntegrationTest {
     }
 
     @Test
+    fun `GET garnishments endpoint returns NY employer-specific child support rule`() {
+        val nyEmployerId = "EMP-GARN-NY"
+        mockMvc.get("/employers/$nyEmployerId/employees/${employeeId.value}/garnishments") {
+            param("asOf", checkDate.toString())
+        }.andExpect {
+            status { isOk() }
+            // First rule: NY child support with protected floor.
+            jsonPath("$[0].type") { value("CHILD_SUPPORT") }
+            jsonPath("$[0].formula.type") { value("PercentOfDisposable") }
+            jsonPath("$[0].formula.percent.value") { value(0.50) }
+            jsonPath("$[0].protectedEarningsRule.type") { value("FixedFloor") }
+            jsonPath("$[0].protectedEarningsRule.amount.amount") { value(250000) }
+            // Second rule: NY creditor garnishment at 15%.
+            jsonPath("$[1].type") { value("CREDITOR_GARNISHMENT") }
+            jsonPath("$[1].formula.type") { value("PercentOfDisposable") }
+            jsonPath("$[1].formula.percent.value") { value(0.15) }
+        }
+    }
+
+    @Test
     fun `GET garnishment ledger endpoint returns empty map before any withholdings`() {
         mockMvc.get("/employers/${employerId.value}/employees/${employeeId.value}/garnishments/ledger")
             .andExpect {
                 status { isOk() }
                 jsonPath("$") { isMap() }
             }
+    }
+
+    @Test
+    fun `POST withholdings then GET ledger returns persisted entry`() {
+        val body = """
+            {
+              "events": [
+                {
+                  "orderId": "ORDER-LEDGER-1",
+                  "paycheckId": "CHK-LEDGER-1",
+                  "payRunId": "RUN-LEDGER-1",
+                  "checkDate": "${checkDate}",
+                  "withheld": { "amount": 12345, "currency": "USD" },
+                  "netPay": { "amount": 500000, "currency": "USD" }
+                }
+              ]
+            }
+        """.trimIndent()
+
+        mockMvc.post("/employers/${employerId.value}/employees/${employeeId.value}/garnishments/withholdings") {
+            contentType = org.springframework.http.MediaType.APPLICATION_JSON
+            content = body
+        }.andExpect {
+            status { isOk() }
+        }
+
+        mockMvc.get("/employers/${employerId.value}/employees/${employeeId.value}/garnishments/ledger")
+            .andExpect {
+                status { isOk() }
+                jsonPath("$.['ORDER-LEDGER-1'].orderId") { value("ORDER-LEDGER-1") }
+                jsonPath("$.['ORDER-LEDGER-1'].totalWithheld.amount") { value(12345) }
+                jsonPath("$.['ORDER-LEDGER-1'].lastPaycheckId") { value("CHK-LEDGER-1") }
+            }
+    }
+
+    @Test
+    fun `arrears are reconciled from ledger into orders and completed orders drop from GET garnishments`() {
+        val reconEmployerId = EmployerId("EMP-HR-RECON")
+        val reconEmployeeId = EmployeeId("EE-HR-RECON-1")
+
+        // Seed an order with an initial arrears balance and ACTIVE status.
+        jdbcTemplate.update(
+            """
+            INSERT INTO garnishment_order (
+              employer_id, employee_id, order_id,
+              type, issuing_jurisdiction_type, issuing_jurisdiction_code,
+              case_number, status,
+              served_date, end_date,
+              priority_class, sequence_within_class,
+              initial_arrears_cents, current_arrears_cents
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """.trimIndent(),
+            reconEmployerId.value,
+            reconEmployeeId.value,
+            "ORDER-RECON-1",
+            "CREDITOR_GARNISHMENT",
+            null,
+            null,
+            "CASE-RECON-1",
+            "ACTIVE",
+            LocalDate.of(2024, 12, 1),
+            null,
+            0,
+            0,
+            10_000_00L,
+            10_000_00L,
+        )
+
+        // First withholding of 4,000.00 reduces remaining arrears to 6,000.00
+        val firstBody = """
+            {
+              "events": [
+                {
+                  "orderId": "ORDER-RECON-1",
+                  "paycheckId": "CHK-RECON-1",
+                  "payRunId": "RUN-RECON-1",
+                  "checkDate": "${checkDate}",
+                  "withheld": { "amount": 4_000_00, "currency": "USD" },
+                  "netPay": { "amount": 10_000_00, "currency": "USD" }
+                }
+              ]
+            }
+        """.trimIndent()
+
+        mockMvc.post("/employers/${reconEmployerId.value}/employees/${reconEmployeeId.value}/garnishments/withholdings") {
+            contentType = org.springframework.http.MediaType.APPLICATION_JSON
+            content = firstBody
+        }.andExpect {
+            status { isOk() }
+        }
+
+        // Order should still be ACTIVE and appear in GET /garnishments with
+        // arrearsBefore reflecting the updated remaining balance of 6,000.00.
+        mockMvc.get("/employers/${reconEmployerId.value}/employees/${reconEmployeeId.value}/garnishments") {
+            param("asOf", checkDate.toString())
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$[0].orderId") { value("ORDER-RECON-1") }
+            jsonPath("$[0].arrearsBefore.amount") { value(6_000_00) }
+        }
+
+        // Second withholding of 6,000.00 pays the order in full.
+        val secondBody = """
+            {
+              "events": [
+                {
+                  "orderId": "ORDER-RECON-1",
+                  "paycheckId": "CHK-RECON-2",
+                  "payRunId": "RUN-RECON-2",
+                  "checkDate": "${checkDate}",
+                  "withheld": { "amount": 6_000_00, "currency": "USD" },
+                  "netPay": { "amount": 10_000_00, "currency": "USD" }
+                }
+              ]
+            }
+        """.trimIndent()
+
+        mockMvc.post("/employers/${reconEmployerId.value}/employees/${reconEmployeeId.value}/garnishments/withholdings") {
+            contentType = org.springframework.http.MediaType.APPLICATION_JSON
+            content = secondBody
+        }.andExpect {
+            status { isOk() }
+        }
+
+        // After reconciliation, the order should be marked COMPLETED and
+        // excluded from the active /garnishments view.
+        mockMvc.get("/employers/${reconEmployerId.value}/employees/${reconEmployeeId.value}/garnishments") {
+            param("asOf", checkDate.toString())
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$") { isEmpty() }
+        }
     }
 }

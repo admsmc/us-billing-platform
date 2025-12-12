@@ -1,0 +1,16 @@
+# Gradle
+.gradle/
+**/build/
+
+# IntelliJ / Kotlin
+.idea/
+*.iml
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+
+# Local env
+.env

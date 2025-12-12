@@ -10,6 +10,24 @@
   },
   {
     "employerId": null,
+    "type": "CREDITOR_GARNISHMENT",
+    "jurisdictionType": "STATE",
+    "jurisdictionCode": "NV",
+    "percentOfDisposable": 0.10,
+    "protectedFloorCents": null,
+    "description": "Generic NV creditor garnishment at 10% of disposable income"
+  },
+  {
+    "employerId": null,
+    "type": "CREDITOR_GARNISHMENT",
+    "jurisdictionType": "STATE",
+    "jurisdictionCode": "NY",
+    "percentOfDisposable": 0.10,
+    "protectedFloorCents": null,
+    "description": "Generic NY creditor garnishment at 10% of disposable income"
+  },
+  {
+    "employerId": null,
     "type": "CHILD_SUPPORT",
     "jurisdictionType": "STATE",
     "jurisdictionCode": "CA",
@@ -23,8 +41,8 @@
     "jurisdictionType": "FEDERAL",
     "jurisdictionCode": "US",
     "percentOfDisposable": 1.0,
-    "protectedFloorCents": 50000,
-    "description": "Example federal tax levy: take disposable income above an illustrative $500 per-check exempt floor (not a full Pub. 1494 model)",
+    "protectedFloorCents": null,
+    "description": "Example federal tax levy: levy with exemption bands (Pub. 1494-style modeling stub)",
     "formulaType": "LEVY_WITH_BANDS"
   },
   {
@@ -33,8 +51,28 @@
     "jurisdictionType": "STATE",
     "jurisdictionCode": "CA",
     "percentOfDisposable": 0.25,
-    "protectedFloorCents": 100000,
-    "description": "Example CA state tax levy: 25% of disposable income above an illustrative $1,000 per-check exempt floor",
+    "protectedFloorCents": null,
+    "description": "Example CA state tax levy: levy with exemption bands",
+    "formulaType": "LEVY_WITH_BANDS"
+  },
+  {
+    "employerId": null,
+    "type": "STATE_TAX_LEVY",
+    "jurisdictionType": "STATE",
+    "jurisdictionCode": "NV",
+    "percentOfDisposable": 0.25,
+    "protectedFloorCents": null,
+    "description": "Example NV state tax levy: levy with exemption bands",
+    "formulaType": "LEVY_WITH_BANDS"
+  },
+  {
+    "employerId": null,
+    "type": "STATE_TAX_LEVY",
+    "jurisdictionType": "STATE",
+    "jurisdictionCode": "NY",
+    "percentOfDisposable": 0.25,
+    "protectedFloorCents": null,
+    "description": "Example NY state tax levy: levy with exemption bands",
     "formulaType": "LEVY_WITH_BANDS"
   },
   {

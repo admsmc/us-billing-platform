@@ -24,6 +24,7 @@ import org.springframework.test.context.ContextConfiguration
 import java.time.LocalDate
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.test.assertNotNull
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ContextConfiguration(initializers = [HrClientIntegrationTest.Companion.Initializer::class])
@@ -297,5 +298,169 @@ class HrClientIntegrationTest {
             ?.count() ?: 0.0
         assertTrue(afterProtected > beforeProtected,
             "Expected protected_floor_applied metric to increase for employer ${employerId.value}")
+    }
+
+    @Test
+    fun `hr-backed flow continues when garnishments endpoint is unavailable`() {
+        val employerId = EmployerId("EMP-HR-GARN-UNAVAILABLE")
+        val payPeriodId = "2025-01-BW1"
+        val checkDate = LocalDate.of(2025, 1, 15)
+
+        val payPeriod = PayPeriod(
+            id = payPeriodId,
+            employerId = employerId,
+            dateRange = LocalDateRange(
+                startInclusive = LocalDate.of(2025, 1, 1),
+                endInclusive = LocalDate.of(2025, 1, 14),
+            ),
+            checkDate = checkDate,
+            frequency = PayFrequency.BIWEEKLY,
+        )
+
+        val employeeId = EmployeeId("EE-HR-GARN-UNAVAILABLE-1")
+        val snapshot = EmployeeSnapshot(
+            employerId = employerId,
+            employeeId = employeeId,
+            homeState = "CA",
+            workState = "CA",
+            filingStatus = FilingStatus.SINGLE,
+            employmentType = EmploymentType.REGULAR,
+            baseCompensation = BaseCompensation.Salaried(
+                annualSalary = Money(52_000_00L),
+                frequency = PayFrequency.BIWEEKLY,
+            ),
+        )
+
+        // Enqueue responses for pay period and employee snapshot, followed by
+        // repeated 500 errors for the garnishments endpoint. The HttpHrClient
+        // should log and fall back to an empty garnishment list rather than
+        // failing the entire run.
+        server.enqueue(
+            MockResponse()
+                .setResponseCode(200)
+                .setHeader("Content-Type", "application/json")
+                .setBody(objectMapper.writeValueAsString(payPeriod) as String),
+        )
+        server.enqueue(
+            MockResponse()
+                .setResponseCode(200)
+                .setHeader("Content-Type", "application/json")
+                .setBody(objectMapper.writeValueAsString(snapshot) as String),
+        )
+        repeat(3) {
+            server.enqueue(
+                MockResponse()
+                    .setResponseCode(500)
+                    .setBody("Internal Server Error"),
+            )
+        }
+
+        val results = payrollRunService.runHrBackedPayForPeriod(
+            employerId = employerId,
+            payPeriodId = payPeriodId,
+            employeeIds = listOf(employeeId),
+        )
+
+        assertEquals(1, results.size)
+        val paycheck = results.first()
+
+        // Paycheck should still have gross/net amounts even though garnishment
+        // orders could not be fetched.
+        assertEquals(employeeId, paycheck.employeeId)
+        assertTrue(paycheck.gross.amount > 0L)
+        assertTrue(paycheck.net.amount > 0L)
+
+        // Ensure that no withholdings callback was issued, since there were
+        // no effective orders after the failure.
+        val first = server.takeRequest() // pay period
+        val second = server.takeRequest() // employee snapshot
+        val third = server.takeRequest() // failed garnishments call
+        assertNotNull(first)
+        assertNotNull(second)
+        assertNotNull(third)
+    }
+
+    @Test
+    fun `hr-backed flow does not fail when garnishment withholdings callback fails`() {
+        val employerId = EmployerId("EMP-HR-GARN-CALLBACK-FAIL")
+        val payPeriodId = "2025-01-BW1"
+        val checkDate = LocalDate.of(2025, 1, 15)
+
+        val payPeriod = PayPeriod(
+            id = payPeriodId,
+            employerId = employerId,
+            dateRange = LocalDateRange(
+                startInclusive = LocalDate.of(2025, 1, 1),
+                endInclusive = LocalDate.of(2025, 1, 14),
+            ),
+            checkDate = checkDate,
+            frequency = PayFrequency.BIWEEKLY,
+        )
+
+        val employeeId = EmployeeId("EE-HR-GARN-CALLBACK-FAIL-1")
+        val snapshot = EmployeeSnapshot(
+            employerId = employerId,
+            employeeId = employeeId,
+            homeState = "CA",
+            workState = "CA",
+            filingStatus = FilingStatus.SINGLE,
+            employmentType = EmploymentType.REGULAR,
+            baseCompensation = BaseCompensation.Salaried(
+                annualSalary = Money(52_000_00L),
+                frequency = PayFrequency.BIWEEKLY,
+            ),
+        )
+
+        val garnDto = com.example.uspayroll.worker.client.GarnishmentOrderDto(
+            orderId = "ORDER-CB-FAIL-1",
+            planId = "GARN_PLAN_CB_FAIL",
+            type = GarnishmentType.CREDITOR_GARNISHMENT,
+            formula = GarnishmentFormula.PercentOfDisposable(Percent(0.10)),
+        )
+
+        // Normal responses for pay period, snapshot, and garnishments, followed
+        // by a 500 error for the withholdings callback. The payroll run should
+        // still complete successfully.
+        server.enqueue(
+            MockResponse()
+                .setResponseCode(200)
+                .setHeader("Content-Type", "application/json")
+                .setBody(objectMapper.writeValueAsString(payPeriod) as String),
+        )
+        server.enqueue(
+            MockResponse()
+                .setResponseCode(200)
+                .setHeader("Content-Type", "application/json")
+                .setBody(objectMapper.writeValueAsString(snapshot) as String),
+        )
+        server.enqueue(
+            MockResponse()
+                .setResponseCode(200)
+                .setHeader("Content-Type", "application/json")
+                .setBody(objectMapper.writeValueAsString(listOf(garnDto)) as String),
+        )
+        // Withholdings callback fails even after retries.
+        repeat(3) {
+            server.enqueue(
+                MockResponse()
+                    .setResponseCode(500)
+                    .setBody("Internal Server Error"),
+            )
+        }
+
+        val results = payrollRunService.runHrBackedPayForPeriod(
+            employerId = employerId,
+            payPeriodId = payPeriodId,
+            employeeIds = listOf(employeeId),
+        )
+
+        assertEquals(1, results.size)
+        val paycheck = results.first()
+
+        // We still expect a garnishment deduction in the paycheck; the failure
+        // is isolated to the callback into HR.
+        val garnishmentsByCode = paycheck.deductions.associateBy { it.code.value }
+        val garn = garnishmentsByCode["ORDER-CB-FAIL-1"]
+        assertNotNull(garn, "Expected garnishment for ORDER-CB-FAIL-1 to be present in deductions")
     }
 }

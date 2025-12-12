@@ -1,0 +1,240 @@
+package com.example.uspayroll.payments.persistence
+
+import com.example.uspayroll.messaging.events.payments.PaycheckPaymentLifecycleStatus
+import org.springframework.dao.DataIntegrityViolationException
+import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.stereotype.Repository
+import org.springframework.transaction.annotation.Transactional
+import java.sql.Timestamp
+import java.time.Duration
+import java.time.Instant
+
+@Repository
+class PaycheckPaymentRepository(
+    private val jdbcTemplate: JdbcTemplate,
+) {
+    data class PaymentRow(
+        val employerId: String,
+        val paymentId: String,
+        val paycheckId: String,
+        val payRunId: String,
+        val employeeId: String,
+        val payPeriodId: String,
+        val currency: String,
+        val netCents: Long,
+        val status: PaycheckPaymentLifecycleStatus,
+        val attempts: Int,
+        val batchId: String?,
+    )
+
+    fun findByPaycheck(employerId: String, paycheckId: String): PaymentRow? =
+        jdbcTemplate.query(
+            """
+            SELECT employer_id, payment_id, paycheck_id, pay_run_id, employee_id, pay_period_id, currency, net_cents, status, attempts, batch_id
+            FROM paycheck_payment
+            WHERE employer_id = ? AND paycheck_id = ?
+            """.trimIndent(),
+            { rs, _ ->
+                PaymentRow(
+                    employerId = rs.getString("employer_id"),
+                    paymentId = rs.getString("payment_id"),
+                    paycheckId = rs.getString("paycheck_id"),
+                    payRunId = rs.getString("pay_run_id"),
+                    employeeId = rs.getString("employee_id"),
+                    payPeriodId = rs.getString("pay_period_id"),
+                    currency = rs.getString("currency"),
+                    netCents = rs.getLong("net_cents"),
+                    status = PaycheckPaymentLifecycleStatus.valueOf(rs.getString("status")),
+                    attempts = rs.getInt("attempts"),
+                    batchId = rs.getString("batch_id"),
+                )
+            },
+            employerId,
+            paycheckId,
+        ).firstOrNull()
+
+    fun insertIfAbsent(
+        employerId: String,
+        paymentId: String,
+        paycheckId: String,
+        payRunId: String,
+        employeeId: String,
+        payPeriodId: String,
+        currency: String,
+        netCents: Long,
+        batchId: String?,
+        now: Instant = Instant.now(),
+    ): Boolean {
+        return try {
+            val inserted = jdbcTemplate.update(
+                """
+                INSERT INTO paycheck_payment (
+                  employer_id, payment_id, paycheck_id,
+                  pay_run_id, employee_id, pay_period_id,
+                  currency, net_cents,
+                  status, attempts,
+                  next_attempt_at, last_error,
+                  locked_by, locked_at,
+                  batch_id,
+                  created_at, submitted_at, settled_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NULL, NULL, NULL, NULL, ?, ?, NULL, NULL, ?)
+                """.trimIndent(),
+                employerId,
+                paymentId,
+                paycheckId,
+                payRunId,
+                employeeId,
+                payPeriodId,
+                currency,
+                netCents,
+                PaycheckPaymentLifecycleStatus.CREATED.name,
+                batchId,
+                Timestamp.from(now),
+                Timestamp.from(now),
+            )
+            inserted == 1
+        } catch (_: DataIntegrityViolationException) {
+            false
+        }
+    }
+
+    fun updateStatus(
+        employerId: String,
+        paymentId: String,
+        status: PaycheckPaymentLifecycleStatus,
+        error: String? = null,
+        nextAttemptAt: Instant? = null,
+        now: Instant = Instant.now(),
+    ): Int {
+        val truncated = error?.let { if (it.length <= 2000) it else it.take(2000) }
+
+        return jdbcTemplate.update(
+            """
+            UPDATE paycheck_payment
+            SET status = ?,
+                last_error = ?,
+                next_attempt_at = ?,
+                attempts = CASE WHEN ? = 'FAILED' THEN attempts + 1 ELSE attempts END,
+                locked_by = CASE WHEN ? IN ('SETTLED','FAILED') THEN NULL ELSE locked_by END,
+                locked_at = CASE WHEN ? IN ('SETTLED','FAILED') THEN NULL ELSE locked_at END,
+                submitted_at = CASE WHEN ? = 'SUBMITTED' THEN ? ELSE submitted_at END,
+                settled_at = CASE WHEN ? = 'SETTLED' THEN ? ELSE settled_at END,
+                updated_at = ?
+            WHERE employer_id = ? AND payment_id = ?
+            """.trimIndent(),
+            status.name,
+            truncated,
+            nextAttemptAt?.let { Timestamp.from(it) },
+            status.name,
+            status.name,
+            status.name,
+            status.name,
+            Timestamp.from(now),
+            status.name,
+            Timestamp.from(now),
+            Timestamp.from(now),
+            employerId,
+            paymentId,
+        )
+    }
+
+    /**
+     * Claim CREATED payments for processing (CREATED -> SUBMITTED) in a single transaction.
+     */
+    @Transactional
+    fun claimCreatedBatch(
+        limit: Int,
+        lockOwner: String,
+        lockTtl: Duration,
+        now: Instant = Instant.now(),
+    ): List<PaymentRow> {
+        val effectiveLimit = limit.coerceIn(1, 500)
+        val nowTs = Timestamp.from(now)
+        val cutoffTs = Timestamp.from(now.minus(lockTtl))
+
+        val rows = jdbcTemplate.query(
+            """
+            SELECT employer_id, payment_id, paycheck_id, pay_run_id, employee_id, pay_period_id, currency, net_cents, status, attempts, batch_id
+            FROM paycheck_payment
+            WHERE status = 'CREATED'
+              AND (next_attempt_at IS NULL OR next_attempt_at <= ?)
+              AND (locked_at IS NULL OR locked_at < ?)
+            ORDER BY created_at
+            LIMIT ?
+            FOR UPDATE
+            """.trimIndent(),
+            { rs, _ ->
+                PaymentRow(
+                    employerId = rs.getString("employer_id"),
+                    paymentId = rs.getString("payment_id"),
+                    paycheckId = rs.getString("paycheck_id"),
+                    payRunId = rs.getString("pay_run_id"),
+                    employeeId = rs.getString("employee_id"),
+                    payPeriodId = rs.getString("pay_period_id"),
+                    currency = rs.getString("currency"),
+                    netCents = rs.getLong("net_cents"),
+                    status = PaycheckPaymentLifecycleStatus.valueOf(rs.getString("status")),
+                    attempts = rs.getInt("attempts"),
+                    batchId = rs.getString("batch_id"),
+                )
+            },
+            nowTs,
+            cutoffTs,
+            effectiveLimit,
+        )
+
+        if (rows.isEmpty()) return emptyList()
+
+        val ids = rows.map { it.paymentId }
+        val placeholders = ids.joinToString(",") { "?" }
+        val args: MutableList<Any> = mutableListOf(
+            PaycheckPaymentLifecycleStatus.SUBMITTED.name,
+            lockOwner,
+            nowTs,
+            nowTs,
+        )
+        args.addAll(ids)
+
+        jdbcTemplate.update(
+            """
+            UPDATE paycheck_payment
+            SET status = ?,
+                locked_by = ?,
+                locked_at = ?,
+                submitted_at = ?,
+                updated_at = ?
+            WHERE payment_id IN ($placeholders)
+            """.trimIndent(),
+            *args.toTypedArray(),
+        )
+
+        return rows
+    }
+
+    fun listByPayRun(employerId: String, payRunId: String): List<PaymentRow> =
+        jdbcTemplate.query(
+            """
+            SELECT employer_id, payment_id, paycheck_id, pay_run_id, employee_id, pay_period_id, currency, net_cents, status, attempts, batch_id
+            FROM paycheck_payment
+            WHERE employer_id = ? AND pay_run_id = ?
+            ORDER BY employee_id
+            """.trimIndent(),
+            { rs, _ ->
+                PaymentRow(
+                    employerId = rs.getString("employer_id"),
+                    paymentId = rs.getString("payment_id"),
+                    paycheckId = rs.getString("paycheck_id"),
+                    payRunId = rs.getString("pay_run_id"),
+                    employeeId = rs.getString("employee_id"),
+                    payPeriodId = rs.getString("pay_period_id"),
+                    currency = rs.getString("currency"),
+                    netCents = rs.getLong("net_cents"),
+                    status = PaycheckPaymentLifecycleStatus.valueOf(rs.getString("status")),
+                    attempts = rs.getInt("attempts"),
+                    batchId = rs.getString("batch_id"),
+                )
+            },
+            employerId,
+            payRunId,
+        )
+}

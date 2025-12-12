@@ -1,11 +1,11 @@
 package com.example.uspayroll.hr.http
 
 import com.example.uspayroll.hr.db.GarnishmentRuleConfigRepository
-import com.example.uspayroll.payroll.model.Percent
+import com.example.uspayroll.hr.garnishment.GarnishmentOrderRepository
 import com.example.uspayroll.payroll.model.TaxJurisdiction
-import com.example.uspayroll.payroll.model.TaxJurisdictionType
 import com.example.uspayroll.payroll.model.garnishment.GarnishmentFormula
 import com.example.uspayroll.payroll.model.garnishment.GarnishmentType
+import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.shared.Money
 import org.springframework.format.annotation.DateTimeFormat
@@ -17,14 +17,16 @@ import org.springframework.web.bind.annotation.RestController
 import java.time.LocalDate
 
 /**
- * Minimal controller that exposes a /garnishments endpoint compatible with the
- * worker-service HttpHrClient expectations. Phase 4 wires this to a simple
- * in-memory GarnishmentRuleConfigRepository rather than hard-coding values.
+ * Controller that exposes a /garnishments endpoint compatible with the
+ * worker-service HttpHrClient expectations. Orders are sourced from the
+ * HR database (garnishment_order) and combined with statutory rule
+ * configuration to produce full GarnishmentOrderResponse objects.
  */
 @RestController
 @RequestMapping("/employers/{employerId}")
 class GarnishmentHttpController(
     private val ruleConfigRepository: GarnishmentRuleConfigRepository,
+    private val orderRepository: GarnishmentOrderRepository,
 ) {
 
     @GetMapping("/employees/{employeeId}/garnishments")
@@ -33,27 +35,72 @@ class GarnishmentHttpController(
         @PathVariable employeeId: String,
         @RequestParam("asOf") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) asOf: LocalDate,
     ): List<GarnishmentOrderResponse> {
-        val rules = ruleConfigRepository.findRulesForEmployer(EmployerId(employerId))
-        if (rules.isEmpty()) return emptyList()
+        val employer = EmployerId(employerId)
+        val employee = EmployeeId(employeeId)
 
-        // For now, synthesize a single order per rule. In a real
-        // implementation, rules would be combined with per-employee order
-        // records (case numbers, arrears, etc.).
-        return rules.mapIndexed { index, rule ->
+        val activeOrders = orderRepository.findActiveOrdersForEmployee(employer, employee, asOf)
+        val rules = ruleConfigRepository.findRulesForEmployer(employer)
+
+        // Legacy fallback: if there are no persisted orders for this employee,
+        // synthesize one order per rule.
+        if (activeOrders.isEmpty()) {
+            if (rules.isEmpty()) return emptyList()
+
+            return rules.mapIndexed { index, rule ->
+                GarnishmentOrderResponse(
+                    orderId = "ORDER-RULE-${index + 1}",
+                    planId = "GARN_PLAN_${rule.type.name}",
+                    type = rule.type,
+                    issuingJurisdiction = rule.jurisdiction,
+                    caseNumber = null,
+                    servedDate = asOf.minusDays(30),
+                    endDate = null,
+                    priorityClass = 0,
+                    sequenceWithinClass = 0,
+                    formula = rule.formula,
+                    protectedEarningsRule = rule.protectedEarningsRule,
+                    arrearsBefore = Money(0L),
+                    lifetimeCap = null,
+                    supportsOtherDependents = null,
+                    arrearsAtLeast12Weeks = null,
+                )
+            }
+        }
+
+        val rulesByKey = rules.groupBy { it.type to it.jurisdiction }
+
+        return activeOrders.mapNotNull { orderRow ->
+            val matchingRule = rulesByKey[orderRow.type to orderRow.issuingJurisdiction]
+                ?.firstOrNull()
+                ?: rulesByKey[orderRow.type to null]?.firstOrNull()
+
+            // Prefer per-order overrides when present; fall back to rule-derived
+            // configuration for backward compatibility.
+            val formula = orderRow.formulaOverride ?: matchingRule?.formula
+            val protectedRule = orderRow.protectedEarningsRuleOverride ?: matchingRule?.protectedEarningsRule
+
+            if (formula == null) {
+                // If we cannot determine a formula, skip this order rather than
+                // returning a partially populated response.
+                return@mapNotNull null
+            }
+
             GarnishmentOrderResponse(
-                orderId = "ORDER-RULE-${index + 1}",
-                planId = "GARN_PLAN_${rule.type.name}",
-                type = rule.type,
-                issuingJurisdiction = rule.jurisdiction,
-                caseNumber = null,
-                servedDate = asOf.minusDays(30),
-                endDate = null,
-                priorityClass = 0,
-                sequenceWithinClass = 0,
-                formula = rule.formula,
-                protectedEarningsRule = rule.protectedEarningsRule,
-                arrearsBefore = Money(0L),
+                orderId = orderRow.orderId,
+                planId = "GARN_PLAN_${orderRow.type.name}",
+                type = orderRow.type,
+                issuingJurisdiction = orderRow.issuingJurisdiction ?: matchingRule?.jurisdiction,
+                caseNumber = orderRow.caseNumber,
+                servedDate = orderRow.servedDate,
+                endDate = orderRow.endDate,
+                priorityClass = orderRow.priorityClass,
+                sequenceWithinClass = orderRow.sequenceWithinClass,
+                formula = formula,
+                protectedEarningsRule = protectedRule,
+                arrearsBefore = orderRow.currentArrears ?: orderRow.initialArrears,
                 lifetimeCap = null,
+                supportsOtherDependents = orderRow.supportsOtherDependents,
+                arrearsAtLeast12Weeks = orderRow.arrearsAtLeast12Weeks,
             )
         }
     }
@@ -79,4 +126,6 @@ data class GarnishmentOrderResponse(
     val protectedEarningsRule: com.example.uspayroll.payroll.model.garnishment.ProtectedEarningsRule? = null,
     val arrearsBefore: Money? = null,
     val lifetimeCap: Money? = null,
+    val supportsOtherDependents: Boolean? = null,
+    val arrearsAtLeast12Weeks: Boolean? = null,
 )

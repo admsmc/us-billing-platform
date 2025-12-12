@@ -29,6 +29,7 @@ dependencies {
     testImplementation(kotlin("test"))
     testImplementation("com.h2database:h2:2.3.232")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 }
 
 tasks.withType<JavaCompile> {

@@ -4,6 +4,7 @@ import com.example.uspayroll.shared.Money
 import com.example.uspayroll.payroll.model.*
 import com.example.uspayroll.payroll.model.config.EarningConfigRepository
 import com.example.uspayroll.payroll.model.config.DeductionConfigRepository
+import com.example.uspayroll.payroll.model.garnishment.SupportCapContext
 
 object PayrollEngine {
     fun version(): String = "0.0.1-SNAPSHOT"
@@ -21,6 +22,7 @@ object PayrollEngine {
         overtimePolicy: OvertimePolicy = OvertimePolicy.Default,
         employerContributions: List<EmployerContributionLine> = emptyList(),
         strictYtdYear: Boolean = false,
+        supportCapContext: SupportCapContext? = null,
     ): PaycheckResult {
         val baseEarnings = EarningsCalculator.computeEarnings(input, earningConfig, overtimePolicy)
         val earnings = baseEarnings.toMutableList()
@@ -138,6 +140,7 @@ object PayrollEngine {
             employeeTaxes = taxResult.employeeTaxes,
             preTaxDeductions = deductionResult.preTaxDeductions,
             plansByCode = deductionResult.plansByCode,
+            supportCapContext = supportCapContext,
         )
 
         val allDeductions = deductionResult.preTaxDeductions +

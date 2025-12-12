@@ -1,0 +1,197 @@
+package com.example.uspayroll.orchestrator.payments
+
+import com.example.uspayroll.messaging.events.payments.PaycheckPaymentLifecycleStatus
+import com.example.uspayroll.messaging.events.payments.PaycheckPaymentStatusChangedEvent
+import com.example.uspayroll.orchestrator.http.PayRunController
+import com.example.uspayroll.orchestrator.payrun.model.PaymentStatus
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.web.client.TestRestTemplate
+import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
+import org.springframework.http.RequestEntity
+import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.test.annotation.DirtiesContext
+import java.net.URI
+import java.time.Instant
+
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+class PaymentStatusProjectionIT(
+    private val rest: TestRestTemplate,
+    private val jdbcTemplate: JdbcTemplate,
+    private val projectionService: PaymentStatusProjectionService,
+) {
+    @Test
+    fun `settled payment event marks paycheck and payrun paid`() {
+        val employerId = "emp-1"
+
+        rest.exchange(
+            RequestEntity.post(URI.create("/employers/$employerId/payruns/finalize"))
+                .body(
+                    PayRunController.StartFinalizeRequest(
+                        payPeriodId = "pp-1",
+                        employeeIds = listOf("e-1"),
+                        requestedPayRunId = "run-proj-1",
+                    )
+                ),
+            PayRunController.StartFinalizeResponse::class.java,
+        )
+
+        val execHeaders = HttpHeaders().apply { set("X-Internal-Token", "dev-internal-token") }
+        rest.exchange(
+            RequestEntity.post(URI.create("/employers/$employerId/payruns/internal/run-proj-1/execute?batchSize=10"))
+                .headers(execHeaders)
+                .build(),
+            Map::class.java,
+        )
+
+        val approve = rest.exchange(
+            RequestEntity.post(URI.create("/employers/$employerId/payruns/run-proj-1/approve"))
+                .build(),
+            Map::class.java,
+        )
+        assertEquals(HttpStatus.OK, approve.statusCode)
+
+        val initiate = rest.exchange(
+            RequestEntity.post(URI.create("/employers/$employerId/payruns/run-proj-1/payments/initiate"))
+                .build(),
+            Map::class.java,
+        )
+        assertEquals(HttpStatus.OK, initiate.statusCode)
+
+        val paycheckId = jdbcTemplate.queryForObject(
+            """
+            SELECT paycheck_id
+            FROM pay_run_item
+            WHERE employer_id = ? AND pay_run_id = ? AND employee_id = ?
+            """.trimIndent(),
+            String::class.java,
+            employerId,
+            "run-proj-1",
+            "e-1",
+        )!!
+
+        // Apply event as if emitted by payments-service.
+        projectionService.applyPaymentStatusChanged(
+            PaycheckPaymentStatusChangedEvent(
+                eventId = "paycheck-payment-status-changed:$employerId:$paycheckId:SETTLED",
+                occurredAt = Instant.now(),
+                employerId = employerId,
+                payRunId = "run-proj-1",
+                paycheckId = paycheckId,
+                paymentId = "pmt-$paycheckId",
+                status = PaycheckPaymentLifecycleStatus.SETTLED,
+            )
+        )
+
+        val paycheckStatus = jdbcTemplate.queryForObject(
+            "SELECT payment_status FROM paycheck WHERE employer_id = ? AND paycheck_id = ?",
+            String::class.java,
+            employerId,
+            paycheckId,
+        )
+        assertEquals(PaymentStatus.PAID.name, paycheckStatus)
+
+        val payRunStatus = jdbcTemplate.queryForObject(
+            "SELECT payment_status FROM pay_run WHERE employer_id = ? AND pay_run_id = ?",
+            String::class.java,
+            employerId,
+            "run-proj-1",
+        )
+        assertEquals(PaymentStatus.PAID.name, payRunStatus)
+    }
+
+    @Test
+    fun `mixed settled and failed events mark payrun partially paid`() {
+        val employerId = "emp-1"
+
+        rest.exchange(
+            RequestEntity.post(URI.create("/employers/$employerId/payruns/finalize"))
+                .body(
+                    PayRunController.StartFinalizeRequest(
+                        payPeriodId = "pp-1",
+                        employeeIds = listOf("e-1", "e-2"),
+                        requestedPayRunId = "run-proj-2",
+                    )
+                ),
+            PayRunController.StartFinalizeResponse::class.java,
+        )
+
+        val execHeaders = HttpHeaders().apply { set("X-Internal-Token", "dev-internal-token") }
+        rest.exchange(
+            RequestEntity.post(URI.create("/employers/$employerId/payruns/internal/run-proj-2/execute?batchSize=10"))
+                .headers(execHeaders)
+                .build(),
+            Map::class.java,
+        )
+
+        rest.exchange(
+            RequestEntity.post(URI.create("/employers/$employerId/payruns/run-proj-2/approve"))
+                .build(),
+            Map::class.java,
+        )
+
+        rest.exchange(
+            RequestEntity.post(URI.create("/employers/$employerId/payruns/run-proj-2/payments/initiate"))
+                .build(),
+            Map::class.java,
+        )
+
+        val paycheck1 = jdbcTemplate.queryForObject(
+            """
+            SELECT paycheck_id FROM pay_run_item
+            WHERE employer_id = ? AND pay_run_id = ? AND employee_id = ?
+            """.trimIndent(),
+            String::class.java,
+            employerId,
+            "run-proj-2",
+            "e-1",
+        )!!
+
+        val paycheck2 = jdbcTemplate.queryForObject(
+            """
+            SELECT paycheck_id FROM pay_run_item
+            WHERE employer_id = ? AND pay_run_id = ? AND employee_id = ?
+            """.trimIndent(),
+            String::class.java,
+            employerId,
+            "run-proj-2",
+            "e-2",
+        )!!
+
+        projectionService.applyPaymentStatusChanged(
+            PaycheckPaymentStatusChangedEvent(
+                eventId = "paycheck-payment-status-changed:$employerId:$paycheck1:SETTLED",
+                occurredAt = Instant.now(),
+                employerId = employerId,
+                payRunId = "run-proj-2",
+                paycheckId = paycheck1,
+                paymentId = "pmt-$paycheck1",
+                status = PaycheckPaymentLifecycleStatus.SETTLED,
+            )
+        )
+
+        projectionService.applyPaymentStatusChanged(
+            PaycheckPaymentStatusChangedEvent(
+                eventId = "paycheck-payment-status-changed:$employerId:$paycheck2:FAILED",
+                occurredAt = Instant.now(),
+                employerId = employerId,
+                payRunId = "run-proj-2",
+                paycheckId = paycheck2,
+                paymentId = "pmt-$paycheck2",
+                status = PaycheckPaymentLifecycleStatus.FAILED,
+            )
+        )
+
+        val payRunStatus = jdbcTemplate.queryForObject(
+            "SELECT payment_status FROM pay_run WHERE employer_id = ? AND pay_run_id = ?",
+            String::class.java,
+            employerId,
+            "run-proj-2",
+        )
+
+        assertEquals(PaymentStatus.PARTIALLY_PAID.name, payRunStatus)
+    }
+}

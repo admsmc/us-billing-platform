@@ -68,6 +68,10 @@ sealed class TraceStep {
         val protectedFloorConstrained: Boolean,
         val arrearsBeforeCents: Long?,
         val arrearsAfterCents: Long?,
+        /** Portion of [appliedCents] treated as current support for this period. */
+        val appliedToCurrentCents: Long? = null,
+        /** Portion of [appliedCents] applied to arrears principal. */
+        val appliedToArrearsCents: Long? = null,
     ) : TraceStep()
 
     /**
@@ -80,6 +84,19 @@ sealed class TraceStep {
         val employeeTaxCents: Long,
         val baseDisposableCents: Long,
         val netForProtectedFloorCents: Long,
+    ) : TraceStep()
+
+    /**
+     * Indicates that a support (child/spousal) cap constrained the total
+     * support withholding for a paycheck.
+     */
+    data class SupportCapApplied(
+        val jurisdictionCode: String?,
+        val ccpaCapCents: Long,
+        val stateCapCents: Long?,
+        val effectiveCapCents: Long,
+        val totalRequestedCents: Long,
+        val totalAppliedCents: Long,
     ) : TraceStep()
 
     data class Note(val message: String) : TraceStep()

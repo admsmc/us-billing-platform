@@ -7,6 +7,9 @@ import com.example.uspayroll.payroll.model.TaxLine
 import com.example.uspayroll.payroll.model.TraceStep
 import com.example.uspayroll.payroll.model.garnishment.GarnishmentFormula
 import com.example.uspayroll.payroll.model.garnishment.GarnishmentOrder
+import com.example.uspayroll.payroll.model.garnishment.GarnishmentType
+import com.example.uspayroll.payroll.model.garnishment.SupportCapContext
+import com.example.uspayroll.payroll.model.garnishment.computeSupportCap
 import com.example.uspayroll.payroll.model.config.DeductionKind
 import com.example.uspayroll.payroll.model.config.DeductionPlan
 import com.example.uspayroll.payroll.model.config.defaultEmployeeEffects
@@ -36,6 +39,7 @@ object GarnishmentsCalculator {
         employeeTaxes: List<TaxLine>,
         preTaxDeductions: List<DeductionLine>,
         plansByCode: Map<DeductionCode, DeductionPlan>,
+        supportCapContext: SupportCapContext? = null,
     ): GarnishmentCalculationResult {
         val orders = input.garnishments.orders
         return if (orders.isNotEmpty()) {
@@ -46,6 +50,7 @@ object GarnishmentsCalculator {
                 preTaxDeductions = preTaxDeductions,
                 plansByCode = plansByCode,
                 orders = orders,
+                supportCapContext = supportCapContext,
             )
         } else {
             computeFromPlans(
@@ -64,6 +69,7 @@ object GarnishmentsCalculator {
         preTaxDeductions: List<DeductionLine>,
         plansByCode: Map<DeductionCode, DeductionPlan>,
         orders: List<GarnishmentOrder>,
+        supportCapContext: SupportCapContext?,
     ): GarnishmentCalculationResult {
         if (orders.isEmpty()) {
             return GarnishmentCalculationResult(emptyList(), emptyList())
@@ -75,6 +81,9 @@ object GarnishmentsCalculator {
         val sortedOrders = orders.sortedWith(
             compareBy<GarnishmentOrder>({ it.priorityClass }, { it.sequenceWithinClass }, { it.orderId.value }),
         )
+
+        val supportOrders = sortedOrders.filter { it.type == GarnishmentType.CHILD_SUPPORT }
+        val nonSupportOrders = sortedOrders.filter { it.type != GarnishmentType.CHILD_SUPPORT }
 
         fun ytdForOrder(order: GarnishmentOrder): Long {
             val code = DeductionCode(order.orderId.value)
@@ -209,6 +218,92 @@ object GarnishmentsCalculator {
 
         var garnishmentCents = 0L
 
+        // First pass: compute requested amounts for support orders so we can
+        // apply any aggregate caps before mixing in other orders.
+        data class RequestedSupport(
+            val order: GarnishmentOrder,
+            val disposable: DisposableIncome,
+            val requestedBeforeCaps: Long,
+        )
+
+        val supportRequests = mutableListOf<RequestedSupport>()
+ 
+        // For now we allocate any support caps proportionally across all
+        // support orders, in the deterministic order of (priorityClass,
+        // sequenceWithinClass, orderId). If a jurisdiction requires
+        // priority-based allocation instead, this is where a different
+        // strategy would be plugged in.
+        for (order in supportOrders) {
+            val plan = plansByCode[DeductionCode(order.planId)]
+
+            val disposable = computeDisposableIncome(
+                order = order,
+                gross = gross,
+                employeeTaxes = employeeTaxes,
+                preTaxDeductions = preTaxDeductions,
+            )
+
+            val disposableBefore = disposable.baseDisposableCents
+            if (disposableBefore <= 0L) continue
+
+            var rawCents = rawFromFormula(order, disposableBefore, filingStatus)
+            if (rawCents <= 0L) continue
+
+            val ytd = ytdForOrder(order)
+            val (finalCents, _) = applyCaps(plan, rawCents, ytd, order.lifetimeCap)
+            if (finalCents <= 0L) continue
+
+            supportRequests += RequestedSupport(order, disposable, finalCents)
+        }
+
+        // If a support cap is configured and support requests exist, compute
+        // per-order scaled amounts that respect the aggregate cap.
+        val scaledSupportByOrderId: Map<String, Long> =
+            if (supportCapContext != null && supportRequests.isNotEmpty()) {
+                val disposableForSupport = Money(
+                    amount = supportRequests.map { it.disposable.baseDisposableCents }.min(),
+                    currency = gross.currency,
+                )
+                val capMoney = computeSupportCap(disposableForSupport, supportCapContext)
+                val capCents = capMoney.amount
+                val totalRequested = supportRequests.sumOf { it.requestedBeforeCaps }
+
+                if (totalRequested > capCents && capCents >= 0) {
+                    // Proportionally scale requested amounts to fit within the cap.
+                    var runningTotal = 0L
+                    val scaled = mutableMapOf<String, Long>()
+                    supportRequests.forEachIndexed { index, req ->
+                        val isLast = index == supportRequests.lastIndex
+                        val applied = if (isLast) {
+                            // Assign remainder to last order to avoid rounding gaps.
+                            capCents - runningTotal
+                        } else {
+                            val proportion = req.requestedBeforeCaps.toDouble() / totalRequested.toDouble()
+                            (capCents * proportion).toLong()
+                        }
+                        runningTotal += applied
+                        scaled[req.order.orderId.value] = applied.coerceAtLeast(0L)
+                    }
+
+                    traceSteps += TraceStep.SupportCapApplied(
+                        jurisdictionCode = supportCapContext.jurisdictionCode,
+                        ccpaCapCents = capCents,
+                        stateCapCents = supportCapContext.params.stateAggregateCapRate
+                            ?.let { (disposableForSupport.amount * it.value).toLong() },
+                        effectiveCapCents = capCents,
+                        totalRequestedCents = totalRequested,
+                        totalAppliedCents = capCents,
+                    )
+
+                    scaled
+                } else {
+                    // Cap does not bind; use requested amounts as-is.
+                    supportRequests.associate { it.order.orderId.value to it.requestedBeforeCaps }
+                }
+            } else {
+                emptyMap()
+            }
+
         for (order in sortedOrders) {
             val plan = plansByCode[DeductionCode(order.planId)]
 
@@ -225,7 +320,11 @@ object GarnishmentsCalculator {
             val remainingDisposable = disposableBefore - garnishmentCents
             if (remainingDisposable <= 0L) continue
 
-            var rawCents = rawFromFormula(order, disposableBefore, filingStatus)
+            // For support orders, start from any scaled amount if a cap was
+            // applied; otherwise fall back to the formula-derived amount.
+            val scaledSupport = scaledSupportByOrderId[order.orderId.value]
+
+            var rawCents = scaledSupport ?: rawFromFormula(order, disposableBefore, filingStatus)
             if (rawCents <= 0L) continue
 
             val requestedBeforeCaps = rawCents
@@ -286,6 +385,15 @@ object GarnishmentsCalculator {
             // Emit a garnishment-specific trace step before the generic
             // DeductionApplied so consumers can see the full requested vs
             // applied context.
+            val arrearsBeforeCents = order.arrearsBefore?.amount
+            val appliedToArrears = if (arrearsBeforeCents != null && arrearsBeforeCents > 0L) {
+                minOf(finalCents, arrearsBeforeCents)
+            } else {
+                0L
+            }
+            val appliedToCurrent = finalCents - appliedToArrears
+            val arrearsAfterCents = arrearsBeforeCents?.let { (it - appliedToArrears).coerceAtLeast(0L) }
+
             traceSteps += TraceStep.GarnishmentApplied(
                 orderId = order.orderId.value,
                 type = order.type.name,
@@ -296,8 +404,10 @@ object GarnishmentsCalculator {
                 disposableAfterCents = disposableBefore - garnishmentCents,
                 protectedEarningsFloorCents = protectedFloor,
                 protectedFloorConstrained = protectedConstrained,
-                arrearsBeforeCents = order.arrearsBefore?.amount,
-                arrearsAfterCents = order.arrearsBefore?.amount?.let { it - finalCents },
+                arrearsBeforeCents = arrearsBeforeCents,
+                arrearsAfterCents = arrearsAfterCents,
+                appliedToCurrentCents = appliedToCurrent,
+                appliedToArrearsCents = appliedToArrears,
             )
 
             traceSteps += TraceStep.DeductionApplied(

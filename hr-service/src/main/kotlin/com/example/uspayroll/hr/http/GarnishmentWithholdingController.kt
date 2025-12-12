@@ -1,6 +1,7 @@
 package com.example.uspayroll.hr.http
 
 import com.example.uspayroll.hr.garnishment.GarnishmentLedgerRepository
+import com.example.uspayroll.hr.garnishment.GarnishmentReconciliationService
 import com.example.uspayroll.hr.garnishment.GarnishmentWithholdingEventView
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
@@ -17,6 +18,7 @@ import java.time.LocalDate
 @RequestMapping("/employers/{employerId}")
 class GarnishmentWithholdingController(
     private val ledgerRepository: GarnishmentLedgerRepository,
+    private val reconciliationService: GarnishmentReconciliationService,
 ) {
 
     @PostMapping("/employees/{employeeId}/garnishments/withholdings")
@@ -38,6 +40,7 @@ class GarnishmentWithholdingController(
             )
         }
         ledgerRepository.recordWithholdings(employer, employee, views)
+        reconciliationService.reconcileForEmployee(employer, employee)
     }
 
     /**

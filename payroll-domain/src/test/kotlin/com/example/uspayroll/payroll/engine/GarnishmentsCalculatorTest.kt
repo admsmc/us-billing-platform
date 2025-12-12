@@ -379,6 +379,79 @@ class GarnishmentsCalculatorTest {
     }
 
     @Test
+    fun `protected earnings floor can be more restrictive than support cap`() {
+        val employerId = EmployerId("emp-garn-support-floor")
+        val employeeId = EmployeeId("ee-garn-support-floor")
+
+        val orderId = GarnishmentOrderId("ORDER_CHILD_FLOOR")
+        val planId = "GARN_PLAN_CHILD_FLOOR"
+
+        val order = GarnishmentOrder(
+            orderId = orderId,
+            planId = planId,
+            type = GarnishmentType.CHILD_SUPPORT,
+            priorityClass = 0,
+            sequenceWithinClass = 0,
+            // Wants 80% of disposable to ensure the cap binds before the floor.
+            formula = GarnishmentFormula.PercentOfDisposable(Percent(0.80)),
+            protectedEarningsRule = com.example.uspayroll.payroll.model.garnishment.ProtectedEarningsRule.FixedFloor(
+                Money(6_000_00L),
+            ),
+        )
+
+        val garnContext = GarnishmentContext(orders = listOf(order))
+        val input = baseInput(employerId, employeeId, YtdSnapshot(year = 2025), garnContext)
+        val gross = Money(10_000_00L)
+
+        val plan = DeductionPlan(
+            id = planId,
+            name = "Child Support With Floor",
+            kind = DeductionKind.GARNISHMENT,
+        )
+        val plansByCode = mapOf(DeductionCode(planId) to plan)
+
+        // MI-style support cap: 60% CCPA (no arrears, no other dependents) overlaid
+        // with a 50% state aggregate cap.
+        val supportCapContext = com.example.uspayroll.payroll.model.garnishment.SupportCapContext(
+            params = com.example.uspayroll.payroll.model.garnishment.SupportCapParams(
+                maxRateWhenSupportingOthers = Percent(0.50),
+                maxRateWhenNotSupportingOthers = Percent(0.60),
+                arrearsBonusRate = Percent(0.05),
+                stateAggregateCapRate = Percent(0.50),
+            ),
+            supportsOtherDependents = false,
+            arrearsAtLeast12Weeks = false,
+            jurisdictionCode = "MI",
+        )
+
+        val result = GarnishmentsCalculator.computeGarnishments(
+            input = input,
+            gross = gross,
+            employeeTaxes = emptyList(),
+            preTaxDeductions = emptyList(),
+            plansByCode = plansByCode,
+            supportCapContext = supportCapContext,
+        )
+
+        val garn = result.garnishments.single()
+        // Disposable base = 10,000. CCPA-only would allow 60% = 6,000, but the
+        // MI aggregate cap constrains support to 50% = 5,000. The protected
+        // floor then further constrains garnishment so that 6,000 net cash
+        // remains: 10,000 - 6,000 = 4,000. Thus the floor is more restrictive
+        // than the cap.
+        assertEquals(4_000_00L, garn.amount.amount)
+
+        val supportCap = result.traceSteps.filterIsInstance<TraceStep.SupportCapApplied>().single()
+        assertEquals(5_000_00L, supportCap.effectiveCapCents)
+
+        val protectedSteps = result.traceSteps.filterIsInstance<TraceStep.ProtectedEarningsApplied>()
+        val step = protectedSteps.single { it.orderId == orderId.value }
+        assertEquals(5_000_00L, step.requestedCents) // post-cap request
+        assertEquals(4_000_00L, step.adjustedCents)  // floor-reduced amount
+        assertEquals(6_000_00L, step.floorCents)
+    }
+
+    @Test
     fun `protected earnings considers pre tax and employee taxes`() {
         val employerId = EmployerId("emp-garn-floor-tax")
         val employeeId = EmployeeId("ee-garn-floor-tax")
@@ -827,6 +900,143 @@ class GarnishmentsCalculatorTest {
         // percent-of-disposable semantics.
         val remainingAfterFed = gross.amount - fedGarn.amount.amount
         assertEquals(remainingAfterFed, stateGarn.amount.amount)
+    }
+
+    @Test
+    fun `support cap scaling is proportional across multiple child support orders`() {
+        val employerId = EmployerId("emp-garn-support-proportional")
+        val employeeId = EmployeeId("ee-garn-support-proportional")
+
+        val planIdA = "GARN_PLAN_CHILD_A"
+        val planIdB = "GARN_PLAN_CHILD_B"
+
+        val orderA = GarnishmentOrder(
+            orderId = GarnishmentOrderId("ORDER_CHILD_A"),
+            planId = planIdA,
+            type = GarnishmentType.CHILD_SUPPORT,
+            priorityClass = 0,
+            sequenceWithinClass = 0,
+            // Wants 30% of disposable
+            formula = GarnishmentFormula.PercentOfDisposable(Percent(0.30)),
+        )
+        val orderB = GarnishmentOrder(
+            orderId = GarnishmentOrderId("ORDER_CHILD_B"),
+            planId = planIdB,
+            type = GarnishmentType.CHILD_SUPPORT,
+            priorityClass = 0,
+            sequenceWithinClass = 1,
+            // Also wants 30% of disposable
+            formula = GarnishmentFormula.PercentOfDisposable(Percent(0.30)),
+        )
+
+        val garnContext = GarnishmentContext(orders = listOf(orderA, orderB))
+        val input = baseInput(employerId, employeeId, YtdSnapshot(year = 2025), garnContext)
+        val gross = Money(10_000_00L)
+
+        val planA = DeductionPlan(
+            id = planIdA,
+            name = "Child Support A",
+            kind = DeductionKind.GARNISHMENT,
+        )
+        val planB = DeductionPlan(
+            id = planIdB,
+            name = "Child Support B",
+            kind = DeductionKind.GARNISHMENT,
+        )
+        val plansByCode = mapOf(
+            DeductionCode(planIdA) to planA,
+            DeductionCode(planIdB) to planB,
+        )
+
+        // Configure a support cap that is below the combined requested amount.
+        val supportCapContext = com.example.uspayroll.payroll.model.garnishment.SupportCapContext(
+            params = com.example.uspayroll.payroll.model.garnishment.SupportCapParams(
+                maxRateWhenSupportingOthers = Percent(0.50),
+                maxRateWhenNotSupportingOthers = Percent(0.60),
+                arrearsBonusRate = Percent(0.05),
+                stateAggregateCapRate = Percent(0.50),
+            ),
+            supportsOtherDependents = false,
+            arrearsAtLeast12Weeks = false,
+            jurisdictionCode = "MI",
+        )
+
+        val result = GarnishmentsCalculator.computeGarnishments(
+            input = input,
+            gross = gross,
+            employeeTaxes = emptyList(),
+            preTaxDeductions = emptyList(),
+            plansByCode = plansByCode,
+            supportCapContext = supportCapContext,
+        )
+
+        val byCode = result.garnishments.associateBy { it.code.value }
+        val gA = byCode.getValue("ORDER_CHILD_A")
+        val gB = byCode.getValue("ORDER_CHILD_B")
+
+        // Disposable base for support orders = 10,000 (no pre-tax). Each order
+        // wants 30% = 3,000, for a total requested of 6,000. The MI-style cap
+        // limits total support to 50% of disposable = 5,000, so the cap binds.
+        val totalSupport = gA.amount.amount + gB.amount.amount
+        assertEquals(5_000_00L, totalSupport)
+
+        // Because both orders request the same amount and the allocator is
+        // proportional, each order should receive half of the capped total.
+        assertEquals(2_500_00L, gA.amount.amount)
+        assertEquals(2_500_00L, gB.amount.amount)
+    }
+
+    @Test
+    fun `arrears-first allocation splits applied amount between arrears and current`() {
+        val employerId = EmployerId("emp-garn-arrears-split")
+        val employeeId = EmployeeId("ee-garn-arrears-split")
+
+        val orderId = GarnishmentOrderId("ORDER_CHILD_ARREARS")
+        val planId = "GARN_PLAN_CHILD_ARREARS"
+
+        val order = GarnishmentOrder(
+            orderId = orderId,
+            planId = planId,
+            type = GarnishmentType.CHILD_SUPPORT,
+            priorityClass = 0,
+            sequenceWithinClass = 0,
+            // Wants 50% of disposable; with gross 10,000 this is 5,000.
+            formula = GarnishmentFormula.PercentOfDisposable(Percent(0.50)),
+            arrearsBefore = Money(1_000_00L),
+        )
+
+        val garnContext = GarnishmentContext(orders = listOf(order))
+        val input = baseInput(employerId, employeeId, YtdSnapshot(year = 2025), garnContext)
+        val gross = Money(10_000_00L)
+
+        val plan = DeductionPlan(
+            id = planId,
+            name = "Child Support With Arrears",
+            kind = DeductionKind.GARNISHMENT,
+        )
+        val plansByCode = mapOf(DeductionCode(planId) to plan)
+
+        val result = GarnishmentsCalculator.computeGarnishments(
+            input = input,
+            gross = gross,
+            employeeTaxes = emptyList(),
+            preTaxDeductions = emptyList(),
+            plansByCode = plansByCode,
+        )
+
+        val garn = result.garnishments.single()
+        // 50% of 10,000 = 5,000 applied.
+        assertEquals(5_000_00L, garn.amount.amount)
+
+        val ga = result.traceSteps
+            .filterIsInstance<TraceStep.GarnishmentApplied>()
+            .single { it.orderId == orderId.value }
+
+        // Arrears-first: first 1,000 of the 5,000 goes to arrears, remainder to current.
+        assertEquals(1_000_00L, ga.appliedToArrearsCents)
+        assertEquals(4_000_00L, ga.appliedToCurrentCents)
+        assertEquals(1_000_00L, ga.arrearsBeforeCents)
+        assertEquals(0L, ga.arrearsAfterCents)
     }
 
     @Test

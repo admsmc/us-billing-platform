@@ -104,6 +104,11 @@ data class GarnishmentOrder(
     val arrearsBefore: Money? = null,
     /** Optional lifetime cap for this order across its lifecycle. */
     val lifetimeCap: Money? = null,
+    /**
+     * Support-specific flags surfaced from HR for CCPA support cap behavior.
+     */
+    val supportsOtherDependents: Boolean? = null,
+    val arrearsAtLeast12Weeks: Boolean? = null,
 )
 
 /**
