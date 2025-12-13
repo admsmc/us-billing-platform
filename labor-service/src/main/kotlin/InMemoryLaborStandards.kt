@@ -1,7 +1,11 @@
 package com.example.uspayroll.labor.impl
 
-import com.example.uspayroll.labor.api.*
+import com.example.uspayroll.labor.api.LaborStandardsCatalog
+import com.example.uspayroll.labor.api.LaborStandardsContextProvider
+import com.example.uspayroll.labor.api.LaborStandardsQuery
+import com.example.uspayroll.labor.api.StateLaborStandard
 import com.example.uspayroll.payroll.model.LaborStandardsContext
+import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.shared.Money
 import java.time.LocalDate
 
@@ -51,27 +55,11 @@ class InMemoryLaborStandardsCatalog : LaborStandardsCatalog {
     }
 }
 
-interface LaborStandardsContextProvider {
-    fun getLaborStandards(
-        employerId: com.example.uspayroll.shared.EmployerId,
-        asOfDate: LocalDate,
-        workState: String?,
-        homeState: String?,
-        localityCodes: List<String> = emptyList(),
-    ): LaborStandardsContext?
-}
-
 class CatalogBackedLaborStandardsContextProvider(
     private val catalog: LaborStandardsCatalog,
 ) : LaborStandardsContextProvider {
 
-    override fun getLaborStandards(
-        employerId: com.example.uspayroll.shared.EmployerId,
-        asOfDate: LocalDate,
-        workState: String?,
-        homeState: String?,
-        localityCodes: List<String>,
-    ): LaborStandardsContext? {
+    override fun getLaborStandards(employerId: EmployerId, asOfDate: LocalDate, workState: String?, homeState: String?, localityCodes: List<String>): LaborStandardsContext? {
         if (workState == null) return null
 
         val query = LaborStandardsQuery(

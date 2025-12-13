@@ -40,53 +40,78 @@ data class BasisComputation(
 
 object BasisBuilder {
 
-    fun compute(context: BasisContext): BasisComputation {
-        val grossAmount = context.earnings.fold(0L) { acc, line -> acc + line.amount.amount }
+    fun compute(context: BasisContext, includeComponents: Boolean = true): BasisComputation {
+        var grossAmount = 0L
+        var supplementalAmount = 0L
+        var holidayAmount = 0L
+        var imputedAmount = 0L
+
+        for (line in context.earnings) {
+            val cents = line.amount.amount
+            grossAmount += cents
+
+            when (line.category) {
+                com.example.uspayroll.payroll.model.EarningCategory.SUPPLEMENTAL,
+                com.example.uspayroll.payroll.model.EarningCategory.BONUS,
+                -> supplementalAmount += cents
+
+                com.example.uspayroll.payroll.model.EarningCategory.HOLIDAY -> holidayAmount += cents
+                com.example.uspayroll.payroll.model.EarningCategory.IMPUTED -> imputedAmount += cents
+                else -> {
+                    // ignore
+                }
+            }
+        }
+
         val gross = Money(grossAmount)
 
-        val supplementalAmount = context.earnings
-            .filter { it.category == com.example.uspayroll.payroll.model.EarningCategory.SUPPLEMENTAL || it.category == com.example.uspayroll.payroll.model.EarningCategory.BONUS }
-            .fold(0L) { acc, line -> acc + line.amount.amount }
-        val holidayAmount = context.earnings
-            .filter { it.category == com.example.uspayroll.payroll.model.EarningCategory.HOLIDAY }
-            .fold(0L) { acc, line -> acc + line.amount.amount }
-        val imputedAmount = context.earnings
-            .filter { it.category == com.example.uspayroll.payroll.model.EarningCategory.IMPUTED }
-            .fold(0L) { acc, line -> acc + line.amount.amount }
+        var federalReductions = 0L
+        var stateReductions = 0L
+        var ssReductions = 0L
+        var medicareReductions = 0L
 
-        fun effectsFor(line: DeductionLine, isPreTax: Boolean): Set<DeductionEffect> {
+        fun applyDeductionEffects(line: DeductionLine, isPreTax: Boolean) {
+            val cents = line.amount.amount
+            if (cents == 0L) return
+
             val plan = context.plansByCode[line.code]
-            val planEffects = when {
-                plan == null -> emptySet()
-                plan.employeeEffects.isNotEmpty() -> plan.employeeEffects
-                else -> plan.kind.defaultEmployeeEffects()
-            }
+
             // Fallback: if we have no plan but the deduction is pre-tax in the
             // engine pipeline, at least reduce FederalTaxable to preserve
             // existing behavior in tests that do not configure plans.
-            return if (plan == null && isPreTax) {
-                setOf(DeductionEffect.REDUCES_FEDERAL_TAXABLE)
+            if (plan == null) {
+                if (isPreTax) {
+                    federalReductions += cents
+                }
+                return
+            }
+
+            val planEffects = if (plan.employeeEffects.isNotEmpty()) {
+                plan.employeeEffects
             } else {
-                planEffects
+                plan.kind.defaultEmployeeEffects()
+            }
+
+            // Effects are usually a small set; iterate once and update all totals.
+            for (effect in planEffects) {
+                when (effect) {
+                    DeductionEffect.REDUCES_FEDERAL_TAXABLE -> federalReductions += cents
+                    DeductionEffect.REDUCES_STATE_TAXABLE -> stateReductions += cents
+                    DeductionEffect.REDUCES_SOCIAL_SECURITY_WAGES -> ssReductions += cents
+                    DeductionEffect.REDUCES_MEDICARE_WAGES -> medicareReductions += cents
+                    else -> {
+                        // ignore: effect does not impact the bases we currently compute
+                    }
+                }
             }
         }
 
-        fun sumFor(effect: DeductionEffect): Long {
-            val fromPreTax = context.preTaxDeductions.sumOf { line ->
-                val effects = effectsFor(line, isPreTax = true)
-                if (effect in effects) line.amount.amount else 0L
-            }
-            val fromPostTax = context.postTaxDeductions.sumOf { line ->
-                val effects = effectsFor(line, isPreTax = false)
-                if (effect in effects) line.amount.amount else 0L
-            }
-            return fromPreTax + fromPostTax
+        for (line in context.preTaxDeductions) {
+            applyDeductionEffects(line, isPreTax = true)
         }
-
-        val federalReductions = sumFor(DeductionEffect.REDUCES_FEDERAL_TAXABLE)
-        val stateReductions = sumFor(DeductionEffect.REDUCES_STATE_TAXABLE)
-        val ssReductions = sumFor(DeductionEffect.REDUCES_SOCIAL_SECURITY_WAGES)
-        val medicareReductions = sumFor(DeductionEffect.REDUCES_MEDICARE_WAGES)
+        for (line in context.postTaxDeductions) {
+            applyDeductionEffects(line, isPreTax = false)
+        }
 
         val federalTaxable = Money(gross.amount - federalReductions, gross.currency)
         val stateTaxable = Money(gross.amount - stateReductions, gross.currency)
@@ -97,80 +122,86 @@ object BasisBuilder {
         // reductions can be added later via additional deduction effects.
         val futaWages = gross
 
-        val bases = buildMap {
-            put(TaxBasis.Gross, gross)
-            put(TaxBasis.FederalTaxable, federalTaxable)
-            put(TaxBasis.StateTaxable, stateTaxable)
-            put(TaxBasis.SocialSecurityWages, ssWages)
-            put(TaxBasis.MedicareWages, medicareWages)
-            put(TaxBasis.SupplementalWages, supplementalWages)
-            put(TaxBasis.FutaWages, futaWages)
+        val bases = LinkedHashMap<TaxBasis, Money>(8)
+        bases[TaxBasis.Gross] = gross
+        bases[TaxBasis.FederalTaxable] = federalTaxable
+        bases[TaxBasis.StateTaxable] = stateTaxable
+        bases[TaxBasis.SocialSecurityWages] = ssWages
+        bases[TaxBasis.MedicareWages] = medicareWages
+        bases[TaxBasis.SupplementalWages] = supplementalWages
+        bases[TaxBasis.FutaWages] = futaWages
+
+        val supplementalMoney: Money? = if (supplementalAmount != 0L) Money(supplementalAmount, gross.currency) else null
+        val holidayMoney: Money? = if (holidayAmount != 0L) Money(holidayAmount, gross.currency) else null
+        val imputedMoney: Money? = if (imputedAmount != 0L) Money(imputedAmount, gross.currency) else null
+
+        val lessFederalTaxableMoney: Money? = if (federalReductions != 0L) Money(federalReductions, gross.currency) else null
+        val lessStateTaxableMoney: Money? = if (stateReductions != 0L) Money(stateReductions, gross.currency) else null
+        val lessFicaMoney: Money? = if (ssReductions != 0L) Money(ssReductions, gross.currency) else null
+        val lessMedicareMoney: Money? = if (medicareReductions != 0L) Money(medicareReductions, gross.currency) else null
+
+        if (!includeComponents) {
+            return BasisComputation(bases = bases, components = emptyMap())
         }
 
-        val components = buildMap<TaxBasis, Map<String, Money>> {
-            put(
-                TaxBasis.Gross,
-                buildMap {
-                    put("gross", gross)
-                    if (supplementalAmount != 0L) {
-                        put("supplemental", Money(supplementalAmount, gross.currency))
-                    }
-                    if (holidayAmount != 0L) {
-                        put("holiday", Money(holidayAmount, gross.currency))
-                    }
-                    if (imputedAmount != 0L) {
-                        put("imputed", Money(imputedAmount, gross.currency))
-                    }
-                },
-            )
-            put(
-                TaxBasis.FederalTaxable,
-                buildMap {
-                    put("gross", gross)
-                    if (federalReductions != 0L) {
-                        put("lessFederalTaxableDeductions", Money(federalReductions, gross.currency))
-                    }
-                },
-            )
-            put(
-                TaxBasis.StateTaxable,
-                buildMap {
-                    put("gross", gross)
-                    if (stateReductions != 0L) {
-                        put("lessStateTaxableDeductions", Money(stateReductions, gross.currency))
-                    }
-                },
-            )
-            put(
-                TaxBasis.SocialSecurityWages,
-                buildMap {
-                    put("gross", gross)
-                    if (ssReductions != 0L) {
-                        put("lessFicaDeductions", Money(ssReductions, gross.currency))
-                    }
-                },
-            )
-            put(
-                TaxBasis.MedicareWages,
-                buildMap {
-                    put("gross", gross)
-                    if (medicareReductions != 0L) {
-                        put("lessMedicareDeductions", Money(medicareReductions, gross.currency))
-                    }
-                },
-            )
-            put(
-                TaxBasis.SupplementalWages,
-                buildMap {
-                    put("supplemental", Money(supplementalAmount, gross.currency))
-                },
-            )
-            put(
-                TaxBasis.FutaWages,
-                buildMap {
-                    put("gross", gross)
-                },
-            )
+        val components = LinkedHashMap<TaxBasis, Map<String, Money>>(8)
+
+        run {
+            val grossComponents = LinkedHashMap<String, Money>(4)
+            grossComponents["gross"] = gross
+            if (supplementalMoney != null) grossComponents["supplemental"] = supplementalMoney
+            if (holidayMoney != null) grossComponents["holiday"] = holidayMoney
+            if (imputedMoney != null) grossComponents["imputed"] = imputedMoney
+            components[TaxBasis.Gross] = grossComponents
+        }
+
+        run {
+            val federalComponents = LinkedHashMap<String, Money>(2)
+            federalComponents["gross"] = gross
+            if (lessFederalTaxableMoney != null) {
+                federalComponents["lessFederalTaxableDeductions"] = lessFederalTaxableMoney
+            }
+            components[TaxBasis.FederalTaxable] = federalComponents
+        }
+
+        run {
+            val stateComponents = LinkedHashMap<String, Money>(2)
+            stateComponents["gross"] = gross
+            if (lessStateTaxableMoney != null) {
+                stateComponents["lessStateTaxableDeductions"] = lessStateTaxableMoney
+            }
+            components[TaxBasis.StateTaxable] = stateComponents
+        }
+
+        run {
+            val ssComponents = LinkedHashMap<String, Money>(2)
+            ssComponents["gross"] = gross
+            if (lessFicaMoney != null) {
+                ssComponents["lessFicaDeductions"] = lessFicaMoney
+            }
+            components[TaxBasis.SocialSecurityWages] = ssComponents
+        }
+
+        run {
+            val medicareComponents = LinkedHashMap<String, Money>(2)
+            medicareComponents["gross"] = gross
+            if (lessMedicareMoney != null) {
+                medicareComponents["lessMedicareDeductions"] = lessMedicareMoney
+            }
+            components[TaxBasis.MedicareWages] = medicareComponents
+        }
+
+        run {
+            // Supplemental basis is always present; keep this stable.
+            val supplementalComponents = LinkedHashMap<String, Money>(1)
+            supplementalComponents["supplemental"] = Money(supplementalAmount, gross.currency)
+            components[TaxBasis.SupplementalWages] = supplementalComponents
+        }
+
+        run {
+            val futaComponents = LinkedHashMap<String, Money>(1)
+            futaComponents["gross"] = gross
+            components[TaxBasis.FutaWages] = futaComponents
         }
 
         return BasisComputation(bases = bases, components = components)

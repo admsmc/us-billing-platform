@@ -1,6 +1,5 @@
 package com.example.uspayroll.orchestrator.http
 
-import com.example.uspayroll.orchestrator.payrun.PayRunExecutionService
 import com.example.uspayroll.orchestrator.payrun.PayRunService
 import com.example.uspayroll.orchestrator.payrun.model.PayRunStatus
 import com.example.uspayroll.shared.EmployerId
@@ -17,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/employers/{employerId}/payruns")
 class PayRunController(
     private val payRunService: PayRunService,
-    private val executionService: PayRunExecutionService,
+    private val itemFinalizationService: com.example.uspayroll.orchestrator.payrun.PayRunItemFinalizationService,
 ) {
 
     data class StartFinalizeRequest(
@@ -168,37 +167,33 @@ class PayRunController(
     }
 
     /**
-     * Internal execution trigger used by worker-service.
+     * Internal endpoint: finalize a single employee item.
      *
-     * In a production deployment this should be protected by network policy
-     * and/or auth; for now it's simply namespaced under /internal.
+     * Intended for queue-driven execution (RabbitMQ) where many worker replicas
+     * call into orchestrator to perform the DB-backed finalize step idempotently.
      */
-    @PostMapping("/internal/{payRunId}/execute")
-    fun execute(
+    @PostMapping("/internal/{payRunId}/items/{employeeId}/finalize")
+    fun finalizeEmployeeItem(
         @PathVariable employerId: String,
         @PathVariable payRunId: String,
-        @RequestParam(name = "batchSize", defaultValue = "25") batchSize: Int,
-        @RequestParam(name = "maxItems", defaultValue = "200") maxItems: Int,
-        @RequestParam(name = "maxMillis", defaultValue = "2000") maxMillis: Long,
-        @RequestParam(name = "requeueStaleMillis", defaultValue = "600000") requeueStaleMillis: Long,
-        @RequestParam(name = "leaseOwner", defaultValue = "worker") leaseOwner: String,
+        @PathVariable employeeId: String,
     ): ResponseEntity<Map<String, Any?>> {
-        val result = executionService.executePayRun(
+        val result = itemFinalizationService.finalizeOneEmployeeItem(
             employerId = EmployerId(employerId).value,
             payRunId = payRunId,
-            batchSize = batchSize,
-            maxItems = maxItems,
-            maxMillis = maxMillis,
-            requeueStaleMillis = requeueStaleMillis,
-            leaseOwner = leaseOwner,
-        )
+            employeeId = employeeId,
+        ) ?: return ResponseEntity.notFound().build()
 
         return ResponseEntity.ok(
             mapOf(
-                "acquiredLease" to result.acquiredLease,
-                "processed" to result.processed,
-                "finalStatus" to result.finalStatus?.name,
-                "moreWork" to result.moreWork,
+                "employerId" to result.employerId,
+                "payRunId" to result.payRunId,
+                "employeeId" to result.employeeId,
+                "itemStatus" to result.itemStatus,
+                "attemptCount" to result.attemptCount,
+                "paycheckId" to result.paycheckId,
+                "retryable" to result.retryable,
+                "error" to result.error,
             ),
         )
     }

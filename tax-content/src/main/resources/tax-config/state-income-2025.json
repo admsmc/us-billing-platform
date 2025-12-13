@@ -1,0 +1,2166 @@
+{
+  "rules" : [ {
+    "id" : "US_AL_SIT_2025_SINGLE",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "AL",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 50000,
+      "rate" : 0.02,
+      "taxCents" : null
+    }, {
+      "upToCents" : 300000,
+      "rate" : 0.04,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.05,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "SINGLE",
+    "residentStateFilter" : "AL",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_AK_SIT_2025",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "AK",
+    "basis" : "StateTaxable",
+    "ruleType" : "FLAT",
+    "rate" : 0.0,
+    "annualWageCapCents" : null,
+    "brackets" : null,
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : null,
+    "residentStateFilter" : "AK",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_AZ_SIT_2025",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "AZ",
+    "basis" : "StateTaxable",
+    "ruleType" : "FLAT",
+    "rate" : 0.025,
+    "annualWageCapCents" : null,
+    "brackets" : null,
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : null,
+    "residentStateFilter" : "AZ",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_AR_SIT_2025_SINGLE",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "AR",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 549900,
+      "rate" : 0.0,
+      "taxCents" : null
+    }, {
+      "upToCents" : 1089900,
+      "rate" : 0.02,
+      "taxCents" : null
+    }, {
+      "upToCents" : 1559900,
+      "rate" : 0.03,
+      "taxCents" : null
+    }, {
+      "upToCents" : 2569900,
+      "rate" : 0.034,
+      "taxCents" : null
+    }, {
+      "upToCents" : 9230000,
+      "rate" : 0.039,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.039,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "SINGLE",
+    "residentStateFilter" : "AR",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_CA_SIT_2025_SINGLE",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "CA",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 1075600,
+      "rate" : 0.01,
+      "taxCents" : null
+    }, {
+      "upToCents" : 2549900,
+      "rate" : 0.02,
+      "taxCents" : null
+    }, {
+      "upToCents" : 4024500,
+      "rate" : 0.04,
+      "taxCents" : null
+    }, {
+      "upToCents" : 5586600,
+      "rate" : 0.06,
+      "taxCents" : null
+    }, {
+      "upToCents" : 7060600,
+      "rate" : 0.08,
+      "taxCents" : null
+    }, {
+      "upToCents" : 36065900,
+      "rate" : 0.093,
+      "taxCents" : null
+    }, {
+      "upToCents" : 43278700,
+      "rate" : 0.103,
+      "taxCents" : null
+    }, {
+      "upToCents" : 72131400,
+      "rate" : 0.113,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.123,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "SINGLE",
+    "residentStateFilter" : "CA",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_CA_SIT_2025_MARRIED",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "CA",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 2151200,
+      "rate" : 0.01,
+      "taxCents" : null
+    }, {
+      "upToCents" : 5099800,
+      "rate" : 0.02,
+      "taxCents" : null
+    }, {
+      "upToCents" : 8049000,
+      "rate" : 0.04,
+      "taxCents" : null
+    }, {
+      "upToCents" : 11173200,
+      "rate" : 0.06,
+      "taxCents" : null
+    }, {
+      "upToCents" : 14121200,
+      "rate" : 0.08,
+      "taxCents" : null
+    }, {
+      "upToCents" : 72131800,
+      "rate" : 0.093,
+      "taxCents" : null
+    }, {
+      "upToCents" : 86557400,
+      "rate" : 0.103,
+      "taxCents" : null
+    }, {
+      "upToCents" : 144262800,
+      "rate" : 0.113,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.123,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "MARRIED",
+    "residentStateFilter" : "CA",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_CA_SIT_2025_HEAD_OF_HOUSEHOLD",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "CA",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 2152700,
+      "rate" : 0.01,
+      "taxCents" : null
+    }, {
+      "upToCents" : 5100000,
+      "rate" : 0.02,
+      "taxCents" : null
+    }, {
+      "upToCents" : 6574400,
+      "rate" : 0.04,
+      "taxCents" : null
+    }, {
+      "upToCents" : 8136400,
+      "rate" : 0.06,
+      "taxCents" : null
+    }, {
+      "upToCents" : 9610700,
+      "rate" : 0.08,
+      "taxCents" : null
+    }, {
+      "upToCents" : 49049300,
+      "rate" : 0.093,
+      "taxCents" : null
+    }, {
+      "upToCents" : 58859300,
+      "rate" : 0.103,
+      "taxCents" : null
+    }, {
+      "upToCents" : 98098700,
+      "rate" : 0.113,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "HEAD_OF_HOUSEHOLD",
+    "residentStateFilter" : "CA",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_CO_SIT_2025",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "CO",
+    "basis" : "StateTaxable",
+    "ruleType" : "FLAT",
+    "rate" : 0.044,
+    "annualWageCapCents" : null,
+    "brackets" : null,
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : null,
+    "residentStateFilter" : "CO",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_CT_SIT_2025_SINGLE",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "CT",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 1000000,
+      "rate" : 0.02,
+      "taxCents" : null
+    }, {
+      "upToCents" : 5000000,
+      "rate" : 0.045,
+      "taxCents" : null
+    }, {
+      "upToCents" : 10000000,
+      "rate" : 0.055,
+      "taxCents" : null
+    }, {
+      "upToCents" : 20000000,
+      "rate" : 0.06,
+      "taxCents" : null
+    }, {
+      "upToCents" : 25000000,
+      "rate" : 0.065,
+      "taxCents" : null
+    }, {
+      "upToCents" : 50000000,
+      "rate" : 0.069,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.0699,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "SINGLE",
+    "residentStateFilter" : "CT",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_CT_SIT_2025_MARRIED",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "CT",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 2000000,
+      "rate" : 0.02,
+      "taxCents" : null
+    }, {
+      "upToCents" : 10000000,
+      "rate" : 0.045,
+      "taxCents" : null
+    }, {
+      "upToCents" : 20000000,
+      "rate" : 0.055,
+      "taxCents" : null
+    }, {
+      "upToCents" : 40000000,
+      "rate" : 0.06,
+      "taxCents" : null
+    }, {
+      "upToCents" : 50000000,
+      "rate" : 0.065,
+      "taxCents" : null
+    }, {
+      "upToCents" : 100000000,
+      "rate" : 0.069,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.0699,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "MARRIED",
+    "residentStateFilter" : "CT",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_CT_SIT_2025_HEAD_OF_HOUSEHOLD",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "CT",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 1600000,
+      "rate" : 0.02,
+      "taxCents" : null
+    }, {
+      "upToCents" : 8000000,
+      "rate" : 0.045,
+      "taxCents" : null
+    }, {
+      "upToCents" : 16000000,
+      "rate" : 0.055,
+      "taxCents" : null
+    }, {
+      "upToCents" : 32000000,
+      "rate" : 0.06,
+      "taxCents" : null
+    }, {
+      "upToCents" : 40000000,
+      "rate" : 0.065,
+      "taxCents" : null
+    }, {
+      "upToCents" : 80000000,
+      "rate" : 0.069,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.0699,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "HEAD_OF_HOUSEHOLD",
+    "residentStateFilter" : "CT",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_DE_SIT_2025_SINGLE",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "DE",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 200000,
+      "rate" : 0.0,
+      "taxCents" : null
+    }, {
+      "upToCents" : 500000,
+      "rate" : 0.022,
+      "taxCents" : null
+    }, {
+      "upToCents" : 1000000,
+      "rate" : 0.039,
+      "taxCents" : null
+    }, {
+      "upToCents" : 2000000,
+      "rate" : 0.048,
+      "taxCents" : null
+    }, {
+      "upToCents" : 2500000,
+      "rate" : 0.052,
+      "taxCents" : null
+    }, {
+      "upToCents" : 6000000,
+      "rate" : 0.0555,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.066,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "SINGLE",
+    "residentStateFilter" : "DE",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_FL_SIT_2025",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "FL",
+    "basis" : "StateTaxable",
+    "ruleType" : "FLAT",
+    "rate" : 0.0,
+    "annualWageCapCents" : null,
+    "brackets" : null,
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : null,
+    "residentStateFilter" : "FL",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_GA_SIT_2025",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "GA",
+    "basis" : "StateTaxable",
+    "ruleType" : "FLAT",
+    "rate" : 0.0519,
+    "annualWageCapCents" : null,
+    "brackets" : null,
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : null,
+    "residentStateFilter" : "GA",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_HI_SIT_2025_SINGLE",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "HI",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 240000,
+      "rate" : 0.014,
+      "taxCents" : null
+    }, {
+      "upToCents" : 480000,
+      "rate" : 0.032,
+      "taxCents" : null
+    }, {
+      "upToCents" : 960000,
+      "rate" : 0.055,
+      "taxCents" : null
+    }, {
+      "upToCents" : 1440000,
+      "rate" : 0.064,
+      "taxCents" : null
+    }, {
+      "upToCents" : 1920000,
+      "rate" : 0.068,
+      "taxCents" : null
+    }, {
+      "upToCents" : 2400000,
+      "rate" : 0.072,
+      "taxCents" : null
+    }, {
+      "upToCents" : 3600000,
+      "rate" : 0.076,
+      "taxCents" : null
+    }, {
+      "upToCents" : 4800000,
+      "rate" : 0.079,
+      "taxCents" : null
+    }, {
+      "upToCents" : 15000000,
+      "rate" : 0.0825,
+      "taxCents" : null
+    }, {
+      "upToCents" : 17500000,
+      "rate" : 0.09,
+      "taxCents" : null
+    }, {
+      "upToCents" : 20000000,
+      "rate" : 0.1,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.11,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "SINGLE",
+    "residentStateFilter" : "HI",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_ID_SIT_2025_SINGLE",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "ID",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 250000,
+      "rate" : 0.0,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.053,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "SINGLE",
+    "residentStateFilter" : "ID",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_ID_SIT_2025_MARRIED",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "ID",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 500000,
+      "rate" : 0.0,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.053,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "MARRIED",
+    "residentStateFilter" : "ID",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_IL_SIT_2025",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "IL",
+    "basis" : "StateTaxable",
+    "ruleType" : "FLAT",
+    "rate" : 0.0495,
+    "annualWageCapCents" : null,
+    "brackets" : null,
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : null,
+    "residentStateFilter" : "IL",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_IN_SIT_2025",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "IN",
+    "basis" : "StateTaxable",
+    "ruleType" : "FLAT",
+    "rate" : 0.03,
+    "annualWageCapCents" : null,
+    "brackets" : null,
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : null,
+    "residentStateFilter" : "IN",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_IA_SIT_2025",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "IA",
+    "basis" : "StateTaxable",
+    "ruleType" : "FLAT",
+    "rate" : 0.038,
+    "annualWageCapCents" : null,
+    "brackets" : null,
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : null,
+    "residentStateFilter" : "IA",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_KS_SIT_2025_SINGLE",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "KS",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 2000000,
+      "rate" : 0.052,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.0558,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "SINGLE",
+    "residentStateFilter" : "KS",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_KY_SIT_2025",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "KY",
+    "basis" : "StateTaxable",
+    "ruleType" : "FLAT",
+    "rate" : 0.04,
+    "annualWageCapCents" : null,
+    "brackets" : null,
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : null,
+    "residentStateFilter" : "KY",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_LA_SIT_2025",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "LA",
+    "basis" : "StateTaxable",
+    "ruleType" : "FLAT",
+    "rate" : 0.03,
+    "annualWageCapCents" : null,
+    "brackets" : null,
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : null,
+    "residentStateFilter" : "LA",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_ME_SIT_2025_SINGLE",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "ME",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 2450000,
+      "rate" : 0.058,
+      "taxCents" : null
+    }, {
+      "upToCents" : 5805000,
+      "rate" : 0.0675,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.0715,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "SINGLE",
+    "residentStateFilter" : "ME",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_MD_SIT_2025_SINGLE",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "MD",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 100000,
+      "rate" : 0.02,
+      "taxCents" : null
+    }, {
+      "upToCents" : 200000,
+      "rate" : 0.03,
+      "taxCents" : null
+    }, {
+      "upToCents" : 300000,
+      "rate" : 0.04,
+      "taxCents" : null
+    }, {
+      "upToCents" : 10000000,
+      "rate" : 0.0475,
+      "taxCents" : null
+    }, {
+      "upToCents" : 12500000,
+      "rate" : 0.05,
+      "taxCents" : null
+    }, {
+      "upToCents" : 15000000,
+      "rate" : 0.0525,
+      "taxCents" : null
+    }, {
+      "upToCents" : 25000000,
+      "rate" : 0.055,
+      "taxCents" : null
+    }, {
+      "upToCents" : 50000000,
+      "rate" : 0.0575,
+      "taxCents" : null
+    }, {
+      "upToCents" : 100000000,
+      "rate" : 0.0625,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.065,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "SINGLE",
+    "residentStateFilter" : "MD",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_MA_SIT_2025_SINGLE",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "MA",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 108315000,
+      "rate" : 0.05,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.09,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "SINGLE",
+    "residentStateFilter" : "MA",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_MA_SIT_2025_MARRIED",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "MA",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 108315000,
+      "rate" : 0.05,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.09,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "MARRIED",
+    "residentStateFilter" : "MA",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_MA_SIT_2025_HEAD_OF_HOUSEHOLD",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "MA",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 108315000,
+      "rate" : 0.05,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.09,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.09,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "HEAD_OF_HOUSEHOLD",
+    "residentStateFilter" : "MA",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_MI_SIT_2025",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "MI",
+    "basis" : "StateTaxable",
+    "ruleType" : "FLAT",
+    "rate" : 0.0425,
+    "annualWageCapCents" : null,
+    "brackets" : null,
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : null,
+    "residentStateFilter" : "MI",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_MN_SIT_2025_SINGLE",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "MN",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 3257000,
+      "rate" : 0.0535,
+      "taxCents" : null
+    }, {
+      "upToCents" : 3257000,
+      "rate" : 0.0535,
+      "taxCents" : null
+    }, {
+      "upToCents" : 10699000,
+      "rate" : 0.068,
+      "taxCents" : null
+    }, {
+      "upToCents" : 19863000,
+      "rate" : 0.0785,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.0985,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "SINGLE",
+    "residentStateFilter" : "MN",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_MN_SIT_2025_MARRIED",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "MN",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 4762000,
+      "rate" : 0.0535,
+      "taxCents" : null
+    }, {
+      "upToCents" : 18918000,
+      "rate" : 0.068,
+      "taxCents" : null
+    }, {
+      "upToCents" : 33041000,
+      "rate" : 0.0785,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.0985,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "MARRIED",
+    "residentStateFilter" : "MN",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_MN_SIT_2025_HEAD_OF_HOUSEHOLD",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "MN",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 4010000,
+      "rate" : 0.0535,
+      "taxCents" : null
+    }, {
+      "upToCents" : 16113000,
+      "rate" : 0.068,
+      "taxCents" : null
+    }, {
+      "upToCents" : 26405000,
+      "rate" : 0.0785,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.0985,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "HEAD_OF_HOUSEHOLD",
+    "residentStateFilter" : "MN",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_MS_SIT_2025",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "MS",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 1000000,
+      "rate" : 0.0,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.044,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : null,
+    "residentStateFilter" : "MS",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_MO_SIT_2025_SINGLE",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "MO",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 100000,
+      "rate" : 0.0,
+      "taxCents" : null
+    }, {
+      "upToCents" : 200000,
+      "rate" : 0.02,
+      "taxCents" : null
+    }, {
+      "upToCents" : 300000,
+      "rate" : 0.025,
+      "taxCents" : null
+    }, {
+      "upToCents" : 400000,
+      "rate" : 0.03,
+      "taxCents" : null
+    }, {
+      "upToCents" : 500000,
+      "rate" : 0.035,
+      "taxCents" : null
+    }, {
+      "upToCents" : 800000,
+      "rate" : 0.04,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.047,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "SINGLE",
+    "residentStateFilter" : "MO",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_MT_SIT_2025_SINGLE",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "MT",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 2110000,
+      "rate" : 0.047,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.059,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "SINGLE",
+    "residentStateFilter" : "MT",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_NE_SIT_2025_SINGLE",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "NE",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 500000,
+      "rate" : 0.024,
+      "taxCents" : null
+    }, {
+      "upToCents" : 2000000,
+      "rate" : 0.035,
+      "taxCents" : null
+    }, {
+      "upToCents" : 7500000,
+      "rate" : 0.044,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.052,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "SINGLE",
+    "residentStateFilter" : "NE",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_NV_SIT_2025",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "NV",
+    "basis" : "StateTaxable",
+    "ruleType" : "FLAT",
+    "rate" : 0.0,
+    "annualWageCapCents" : null,
+    "brackets" : null,
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : null,
+    "residentStateFilter" : "NV",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_NH_SIT_2025",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "NH",
+    "basis" : "StateTaxable",
+    "ruleType" : "FLAT",
+    "rate" : 0.0,
+    "annualWageCapCents" : null,
+    "brackets" : null,
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : null,
+    "residentStateFilter" : "NH",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_NJ_SIT_2025_SINGLE",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "NJ",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 2000000,
+      "rate" : 0.014,
+      "taxCents" : null
+    }, {
+      "upToCents" : 3500000,
+      "rate" : 0.0175,
+      "taxCents" : null
+    }, {
+      "upToCents" : 4000000,
+      "rate" : 0.035,
+      "taxCents" : null
+    }, {
+      "upToCents" : 7500000,
+      "rate" : 0.05525,
+      "taxCents" : null
+    }, {
+      "upToCents" : 50000000,
+      "rate" : 0.0637,
+      "taxCents" : null
+    }, {
+      "upToCents" : 100000000,
+      "rate" : 0.0897,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.1075,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "SINGLE",
+    "residentStateFilter" : "NJ",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_NJ_SIT_2025_MARRIED",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "NJ",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 2000000,
+      "rate" : 0.014,
+      "taxCents" : null
+    }, {
+      "upToCents" : 5000000,
+      "rate" : 0.0175,
+      "taxCents" : null
+    }, {
+      "upToCents" : 7000000,
+      "rate" : 0.0245,
+      "taxCents" : null
+    }, {
+      "upToCents" : 8000000,
+      "rate" : 0.035,
+      "taxCents" : null
+    }, {
+      "upToCents" : 15000000,
+      "rate" : 0.05525,
+      "taxCents" : null
+    }, {
+      "upToCents" : 50000000,
+      "rate" : 0.0637,
+      "taxCents" : null
+    }, {
+      "upToCents" : 100000000,
+      "rate" : 0.0897,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.1075,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "MARRIED",
+    "residentStateFilter" : "NJ",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_NJ_SIT_2025_HEAD_OF_HOUSEHOLD",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "NJ",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 2000000,
+      "rate" : 0.014,
+      "taxCents" : null
+    }, {
+      "upToCents" : 5000000,
+      "rate" : 0.0175,
+      "taxCents" : null
+    }, {
+      "upToCents" : 7000000,
+      "rate" : 0.0245,
+      "taxCents" : null
+    }, {
+      "upToCents" : 8000000,
+      "rate" : 0.035,
+      "taxCents" : null
+    }, {
+      "upToCents" : 15000000,
+      "rate" : 0.05525,
+      "taxCents" : null
+    }, {
+      "upToCents" : 50000000,
+      "rate" : 0.0637,
+      "taxCents" : null
+    }, {
+      "upToCents" : 100000000,
+      "rate" : 0.0897,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.1075,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "HEAD_OF_HOUSEHOLD",
+    "residentStateFilter" : "NJ",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_NM_SIT_2025_SINGLE",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "NM",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 550000,
+      "rate" : 0.015,
+      "taxCents" : null
+    }, {
+      "upToCents" : 1650000,
+      "rate" : 0.032,
+      "taxCents" : null
+    }, {
+      "upToCents" : 3350000,
+      "rate" : 0.043,
+      "taxCents" : null
+    }, {
+      "upToCents" : 6650000,
+      "rate" : 0.047,
+      "taxCents" : null
+    }, {
+      "upToCents" : 21000000,
+      "rate" : 0.049,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.059,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "SINGLE",
+    "residentStateFilter" : "NM",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_NY_SIT_2025_SINGLE",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "NY",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 850000,
+      "rate" : 0.04,
+      "taxCents" : null
+    }, {
+      "upToCents" : 1170000,
+      "rate" : 0.045,
+      "taxCents" : null
+    }, {
+      "upToCents" : 1390000,
+      "rate" : 0.0525,
+      "taxCents" : null
+    }, {
+      "upToCents" : 8065000,
+      "rate" : 0.055,
+      "taxCents" : null
+    }, {
+      "upToCents" : 21540000,
+      "rate" : 0.06,
+      "taxCents" : null
+    }, {
+      "upToCents" : 107755000,
+      "rate" : 0.0685,
+      "taxCents" : null
+    }, {
+      "upToCents" : 500000000,
+      "rate" : 0.0965,
+      "taxCents" : null
+    }, {
+      "upToCents" : 2500000000,
+      "rate" : 0.103,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.109,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "SINGLE",
+    "residentStateFilter" : "NY",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_NY_SIT_2025_MARRIED",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "NY",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 1715000,
+      "rate" : 0.04,
+      "taxCents" : null
+    }, {
+      "upToCents" : 2360000,
+      "rate" : 0.045,
+      "taxCents" : null
+    }, {
+      "upToCents" : 2790000,
+      "rate" : 0.0525,
+      "taxCents" : null
+    }, {
+      "upToCents" : 16155000,
+      "rate" : 0.055,
+      "taxCents" : null
+    }, {
+      "upToCents" : 32320000,
+      "rate" : 0.06,
+      "taxCents" : null
+    }, {
+      "upToCents" : 215535000,
+      "rate" : 0.0685,
+      "taxCents" : null
+    }, {
+      "upToCents" : 500000000,
+      "rate" : 0.0965,
+      "taxCents" : null
+    }, {
+      "upToCents" : 2500000000,
+      "rate" : 0.103,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.109,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "MARRIED",
+    "residentStateFilter" : "NY",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_NY_SIT_2025_HEAD_OF_HOUSEHOLD",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "NY",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 1280000,
+      "rate" : 0.04,
+      "taxCents" : null
+    }, {
+      "upToCents" : 1765000,
+      "rate" : 0.045,
+      "taxCents" : null
+    }, {
+      "upToCents" : 2090000,
+      "rate" : 0.0525,
+      "taxCents" : null
+    }, {
+      "upToCents" : 10765000,
+      "rate" : 0.055,
+      "taxCents" : null
+    }, {
+      "upToCents" : 26930000,
+      "rate" : 0.06,
+      "taxCents" : null
+    }, {
+      "upToCents" : 161645000,
+      "rate" : 0.0685,
+      "taxCents" : null
+    }, {
+      "upToCents" : 500000000,
+      "rate" : 0.0965,
+      "taxCents" : null
+    }, {
+      "upToCents" : 2500000000,
+      "rate" : 0.103,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.109,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "HEAD_OF_HOUSEHOLD",
+    "residentStateFilter" : "NY",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_NC_SIT_2025",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "NC",
+    "basis" : "StateTaxable",
+    "ruleType" : "FLAT",
+    "rate" : 0.0425,
+    "annualWageCapCents" : null,
+    "brackets" : null,
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : null,
+    "residentStateFilter" : "NC",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_ND_SIT_2025_SINGLE",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "ND",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 4715000,
+      "rate" : 0.0,
+      "taxCents" : null
+    }, {
+      "upToCents" : 23820000,
+      "rate" : 0.0195,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.025,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "SINGLE",
+    "residentStateFilter" : "ND",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_OH_SIT_2025_SINGLE",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "OH",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 2605000,
+      "rate" : 0.0,
+      "taxCents" : null
+    }, {
+      "upToCents" : 10000000,
+      "rate" : 0.0275,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.03125,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "SINGLE",
+    "residentStateFilter" : "OH",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_OK_SIT_2025_SINGLE",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "OK",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 100000,
+      "rate" : 0.0025,
+      "taxCents" : null
+    }, {
+      "upToCents" : 250000,
+      "rate" : 0.0075,
+      "taxCents" : null
+    }, {
+      "upToCents" : 375000,
+      "rate" : 0.0175,
+      "taxCents" : null
+    }, {
+      "upToCents" : 490000,
+      "rate" : 0.0275,
+      "taxCents" : null
+    }, {
+      "upToCents" : 720000,
+      "rate" : 0.0375,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.0475,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "SINGLE",
+    "residentStateFilter" : "OK",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_OR_SIT_2025_SINGLE",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "OR",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 435000,
+      "rate" : 0.0475,
+      "taxCents" : null
+    }, {
+      "upToCents" : 1090000,
+      "rate" : 0.0675,
+      "taxCents" : null
+    }, {
+      "upToCents" : 13775000,
+      "rate" : 0.0875,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.099,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "SINGLE",
+    "residentStateFilter" : "OR",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_OR_SIT_2025_MARRIED",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "OR",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 870000,
+      "rate" : 0.0475,
+      "taxCents" : null
+    }, {
+      "upToCents" : 2180000,
+      "rate" : 0.0675,
+      "taxCents" : null
+    }, {
+      "upToCents" : 27550000,
+      "rate" : 0.0875,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.099,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "MARRIED",
+    "residentStateFilter" : "OR",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_OR_SIT_2025_HEAD_OF_HOUSEHOLD",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "OR",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 870000,
+      "rate" : 0.0475,
+      "taxCents" : null
+    }, {
+      "upToCents" : 2180000,
+      "rate" : 0.0675,
+      "taxCents" : null
+    }, {
+      "upToCents" : 27550000,
+      "rate" : 0.0875,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.099,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "HEAD_OF_HOUSEHOLD",
+    "residentStateFilter" : "OR",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_PA_SIT_2025",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "PA",
+    "basis" : "StateTaxable",
+    "ruleType" : "FLAT",
+    "rate" : 0.0307,
+    "annualWageCapCents" : null,
+    "brackets" : null,
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : null,
+    "residentStateFilter" : "PA",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_RI_SIT_2025_SINGLE",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "RI",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 7990000,
+      "rate" : 0.0375,
+      "taxCents" : null
+    }, {
+      "upToCents" : 18165000,
+      "rate" : 0.0475,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.0599,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "SINGLE",
+    "residentStateFilter" : "RI",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_SC_SIT_2025_SINGLE",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "SC",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 320000,
+      "rate" : 0.0,
+      "taxCents" : null
+    }, {
+      "upToCents" : 1604000,
+      "rate" : 0.03,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.06,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "SINGLE",
+    "residentStateFilter" : "SC",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_SD_SIT_2025",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "SD",
+    "basis" : "StateTaxable",
+    "ruleType" : "FLAT",
+    "rate" : 0.0,
+    "annualWageCapCents" : null,
+    "brackets" : null,
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : null,
+    "residentStateFilter" : "SD",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_TN_SIT_2025",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "TN",
+    "basis" : "StateTaxable",
+    "ruleType" : "FLAT",
+    "rate" : 0.0,
+    "annualWageCapCents" : null,
+    "brackets" : null,
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : null,
+    "residentStateFilter" : "TN",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_TX_SIT_2025",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "TX",
+    "basis" : "StateTaxable",
+    "ruleType" : "FLAT",
+    "rate" : 0.0,
+    "annualWageCapCents" : null,
+    "brackets" : null,
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : null,
+    "residentStateFilter" : "TX",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_UT_SIT_2025",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "UT",
+    "basis" : "StateTaxable",
+    "ruleType" : "FLAT",
+    "rate" : 0.045,
+    "annualWageCapCents" : null,
+    "brackets" : null,
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : null,
+    "residentStateFilter" : "UT",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_VT_SIT_2025_SINGLE",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "VT",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 4790000,
+      "rate" : 0.0335,
+      "taxCents" : null
+    }, {
+      "upToCents" : 11600000,
+      "rate" : 0.066,
+      "taxCents" : null
+    }, {
+      "upToCents" : 24200000,
+      "rate" : 0.076,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.0875,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "SINGLE",
+    "residentStateFilter" : "VT",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_VA_SIT_2025_SINGLE",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "VA",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 300000,
+      "rate" : 0.02,
+      "taxCents" : null
+    }, {
+      "upToCents" : 500000,
+      "rate" : 0.03,
+      "taxCents" : null
+    }, {
+      "upToCents" : 1700000,
+      "rate" : 0.05,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.0575,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "SINGLE",
+    "residentStateFilter" : "VA",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_WA_SIT_2025",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "WA",
+    "basis" : "StateTaxable",
+    "ruleType" : "FLAT",
+    "rate" : 0.0,
+    "annualWageCapCents" : null,
+    "brackets" : null,
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : null,
+    "residentStateFilter" : "WA",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_WV_SIT_2025_SINGLE",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "WV",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 1000000,
+      "rate" : 0.0222,
+      "taxCents" : null
+    }, {
+      "upToCents" : 2500000,
+      "rate" : 0.0296,
+      "taxCents" : null
+    }, {
+      "upToCents" : 4000000,
+      "rate" : 0.0333,
+      "taxCents" : null
+    }, {
+      "upToCents" : 6000000,
+      "rate" : 0.0444,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.0482,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "SINGLE",
+    "residentStateFilter" : "WV",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_WI_SIT_2025_SINGLE",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "WI",
+    "basis" : "StateTaxable",
+    "ruleType" : "BRACKETED",
+    "rate" : null,
+    "annualWageCapCents" : null,
+    "brackets" : [ {
+      "upToCents" : 1432000,
+      "rate" : 0.035,
+      "taxCents" : null
+    }, {
+      "upToCents" : 2864000,
+      "rate" : 0.044,
+      "taxCents" : null
+    }, {
+      "upToCents" : 31531000,
+      "rate" : 0.053,
+      "taxCents" : null
+    }, {
+      "upToCents" : null,
+      "rate" : 0.0765,
+      "taxCents" : null
+    } ],
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : "SINGLE",
+    "residentStateFilter" : "WI",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  }, {
+    "id" : "US_WY_SIT_2025",
+    "jurisdictionType" : "STATE",
+    "jurisdictionCode" : "WY",
+    "basis" : "StateTaxable",
+    "ruleType" : "FLAT",
+    "rate" : 0.0,
+    "annualWageCapCents" : null,
+    "brackets" : null,
+    "standardDeductionCents" : null,
+    "additionalWithholdingCents" : null,
+    "employerId" : null,
+    "fitVariant" : null,
+    "effectiveFrom" : "2025-01-01",
+    "effectiveTo" : "9999-12-31",
+    "filingStatus" : null,
+    "residentStateFilter" : "WY",
+    "workStateFilter" : null,
+    "localityFilter" : null
+  } ]
+}

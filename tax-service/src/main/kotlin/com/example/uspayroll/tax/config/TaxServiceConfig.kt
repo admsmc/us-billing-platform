@@ -66,11 +66,7 @@ class TaxServiceConfig {
     }
 
     @Bean
-    fun federalWithholdingCalculator(
-        @Value("\${tax.federalWithholding.method:PERCENTAGE}") method: String,
-        @Value("\${tax.federalWithholding.pub15tStrictMode:false}") strictMode: Boolean,
-    ): FederalWithholdingCalculator = DefaultFederalWithholdingCalculator(
+    fun federalWithholdingCalculator(@Value("\${tax.federalWithholding.method:PERCENTAGE}") method: String): FederalWithholdingCalculator = DefaultFederalWithholdingCalculator(
         method = method,
-        pub15tStrictMode = strictMode,
     )
 }

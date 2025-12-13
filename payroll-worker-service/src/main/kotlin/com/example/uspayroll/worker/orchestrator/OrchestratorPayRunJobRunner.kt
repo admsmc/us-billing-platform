@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service
 class OrchestratorPayRunJobRunner(
     private val orchestratorClient: OrchestratorClient,
     private val props: OrchestratorPayRunJobProperties,
+    private val workerInstance: com.example.uspayroll.worker.support.WorkerInstance,
 ) {
 
     private val logger = LoggerFactory.getLogger(OrchestratorPayRunJobRunner::class.java)
@@ -45,7 +46,8 @@ class OrchestratorPayRunJobRunner(
                 maxItems = props.executeMaxItems,
                 maxMillis = props.executeMaxMillis,
                 requeueStaleMillis = props.requeueStaleMillis,
-                leaseOwner = "worker",
+                leaseOwner = workerInstance.leaseOwner,
+                parallelism = props.executeParallelism,
             )
 
             lastFinalStatus = exec["finalStatus"] as? String

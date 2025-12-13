@@ -11,9 +11,11 @@ COPY settings.gradle.kts settings.gradle.kts
 COPY build.gradle.kts build.gradle.kts
 COPY gradle.properties gradle.properties
 
-# Copy project sources.
+# Copy project sources (include all subprojects required by :hr-service).
 COPY shared-kernel shared-kernel
 COPY payroll-domain payroll-domain
+COPY web-core web-core
+COPY hr-api hr-api
 COPY hr-service hr-service
 
 RUN ./gradlew --no-daemon :hr-service:bootJar

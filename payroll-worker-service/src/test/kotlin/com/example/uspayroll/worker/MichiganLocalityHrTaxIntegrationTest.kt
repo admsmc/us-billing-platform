@@ -2,6 +2,7 @@ package com.example.uspayroll.worker
 
 import com.example.uspayroll.hr.HrApplication
 import com.example.uspayroll.payroll.model.*
+import com.example.uspayroll.persistence.flyway.FlywaySupport
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.tax.api.TaxCatalog
@@ -17,7 +18,6 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import org.flywaydb.core.Flyway
 import org.h2.jdbcx.JdbcDataSource
 import org.jooq.DSLContext
 import org.jooq.SQLDialect
@@ -228,11 +228,10 @@ class MichiganLocalityHrTaxIntegrationTest {
             }
 
             // Create the tax_rule schema using the real Flyway migration.
-            Flyway.configure()
-                .dataSource(ds)
-                .locations("classpath:db/migration/tax")
-                .load()
-                .migrate()
+            FlywaySupport.migrate(
+                dataSource = ds,
+                "classpath:db/migration/tax",
+            )
 
             return DSL.using(ds, SQLDialect.H2)
         }

@@ -1,7 +1,7 @@
 package com.example.uspayroll.labor.http
 
 import com.example.uspayroll.labor.LaborHttpController
-import com.example.uspayroll.labor.impl.LaborStandardsContextProvider
+import com.example.uspayroll.labor.api.LaborStandardsContextProvider
 import com.example.uspayroll.labor.web.CorrelationIdFilter
 import com.example.uspayroll.payroll.model.LaborStandardsContext
 import com.example.uspayroll.shared.EmployerId

@@ -6,7 +6,7 @@
 -- from (type, issuing jurisdiction).
 
 ALTER TABLE garnishment_order
-    ADD COLUMN formula_json CLOB;
+    ADD COLUMN formula_json TEXT;
 
 ALTER TABLE garnishment_order
-    ADD COLUMN protected_earnings_rule_json CLOB;
+    ADD COLUMN protected_earnings_rule_json TEXT;

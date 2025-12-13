@@ -105,16 +105,20 @@ class EmployerPretaxRothWorkerIntegrationTest {
 
         val repo = PretaxRothDeductionConfigRepository()
 
-        val pretaxResult = PayrollEngine.calculatePaycheck(
+        val pretaxResult = PayrollEngine.calculatePaycheckComputation(
             input = pretaxInput,
+            computedAt = java.time.Instant.EPOCH,
+            traceLevel = com.example.uspayroll.payroll.model.audit.TraceLevel.DEBUG,
             earningConfig = null,
             deductionConfig = repo,
-        )
-        val rothResult = PayrollEngine.calculatePaycheck(
+        ).paycheck
+        val rothResult = PayrollEngine.calculatePaycheckComputation(
             input = rothInput,
+            computedAt = java.time.Instant.EPOCH,
+            traceLevel = com.example.uspayroll.payroll.model.audit.TraceLevel.DEBUG,
             earningConfig = null,
             deductionConfig = repo,
-        )
+        ).paycheck
 
         // Gross is identical.
         assertEquals(10_000_00L, pretaxResult.gross.amount)

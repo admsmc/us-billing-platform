@@ -12,9 +12,12 @@ COPY gradle.properties gradle.properties
 
 COPY shared-kernel shared-kernel
 COPY payroll-domain payroll-domain
-COPY hr-service hr-service
-COPY tax-service tax-service
-COPY labor-service labor-service
+COPY messaging-core messaging-core
+COPY web-core web-core
+COPY hr-api hr-api
+COPY hr-client hr-client
+COPY tax-api tax-api
+COPY labor-api labor-api
 COPY payroll-worker-service payroll-worker-service
 
 RUN ./gradlew --no-daemon :payroll-worker-service:bootJar

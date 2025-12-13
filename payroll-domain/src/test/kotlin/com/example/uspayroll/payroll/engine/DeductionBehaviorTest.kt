@@ -73,7 +73,7 @@ class DeductionBehaviorTest {
 
         // First check, YTD = 0 -> full 2,000 allowed
         val input1 = baseInput(employerId, employeeId, YtdSnapshot(year = 2025))
-        val result1 = PayrollEngine.calculatePaycheck(
+        val result1 = calculatePaycheckDebug(
             input = input1,
             earningConfig = null,
             deductionConfig = repo,
@@ -93,7 +93,7 @@ class DeductionBehaviorTest {
         // Second check, prior YTD already 2,000 -> only 1,000 remaining to hit 3,000 cap
         val priorYtd2 = result1.ytdAfter
         val input2 = baseInput(employerId, employeeId, priorYtd2)
-        val result2 = PayrollEngine.calculatePaycheck(
+        val result2 = calculatePaycheckDebug(
             input = input2,
             earningConfig = null,
             deductionConfig = repo,
@@ -104,7 +104,7 @@ class DeductionBehaviorTest {
         // Third check, prior YTD already at cap -> 0 this period
         val priorYtd3 = result2.ytdAfter
         val input3 = baseInput(employerId, employeeId, priorYtd3)
-        val result3 = PayrollEngine.calculatePaycheck(
+        val result3 = calculatePaycheckDebug(
             input = input3,
             earningConfig = null,
             deductionConfig = repo,
@@ -140,7 +140,7 @@ class DeductionBehaviorTest {
         }
 
         val input = baseInput(employerId, employeeId, YtdSnapshot(year = 2025))
-        val result = PayrollEngine.calculatePaycheck(
+        val result = calculatePaycheckDebug(
             input = input,
             earningConfig = null,
             deductionConfig = repo,
@@ -202,7 +202,7 @@ class DeductionBehaviorTest {
             taxContext = TaxContext(federal = listOf(taxRule)),
         )
 
-        val result = PayrollEngine.calculatePaycheck(
+        val result = calculatePaycheckDebug(
             input = input,
             earningConfig = null,
             deductionConfig = repo,

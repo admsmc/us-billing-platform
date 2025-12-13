@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS paycheck (
     status           VARCHAR(32)  NOT NULL DEFAULT 'FINAL',
     version          INT          NOT NULL DEFAULT 1,
 
-    payload_json     CLOB         NOT NULL,
+    payload_json     TEXT         NOT NULL,
 
     created_at       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
 

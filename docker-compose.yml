@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:16
+    image: postgres:15.14
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -9,8 +9,9 @@ services:
       HR_DB_PASSWORD: ${HR_DB_PASSWORD:-hr_service}
       TAX_DB_PASSWORD: ${TAX_DB_PASSWORD:-tax_service}
       LABOR_DB_PASSWORD: ${LABOR_DB_PASSWORD:-labor_service}
+      ORCHESTRATOR_DB_PASSWORD: ${ORCHESTRATOR_DB_PASSWORD:-orchestrator_service}
     ports:
-      - "5432:5432"
+      - "15432:5432"
     volumes:
       - ./docker/postgres/init.sh:/docker-entrypoint-initdb.d/init.sh:ro
 
@@ -25,6 +26,9 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/us_payroll_hr
       SPRING_DATASOURCE_USERNAME: hr_service
       SPRING_DATASOURCE_PASSWORD: ${HR_DB_PASSWORD:-hr_service}
+      # Optional benchmark-only endpoint for discovering seeded employee ID range.
+      HR_BENCHMARKS_ENABLED: ${HR_BENCHMARKS_ENABLED:-false}
+      HR_BENCHMARKS_TOKEN: ${WORKER_BENCHMARKS_TOKEN:-}
 
   tax-service:
     build:
@@ -58,8 +62,17 @@ services:
       - postgres
     environment:
       SERVER_PORT: 8085
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/us_payroll_orchestrator
+      SPRING_DATASOURCE_USERNAME: orchestrator_service
+      SPRING_DATASOURCE_PASSWORD: ${ORCHESTRATOR_DB_PASSWORD:-orchestrator_service}
+
+      # Service-to-service base URLs (default HR client config is localhost, which is wrong in Docker)
+      HR_BASE_URL: http://hr-service:8081
+      TAX_BASE_URL: http://tax-service:8082
+      LABOR_BASE_URL: http://labor-service:8083
+
       # For now we keep orchestrator internal auth enabled only when explicitly set.
-      ORCHESTRATOR_INTERNAL_AUTH_SHAREDSECRET: ${ORCHESTRATOR_INTERNAL_AUTH_SHAREDSECRET:-}
+      ORCHESTRATOR_INTERNAL_AUTH_SHARED_SECRET: ${ORCHESTRATOR_INTERNAL_AUTH_SHARED_SECRET:-}
 
   payroll-worker-service:
     build:
@@ -76,7 +89,10 @@ services:
       TAX_BASE_URL: http://tax-service:8082
       LABOR_BASE_URL: http://labor-service:8083
       ORCHESTRATOR_BASE_URL: http://payroll-orchestrator-service:8085
-      ORCHESTRATOR_INTERNAL_TOKEN: ${ORCHESTRATOR_INTERNAL_AUTH_SHAREDSECRET:-}
+      ORCHESTRATOR_INTERNAL_TOKEN: ${ORCHESTRATOR_INTERNAL_AUTH_SHARED_SECRET:-}
+      # Benchmark-only endpoint (disabled by default).
+      WORKER_BENCHMARKS_ENABLED: ${WORKER_BENCHMARKS_ENABLED:-false}
+      WORKER_BENCHMARKS_TOKEN: ${WORKER_BENCHMARKS_TOKEN:-}
 
   edge-service:
     build:

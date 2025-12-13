@@ -20,6 +20,12 @@ kotlin {
 dependencies {
     implementation(project(":shared-kernel"))
     implementation(project(":payroll-domain"))
+    implementation(project(":web-core"))
+    implementation(project(":tax-api"))
+    implementation(project(":tax-config"))
+    implementation(project(":tax-catalog-ports"))
+    implementation(project(":tax-impl"))
+    implementation(project(":tax-content"))
 
     // Spring Boot web + JDBC for tax-service HTTP API and DB access.
     implementation("org.springframework.boot:spring-boot-starter-web")
@@ -27,7 +33,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
 
     // Flyway for managing Postgres schema migrations (including tax_rule).
-    implementation("org.flywaydb:flyway-core")
+    implementation("org.flywaydb:flyway-core:11.19.0")
+    implementation("org.flywaydb:flyway-database-postgresql:11.19.0")
 
     // jOOQ for SQL-centric, type-safe access to the tax_rule schema.
     implementation("org.jooq:jooq:3.19.11")
@@ -46,6 +53,7 @@ dependencies {
     implementation("org.apache.commons:commons-csv:1.11.0")
 
     testImplementation(kotlin("test"))
+    testImplementation(project(":persistence-core"))
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("com.h2database:h2:2.3.232")
 
@@ -68,6 +76,9 @@ application {
 tasks.register<JavaExec>("runStateIncomeTaxImporter") {
     group = "application"
     description = "Generate state income tax JSON from CSV. Use -PtaxYear=YYYY to override the default year."
+
+    // Ensure TaxContentPaths can find tax-content/src/main/resources.
+    workingDir = rootProject.projectDir
 
     classpath = sourceSets.getByName("main").runtimeClasspath
     mainClass.set("com.example.uspayroll.tax.tools.StateIncomeTaxImporter")

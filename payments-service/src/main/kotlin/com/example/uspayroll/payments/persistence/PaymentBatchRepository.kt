@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional
 import java.sql.Timestamp
 import java.time.Duration
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 enum class PaymentBatchStatus {
@@ -38,6 +39,12 @@ data class PaymentBatchRow(
 class PaymentBatchRepository(
     private val jdbcTemplate: JdbcTemplate,
 ) {
+    private val isPostgres: Boolean by lazy {
+        val ds = jdbcTemplate.dataSource ?: return@lazy false
+        ds.connection.use { conn ->
+            conn.metaData.databaseProductName.lowercase().contains("postgres")
+        }
+    }
     fun findByBatchId(employerId: String, batchId: String): PaymentBatchRow? = jdbcTemplate.query(
         """
             SELECT employer_id, batch_id, pay_run_id, status,
@@ -97,9 +104,50 @@ class PaymentBatchRepository(
         val batchId = "pbat-${UUID.randomUUID()}"
         val ts = Timestamp.from(now)
 
-        try {
-            jdbcTemplate.update(
-                """
+        if (!isPostgres) {
+            // H2 (used in tests) doesn't support Postgres's ON CONFLICT syntax.
+            // Fall back to exception-based race handling.
+            try {
+                jdbcTemplate.update(
+                    """
+                    INSERT INTO payment_batch (
+                      employer_id, batch_id, pay_run_id,
+                      status,
+                      total_payments, settled_payments, failed_payments,
+                      attempts, next_attempt_at, last_error,
+                      locked_by, locked_at,
+                      created_at, updated_at
+                    ) VALUES (?, ?, ?, ?, 0, 0, 0, 0, NULL, NULL, NULL, NULL, ?, ?)
+                    """.trimIndent(),
+                    employerId,
+                    batchId,
+                    payRunId,
+                    PaymentBatchStatus.CREATED.name,
+                    ts,
+                    ts,
+                )
+
+                jdbcTemplate.update(
+                    """
+                    INSERT INTO pay_run_payment_batch (employer_id, pay_run_id, batch_id, created_at)
+                    VALUES (?, ?, ?, ?)
+                    """.trimIndent(),
+                    employerId,
+                    payRunId,
+                    batchId,
+                    ts,
+                )
+
+                return batchId
+            } catch (_: DataIntegrityViolationException) {
+                return findBatchIdForPayRun(employerId, payRunId)
+                    ?: throw IllegalStateException("batch creation race but mapping not found")
+            }
+        }
+
+        // Postgres: avoid transaction-aborting constraint violations.
+        val insertedBatch = jdbcTemplate.update(
+            """
                 INSERT INTO payment_batch (
                   employer_id, batch_id, pay_run_id,
                   status,
@@ -108,32 +156,44 @@ class PaymentBatchRepository(
                   locked_by, locked_at,
                   created_at, updated_at
                 ) VALUES (?, ?, ?, ?, 0, 0, 0, 0, NULL, NULL, NULL, NULL, ?, ?)
-                """.trimIndent(),
-                employerId,
-                batchId,
-                payRunId,
-                PaymentBatchStatus.CREATED.name,
-                ts,
-                ts,
-            )
+                ON CONFLICT DO NOTHING
+            """.trimIndent(),
+            employerId,
+            batchId,
+            payRunId,
+            PaymentBatchStatus.CREATED.name,
+            ts,
+            ts,
+        )
 
-            jdbcTemplate.update(
-                """
+        val insertedMapping = jdbcTemplate.update(
+            """
                 INSERT INTO pay_run_payment_batch (employer_id, pay_run_id, batch_id, created_at)
                 VALUES (?, ?, ?, ?)
-                """.trimIndent(),
-                employerId,
-                payRunId,
-                batchId,
-                ts,
-            )
+                ON CONFLICT DO NOTHING
+            """.trimIndent(),
+            employerId,
+            payRunId,
+            batchId,
+            ts,
+        )
 
+        if (insertedMapping == 1) {
             return batchId
-        } catch (_: DataIntegrityViolationException) {
-            // Concurrent creation: read existing mapping.
-            return findBatchIdForPayRun(employerId, payRunId)
-                ?: throw IllegalStateException("batch creation race but mapping not found")
         }
+
+        // Another transaction already created the mapping. Clean up any newly inserted batch row
+        // to avoid orphaned payment_batch records.
+        if (insertedBatch == 1) {
+            jdbcTemplate.update(
+                "DELETE FROM payment_batch WHERE employer_id = ? AND batch_id = ?",
+                employerId,
+                batchId,
+            )
+        }
+
+        return findBatchIdForPayRun(employerId, payRunId)
+            ?: throw IllegalStateException("batch creation race but mapping not found")
     }
 
     data class BatchCounts(
@@ -205,8 +265,9 @@ class PaymentBatchRepository(
     @Transactional
     fun claimActiveBatches(limit: Int, lockOwner: String, lockTtl: Duration, now: Instant = Instant.now()): List<PaymentBatchRow> {
         val effectiveLimit = limit.coerceIn(1, 100)
-        val nowTs = Timestamp.from(now)
-        val cutoffTs = Timestamp.from(now.minus(lockTtl))
+        val leaseAt = now.truncatedTo(ChronoUnit.MILLIS)
+        val nowTs = Timestamp.from(leaseAt)
+        val cutoffTs = Timestamp.from(leaseAt.minus(lockTtl))
 
         val rows = jdbcTemplate.query(
             """
@@ -253,11 +314,15 @@ class PaymentBatchRepository(
 
         if (rows.isEmpty()) return emptyList()
 
-        jdbcTemplate.batchUpdate(
+        val updatedCounts = jdbcTemplate.batchUpdate(
             """
             UPDATE payment_batch
             SET status = ?, locked_by = ?, locked_at = ?, updated_at = ?
-            WHERE employer_id = ? AND batch_id = ?
+            WHERE employer_id = ?
+              AND batch_id = ?
+              AND status IN ('CREATED','PROCESSING','PARTIALLY_COMPLETED')
+              AND (next_attempt_at IS NULL OR next_attempt_at <= ?)
+              AND (locked_at IS NULL OR locked_at < ?)
             """.trimIndent(),
             rows.map {
                 arrayOf(
@@ -267,10 +332,23 @@ class PaymentBatchRepository(
                     nowTs,
                     it.employerId,
                     it.batchId,
+                    nowTs,
+                    cutoffTs,
                 )
             },
         )
 
+        // Only return rows we successfully claimed (maximally defensive).
         return rows
+            .zip(updatedCounts.asList())
+            .filter { (_, updated) -> updated == 1 }
+            .map { (row, _) ->
+                row.copy(
+                    status = PaymentBatchStatus.PROCESSING,
+                    lockedBy = lockOwner,
+                    lockedAt = leaseAt,
+                    updatedAt = leaseAt,
+                )
+            }
     }
 }

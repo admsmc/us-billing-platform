@@ -9,7 +9,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.client.RestTemplate
-import org.springframework.web.client.getForObject
 import java.time.LocalDate
 
 interface LaborStandardsClient {
@@ -53,8 +52,10 @@ class HttpLaborStandardsClient(
         }
 
         val url = baseQuery + localityQuery
-        val dto = restTemplate.getForObject<LaborStandardsContextDto>(url)
-            ?: return null
-        return dto.toDomain()
+
+        // Avoid Kotlin's reified RestTemplate extension here: when the controller returns a 200 with an empty body,
+        // some extension variants will cast null to a non-null type and throw.
+        val dto: LaborStandardsContextDto? = restTemplate.getForObject(url, LaborStandardsContextDto::class.java)
+        return dto?.toDomain()
     }
 }

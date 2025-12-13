@@ -7,8 +7,6 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
 
 /**
  * Command-line utility that validates all TaxRuleFile JSON documents under
@@ -19,8 +17,8 @@ object TaxConfigValidatorCli {
 
     @JvmStatic
     fun main(args: Array<String>) {
-        val projectDir: Path = Paths.get("").toAbsolutePath()
-        val taxConfigDir = projectDir.resolve("src/main/resources/tax-config")
+        val resourcesDir = TaxContentPaths.resourcesDir()
+        val taxConfigDir = resourcesDir.resolve("tax-config")
 
         if (!Files.exists(taxConfigDir)) {
             println("No tax-config directory found at $taxConfigDir; nothing to validate.")

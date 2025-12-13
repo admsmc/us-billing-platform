@@ -1,16 +1,18 @@
 package com.example.uspayroll.orchestrator.payrun
 
-import com.example.uspayroll.orchestrator.client.HrClient
+import com.example.uspayroll.hr.client.HrClient
 import com.example.uspayroll.orchestrator.client.LaborStandardsClient
 import com.example.uspayroll.orchestrator.client.TaxClient
 import com.example.uspayroll.orchestrator.garnishment.SupportProfiles
 import com.example.uspayroll.orchestrator.location.LocalityResolver
+import com.example.uspayroll.orchestrator.persistence.PaycheckAuditStoreRepository
 import com.example.uspayroll.orchestrator.persistence.PaycheckStoreRepository
 import com.example.uspayroll.payroll.engine.PayrollEngine
 import com.example.uspayroll.payroll.model.PaycheckInput
 import com.example.uspayroll.payroll.model.PaycheckResult
 import com.example.uspayroll.payroll.model.TimeSlice
 import com.example.uspayroll.payroll.model.YtdSnapshot
+import com.example.uspayroll.payroll.model.audit.TraceLevel
 import com.example.uspayroll.payroll.model.config.DeductionConfigRepository
 import com.example.uspayroll.payroll.model.config.EarningConfigRepository
 import com.example.uspayroll.payroll.model.garnishment.GarnishmentContext
@@ -20,6 +22,7 @@ import com.example.uspayroll.shared.PayRunId
 import com.example.uspayroll.shared.PaycheckId
 import com.example.uspayroll.shared.toLocalityCodeStrings
 import org.springframework.stereotype.Service
+import java.time.Instant
 
 @Service
 class PaycheckComputationService(
@@ -30,6 +33,7 @@ class PaycheckComputationService(
     private val earningConfigRepository: EarningConfigRepository,
     private val deductionConfigRepository: DeductionConfigRepository,
     private val paycheckStoreRepository: PaycheckStoreRepository,
+    private val paycheckAuditStoreRepository: PaycheckAuditStoreRepository,
 ) {
 
     /**
@@ -106,12 +110,16 @@ class PaycheckComputationService(
             garnishments = garnishmentContext,
         )
 
-        val paycheck = PayrollEngine.calculatePaycheck(
+        val computation = PayrollEngine.calculatePaycheckComputation(
             input = input,
+            computedAt = Instant.now(),
+            traceLevel = TraceLevel.AUDIT,
             earningConfig = earningConfigRepository,
             deductionConfig = deductionConfigRepository,
             supportCapContext = supportCapContext,
         )
+
+        val paycheck = computation.paycheck
 
         paycheckStoreRepository.insertFinalPaycheckIfAbsent(
             employerId = employerId,
@@ -127,6 +135,8 @@ class PaycheckComputationService(
             version = 1,
             payload = paycheck,
         )
+
+        paycheckAuditStoreRepository.insertAuditIfAbsent(computation.audit)
 
         return paycheck
     }

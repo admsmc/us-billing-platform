@@ -1,8 +1,8 @@
 package com.example.uspayroll.orchestrator.payrun.persistence
 
+import com.example.uspayroll.orchestrator.payrun.model.PayRunItemRecord
 import com.example.uspayroll.orchestrator.payrun.model.PayRunItemStatus
 import com.example.uspayroll.orchestrator.payrun.model.PayRunStatusCounts
-import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
@@ -15,33 +15,155 @@ class PayRunItemRepository(
     private val jdbcTemplate: JdbcTemplate,
 ) {
 
+    data class ClaimItemResult(
+        val item: PayRunItemRecord,
+        /** True if we transitioned QUEUED -> RUNNING in this call. */
+        val claimed: Boolean,
+    )
+
+    private val supportsSkipLocked: Boolean by lazy {
+        val ds = jdbcTemplate.dataSource ?: return@lazy false
+        ds.connection.use { conn ->
+            conn.metaData.databaseProductName.lowercase().contains("postgres")
+        }
+    }
+
     fun upsertQueuedItems(employerId: String, payRunId: String, employeeIds: List<String>) {
         // Do not overwrite existing rows (especially paycheck_id) on retries.
-        employeeIds.distinct().forEach { employeeId ->
-            try {
-                jdbcTemplate.update(
-                    """
-                    INSERT INTO pay_run_item (
-                      employer_id, pay_run_id, employee_id,
-                      status, paycheck_id,
-                      attempt_count, last_error,
-                      started_at, completed_at, updated_at
-                    ) VALUES (?, ?, ?, ?, NULL, 0, NULL, NULL, NULL, CURRENT_TIMESTAMP)
-                    """.trimIndent(),
+        // Use ON CONFLICT DO NOTHING to avoid Postgres transaction aborts inside larger
+        // @Transactional flows.
+        val distinct = employeeIds.distinct()
+        if (distinct.isEmpty()) return
+
+        jdbcTemplate.batchUpdate(
+            """
+                INSERT INTO pay_run_item (
+                  employer_id, pay_run_id, employee_id,
+                  status, paycheck_id,
+                  attempt_count, last_error,
+                  started_at, completed_at, updated_at
+                ) VALUES (?, ?, ?, ?, NULL, 0, NULL, NULL, NULL, CURRENT_TIMESTAMP)
+                ON CONFLICT DO NOTHING
+            """.trimIndent(),
+            distinct.map { employeeId ->
+                arrayOf(
                     employerId,
                     payRunId,
                     employeeId,
                     PayRunItemStatus.QUEUED.name,
                 )
-            } catch (e: DataIntegrityViolationException) {
-                // already exists
-            }
-        }
+            },
+        )
     }
 
     /**
      * Returns an already-assigned paycheck_id for the item, or assigns a new one.
      */
+    fun findItem(employerId: String, payRunId: String, employeeId: String): PayRunItemRecord? {
+        return jdbcTemplate.query(
+            """
+            SELECT employer_id, pay_run_id, employee_id, status, paycheck_id, attempt_count, last_error
+            FROM pay_run_item
+            WHERE employer_id = ? AND pay_run_id = ? AND employee_id = ?
+            """.trimIndent(),
+            { rs, _ ->
+                PayRunItemRecord(
+                    employerId = rs.getString("employer_id"),
+                    payRunId = rs.getString("pay_run_id"),
+                    employeeId = rs.getString("employee_id"),
+                    status = PayRunItemStatus.valueOf(rs.getString("status")),
+                    paycheckId = rs.getString("paycheck_id"),
+                    attemptCount = rs.getInt("attempt_count"),
+                    lastError = rs.getString("last_error"),
+                )
+            },
+            employerId,
+            payRunId,
+            employeeId,
+        ).firstOrNull()
+    }
+
+    /**
+     * Claim exactly one employee item for execution.
+     *
+     * If the item is QUEUED, transitions it to RUNNING and increments attempt_count.
+     * If the item is RUNNING but stale (updated_at older than cutoff), requeues it.
+     * Otherwise, returns the current state without claiming.
+     */
+    @Transactional
+    fun claimItem(employerId: String, payRunId: String, employeeId: String, requeueStaleMillis: Long, now: Instant = Instant.now()): ClaimItemResult? {
+        // Lock the row.
+        val row = jdbcTemplate.query(
+            """
+            SELECT employer_id, pay_run_id, employee_id, status, paycheck_id, attempt_count, last_error, updated_at
+            FROM pay_run_item
+            WHERE employer_id = ? AND pay_run_id = ? AND employee_id = ?
+            FOR UPDATE
+            """.trimIndent(),
+            { rs, _ ->
+                val updatedAt = rs.getTimestamp("updated_at")
+                mapOf(
+                    "employerId" to rs.getString("employer_id"),
+                    "payRunId" to rs.getString("pay_run_id"),
+                    "employeeId" to rs.getString("employee_id"),
+                    "status" to rs.getString("status"),
+                    "paycheckId" to rs.getString("paycheck_id"),
+                    "attemptCount" to rs.getInt("attempt_count"),
+                    "lastError" to rs.getString("last_error"),
+                    "updatedAt" to updatedAt,
+                )
+            },
+            employerId,
+            payRunId,
+            employeeId,
+        ).firstOrNull() ?: return null
+
+        val status = PayRunItemStatus.valueOf(row["status"] as String)
+        val attemptCount = row["attemptCount"] as Int
+        val paycheckId = row["paycheckId"] as String?
+        val lastError = row["lastError"] as String?
+        val updatedAt = row["updatedAt"] as Timestamp?
+
+        val staleCutoff = now.minusMillis(requeueStaleMillis.coerceAtLeast(0L))
+        val isStaleRunning = status == PayRunItemStatus.RUNNING && updatedAt != null && updatedAt.toInstant().isBefore(staleCutoff)
+
+        if (isStaleRunning) {
+            requeueStaleRunningItems(
+                employerId = employerId,
+                payRunId = payRunId,
+                cutoff = staleCutoff,
+                reason = "requeued_stale_running cutoffMs=$requeueStaleMillis",
+            )
+        }
+
+        // Re-read the current status after potential requeue.
+        val current = findItem(employerId, payRunId, employeeId) ?: return null
+
+        if (current.status != PayRunItemStatus.QUEUED) {
+            return ClaimItemResult(item = current, claimed = false)
+        }
+
+        // Claim QUEUED -> RUNNING.
+        jdbcTemplate.update(
+            """
+            UPDATE pay_run_item
+            SET status = ?,
+                attempt_count = attempt_count + 1,
+                started_at = COALESCE(started_at, CURRENT_TIMESTAMP),
+                updated_at = CURRENT_TIMESTAMP
+            WHERE employer_id = ? AND pay_run_id = ? AND employee_id = ? AND status = ?
+            """.trimIndent(),
+            PayRunItemStatus.RUNNING.name,
+            employerId,
+            payRunId,
+            employeeId,
+            PayRunItemStatus.QUEUED.name,
+        )
+
+        val claimedRow = findItem(employerId, payRunId, employeeId) ?: return null
+        return ClaimItemResult(item = claimedRow, claimed = true)
+    }
+
     fun getOrAssignPaycheckId(employerId: String, payRunId: String, employeeId: String): String {
         val existing = jdbcTemplate.query(
             """
@@ -96,6 +218,7 @@ class PayRunItemRepository(
 
         // Row-lock the candidate set. This makes concurrent claimers block
         // rather than double-claiming the same employees.
+        val lockClause = if (supportsSkipLocked) "FOR UPDATE SKIP LOCKED" else "FOR UPDATE"
         val ids = jdbcTemplate.query(
             """
             SELECT employee_id
@@ -103,7 +226,7 @@ class PayRunItemRepository(
             WHERE employer_id = ? AND pay_run_id = ? AND status = ?
             ORDER BY employee_id
             LIMIT ?
-            FOR UPDATE
+            $lockClause
             """.trimIndent(),
             { rs, _ -> rs.getString("employee_id") },
             employerId,
@@ -160,6 +283,8 @@ class PayRunItemRepository(
     }
 
     fun markSucceeded(employerId: String, payRunId: String, employeeId: String, paycheckId: String) {
+        // Only transition RUNNING -> SUCCEEDED. This prevents stale retries from overwriting
+        // terminal states.
         jdbcTemplate.update(
             """
             UPDATE pay_run_item
@@ -169,18 +294,50 @@ class PayRunItemRepository(
                 completed_at = CURRENT_TIMESTAMP,
                 updated_at = CURRENT_TIMESTAMP
             WHERE employer_id = ? AND pay_run_id = ? AND employee_id = ?
+              AND status = ?
             """.trimIndent(),
             PayRunItemStatus.SUCCEEDED.name,
             paycheckId,
             employerId,
             payRunId,
             employeeId,
+            PayRunItemStatus.RUNNING.name,
+        )
+    }
+
+    /**
+     * Record a retryable failure and requeue the item (status=QUEUED).
+     *
+     * attempt_count should already have been incremented by claimItem().
+     */
+    fun markRetryableFailure(employerId: String, payRunId: String, employeeId: String, error: String) {
+        val truncated = if (error.length <= 2000) error else error.take(2000)
+
+        // Only requeue RUNNING -> QUEUED.
+        jdbcTemplate.update(
+            """
+            UPDATE pay_run_item
+            SET status = ?,
+                last_error = ?,
+                started_at = NULL,
+                completed_at = NULL,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE employer_id = ? AND pay_run_id = ? AND employee_id = ?
+              AND status = ?
+            """.trimIndent(),
+            PayRunItemStatus.QUEUED.name,
+            truncated,
+            employerId,
+            payRunId,
+            employeeId,
+            PayRunItemStatus.RUNNING.name,
         )
     }
 
     fun markFailed(employerId: String, payRunId: String, employeeId: String, error: String) {
         val truncated = if (error.length <= 2000) error else error.take(2000)
 
+        // Only transition RUNNING -> FAILED.
         jdbcTemplate.update(
             """
             UPDATE pay_run_item
@@ -189,12 +346,14 @@ class PayRunItemRepository(
                 completed_at = CURRENT_TIMESTAMP,
                 updated_at = CURRENT_TIMESTAMP
             WHERE employer_id = ? AND pay_run_id = ? AND employee_id = ?
+              AND status = ?
             """.trimIndent(),
             PayRunItemStatus.FAILED.name,
             truncated,
             employerId,
             payRunId,
             employeeId,
+            PayRunItemStatus.RUNNING.name,
         )
     }
 

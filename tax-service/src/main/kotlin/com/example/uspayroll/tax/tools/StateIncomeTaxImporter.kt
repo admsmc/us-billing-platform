@@ -6,7 +6,6 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 
 /**
@@ -25,8 +24,7 @@ object StateIncomeTaxImporter {
     @JvmStatic
     fun main(args: Array<String>) {
         val year = args.getOrNull(0) ?: System.getenv("TAX_YEAR") ?: "2025"
-        val projectDir: Path = Paths.get("").toAbsolutePath()
-        val resourcesDir = projectDir.resolve("src/main/resources")
+        val resourcesDir = TaxContentPaths.resourcesDir()
         Files.createDirectories(resourcesDir)
 
         val rulesCsv = resourcesDir.resolve("state-income-tax-$year-rules.csv")

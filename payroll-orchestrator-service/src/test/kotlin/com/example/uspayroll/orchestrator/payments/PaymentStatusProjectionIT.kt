@@ -26,6 +26,7 @@ import java.time.Instant
 @TestPropertySource(
     properties = [
         "orchestrator.internal-auth.shared-secret=dev-internal-token",
+        "orchestrator.payrun.execute.enabled=true",
     ],
 )
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)

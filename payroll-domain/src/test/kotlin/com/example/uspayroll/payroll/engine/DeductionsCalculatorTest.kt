@@ -64,7 +64,7 @@ class DeductionsCalculatorTest {
             priorYtd = YtdSnapshot(year = 2025),
         )
 
-        val result = PayrollEngine.calculatePaycheck(
+        val result = calculatePaycheckDebug(
             input = input,
             earningConfig = null,
             deductionConfig = TestDeductionConfigRepository(),
@@ -127,7 +127,7 @@ class DeductionsCalculatorTest {
             priorYtd = YtdSnapshot(year = 2025),
         )
 
-        val result = PayrollEngine.calculatePaycheck(
+        val result = calculatePaycheckDebug(
             input = input,
             earningConfig = null,
             deductionConfig = EmptyDeductionConfigRepository(),

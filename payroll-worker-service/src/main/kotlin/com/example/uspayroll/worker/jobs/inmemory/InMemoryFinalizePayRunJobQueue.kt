@@ -33,7 +33,7 @@ class InMemoryFinalizePayRunJobQueueConfig {
      * Default dev/test implementation. Disabled automatically when Rabbit jobs are enabled.
      */
     @Bean
-    @ConditionalOnExpression("\${worker.jobs.inmemory.enabled:true} and !\${worker.jobs.rabbit.enabled:false}")
+    @ConditionalOnExpression("\${worker.jobs.legacy-payrun.enabled:false} and \${worker.jobs.inmemory.enabled:true} and !\${worker.jobs.rabbit.enabled:false}")
     fun finalizePayRunJobQueue(): FinalizePayRunJobQueue = InMemoryFinalizePayRunJobQueue()
 
     /**
@@ -44,7 +44,7 @@ class InMemoryFinalizePayRunJobQueueConfig {
     fun finalizePayRunJobStore(): FinalizePayRunJobStore = InMemoryFinalizePayRunJobStore()
 
     @Bean
-    @ConditionalOnExpression("\${worker.jobs.inmemory.enabled:true} and !\${worker.jobs.rabbit.enabled:false}")
+    @ConditionalOnExpression("\${worker.jobs.legacy-payrun.enabled:false} and \${worker.jobs.inmemory.enabled:true} and !\${worker.jobs.rabbit.enabled:false}")
     fun inMemoryFinalizePayRunJobConsumer(props: InMemoryJobQueueProperties, queue: FinalizePayRunJobQueue, store: FinalizePayRunJobStore, runner: OrchestratorPayRunJobRunner): SmartLifecycle =
         InMemoryFinalizePayRunJobConsumer(props, queue, store, runner)
 }

@@ -1,8 +1,8 @@
 package com.example.uspayroll.labor
 
+import com.example.uspayroll.labor.api.LaborStandardsContextProvider
 import com.example.uspayroll.labor.http.LaborStandardsContextDto
 import com.example.uspayroll.labor.http.toDto
-import com.example.uspayroll.labor.impl.LaborStandardsContextProvider
 import com.example.uspayroll.shared.EmployerId
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
@@ -34,7 +34,7 @@ class LaborHttpController(
         @RequestParam("state") workState: String,
         @RequestParam("homeState", required = false) homeState: String?,
         @RequestParam("locality", required = false) localityCodes: List<String>?,
-    ): LaborStandardsContextDto? {
+    ): LaborStandardsContextDto {
         val context = laborStandardsContextProvider.getLaborStandards(
             employerId = EmployerId(employerId),
             asOfDate = asOf,
@@ -43,6 +43,10 @@ class LaborHttpController(
             localityCodes = localityCodes ?: emptyList(),
         )
 
-        return context?.toDto()
+        // Returning null here produces a 200 with an empty body, which causes some RestTemplate clients
+        // (especially Kotlin-typed ones) to throw at the call site. Provide a safe baseline instead.
+        return context?.toDto() ?: LaborStandardsContextDto(
+            federalMinimumWageCents = 725, // $7.25
+        )
     }
 }

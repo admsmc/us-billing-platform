@@ -71,6 +71,8 @@ class GarnishmentReconciliationService(
             // combination of served_date and last_check_date.
             val status = if (remaining <= 0L) OrderStatus.COMPLETED.name else OrderStatus.ACTIVE.name
 
+            // Optional tightening: do not "resurrect" COMPLETED orders back to ACTIVE.
+            // If remaining <= 0, the update is idempotent and allowed even if already COMPLETED.
             jdbcTemplate.update(
                 """
                 UPDATE garnishment_order
@@ -81,6 +83,7 @@ class GarnishmentReconciliationService(
                  WHERE employer_id = ?
                    AND employee_id = ?
                    AND order_id = ?
+                   AND (status <> 'COMPLETED' OR ? = 'COMPLETED')
                 """.trimIndent(),
                 remaining.coerceAtLeast(0L),
                 status,
@@ -88,6 +91,7 @@ class GarnishmentReconciliationService(
                 employerId.value,
                 employeeId.value,
                 row.orderId,
+                status,
             )
 
             // Also update ledger.remaining_arrears_cents for debugging/ops,

@@ -13,6 +13,12 @@ import java.time.Instant
 class PaycheckPaymentRepository(
     private val jdbcTemplate: JdbcTemplate,
 ) {
+    private val isPostgres: Boolean by lazy {
+        val ds = jdbcTemplate.dataSource ?: return@lazy false
+        ds.connection.use { conn ->
+            conn.metaData.databaseProductName.lowercase().contains("postgres")
+        }
+    }
     data class PaymentRow(
         val employerId: String,
         val paymentId: String,
@@ -64,6 +70,39 @@ class PaycheckPaymentRepository(
         batchId: String?,
         now: Instant = Instant.now(),
     ): Boolean {
+        // Postgres: use ON CONFLICT to avoid transaction-aborting constraint violations.
+        if (isPostgres) {
+            val inserted = jdbcTemplate.update(
+                """
+                INSERT INTO paycheck_payment (
+                  employer_id, payment_id, paycheck_id,
+                  pay_run_id, employee_id, pay_period_id,
+                  currency, net_cents,
+                  status, attempts,
+                  next_attempt_at, last_error,
+                  locked_by, locked_at,
+                  batch_id,
+                  created_at, submitted_at, settled_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NULL, NULL, NULL, NULL, ?, ?, NULL, NULL, ?)
+                ON CONFLICT DO NOTHING
+                """.trimIndent(),
+                employerId,
+                paymentId,
+                paycheckId,
+                payRunId,
+                employeeId,
+                payPeriodId,
+                currency,
+                netCents,
+                PaycheckPaymentLifecycleStatus.CREATED.name,
+                batchId,
+                Timestamp.from(now),
+                Timestamp.from(now),
+            )
+            return inserted == 1
+        }
+
+        // H2 (tests): fall back to exception-based idempotency.
         return try {
             val inserted = jdbcTemplate.update(
                 """
@@ -99,34 +138,73 @@ class PaycheckPaymentRepository(
 
     fun updateStatus(employerId: String, paymentId: String, status: PaycheckPaymentLifecycleStatus, error: String? = null, nextAttemptAt: Instant? = null, now: Instant = Instant.now()): Int {
         val truncated = error?.let { if (it.length <= 2000) it else it.take(2000) }
+        val nowTs = Timestamp.from(now)
+        val nextAttemptTs = nextAttemptAt?.let { Timestamp.from(it) }
 
+        // Enforce a minimal state machine to avoid out-of-order updates overwriting terminal
+        // statuses. Also make FAILED idempotent (do not increment attempts repeatedly).
         return jdbcTemplate.update(
             """
             UPDATE paycheck_payment
             SET status = ?,
-                last_error = ?,
-                next_attempt_at = ?,
-                attempts = CASE WHEN ? = 'FAILED' THEN attempts + 1 ELSE attempts END,
+                last_error = CASE
+                    WHEN ? = 'FAILED' THEN ?
+                    WHEN ? = 'SETTLED' THEN NULL
+                    ELSE last_error
+                END,
+                next_attempt_at = CASE
+                    WHEN ? = 'FAILED' THEN ?
+                    ELSE NULL
+                END,
+                attempts = CASE
+                    WHEN ? = 'FAILED' AND status <> 'FAILED' THEN attempts + 1
+                    ELSE attempts
+                END,
                 locked_by = CASE WHEN ? IN ('SETTLED','FAILED') THEN NULL ELSE locked_by END,
                 locked_at = CASE WHEN ? IN ('SETTLED','FAILED') THEN NULL ELSE locked_at END,
                 submitted_at = CASE WHEN ? = 'SUBMITTED' THEN ? ELSE submitted_at END,
                 settled_at = CASE WHEN ? = 'SETTLED' THEN ? ELSE settled_at END,
                 updated_at = ?
-            WHERE employer_id = ? AND payment_id = ?
+            WHERE employer_id = ?
+              AND payment_id = ?
+              AND (
+                status = ?
+                OR (status = 'CREATED' AND ? = 'SUBMITTED')
+                OR (status = 'SUBMITTED' AND ? IN ('SETTLED','FAILED'))
+                OR (status = 'FAILED' AND ? = 'FAILED')
+                OR (status = 'SETTLED' AND ? = 'SETTLED')
+              )
             """.trimIndent(),
+            // SET status = ?
+            status.name,
+            // last_error CASE
             status.name,
             truncated,
-            nextAttemptAt?.let { Timestamp.from(it) },
+            status.name,
+            // next_attempt_at CASE
+            status.name,
+            nextAttemptTs,
+            // attempts CASE
+            status.name,
+            // locks
             status.name,
             status.name,
+            // submitted_at / settled_at
             status.name,
+            nowTs,
             status.name,
-            Timestamp.from(now),
-            status.name,
-            Timestamp.from(now),
-            Timestamp.from(now),
+            nowTs,
+            // updated_at
+            nowTs,
+            // WHERE keys
             employerId,
             paymentId,
+            // allowed transitions
+            status.name,
+            status.name,
+            status.name,
+            status.name,
+            status.name,
         )
     }
 
@@ -172,28 +250,35 @@ class PaycheckPaymentRepository(
 
         if (rows.isEmpty()) return emptyList()
 
-        val ids = rows.map { it.paymentId }
-        val placeholders = ids.joinToString(",") { "?" }
-        val args: MutableList<Any> = mutableListOf(
-            PaycheckPaymentLifecycleStatus.SUBMITTED.name,
-            lockOwner,
-            nowTs,
-            nowTs,
-        )
-        args.addAll(ids)
+        // payment_id is only unique within (employer_id, payment_id), so update per-employer.
+        rows.groupBy { it.employerId }.forEach { (empId, empRows) ->
+            val ids = empRows.map { it.paymentId }
+            val placeholders = ids.joinToString(",") { "?" }
+            val params: MutableList<Any> = mutableListOf(
+                PaycheckPaymentLifecycleStatus.SUBMITTED.name,
+                lockOwner,
+                nowTs,
+                nowTs,
+                nowTs,
+                empId,
+            )
+            params.addAll(ids)
 
-        jdbcTemplate.update(
-            """
-            UPDATE paycheck_payment
-            SET status = ?,
-                locked_by = ?,
-                locked_at = ?,
-                submitted_at = ?,
-                updated_at = ?
-            WHERE payment_id IN ($placeholders)
-            """.trimIndent(),
-            *args.toTypedArray(),
-        )
+            jdbcTemplate.update(
+                """
+                UPDATE paycheck_payment
+                SET status = ?,
+                    locked_by = ?,
+                    locked_at = ?,
+                    submitted_at = ?,
+                    updated_at = ?
+                WHERE employer_id = ?
+                  AND status = 'CREATED'
+                  AND payment_id IN ($placeholders)
+                """.trimIndent(),
+                *params.toTypedArray(),
+            )
+        }
 
         return rows
     }

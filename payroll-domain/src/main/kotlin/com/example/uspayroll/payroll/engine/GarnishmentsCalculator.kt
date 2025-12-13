@@ -40,6 +40,7 @@ object GarnishmentsCalculator {
         preTaxDeductions: List<DeductionLine>,
         plansByCode: Map<DeductionCode, DeductionPlan>,
         supportCapContext: SupportCapContext? = null,
+        includeTrace: Boolean = true,
     ): GarnishmentCalculationResult {
         val orders = input.garnishments.orders
         return if (orders.isNotEmpty()) {
@@ -51,6 +52,7 @@ object GarnishmentsCalculator {
                 plansByCode = plansByCode,
                 orders = orders,
                 supportCapContext = supportCapContext,
+                includeTrace = includeTrace,
             )
         } else {
             computeFromPlans(
@@ -58,6 +60,7 @@ object GarnishmentsCalculator {
                 gross = gross,
                 preTaxDeductions = preTaxDeductions,
                 plansByCode = plansByCode,
+                includeTrace = includeTrace,
             )
         }
     }
@@ -70,59 +73,59 @@ object GarnishmentsCalculator {
         plansByCode: Map<DeductionCode, DeductionPlan>,
         orders: List<GarnishmentOrder>,
         supportCapContext: SupportCapContext?,
+        includeTrace: Boolean,
     ): GarnishmentCalculationResult {
         if (orders.isEmpty()) {
             return GarnishmentCalculationResult(emptyList(), emptyList())
         }
-
-        val garnishments = mutableListOf<DeductionLine>()
-        val traceSteps = mutableListOf<TraceStep>()
 
         val sortedOrders = orders.sortedWith(
             compareBy<GarnishmentOrder>({ it.priorityClass }, { it.sequenceWithinClass }, { it.orderId.value }),
         )
 
         val supportOrders = sortedOrders.filter { it.type == GarnishmentType.CHILD_SUPPORT }
-        val nonSupportOrders = sortedOrders.filter { it.type != GarnishmentType.CHILD_SUPPORT }
 
         fun ytdForOrder(order: GarnishmentOrder): Long {
             val code = DeductionCode(order.orderId.value)
             return input.priorYtd.deductionsByCode[code]?.amount ?: 0L
         }
 
-        fun applyCaps(plan: DeductionPlan?, rawCents: Long, ytdCents: Long, lifetimeCap: Money?): Pair<Long, Money?> {
-            var finalCents = rawCents
-            var cappedAt: Money? = null
+        data class CapResult(
+            val finalCents: Long,
+            val cappedAt: Money?,
+        )
 
+        fun applyCaps(plan: DeductionPlan?, rawCents: Long, ytdCents: Long, lifetimeCap: Money?): CapResult {
             val annualCap = plan?.annualCap
-            if (annualCap != null) {
+            val afterAnnual = if (annualCap != null) {
                 val remaining = annualCap.amount - ytdCents
-                if (remaining <= 0L) {
-                    finalCents = 0L
-                } else if (finalCents > remaining) {
-                    finalCents = remaining
-                    cappedAt = annualCap
+                when {
+                    remaining <= 0L -> CapResult(finalCents = 0L, cappedAt = annualCap)
+                    rawCents > remaining -> CapResult(finalCents = remaining, cappedAt = annualCap)
+                    else -> CapResult(finalCents = rawCents, cappedAt = null)
                 }
+            } else {
+                CapResult(finalCents = rawCents, cappedAt = null)
             }
 
             // Simple lifetime-cap support (per order).
-            if (lifetimeCap != null) {
+            val afterLifetime = if (lifetimeCap != null) {
                 val remaining = lifetimeCap.amount - ytdCents
-                if (remaining <= 0L) {
-                    finalCents = 0L
-                } else if (finalCents > remaining) {
-                    finalCents = remaining
-                    cappedAt = lifetimeCap
+                when {
+                    remaining <= 0L -> CapResult(finalCents = 0L, cappedAt = lifetimeCap)
+                    afterAnnual.finalCents > remaining -> CapResult(finalCents = remaining, cappedAt = lifetimeCap)
+                    else -> afterAnnual
                 }
+            } else {
+                afterAnnual
             }
 
             val perPeriodCap = plan?.perPeriodCap
-            if (perPeriodCap != null && finalCents > perPeriodCap.amount) {
-                finalCents = perPeriodCap.amount
-                cappedAt = perPeriodCap
+            return if (perPeriodCap != null && afterLifetime.finalCents > perPeriodCap.amount) {
+                CapResult(finalCents = perPeriodCap.amount, cappedAt = perPeriodCap)
+            } else {
+                afterLifetime
             }
-
-            return finalCents to cappedAt
         }
 
         fun rawFromFormula(order: GarnishmentOrder, disposableBefore: Long, filingStatus: com.example.uspayroll.payroll.model.FilingStatus?): Long {
@@ -133,6 +136,7 @@ object GarnishmentsCalculator {
                     val pct = (disposableBefore * f.percent.value).toLong()
                     minOf(pct, f.amount.amount)
                 }
+
                 is GarnishmentFormula.LevyWithBands -> {
                     if (f.bands.isEmpty()) return 0L
                     val candidates = filingStatus?.let { status ->
@@ -152,26 +156,25 @@ object GarnishmentsCalculator {
             val netForProtectedFloorCents: Long,
         )
 
-        fun computeDisposableIncome(order: GarnishmentOrder, gross: Money, employeeTaxes: List<TaxLine>, preTaxDeductions: List<DeductionLine>): DisposableIncome {
+        fun computeDisposableIncome(
+            order: GarnishmentOrder,
+            gross: Money,
+            employeeTaxes: List<TaxLine>,
+            preTaxDeductions: List<DeductionLine>,
+            includeTrace: Boolean,
+        ): Pair<DisposableIncome, TraceStep.DisposableIncomeComputed?> {
             val mandatoryPreTaxCents: Long = preTaxDeductions.sumOf { it.amount.amount }
             val totalEmployeeTaxCents: Long = employeeTaxes.sumOf { it.amount.amount }
 
-            // Record how we derived disposable income for this order.
             val grossCents = gross.amount
-            traceSteps += TraceStep.DisposableIncomeComputed(
-                orderId = order.orderId.value,
-                grossCents = grossCents,
-                mandatoryPreTaxCents = mandatoryPreTaxCents,
-                employeeTaxCents = totalEmployeeTaxCents,
-                baseDisposableCents = when (order.type) {
-                    com.example.uspayroll.payroll.model.garnishment.GarnishmentType.STUDENT_LOAN ->
-                        grossCents - mandatoryPreTaxCents - totalEmployeeTaxCents
-                    else -> grossCents - mandatoryPreTaxCents
-                },
-                netForProtectedFloorCents = grossCents - mandatoryPreTaxCents - totalEmployeeTaxCents,
-            )
+            val baseDisposableCents = when (order.type) {
+                com.example.uspayroll.payroll.model.garnishment.GarnishmentType.STUDENT_LOAN ->
+                    grossCents - mandatoryPreTaxCents - totalEmployeeTaxCents
+                else -> grossCents - mandatoryPreTaxCents
+            }
+            val netForProtectedFloorCents = grossCents - mandatoryPreTaxCents - totalEmployeeTaxCents
 
-            return when (order.type) {
+            val disposable = when (order.type) {
                 // For now, model student loan garnishments using a disposable
                 // base that subtracts both pre-tax deductions and employee
                 // taxes before applying the 15% ceiling.
@@ -182,6 +185,7 @@ object GarnishmentsCalculator {
                         netForProtectedFloorCents = base,
                     )
                 }
+
                 // Default CCPA-style behavior: disposable for formulas is
                 // gross minus mandatory pre-tax; disposable for protected
                 // earnings subtracts both pre-tax and employee taxes.
@@ -192,6 +196,21 @@ object GarnishmentsCalculator {
                     )
                 }
             }
+
+            val trace = if (includeTrace) {
+                TraceStep.DisposableIncomeComputed(
+                    orderId = order.orderId.value,
+                    grossCents = grossCents,
+                    mandatoryPreTaxCents = mandatoryPreTaxCents,
+                    employeeTaxCents = totalEmployeeTaxCents,
+                    baseDisposableCents = baseDisposableCents,
+                    netForProtectedFloorCents = netForProtectedFloorCents,
+                )
+            } else {
+                null
+            }
+
+            return disposable to trace
         }
 
         fun protectedEarningsFloorCents(order: GarnishmentOrder): Long? = when (val rule = order.protectedEarningsRule) {
@@ -206,76 +225,72 @@ object GarnishmentsCalculator {
 
         val filingStatus = input.employeeSnapshot.filingStatus
 
-        var garnishmentCents = 0L
+        // Perf-first: local mutation is allowed as long as we don't mutate inputs.
+        val traceSteps: MutableList<TraceStep>? = if (includeTrace) ArrayList<TraceStep>(sortedOrders.size * 4) else null
+        val garnishments = ArrayList<DeductionLine>(sortedOrders.size)
 
-        // First pass: compute requested amounts for support orders so we can
-        // apply any aggregate caps before mixing in other orders.
+        // First pass: compute requested amounts for support orders so we can apply any aggregate caps.
         data class RequestedSupport(
             val order: GarnishmentOrder,
             val disposable: DisposableIncome,
             val requestedBeforeCaps: Long,
         )
 
-        val supportRequests = mutableListOf<RequestedSupport>()
-
-        // For now we allocate any support caps proportionally across all
-        // support orders, in the deterministic order of (priorityClass,
-        // sequenceWithinClass, orderId). If a jurisdiction requires
-        // priority-based allocation instead, this is where a different
-        // strategy would be plugged in.
+        val supportRequests = ArrayList<RequestedSupport>(supportOrders.size)
         for (order in supportOrders) {
             val plan = plansByCode[DeductionCode(order.planId)]
 
-            val disposable = computeDisposableIncome(
+            val (disposable, disposableTrace) = computeDisposableIncome(
                 order = order,
                 gross = gross,
                 employeeTaxes = employeeTaxes,
                 preTaxDeductions = preTaxDeductions,
+                includeTrace = includeTrace,
             )
+            if (disposableTrace != null) traceSteps?.add(disposableTrace)
 
             val disposableBefore = disposable.baseDisposableCents
             if (disposableBefore <= 0L) continue
 
-            var rawCents = rawFromFormula(order, disposableBefore, filingStatus)
+            val rawCents = rawFromFormula(order, disposableBefore, filingStatus)
             if (rawCents <= 0L) continue
 
             val ytd = ytdForOrder(order)
-            val (finalCents, _) = applyCaps(plan, rawCents, ytd, order.lifetimeCap)
-            if (finalCents <= 0L) continue
+            val capResult = applyCaps(plan, rawCents, ytd, order.lifetimeCap)
+            if (capResult.finalCents <= 0L) continue
 
-            supportRequests += RequestedSupport(order, disposable, finalCents)
+            supportRequests.add(RequestedSupport(order, disposable, capResult.finalCents))
         }
 
-        // If a support cap is configured and support requests exist, compute
-        // per-order scaled amounts that respect the aggregate cap.
-        val scaledSupportByOrderId: Map<String, Long> =
-            if (supportCapContext != null && supportRequests.isNotEmpty()) {
-                val disposableForSupport = Money(
-                    amount = supportRequests.map { it.disposable.baseDisposableCents }.min(),
-                    currency = gross.currency,
-                )
-                val capMoney = computeSupportCap(disposableForSupport, supportCapContext)
-                val capCents = capMoney.amount
-                val totalRequested = supportRequests.sumOf { it.requestedBeforeCaps }
+        val scaledSupportByOrderId: Map<String, Long> = if (supportCapContext != null && supportRequests.isNotEmpty()) {
+            val minDisposableForSupport = supportRequests.minOf { it.disposable.baseDisposableCents }
+            val disposableForSupport = Money(amount = minDisposableForSupport, currency = gross.currency)
 
-                if (totalRequested > capCents && capCents >= 0) {
-                    // Proportionally scale requested amounts to fit within the cap.
-                    var runningTotal = 0L
-                    val scaled = mutableMapOf<String, Long>()
-                    supportRequests.forEachIndexed { index, req ->
-                        val isLast = index == supportRequests.lastIndex
-                        val applied = if (isLast) {
-                            // Assign remainder to last order to avoid rounding gaps.
-                            capCents - runningTotal
-                        } else {
-                            val proportion = req.requestedBeforeCaps.toDouble() / totalRequested.toDouble()
-                            (capCents * proportion).toLong()
-                        }
-                        runningTotal += applied
-                        scaled[req.order.orderId.value] = applied.coerceAtLeast(0L)
+            val capMoney = computeSupportCap(disposableForSupport, supportCapContext)
+            val capCents = capMoney.amount
+            val totalRequested = supportRequests.sumOf { it.requestedBeforeCaps }
+
+            if (totalRequested > capCents && capCents >= 0) {
+                val scaled = HashMap<String, Long>(supportRequests.size * 2)
+                var runningTotal = 0L
+
+                val lastIndex = supportRequests.lastIndex
+                supportRequests.forEachIndexed { index, req ->
+                    val isLast = index == lastIndex
+                    val applied = if (isLast) {
+                        // Assign remainder to last order to avoid rounding gaps.
+                        capCents - runningTotal
+                    } else {
+                        val proportion = req.requestedBeforeCaps.toDouble() / totalRequested.toDouble()
+                        (capCents * proportion).toLong()
                     }
 
-                    traceSteps += TraceStep.SupportCapApplied(
+                    runningTotal += applied
+                    scaled[req.order.orderId.value] = applied.coerceAtLeast(0L)
+                }
+
+                traceSteps?.add(
+                    TraceStep.SupportCapApplied(
                         jurisdictionCode = supportCapContext.jurisdictionCode,
                         ccpaCapCents = capCents,
                         stateCapCents = supportCapContext.params.stateAggregateCapRate
@@ -283,26 +298,31 @@ object GarnishmentsCalculator {
                         effectiveCapCents = capCents,
                         totalRequestedCents = totalRequested,
                         totalAppliedCents = capCents,
-                    )
+                    ),
+                )
 
-                    scaled
-                } else {
-                    // Cap does not bind; use requested amounts as-is.
-                    supportRequests.associate { it.order.orderId.value to it.requestedBeforeCaps }
-                }
+                scaled
             } else {
-                emptyMap()
+                // Cap does not bind; use requested amounts as-is.
+                supportRequests.associate { it.order.orderId.value to it.requestedBeforeCaps }
             }
+        } else {
+            emptyMap()
+        }
+
+        var garnishmentCents = 0L
 
         for (order in sortedOrders) {
             val plan = plansByCode[DeductionCode(order.planId)]
 
-            val disposable = computeDisposableIncome(
+            val (disposable, disposableTrace) = computeDisposableIncome(
                 order = order,
                 gross = gross,
                 employeeTaxes = employeeTaxes,
                 preTaxDeductions = preTaxDeductions,
+                includeTrace = includeTrace,
             )
+            if (disposableTrace != null) traceSteps?.add(disposableTrace)
 
             val disposableBefore = disposable.baseDisposableCents
             if (disposableBefore <= 0L) continue
@@ -310,56 +330,57 @@ object GarnishmentsCalculator {
             val remainingDisposable = disposableBefore - garnishmentCents
             if (remainingDisposable <= 0L) continue
 
-            // For support orders, start from any scaled amount if a cap was
-            // applied; otherwise fall back to the formula-derived amount.
-            val scaledSupport = scaledSupportByOrderId[order.orderId.value]
-
-            var rawCents = scaledSupport ?: rawFromFormula(order, disposableBefore, filingStatus)
+            // For support orders, start from any scaled amount if a cap was applied.
+            val rawCents = scaledSupportByOrderId[order.orderId.value] ?: rawFromFormula(order, disposableBefore, filingStatus)
             if (rawCents <= 0L) continue
 
             val requestedBeforeCaps = rawCents
 
             val ytd = ytdForOrder(order)
-            var (finalCents, cappedAt) = applyCaps(plan, rawCents, ytd, order.lifetimeCap)
-            if (finalCents == 0L) continue
+            val capResult = applyCaps(plan, rawCents, ytd, order.lifetimeCap)
+            var finalCents = capResult.finalCents
+            if (finalCents <= 0L) continue
 
-            // Enforce disposable-income ceiling: cannot take more than what is
-            // left after prior garnishments.
+            // Enforce disposable-income ceiling: cannot take more than what is left.
             if (finalCents > remainingDisposable) {
                 finalCents = remainingDisposable
             }
 
-            // Apply protected earnings floor, based on net cash after employee
-            // taxes but before voluntary post-tax deductions.
+            // Apply protected earnings floor.
             val requestedBeforeFloor = finalCents
             val protectedFloor = protectedEarningsFloorCents(order)
             var protectedConstrained = false
-            protectedFloor?.let { floorCents ->
+
+            if (protectedFloor != null) {
                 val disposableForFloor = disposable.netForProtectedFloorCents
-                val maxByFloor = (disposableForFloor - garnishmentCents - floorCents).coerceAtLeast(0L)
+                val maxByFloor = (disposableForFloor - garnishmentCents - protectedFloor).coerceAtLeast(0L)
                 if (finalCents > maxByFloor) {
                     finalCents = maxByFloor
                     protectedConstrained = true
                 }
                 if (finalCents != requestedBeforeFloor) {
-                    traceSteps += TraceStep.ProtectedEarningsApplied(
-                        orderId = order.orderId.value,
-                        requestedCents = requestedBeforeFloor,
-                        adjustedCents = finalCents,
-                        floorCents = floorCents,
+                    traceSteps?.add(
+                        TraceStep.ProtectedEarningsApplied(
+                            orderId = order.orderId.value,
+                            requestedCents = requestedBeforeFloor,
+                            adjustedCents = finalCents,
+                            floorCents = protectedFloor,
+                        ),
                     )
                 }
             }
 
-            if (finalCents == 0L) continue
+            if (finalCents <= 0L) continue
 
             val code = DeductionCode(order.orderId.value)
             val amount = Money(finalCents, gross.currency)
 
-            garnishments += DeductionLine(
-                code = code,
-                description = plan?.name ?: order.caseNumber ?: order.orderId.value,
-                amount = amount,
+            garnishments.add(
+                DeductionLine(
+                    code = code,
+                    description = plan?.name ?: order.caseNumber ?: order.orderId.value,
+                    amount = amount,
+                ),
             )
 
             garnishmentCents += finalCents
@@ -367,14 +388,9 @@ object GarnishmentsCalculator {
             val planEffects = if (plan?.employeeEffects?.isNotEmpty() == true) {
                 plan.employeeEffects
             } else {
-                // For now, treat order-based garnishments with the same default
-                // effects as generic GARNISHMENT plans.
                 DeductionKind.GARNISHMENT.defaultEmployeeEffects()
             }
 
-            // Emit a garnishment-specific trace step before the generic
-            // DeductionApplied so consumers can see the full requested vs
-            // applied context.
             val arrearsBeforeCents = order.arrearsBefore?.amount
             val appliedToArrears = if (arrearsBeforeCents != null && arrearsBeforeCents > 0L) {
                 minOf(finalCents, arrearsBeforeCents)
@@ -384,39 +400,49 @@ object GarnishmentsCalculator {
             val appliedToCurrent = finalCents - appliedToArrears
             val arrearsAfterCents = arrearsBeforeCents?.let { (it - appliedToArrears).coerceAtLeast(0L) }
 
-            traceSteps += TraceStep.GarnishmentApplied(
-                orderId = order.orderId.value,
-                type = order.type.name,
-                description = plan?.name ?: order.caseNumber ?: order.orderId.value,
-                requestedCents = requestedBeforeCaps,
-                appliedCents = finalCents,
-                disposableBeforeCents = disposableBefore,
-                disposableAfterCents = disposableBefore - garnishmentCents,
-                protectedEarningsFloorCents = protectedFloor,
-                protectedFloorConstrained = protectedConstrained,
-                arrearsBeforeCents = arrearsBeforeCents,
-                arrearsAfterCents = arrearsAfterCents,
-                appliedToCurrentCents = appliedToCurrent,
-                appliedToArrearsCents = appliedToArrears,
+            traceSteps?.add(
+                TraceStep.GarnishmentApplied(
+                    orderId = order.orderId.value,
+                    type = order.type.name,
+                    description = plan?.name ?: order.caseNumber ?: order.orderId.value,
+                    requestedCents = requestedBeforeCaps,
+                    appliedCents = finalCents,
+                    disposableBeforeCents = disposableBefore,
+                    disposableAfterCents = disposableBefore - garnishmentCents,
+                    protectedEarningsFloorCents = protectedFloor,
+                    protectedFloorConstrained = protectedConstrained,
+                    arrearsBeforeCents = arrearsBeforeCents,
+                    arrearsAfterCents = arrearsAfterCents,
+                    appliedToCurrentCents = appliedToCurrent,
+                    appliedToArrearsCents = appliedToArrears,
+                ),
             )
 
-            traceSteps += TraceStep.DeductionApplied(
-                description = plan?.name ?: order.caseNumber ?: order.orderId.value,
-                basis = gross,
-                rate = plan?.employeeRate,
-                amount = amount,
-                cappedAt = cappedAt,
-                effects = planEffects,
+            traceSteps?.add(
+                TraceStep.DeductionApplied(
+                    description = plan?.name ?: order.caseNumber ?: order.orderId.value,
+                    basis = gross,
+                    rate = plan?.employeeRate,
+                    amount = amount,
+                    cappedAt = capResult.cappedAt,
+                    effects = planEffects,
+                ),
             )
         }
 
         return GarnishmentCalculationResult(
             garnishments = garnishments,
-            traceSteps = traceSteps,
+            traceSteps = traceSteps ?: emptyList(),
         )
     }
 
-    private fun computeFromPlans(input: PaycheckInput, gross: Money, preTaxDeductions: List<DeductionLine>, plansByCode: Map<DeductionCode, DeductionPlan>): GarnishmentCalculationResult {
+    private fun computeFromPlans(
+        input: PaycheckInput,
+        gross: Money,
+        preTaxDeductions: List<DeductionLine>,
+        plansByCode: Map<DeductionCode, DeductionPlan>,
+        includeTrace: Boolean,
+    ): GarnishmentCalculationResult {
         val garnishmentPlans = plansByCode.values
             .filter { it.kind == DeductionKind.GARNISHMENT }
             .distinctBy { it.id }
@@ -429,9 +455,6 @@ object GarnishmentsCalculator {
 
         val sortedPlans = DeductionOrdering.sort(garnishmentPlans)
 
-        val garnishments = mutableListOf<DeductionLine>()
-        val traceSteps = mutableListOf<TraceStep>()
-
         // In the prior implementation, mandatory pre-tax consisted of HSA, FSA,
         // and PRETAX_RETIREMENT_EMPLOYEE employee amounts.
         val mandatoryPreTaxCents: Long = preTaxDeductions.sumOf { it.amount.amount }
@@ -441,44 +464,48 @@ object GarnishmentsCalculator {
             return input.priorYtd.deductionsByCode[code]?.amount ?: 0L
         }
 
-        fun applyCaps(plan: DeductionPlan, rawCents: Long, ytdCents: Long): Pair<Long, Money?> {
-            var finalCents = rawCents
-            var cappedAt: Money? = null
+        data class CapResult(
+            val finalCents: Long,
+            val cappedAt: Money?,
+        )
 
-            plan.annualCap?.let { cap ->
-                val remaining = cap.amount - ytdCents
-                if (remaining <= 0L) {
-                    finalCents = 0L
-                } else if (finalCents > remaining) {
-                    finalCents = remaining
-                    cappedAt = cap
+        fun applyCaps(plan: DeductionPlan, rawCents: Long, ytdCents: Long): CapResult {
+            val annualCapResult: CapResult = plan.annualCap
+                ?.let { cap ->
+                    val remaining = cap.amount - ytdCents
+                    when {
+                        remaining <= 0L -> CapResult(finalCents = 0L, cappedAt = cap)
+                        rawCents > remaining -> CapResult(finalCents = remaining, cappedAt = cap)
+                        else -> CapResult(finalCents = rawCents, cappedAt = null)
+                    }
                 }
-            }
+                ?: CapResult(finalCents = rawCents, cappedAt = null)
 
-            plan.perPeriodCap?.let { cap ->
-                if (finalCents > cap.amount) {
-                    finalCents = cap.amount
-                    cappedAt = cap
+            return plan.perPeriodCap
+                ?.let { cap ->
+                    when {
+                        annualCapResult.finalCents > cap.amount -> CapResult(finalCents = cap.amount, cappedAt = cap)
+                        else -> annualCapResult
+                    }
                 }
-            }
-
-            return finalCents to cappedAt
+                ?: annualCapResult
         }
+
+        val traceSteps: MutableList<TraceStep>? = if (includeTrace) ArrayList<TraceStep>(sortedPlans.size) else null
+        val garnishments = ArrayList<DeductionLine>(sortedPlans.size)
 
         var garnishmentCents = 0L
 
         for (plan in sortedPlans) {
-            var rawCents = 0L
-            plan.employeeRate?.let { rate ->
-                rawCents += (gross.amount * rate.value).toLong()
-            }
-            plan.employeeFlat?.let { flat ->
-                rawCents += flat.amount
-            }
+            val rawCents: Long =
+                (plan.employeeRate?.let { rate -> (gross.amount * rate.value).toLong() } ?: 0L) +
+                    (plan.employeeFlat?.amount ?: 0L)
+
             if (rawCents == 0L) continue
 
             val ytd = ytdForPlan(plan)
-            var (finalCents, cappedAt) = applyCaps(plan, rawCents, ytd)
+            val capResult = applyCaps(plan, rawCents, ytd)
+            var finalCents = capResult.finalCents
             if (finalCents == 0L) continue
 
             val disposableBefore = gross.amount - mandatoryPreTaxCents
@@ -493,29 +520,33 @@ object GarnishmentsCalculator {
             val code = DeductionCode(plan.id)
             val amount = Money(finalCents, gross.currency)
 
-            garnishments += DeductionLine(
-                code = code,
-                description = plan.name,
-                amount = amount,
+            garnishments.add(
+                DeductionLine(
+                    code = code,
+                    description = plan.name,
+                    amount = amount,
+                ),
             )
 
             garnishmentCents += finalCents
 
             val planEffects = if (plan.employeeEffects.isNotEmpty()) plan.employeeEffects else plan.kind.defaultEmployeeEffects()
 
-            traceSteps += TraceStep.DeductionApplied(
-                description = plan.name,
-                basis = gross,
-                rate = plan.employeeRate,
-                amount = amount,
-                cappedAt = cappedAt,
-                effects = planEffects,
+            traceSteps?.add(
+                TraceStep.DeductionApplied(
+                    description = plan.name,
+                    basis = gross,
+                    rate = plan.employeeRate,
+                    amount = amount,
+                    cappedAt = capResult.cappedAt,
+                    effects = planEffects,
+                ),
             )
         }
 
         return GarnishmentCalculationResult(
             garnishments = garnishments,
-            traceSteps = traceSteps,
+            traceSteps = traceSteps ?: emptyList(),
         )
     }
 }

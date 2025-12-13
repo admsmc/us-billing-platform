@@ -65,7 +65,7 @@ From the repo root:
 - Regenerate state income tax JSON for a given tax year (default 2025):
   - `./gradlew :tax-service:test --no-daemon`
   - `./gradlew :tax-service:runStateIncomeTaxImporter --no-daemon -PtaxYear=2025`
-- Validate all tax rule JSON config files under `tax-service/src/main/resources/tax-config`:
+- Validate all tax rule JSON config files under `tax-content/src/main/resources/tax-config`:
   - `./gradlew :tax-service:validateTaxConfig --no-daemon`
 
 The importer and validator operate on `TaxRuleFile` JSON documents generated from:
@@ -127,7 +127,7 @@ Other modules such as `persistence-core`, `messaging-core`, and `web-core` exist
 
 - The **domain core** (`shared-kernel` + `payroll-domain`) must stay framework-agnostic and side-effect free.
 - Service modules encapsulate persistence, HTTP, and operational concerns while depending on the domain only via its public types and ports.
-- Configuration-heavy content (tax rules, labor standards) lives as versioned CSV/JSON artifacts in the service modules and is compiled/imported via explicit Gradle tasks.
+- Configuration-heavy content (tax rules, labor standards) lives as versioned CSV/JSON artifacts in `tax-content` (tax) and the relevant service modules (e.g. labor) and is compiled/imported via explicit Gradle tasks.
 
 ### Year and coverage assumptions
 

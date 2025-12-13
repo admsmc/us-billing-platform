@@ -1,12 +1,17 @@
 package com.example.uspayroll.worker.client
 
+import com.example.uspayroll.hr.client.HrClient
+import com.example.uspayroll.hr.client.HrClientProperties
+import com.example.uspayroll.hr.http.GarnishmentOrderDto
+import com.example.uspayroll.hr.http.GarnishmentWithholdingRequest
+import com.example.uspayroll.hr.http.toDomain
 import com.example.uspayroll.payroll.model.EmployeeSnapshot
 import com.example.uspayroll.payroll.model.PayPeriod
 import com.example.uspayroll.payroll.model.garnishment.GarnishmentOrder
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
+import com.example.uspayroll.web.RestTemplateMdcPropagationInterceptor
 import org.slf4j.LoggerFactory
-import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -15,18 +20,7 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.client.getForObject
-import java.time.Duration
 import java.time.LocalDate
-
-@ConfigurationProperties(prefix = "hr")
-data class HrClientProperties(
-    var baseUrl: String = "http://localhost:8081",
-    /** Connection + read timeout for HR HTTP calls. */
-    var connectTimeout: Duration = Duration.ofSeconds(2),
-    var readTimeout: Duration = Duration.ofSeconds(5),
-    /** Number of retry attempts for transient failures on non-critical endpoints. */
-    var maxRetries: Int = 2,
-)
 
 @Configuration
 @EnableConfigurationProperties(HrClientProperties::class)
@@ -46,6 +40,7 @@ class HrClientConfig {
         }
         return RestTemplate(listOf(messageConverter)).apply {
             setRequestFactory(requestFactory)
+            interceptors = listOf(RestTemplateMdcPropagationInterceptor())
         }
     }
 

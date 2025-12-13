@@ -55,7 +55,7 @@ class EmployerContributionsAndImputedIncomeTest {
             amount = Money(500_00L),
         )
 
-        val result = PayrollEngine.calculatePaycheck(
+        val result = calculatePaycheckDebug(
             input = input,
             earningConfig = null,
             deductionConfig = null,
@@ -145,7 +145,7 @@ class EmployerContributionsAndImputedIncomeTest {
             }
         }
 
-        val result = PayrollEngine.calculatePaycheck(
+        val result = calculatePaycheckDebug(
             input = input,
             earningConfig = earningConfig,
             deductionConfig = null,

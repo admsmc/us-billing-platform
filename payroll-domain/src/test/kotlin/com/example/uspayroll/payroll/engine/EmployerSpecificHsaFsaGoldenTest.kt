@@ -102,17 +102,17 @@ class EmployerSpecificHsaFsaGoldenTest {
 
         val repo = MultiEmployerHsaFsaRepo()
 
-        val hsaResult = PayrollEngine.calculatePaycheck(
+        val hsaResult = calculatePaycheckDebug(
             input = hsaInput,
             earningConfig = null,
             deductionConfig = repo,
         )
-        val fsaResult = PayrollEngine.calculatePaycheck(
+        val fsaResult = calculatePaycheckDebug(
             input = fsaInput,
             earningConfig = null,
             deductionConfig = repo,
         )
-        val noneResult = PayrollEngine.calculatePaycheck(
+        val noneResult = calculatePaycheckDebug(
             input = noneInput,
             earningConfig = null,
             deductionConfig = repo,

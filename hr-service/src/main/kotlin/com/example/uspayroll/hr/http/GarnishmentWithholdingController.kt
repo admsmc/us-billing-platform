@@ -22,7 +22,7 @@ class GarnishmentWithholdingController(
 ) {
 
     @PostMapping("/employees/{employeeId}/garnishments/withholdings")
-    fun recordWithholdings(@PathVariable employerId: String, @PathVariable employeeId: String, @RequestBody request: GarnishmentWithholdingRequestHr) {
+    fun recordWithholdings(@PathVariable employerId: String, @PathVariable employeeId: String, @RequestBody request: GarnishmentWithholdingRequest) {
         val employer = EmployerId(employerId)
         val employee = EmployeeId(employeeId)
         val views = request.events.map {
@@ -64,20 +64,6 @@ class GarnishmentWithholdingController(
 }
 
 /**
- * HR-service side DTO mirroring the worker-service
- * GarnishmentWithholdingRequest. Kept separate to avoid cross-module
- * dependencies; JSON shape must remain compatible.
- */
-data class GarnishmentWithholdingEventHr(
-    val orderId: String,
-    val paycheckId: String,
-    val payRunId: String?,
-    val checkDate: LocalDate,
-    val withheld: Money,
-    val netPay: Money,
-)
-
-/**
  * Read-only view of a ledger entry exposed over HTTP for debugging/ops.
  */
 data class GarnishmentLedgerEntryHr(
@@ -88,7 +74,4 @@ data class GarnishmentLedgerEntryHr(
     val lastCheckDate: LocalDate?,
     val lastPaycheckId: String?,
     val lastPayRunId: String?,
-)
-data class GarnishmentWithholdingRequestHr(
-    val events: List<GarnishmentWithholdingEventHr>,
 )

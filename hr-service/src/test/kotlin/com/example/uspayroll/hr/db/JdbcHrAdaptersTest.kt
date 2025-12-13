@@ -3,9 +3,9 @@ package com.example.uspayroll.hr.db
 import com.example.uspayroll.hr.api.EmployeeSnapshotProvider
 import com.example.uspayroll.hr.api.PayPeriodProvider
 import com.example.uspayroll.payroll.model.*
+import com.example.uspayroll.persistence.flyway.FlywaySupport
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
-import org.flywaydb.core.Flyway
 import org.h2.jdbcx.JdbcDataSource
 import org.junit.jupiter.api.Test
 import org.springframework.jdbc.core.JdbcTemplate
@@ -27,11 +27,10 @@ class JdbcHrAdaptersTest {
             password = ""
         }
 
-        Flyway.configure()
-            .dataSource(ds)
-            .locations("classpath:db/migration")
-            .load()
-            .migrate()
+        FlywaySupport.migrate(
+            dataSource = ds,
+            "classpath:db/migration",
+        )
 
         return JdbcTemplate(ds)
     }

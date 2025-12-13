@@ -18,8 +18,12 @@ kotlin {
 dependencies {
     implementation(project(":shared-kernel"))
     implementation(project(":payroll-domain"))
-    implementation(project(":tax-service"))
-    implementation(project(":labor-service"))
+    implementation(project(":hr-api"))
+    implementation(project(":hr-client"))
+    implementation(project(":tax-api"))
+    implementation(project(":labor-api"))
+    implementation(project(":messaging-core"))
+    implementation(project(":web-core"))
 
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
@@ -28,12 +32,17 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-amqp")
 
     testImplementation(kotlin("test"))
+    testImplementation(project(":persistence-core"))
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
     testImplementation("org.junit.jupiter:junit-jupiter-params")
 
-    // For cross-module tests that start hr-service in-process
+    // For cross-module tests that start services in-process
     testImplementation(project(":hr-service"))
+    testImplementation(project(":tax-config"))
+    testImplementation(project(":tax-catalog-ports"))
+    testImplementation(project(":tax-impl"))
+    testImplementation(project(":tax-content"))
     // JDBC access for seeding hr-service's H2 schema from worker-service tests.
     testImplementation("org.springframework.boot:spring-boot-starter-jdbc")
 
@@ -53,5 +62,5 @@ tasks.withType<JavaCompile> {
 }
 
 application {
-    mainClass.set("com.example.uspayroll.worker.WorkerApplicationKt")
+    mainClass.set("com.example.uspayroll.worker.ApplicationKt")
 }

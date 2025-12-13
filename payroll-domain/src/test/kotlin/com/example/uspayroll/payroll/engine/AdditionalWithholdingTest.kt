@@ -70,7 +70,7 @@ class AdditionalWithholdingTest {
             taxContext = TaxContext(federal = listOf(rule)),
         )
 
-        val result = PayrollEngine.calculatePaycheck(taxedInput)
+        val result = calculatePaycheckDebug(taxedInput)
 
         // Biweekly gross from salaried: 260,000 / 26 = 10,000
         assertEquals(10_000_00L, result.gross.amount)
@@ -117,7 +117,7 @@ class AdditionalWithholdingTest {
             taxContext = TaxContext(federal = listOf(rule)),
         )
 
-        val result = PayrollEngine.calculatePaycheck(taxedInput)
+        val result = calculatePaycheckDebug(taxedInput)
 
         // Biweekly gross still 10,000
         assertEquals(10_000_00L, result.gross.amount)

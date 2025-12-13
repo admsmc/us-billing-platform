@@ -68,7 +68,7 @@ class YtdYearBoundaryTest {
             priorYtd = YtdSnapshot(year = 2025),
         )
 
-        val result1 = PayrollEngine.calculatePaycheck(input1)
+        val result1 = calculatePaycheckDebug(input1)
 
         val input2 = input1.copy(
             paycheckId = PaycheckId("chk-ytd-2"),
@@ -77,7 +77,7 @@ class YtdYearBoundaryTest {
             priorYtd = result1.ytdAfter,
         )
 
-        val result2 = PayrollEngine.calculatePaycheck(input2)
+        val result2 = calculatePaycheckDebug(input2)
 
         // Each biweekly gross = 10,000; each tax = 1,000
         assertEquals(10_000_00L, result1.gross.amount)
@@ -139,7 +139,7 @@ class YtdYearBoundaryTest {
             priorYtd = priorYtd,
         )
 
-        val result = PayrollEngine.calculatePaycheck(input)
+        val result = calculatePaycheckDebug(input)
 
         // Trace should contain a Note about YTD year mismatch
         val mismatchNotes = result.trace.steps.filterIsInstance<TraceStep.Note>()

@@ -22,7 +22,10 @@ interface OrchestratorClient {
         maxMillis: Long = 2_000L,
         requeueStaleMillis: Long = 10 * 60 * 1000L,
         leaseOwner: String = "worker",
+        parallelism: Int = 4,
     ): Map<String, Any?>
+
+    fun finalizeEmployeeItem(employerId: EmployerId, payRunId: String, employeeId: String): FinalizeEmployeeItemResponse
 
     fun getStatus(employerId: EmployerId, payRunId: String, failureLimit: Int = 25): PayRunStatusResponse
 }
@@ -65,8 +68,8 @@ class HttpOrchestratorClient(
         return response.body ?: error("Orchestrator startFinalize returned null body")
     }
 
-    override fun execute(employerId: EmployerId, payRunId: String, batchSize: Int, maxItems: Int, maxMillis: Long, requeueStaleMillis: Long, leaseOwner: String): Map<String, Any?> {
-        val url = "${props.baseUrl}/employers/${employerId.value}/payruns/internal/$payRunId/execute?batchSize=$batchSize&maxItems=$maxItems&maxMillis=$maxMillis&requeueStaleMillis=$requeueStaleMillis&leaseOwner=$leaseOwner"
+    override fun execute(employerId: EmployerId, payRunId: String, batchSize: Int, maxItems: Int, maxMillis: Long, requeueStaleMillis: Long, leaseOwner: String, parallelism: Int): Map<String, Any?> {
+        val url = "${props.baseUrl}/employers/${employerId.value}/payruns/internal/$payRunId/execute?batchSize=$batchSize&maxItems=$maxItems&maxMillis=$maxMillis&requeueStaleMillis=$requeueStaleMillis&leaseOwner=$leaseOwner&parallelism=$parallelism"
 
         val headers = HttpHeaders().apply {
             set(props.internalTokenHeader, props.internalToken)
@@ -81,6 +84,22 @@ class HttpOrchestratorClient(
         @Suppress("UNCHECKED_CAST")
         return response.body as? Map<String, Any?>
             ?: error("Orchestrator execute returned null body")
+    }
+
+    override fun finalizeEmployeeItem(employerId: EmployerId, payRunId: String, employeeId: String): FinalizeEmployeeItemResponse {
+        val url = "${props.baseUrl}/employers/${employerId.value}/payruns/internal/$payRunId/items/$employeeId/finalize"
+
+        val headers = HttpHeaders().apply {
+            set(props.internalTokenHeader, props.internalToken)
+        }
+
+        val response = restTemplate.exchange<FinalizeEmployeeItemResponse>(
+            RequestEntity.post(URI.create(url))
+                .headers(headers)
+                .build(),
+        )
+
+        return response.body ?: error("Orchestrator finalizeEmployeeItem returned null body")
     }
 
     override fun getStatus(employerId: EmployerId, payRunId: String, failureLimit: Int): PayRunStatusResponse {
@@ -103,6 +122,17 @@ data class StartFinalizeResponse(
     val status: String,
     val totalItems: Int,
     val created: Boolean,
+)
+
+data class FinalizeEmployeeItemResponse(
+    val employerId: String,
+    val payRunId: String,
+    val employeeId: String,
+    val itemStatus: String,
+    val attemptCount: Int,
+    val paycheckId: String? = null,
+    val retryable: Boolean,
+    val error: String? = null,
 )
 
 data class PayRunStatusResponse(

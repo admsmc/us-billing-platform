@@ -1,8 +1,9 @@
 package com.example.uspayroll.worker
 
-import com.example.uspayroll.labor.impl.LaborStandardsContextProvider
+import com.example.uspayroll.labor.api.LaborStandardsContextProvider
 import com.example.uspayroll.payroll.engine.PayrollEngine
 import com.example.uspayroll.payroll.model.*
+import com.example.uspayroll.payroll.model.audit.TraceLevel
 import com.example.uspayroll.payroll.model.garnishment.GarnishmentContext
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
@@ -12,12 +13,14 @@ import com.example.uspayroll.shared.toLocalityCodeStrings
 import com.example.uspayroll.tax.api.TaxContextProvider
 import com.example.uspayroll.tax.service.FederalWithholdingCalculator
 import com.example.uspayroll.tax.service.FederalWithholdingInput
+import com.example.uspayroll.worker.config.WorkerPayrollProperties
 import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RestController
+import java.time.Instant
 import java.time.LocalDate
 
 @SpringBootApplication
@@ -42,11 +45,12 @@ class PayrollRunService(
     private val federalWithholdingCalculator: FederalWithholdingCalculator,
     private val laborStandardsContextProvider: LaborStandardsContextProvider,
     private val localityResolver: LocalityResolver,
-    private val hrClient: com.example.uspayroll.worker.client.HrClient? = null,
+    private val hrClient: com.example.uspayroll.hr.client.HrClient? = null,
     private val taxClient: com.example.uspayroll.worker.client.TaxClient? = null,
     private val laborClient: com.example.uspayroll.worker.client.LaborStandardsClient? = null,
     private val meterRegistry: MeterRegistry,
     private val garnishmentEngineProperties: GarnishmentEngineProperties,
+    private val payrollProperties: WorkerPayrollProperties,
 ) {
 
     private val logger = LoggerFactory.getLogger(PayrollRunService::class.java)
@@ -124,11 +128,13 @@ class PayrollRunService(
                 laborStandards = laborStandards,
             )
 
-            val paycheck = PayrollEngine.calculatePaycheck(
+            val paycheck = PayrollEngine.calculatePaycheckComputation(
                 input = input,
+                computedAt = Instant.now(),
+                traceLevel = payrollProperties.traceLevel,
                 earningConfig = earningConfigRepository,
                 deductionConfig = deductionConfigRepository,
-            )
+            ).paycheck
 
             val federalWithholding = federalWithholdingCalculator.computeWithholding(
                 FederalWithholdingInput(paycheckInput = input),
@@ -143,7 +149,13 @@ class PayrollRunService(
      * snapshots over HTTP, then runs the payroll engine. This is intended for
      * integration tests and future real flows.
      */
-    fun runHrBackedPayForPeriod(employerId: EmployerId, payPeriodId: String, employeeIds: List<EmployeeId>): List<PaycheckResult> {
+    fun runHrBackedPayForPeriod(
+        employerId: EmployerId,
+        payPeriodId: String,
+        employeeIds: List<EmployeeId>,
+        /** Optional unique suffix for paycheck IDs so repeated runs don't collide in HR withholding events. */
+        runId: String? = null,
+    ): List<PaycheckResult> {
         val client = requireNotNull(hrClient) { "HrClient is required for HR-backed flows" }
 
         val payPeriod = client.getPayPeriod(employerId, payPeriodId)
@@ -221,9 +233,21 @@ class PayrollRunService(
                 orders = effectiveOrders,
             )
 
+            val paycheckId = if (runId.isNullOrBlank()) {
+                com.example.uspayroll.shared.PaycheckId("chk-${payPeriod.id}-${eid.value}")
+            } else {
+                com.example.uspayroll.shared.PaycheckId("chk-${payPeriod.id}-${eid.value}-$runId")
+            }
+
+            val payRunId = if (runId.isNullOrBlank()) {
+                PayRunId("run-${payPeriod.id}")
+            } else {
+                PayRunId("run-${payPeriod.id}-$runId")
+            }
+
             val input = PaycheckInput(
-                paycheckId = com.example.uspayroll.shared.PaycheckId("chk-${payPeriod.id}-${eid.value}"),
-                payRunId = PayRunId("run-${payPeriod.id}"),
+                paycheckId = paycheckId,
+                payRunId = payRunId,
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = payPeriod,
@@ -239,21 +263,25 @@ class PayrollRunService(
                 garnishments = garnishmentContext,
             )
 
-            val paycheck = PayrollEngine.calculatePaycheck(
+            val paycheck = PayrollEngine.calculatePaycheckComputation(
                 input = input,
+                computedAt = Instant.now(),
+                traceLevel = payrollProperties.traceLevel,
                 earningConfig = earningConfigRepository,
                 deductionConfig = deductionConfigRepository,
                 supportCapContext = supportCapContext,
-            )
+            ).paycheck
 
             // Emit metrics for protected-earnings adjustments, if any.
-            val protectedSteps = paycheck.trace.steps.filterIsInstance<TraceStep.ProtectedEarningsApplied>()
-            if (protectedSteps.isNotEmpty()) {
-                meterRegistry.counter(
-                    "payroll.garnishments.protected_floor_applied",
-                    "employer_id",
-                    employerId.value,
-                ).increment(protectedSteps.size.toDouble())
+            if (payrollProperties.traceLevel == TraceLevel.DEBUG) {
+                val protectedSteps = paycheck.trace.steps.filterIsInstance<TraceStep.ProtectedEarningsApplied>()
+                if (protectedSteps.isNotEmpty()) {
+                    meterRegistry.counter(
+                        "payroll.garnishments.protected_floor_applied",
+                        "employer_id",
+                        employerId.value,
+                    ).increment(protectedSteps.size.toDouble())
+                }
             }
 
             // Record garnishment withholdings back to HR for this paycheck.
@@ -262,7 +290,7 @@ class PayrollRunService(
                 val events = effectiveOrders.map { order ->
                     val line = deductionsByCode[order.orderId.value]
                     val withheld = line?.amount ?: Money(0L)
-                    com.example.uspayroll.worker.client.GarnishmentWithholdingEvent(
+                    com.example.uspayroll.hr.http.GarnishmentWithholdingEvent(
                         orderId = order.orderId.value,
                         paycheckId = input.paycheckId.value,
                         payRunId = input.payRunId?.value,
@@ -286,7 +314,7 @@ class PayrollRunService(
                 client.recordGarnishmentWithholding(
                     employerId = employerId,
                     employeeId = eid,
-                    request = com.example.uspayroll.worker.client.GarnishmentWithholdingRequest(events = events),
+                    request = com.example.uspayroll.hr.http.GarnishmentWithholdingRequest(events = events),
                 )
             }
 

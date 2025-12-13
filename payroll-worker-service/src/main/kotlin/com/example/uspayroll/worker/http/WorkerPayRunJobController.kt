@@ -14,6 +14,11 @@ import java.util.UUID
 
 @RestController
 @RequestMapping("/jobs/employers/{employerId}/payruns")
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(
+    prefix = "worker.jobs.legacy-payrun",
+    name = ["enabled"],
+    havingValue = "true",
+)
 class WorkerPayRunJobController(
     private val queue: FinalizePayRunJobQueue,
     private val store: FinalizePayRunJobStore,

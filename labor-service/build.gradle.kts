@@ -20,6 +20,8 @@ kotlin {
 dependencies {
     implementation(project(":shared-kernel"))
     implementation(project(":payroll-domain"))
+    implementation(project(":labor-api"))
+    implementation(project(":web-core"))
 
     // Spring Boot web + JDBC for labor-service HTTP API and DB access.
     implementation("org.springframework.boot:spring-boot-starter-web")
@@ -27,7 +29,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
 
     // Flyway for managing Postgres schema migrations (including labor_standard).
-    implementation("org.flywaydb:flyway-core")
+    implementation("org.flywaydb:flyway-core:11.19.0")
+    implementation("org.flywaydb:flyway-database-postgresql:11.19.0")
 
     // jOOQ for SQL-centric, type-safe access to the labor_standard schema.
     implementation("org.jooq:jooq:3.19.11")

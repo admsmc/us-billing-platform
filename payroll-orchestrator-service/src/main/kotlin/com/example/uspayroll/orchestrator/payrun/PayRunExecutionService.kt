@@ -9,6 +9,7 @@ import com.example.uspayroll.shared.EmployerId
 import org.springframework.stereotype.Service
 import java.time.Duration
 import java.time.Instant
+import java.util.concurrent.Executors
 
 @Service
 class PayRunExecutionService(
@@ -43,6 +44,8 @@ class PayRunExecutionService(
         requeueStaleMillis: Long = 10 * 60 * 1000L,
         leaseOwner: String = "worker",
         leaseDuration: Duration = Duration.ofMinutes(5),
+        /** Max number of employees to process concurrently within a single execute call. */
+        parallelism: Int = 4,
     ): ExecuteResult {
         val payRun = payRunRepository.findPayRun(employerId, payRunId)
             ?: return ExecuteResult(acquiredLease = false, processed = 0, finalStatus = null, moreWork = false)
@@ -54,7 +57,7 @@ class PayRunExecutionService(
             return ExecuteResult(acquiredLease = false, processed = 0, finalStatus = payRun.status, moreWork = false)
         }
 
-        val acquired = payRunRepository.tryAcquireLease(
+        val acquired = payRunRepository.acquireOrRenewLease(
             employerId = employerId,
             payRunId = payRunId,
             leaseOwner = leaseOwner,
@@ -82,7 +85,11 @@ class PayRunExecutionService(
         var processed = 0
         var stillOwnLease = true
 
-        while (processed < maxToProcess && System.currentTimeMillis() < deadlineMs) {
+        val effectiveParallelism = parallelism.coerceAtLeast(1)
+        val executor = if (effectiveParallelism == 1) null else Executors.newFixedThreadPool(effectiveParallelism)
+
+        try {
+            while (processed < maxToProcess && System.currentTimeMillis() < deadlineMs) {
             // Heartbeat before each claim/batch.
             stillOwnLease = payRunRepository.renewLeaseIfOwned(
                 employerId = employerId,
@@ -102,41 +109,33 @@ class PayRunExecutionService(
 
             // Once items are claimed (status=RUNNING), we must process them all
             // to avoid leaving rows stuck in RUNNING.
-            claimedEmployeeIds.forEach { eid ->
-                try {
-                    val paycheckId = payRunItemRepository.getOrAssignPaycheckId(
+            if (executor == null) {
+                claimedEmployeeIds.forEach { eid ->
+                    processOneEmployeeItem(
                         employerId = employerId,
+                        payRun = payRun,
                         payRunId = payRunId,
                         employeeId = eid,
                     )
-
-                    val paycheck = paycheckComputationService.computeAndPersistFinalPaycheckForEmployee(
-                        employerId = EmployerId(employerId),
-                        payRunId = payRunId,
-                        payPeriodId = payRun.payPeriodId,
-                        runType = payRun.runType.name,
-                        runSequence = payRun.runSequence,
-                        paycheckId = paycheckId,
-                        employeeId = EmployeeId(eid),
-                    )
-
-                    payRunItemRepository.markSucceeded(
-                        employerId = employerId,
-                        payRunId = payRunId,
-                        employeeId = eid,
-                        paycheckId = paycheck.paycheckId.value,
-                    )
-                } catch (t: Throwable) {
-                    payRunItemRepository.markFailed(
-                        employerId = employerId,
-                        payRunId = payRunId,
-                        employeeId = eid,
-                        error = (t.message ?: t::class.java.name),
-                    )
-                } finally {
                     processed += 1
                 }
+            } else {
+                val futures = claimedEmployeeIds.map { eid ->
+                    executor.submit {
+                        processOneEmployeeItem(
+                            employerId = employerId,
+                            payRun = payRun,
+                            payRunId = payRunId,
+                            employeeId = eid,
+                        )
+                    }
+                }
+                futures.forEach { it.get() }
+                processed += claimedEmployeeIds.size
             }
+        }
+        } finally {
+            executor?.shutdown()
         }
 
         val counts = payRunItemRepository.countsForPayRun(employerId, payRunId)
@@ -174,5 +173,39 @@ class PayRunExecutionService(
             finalStatus = computedStatus,
             moreWork = moreWork,
         )
+    }
+
+    private fun processOneEmployeeItem(employerId: String, payRun: com.example.uspayroll.orchestrator.payrun.model.PayRunRecord, payRunId: String, employeeId: String) {
+        try {
+            val paycheckId = payRunItemRepository.getOrAssignPaycheckId(
+                employerId = employerId,
+                payRunId = payRunId,
+                employeeId = employeeId,
+            )
+
+            val paycheck = paycheckComputationService.computeAndPersistFinalPaycheckForEmployee(
+                employerId = EmployerId(employerId),
+                payRunId = payRunId,
+                payPeriodId = payRun.payPeriodId,
+                runType = payRun.runType.name,
+                runSequence = payRun.runSequence,
+                paycheckId = paycheckId,
+                employeeId = EmployeeId(employeeId),
+            )
+
+            payRunItemRepository.markSucceeded(
+                employerId = employerId,
+                payRunId = payRunId,
+                employeeId = employeeId,
+                paycheckId = paycheck.paycheckId.value,
+            )
+        } catch (t: Throwable) {
+            payRunItemRepository.markFailed(
+                employerId = employerId,
+                payRunId = payRunId,
+                employeeId = employeeId,
+                error = (t.message ?: t::class.java.name),
+            )
+        }
     }
 }

@@ -12,6 +12,12 @@ COPY gradle.properties gradle.properties
 
 COPY shared-kernel shared-kernel
 COPY payroll-domain payroll-domain
+COPY web-core web-core
+COPY tax-api tax-api
+COPY tax-config tax-config
+COPY tax-catalog-ports tax-catalog-ports
+COPY tax-impl tax-impl
+COPY tax-content tax-content
 COPY tax-service tax-service
 
 RUN ./gradlew --no-daemon :tax-service:bootJar

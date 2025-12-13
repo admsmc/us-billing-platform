@@ -12,7 +12,7 @@ The goals are:
 This runbook covers:
 - Federal income tax wage-bracket tables from IRS Publication 15-T.
 - The biweekly wage-bracket configuration used by tax-service.
-- The CSV → JSON → DB pipeline in `tax-service`.
+- The CSV → JSON → DB pipeline in `tax-service` (with shared content living in `tax-content`).
 
 State income tax content and other tax rules have their own pipelines and are not described here.
 
@@ -20,16 +20,16 @@ State income tax content and other tax rules have their own pipelines and are no
 
 Key paths in the repo:
 - Curated Pub. 15-T wage-bracket CSV for the current year:
-  - `tax-service/src/main/resources/wage-bracket-2025-biweekly.csv`
+  - `tax-content/src/main/resources/wage-bracket-2025-biweekly.csv`
 - Generated TaxRuleFile JSON for biweekly wage-brackets:
-  - `tax-service/src/main/resources/tax-config/federal-2025-pub15t-wage-bracket-biweekly.json`
+  - `tax-content/src/main/resources/tax-config/federal-2025-pub15t-wage-bracket-biweekly.json`
 - CSV → JSON transformer:
   - `tax-service/src/main/kotlin/com/example/uspayroll/tax/tools/WageBracketCsvParser.kt`
   - `tax-service/src/main/kotlin/com/example/uspayroll/tax/tools/WageBracketCsvImporter.kt`
 - Gradle generator task:
   - `:tax-service:generateFederal2025BiweeklyWageBrackets` (defined in `tax-service/build.gradle.kts`)
 - DB importer used in tests and migrations:
-  - `tax-service/src/main/kotlin/com/example/uspayroll/tax/persistence/TaxRuleConfigImporter.kt`
+  - `tax-impl/src/main/kotlin/com/example/uspayroll/tax/persistence/TaxRuleConfigImporter.kt`
 
 ## 3. Yearly update checklist (Pub. 15-T wage-brackets)
 
@@ -47,7 +47,7 @@ Use this checklist when updating to a new tax year (for example, 2026).
 
 ### 3.2 Curate CSV for the new year
 
-1. Create a new CSV under `tax-service/src/main/resources`, following the existing naming pattern. For example:
+1. Create a new CSV under `tax-content/src/main/resources`, following the existing naming pattern. For example:
    - `wage-bracket-2026-biweekly.csv`
 2. Populate this CSV from the new Pub. 15-T wage-bracket table (Forms W-4 from 2020 or later, biweekly payroll period):
    - Columns: `frequency,filingStatus,variant,minCents,maxCents,taxCents`.
@@ -115,8 +115,8 @@ These commands ensure:
 Ops and engineers should preserve the following invariants when making changes:
 
 - IRS publications are **authoritative, offline inputs**; the running application never calls IRS endpoints directly.
-- CSV files in `src/main/resources` are the **canonical curated representation** of Pub. 15-T tables.
-- JSON `TaxRuleFile` documents under `tax-config` are **deterministically generated** from CSV via code, not hand-edited.
+- CSV files in `tax-content/src/main/resources` are the **canonical curated representation** of Pub. 15-T tables.
+- JSON `TaxRuleFile` documents under `tax-content/src/main/resources/tax-config` are **deterministically generated** from CSV via code, not hand-edited.
 - All JSON is validated and tested in CI/QA before import into production databases.
 - The payroll-domain engine only consumes normalized tax rules via `TaxContext` and is decoupled from how those rules are sourced.
 

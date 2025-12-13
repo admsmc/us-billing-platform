@@ -101,7 +101,9 @@ class PaycheckPaymentBatchOps(
                 locked_at = ?,
                 submitted_at = ?,
                 updated_at = ?
-            WHERE employer_id = ? AND payment_id IN ($placeholders)
+            WHERE employer_id = ?
+              AND status = 'CREATED'
+              AND payment_id IN ($placeholders)
             """.trimIndent(),
             *(
                 mutableListOf<Any>(

@@ -109,7 +109,7 @@ class StateIncomeTaxIntegrationTest {
                 ),
                 priorYtd = YtdSnapshot(year = 2025),
             )
-            return PayrollEngine.calculatePaycheck(input)
+            return calculatePaycheckDebug(input)
         }
 
         val caResult = runFor(caSnapshot, listOf(caSingleRule()))
@@ -164,7 +164,7 @@ class StateIncomeTaxIntegrationTest {
                 ),
                 priorYtd = YtdSnapshot(year = 2025),
             )
-            return PayrollEngine.calculatePaycheck(input)
+            return calculatePaycheckDebug(input)
         }
 
         val txResult = runFor(txSnapshot, listOf(txZeroRule()))

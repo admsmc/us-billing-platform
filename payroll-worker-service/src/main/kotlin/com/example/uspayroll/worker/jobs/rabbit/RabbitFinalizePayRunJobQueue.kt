@@ -29,17 +29,22 @@ data class RabbitJobsProperties(
 class RabbitFinalizePayRunJobQueueConfig {
 
     @Bean
-    @ConditionalOnProperty(prefix = "worker.jobs.rabbit", name = ["enabled"], havingValue = "true")
+    @org.springframework.boot.autoconfigure.condition.ConditionalOnExpression(
+        "\${worker.jobs.legacy-payrun.enabled:false} and \${worker.jobs.rabbit.enabled:false}",
+    )
     fun finalizePayRunJobsQueue(props: RabbitJobsProperties): Queue = Queue(props.queueName, true)
 
     @Bean
-    fun rabbitJobMessageConverter(): Jackson2JsonMessageConverter = Jackson2JsonMessageConverter()
-
-    @Bean
     @Primary
-    @ConditionalOnProperty(prefix = "worker.jobs.rabbit", name = ["enabled"], havingValue = "true")
-    fun rabbitFinalizePayRunJobQueue(rabbitTemplate: RabbitTemplate, props: RabbitJobsProperties): FinalizePayRunJobQueue {
-        rabbitTemplate.messageConverter = rabbitJobMessageConverter()
+    @org.springframework.boot.autoconfigure.condition.ConditionalOnExpression(
+        "\${worker.jobs.legacy-payrun.enabled:false} and \${worker.jobs.rabbit.enabled:false}",
+    )
+    fun rabbitFinalizePayRunJobQueue(
+        rabbitTemplate: RabbitTemplate,
+        props: RabbitJobsProperties,
+        rabbitMessageConverter: Jackson2JsonMessageConverter,
+    ): FinalizePayRunJobQueue {
+        rabbitTemplate.messageConverter = rabbitMessageConverter
         return RabbitFinalizePayRunJobQueue(rabbitTemplate, props)
     }
 }
@@ -60,7 +65,9 @@ class RabbitFinalizePayRunJobQueue(
 }
 
 @Component
-@ConditionalOnProperty(prefix = "worker.jobs.rabbit", name = ["enabled"], havingValue = "true")
+@org.springframework.boot.autoconfigure.condition.ConditionalOnExpression(
+    "\${worker.jobs.legacy-payrun.enabled:false} and \${worker.jobs.rabbit.enabled:false}",
+)
 class RabbitFinalizePayRunJobConsumer(
     private val store: FinalizePayRunJobStore,
     private val runner: OrchestratorPayRunJobRunner,

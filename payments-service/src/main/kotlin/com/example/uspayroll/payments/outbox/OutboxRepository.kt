@@ -1,11 +1,13 @@
 package com.example.uspayroll.payments.outbox
 
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 import java.sql.Timestamp
 import java.time.Duration
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 enum class OutboxStatus {
@@ -23,38 +25,114 @@ data class OutboxEventRow(
     val aggregateId: String?,
     val payloadJson: String,
     val attempts: Int,
+    /** Lease token for this claim; callers must echo it back to markSent/markFailed. */
+    val lockedAt: Instant,
 )
 
 @Repository
 class OutboxRepository(
     private val jdbcTemplate: JdbcTemplate,
 ) {
+    private val isPostgres: Boolean by lazy {
+        val ds = jdbcTemplate.dataSource ?: return@lazy false
+        ds.connection.use { conn ->
+            conn.metaData.databaseProductName.lowercase().contains("postgres")
+        }
+    }
+
     fun enqueue(topic: String, eventKey: String, eventType: String, eventId: String? = null, aggregateId: String? = null, payloadJson: String, now: Instant = Instant.now()): String {
         val outboxId = "outbox-${UUID.randomUUID()}"
-        jdbcTemplate.update(
-            """
-            INSERT INTO outbox_event (
-              outbox_id, status,
-              event_id,
-              topic, event_key, event_type, aggregate_id,
-              payload_json,
-              attempts, next_attempt_at, last_error,
-              locked_by, locked_at,
-              created_at, published_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, NULL, NULL, NULL, ?, NULL)
-            """.trimIndent(),
-            outboxId,
-            OutboxStatus.PENDING.name,
-            eventId,
-            topic,
-            eventKey,
-            eventType,
-            aggregateId,
-            payloadJson,
-            Timestamp.from(now),
-            Timestamp.from(now),
-        )
-        return outboxId
+        val ts = Timestamp.from(now)
+
+        if (isPostgres) {
+            val inserted = jdbcTemplate.update(
+                """
+                INSERT INTO outbox_event (
+                  outbox_id, status,
+                  event_id,
+                  topic, event_key, event_type, aggregate_id,
+                  payload_json,
+                  attempts, next_attempt_at, last_error,
+                  locked_by, locked_at,
+                  created_at, published_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, NULL, NULL, NULL, ?, NULL)
+                ON CONFLICT DO NOTHING
+                """.trimIndent(),
+                outboxId,
+                OutboxStatus.PENDING.name,
+                eventId,
+                topic,
+                eventKey,
+                eventType,
+                aggregateId,
+                payloadJson,
+                ts,
+                ts,
+            )
+
+            if (inserted == 1) return outboxId
+
+            if (!eventId.isNullOrBlank()) {
+                val existing = jdbcTemplate.query(
+                    """
+                    SELECT outbox_id
+                    FROM outbox_event
+                    WHERE event_id = ?
+                    LIMIT 1
+                    """.trimIndent(),
+                    { rs, _ -> rs.getString("outbox_id") },
+                    eventId,
+                ).firstOrNull()
+
+                if (!existing.isNullOrBlank()) return existing
+            }
+
+            error("outbox enqueue conflicted but existing row not found eventId=$eventId")
+        }
+
+        // H2 tests: fall back to exception-based idempotency.
+        return try {
+            jdbcTemplate.update(
+                """
+                INSERT INTO outbox_event (
+                  outbox_id, status,
+                  event_id,
+                  topic, event_key, event_type, aggregate_id,
+                  payload_json,
+                  attempts, next_attempt_at, last_error,
+                  locked_by, locked_at,
+                  created_at, published_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, NULL, NULL, NULL, ?, NULL)
+                """.trimIndent(),
+                outboxId,
+                OutboxStatus.PENDING.name,
+                eventId,
+                topic,
+                eventKey,
+                eventType,
+                aggregateId,
+                payloadJson,
+                ts,
+                ts,
+            )
+            outboxId
+        } catch (_: DataIntegrityViolationException) {
+            if (!eventId.isNullOrBlank()) {
+                val existing = jdbcTemplate.query(
+                    """
+                    SELECT outbox_id
+                    FROM outbox_event
+                    WHERE event_id = ?
+                    LIMIT 1
+                    """.trimIndent(),
+                    { rs, _ -> rs.getString("outbox_id") },
+                    eventId,
+                ).firstOrNull()
+
+                if (!existing.isNullOrBlank()) return existing
+            }
+            throw IllegalStateException("outbox enqueue conflicted but existing row not found eventId=$eventId")
+        }
     }
 
     /**
@@ -63,8 +141,9 @@ class OutboxRepository(
     @Transactional
     fun claimBatch(limit: Int, lockOwner: String, lockTtl: Duration, now: Instant = Instant.now()): List<OutboxEventRow> {
         val effectiveLimit = limit.coerceIn(1, 500)
-        val nowTs = Timestamp.from(now)
-        val cutoffTs = Timestamp.from(now.minus(lockTtl))
+        val leaseAt = now.truncatedTo(ChronoUnit.MILLIS)
+        val nowTs = Timestamp.from(leaseAt)
+        val cutoffTs = Timestamp.from(leaseAt.minus(lockTtl))
 
         val candidates = jdbcTemplate.query(
             """
@@ -87,6 +166,7 @@ class OutboxRepository(
                     aggregateId = rs.getString("aggregate_id"),
                     payloadJson = rs.getString("payload_json"),
                     attempts = rs.getInt("attempts"),
+                    lockedAt = leaseAt,
                 )
             },
             OutboxStatus.PENDING.name,
@@ -98,28 +178,41 @@ class OutboxRepository(
         if (candidates.isEmpty()) return emptyList()
 
         val ids = candidates.map { it.outboxId }
-        val placeholders = ids.joinToString(",") { "?" }
-        val args: MutableList<Any> = mutableListOf(
-            OutboxStatus.SENDING.name,
-            lockOwner,
-            nowTs,
-        )
-        args.addAll(ids)
 
-        jdbcTemplate.update(
+        val updatedCounts = jdbcTemplate.batchUpdate(
             """
             UPDATE outbox_event
             SET status = ?, locked_by = ?, locked_at = ?
-            WHERE outbox_id IN ($placeholders)
+            WHERE outbox_id = ?
+              AND status = ?
+              AND (next_attempt_at IS NULL OR next_attempt_at <= ?)
+              AND (locked_at IS NULL OR locked_at < ?)
             """.trimIndent(),
-            *args.toTypedArray(),
+            ids.map { outboxId ->
+                arrayOf(
+                    OutboxStatus.SENDING.name,
+                    lockOwner,
+                    nowTs,
+                    outboxId,
+                    OutboxStatus.PENDING.name,
+                    nowTs,
+                    cutoffTs,
+                )
+            },
         )
 
-        return candidates
+        val claimedIds = ids
+            .zip(updatedCounts.asList())
+            .filter { (_, updated) -> updated == 1 }
+            .map { (id, _) -> id }
+            .toSet()
+
+        return candidates.filter { it.outboxId in claimedIds }
     }
 
-    fun markSent(outboxId: String, now: Instant = Instant.now()) {
-        jdbcTemplate.update(
+    fun markSent(outboxId: String, lockOwner: String, lockedAt: Instant, now: Instant = Instant.now()): Int {
+        // Only the current lock owner should be able to mark a row SENT.
+        return jdbcTemplate.update(
             """
             UPDATE outbox_event
             SET status = ?,
@@ -128,17 +221,24 @@ class OutboxRepository(
                 locked_at = NULL,
                 last_error = NULL
             WHERE outbox_id = ?
+              AND status = ?
+              AND locked_by = ?
+              AND locked_at = ?
             """.trimIndent(),
             OutboxStatus.SENT.name,
             Timestamp.from(now),
             outboxId,
+            OutboxStatus.SENDING.name,
+            lockOwner,
+            Timestamp.from(lockedAt),
         )
     }
 
-    fun markFailed(outboxId: String, error: String, nextAttemptAt: Instant, now: Instant = Instant.now()) {
+    fun markFailed(outboxId: String, lockOwner: String, lockedAt: Instant, error: String, nextAttemptAt: Instant, now: Instant = Instant.now()): Int {
         val truncated = if (error.length <= 2000) error else error.take(2000)
 
-        jdbcTemplate.update(
+        // Only the current lock owner should be able to release the lock and requeue.
+        return jdbcTemplate.update(
             """
             UPDATE outbox_event
             SET status = ?,
@@ -148,11 +248,17 @@ class OutboxRepository(
                 locked_by = NULL,
                 locked_at = NULL
             WHERE outbox_id = ?
+              AND status = ?
+              AND locked_by = ?
+              AND locked_at = ?
             """.trimIndent(),
             OutboxStatus.PENDING.name,
             Timestamp.from(nextAttemptAt),
             truncated,
             outboxId,
+            OutboxStatus.SENDING.name,
+            lockOwner,
+            Timestamp.from(lockedAt),
         )
     }
 }

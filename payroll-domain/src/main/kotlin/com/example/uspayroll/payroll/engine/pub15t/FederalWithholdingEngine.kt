@@ -37,68 +37,66 @@ object FederalWithholdingEngine {
      * implement the full Pub. 15-T logic.
      */
     fun computeWithholding(input: PaycheckInput, bases: BasisComputation, profile: WithholdingProfile, federalRules: List<TaxRule>, method: WithholdingMethod): FederalWithholdingResult {
-        // For now we only select which rule would be applied and emit a trace
-        // note; the actual tax computation is implemented in later phases.
-        val trace = mutableListOf<TraceStep>()
-
         // Derive per-period NRA adjustment (if applicable) for trace purposes.
-        val nraExtra = if (profile.isNonresidentAlien) {
+        val (nraExtra, nraTrace) = if (profile.isNonresidentAlien) {
             val firstPaidBefore2020 = profile.firstPaidBefore2020 ?: false
-            NraAdjustment.extraWagesForNra(
+            val extra = NraAdjustment.extraWagesForNra(
                 frequency = input.period.frequency,
                 w4Version = profile.w4Version,
                 firstPaidBefore2020 = firstPaidBefore2020,
-            ).also { extra ->
-                trace += TraceStep.Note(
-                    "Applied NRA extra wages of ${extra.amount} cents for frequency=${input.period.frequency} w4Version=${profile.w4Version} firstPaidBefore2020=$firstPaidBefore2020",
-                )
-            }
+            )
+            val trace = TraceStep.Note(
+                "Applied NRA extra wages of ${extra.amount} cents for frequency=${input.period.frequency} w4Version=${profile.w4Version} firstPaidBefore2020=$firstPaidBefore2020",
+            )
+            extra to listOf(trace)
         } else {
-            Money(0L)
+            Money(0L) to emptyList()
         }
 
-        var withholdingCents = 0L
-
-        when (method) {
+        val (withholdingCents, methodTrace) = when (method) {
             WithholdingMethod.PERCENTAGE -> {
                 val rule = selectBracketedFitRule(federalRules, profile)
                 if (rule != null) {
-                    val (taxCents, pctTrace) = computePercentageMethodWithholding(
+                    computePercentageMethodWithholding(
                         input = input,
                         bases = bases,
                         profile = profile,
                         fitRule = rule,
                         nraExtra = nraExtra,
                     )
-                    withholdingCents = taxCents
-                    trace += pctTrace
                 } else {
-                    trace += TraceStep.Note(
-                        "No percentage-method FIT rule found for filingStatus=${profile.filingStatus} step2MultipleJobs=${profile.step2MultipleJobs}",
+                    0L to listOf(
+                        TraceStep.Note(
+                            "No percentage-method FIT rule found for filingStatus=${profile.filingStatus} step2MultipleJobs=${profile.step2MultipleJobs}",
+                        ),
                     )
                 }
             }
+
             WithholdingMethod.WAGE_BRACKET -> {
                 val rule = selectWageBracketFitRule(federalRules, profile)
                 if (rule != null) {
-                    val (taxCents, wbTrace) = computeWageBracketWithholding(
+                    computeWageBracketWithholding(
                         input = input,
                         bases = bases,
                         profile = profile,
                         fitRule = rule,
                         nraExtra = nraExtra,
                     )
-                    withholdingCents = taxCents
-                    trace += wbTrace
                 } else {
-                    trace += TraceStep.Note(
-                        "No wage-bracket FIT rule found for filingStatus=${profile.filingStatus} step2MultipleJobs=${profile.step2MultipleJobs}",
+                    0L to listOf(
+                        TraceStep.Note(
+                            "No wage-bracket FIT rule found for filingStatus=${profile.filingStatus} step2MultipleJobs=${profile.step2MultipleJobs}",
+                        ),
                     )
                 }
             }
         }
 
-        return FederalWithholdingResult(amount = Money(withholdingCents), trace = trace)
+        return FederalWithholdingResult(
+            amount = Money(withholdingCents),
+            trace = nraTrace + methodTrace,
+        )
     }
 
     private fun computePercentageMethodWithholding(
@@ -108,8 +106,6 @@ object FederalWithholdingEngine {
         fitRule: TaxRule.BracketedIncomeTax,
         nraExtra: Money,
     ): Pair<Long, List<TraceStep>> {
-        val trace = mutableListOf<TraceStep>()
-
         val periodBasis = bases.bases[TaxBasis.FederalTaxable]
             ?: Money(0L)
 
@@ -135,7 +131,7 @@ object FederalWithholdingEngine {
         val adjustedAnnualWages = (baseAnnualWages + otherIncome - deductions)
             .coerceAtLeast(0L)
 
-        trace += TraceStep.Note(
+        val annualizationNote = TraceStep.Note(
             "Annualized FederalTaxable wages = $baseAnnualWages, other income = $otherIncome, deductions = $deductions, adjusted = $adjustedAnnualWages",
         )
 
@@ -168,25 +164,33 @@ object FederalWithholdingEngine {
 
         val fitLine = result.employeeTaxes.firstOrNull { it.ruleId == fitRule.id }
         if (fitLine == null) {
-            trace += TraceStep.Note("No annual FIT tax line produced for ruleId=${fitRule.id}")
-            return 0L to trace
+            return 0L to listOf(
+                annualizationNote,
+                TraceStep.Note("No annual FIT tax line produced for ruleId=${fitRule.id}"),
+            )
         }
 
         val annualTaxCents = fitLine.amount.amount
         val creditCents = profile.step3AnnualCredit?.amount ?: 0L
         val netAnnualTaxCents = (annualTaxCents - creditCents).coerceAtLeast(0L)
 
-        trace += TraceStep.Note("Annual FIT before credits = $annualTaxCents, credits = $creditCents, net = $netAnnualTaxCents")
+        val creditsNote = TraceStep.Note(
+            "Annual FIT before credits = $annualTaxCents, credits = $creditCents, net = $netAnnualTaxCents",
+        )
 
         val perPeriodTaxCents = (netAnnualTaxCents / periodsPerYear).coerceAtLeast(0L)
         val extraPerPeriod = profile.extraWithholdingPerPeriod?.amount ?: 0L
         val totalPerPeriodCents = perPeriodTaxCents + extraPerPeriod
 
-        trace += TraceStep.Note(
+        val perPeriodNote = TraceStep.Note(
             "Per-period FIT = $perPeriodTaxCents, extra withholding = $extraPerPeriod, total = $totalPerPeriodCents",
         )
 
-        return totalPerPeriodCents to trace
+        return totalPerPeriodCents to listOf(
+            annualizationNote,
+            creditsNote,
+            perPeriodNote,
+        )
     }
 
     private fun selectBracketedFitRule(federalRules: List<TaxRule>, profile: WithholdingProfile): TaxRule.BracketedIncomeTax? {
@@ -234,8 +238,6 @@ object FederalWithholdingEngine {
         fitRule: TaxRule.WageBracketTax,
         nraExtra: Money,
     ): Pair<Long, List<TraceStep>> {
-        val trace = mutableListOf<TraceStep>()
-
         val periodBasis = bases.bases[TaxBasis.FederalTaxable]
             ?: Money(0L)
 
@@ -244,7 +246,7 @@ object FederalWithholdingEngine {
             .coerceAtLeast(0L)
         val adjustedPeriod = Money(adjustedPeriodCents, periodBasis.currency)
 
-        trace += TraceStep.Note(
+        val basisNote = TraceStep.Note(
             "Wage-bracket FederalTaxable wages for period = ${adjustedPeriod.amount} cents",
         )
 
@@ -275,18 +277,23 @@ object FederalWithholdingEngine {
 
         val fitLine = result.employeeTaxes.firstOrNull { it.ruleId == fitRule.id }
         if (fitLine == null) {
-            trace += TraceStep.Note("No wage-bracket FIT tax line produced for ruleId=${fitRule.id}")
-            return 0L to trace
+            return 0L to listOf(
+                basisNote,
+                TraceStep.Note("No wage-bracket FIT tax line produced for ruleId=${fitRule.id}"),
+            )
         }
 
         val basePerPeriodTaxCents = fitLine.amount.amount.coerceAtLeast(0L)
         val extraPerPeriod = profile.extraWithholdingPerPeriod?.amount ?: 0L
         val totalPerPeriodCents = basePerPeriodTaxCents + extraPerPeriod
 
-        trace += TraceStep.Note(
+        val resultNote = TraceStep.Note(
             "Wage-bracket FIT base = $basePerPeriodTaxCents, extra withholding = $extraPerPeriod, total = $totalPerPeriodCents",
         )
 
-        return totalPerPeriodCents to trace
+        return totalPerPeriodCents to listOf(
+            basisNote,
+            resultNote,
+        )
     }
 }

@@ -63,7 +63,6 @@ class TipCreditEnforcerTest {
             overtimeHours = 0.0,
         )
 
-        val earnings = mutableListOf<EarningLine>()
         val cashWages = EarningLine(
             code = EarningCode("HOURLY"),
             category = EarningCategory.REGULAR,
@@ -80,10 +79,8 @@ class TipCreditEnforcerTest {
             rate = null,
             amount = Money(250_00L), // $250 tips
         )
-        earnings += cashWages
-        earnings += tips
 
-        TipCreditEnforcer.applyTipCreditMakeup(
+        val earnings = TipCreditEnforcer.applyTipCreditMakeup(
             input = PaycheckInput(
                 paycheckId = PaycheckId("chk-tip-ok"),
                 payRunId = PayRunId("run-tip-ok"),
@@ -96,7 +93,7 @@ class TipCreditEnforcerTest {
                 priorYtd = YtdSnapshot(year = 2025),
             ),
             laborStandards = txLaborStandards(),
-            earnings = earnings,
+            earnings = listOf(cashWages, tips),
         )
 
         val makeUp = earnings.firstOrNull { it.code == EarningCode("TIP_MAKEUP") }
@@ -132,7 +129,6 @@ class TipCreditEnforcerTest {
             overtimeHours = 0.0,
         )
 
-        val earnings = mutableListOf<EarningLine>()
         val cashWages = EarningLine(
             code = EarningCode("HOURLY"),
             category = EarningCategory.REGULAR,
@@ -149,11 +145,9 @@ class TipCreditEnforcerTest {
             rate = null,
             amount = Money(50_00L), // $50 tips, not enough to reach min wage
         )
-        earnings += cashWages
-        earnings += tips
 
         val labor = txLaborStandards()
-        TipCreditEnforcer.applyTipCreditMakeup(
+        val earnings = TipCreditEnforcer.applyTipCreditMakeup(
             input = PaycheckInput(
                 paycheckId = PaycheckId("chk-tip-mu"),
                 payRunId = PayRunId("run-tip-mu"),
@@ -166,7 +160,7 @@ class TipCreditEnforcerTest {
                 priorYtd = YtdSnapshot(year = 2025),
             ),
             laborStandards = labor,
-            earnings = earnings,
+            earnings = listOf(cashWages, tips),
         )
 
         val makeUp = earnings.firstOrNull { it.code == EarningCode("TIP_MAKEUP") }
@@ -215,7 +209,6 @@ class TipCreditEnforcerTest {
             overtimeHours = 0.0,
         )
 
-        val earnings = mutableListOf<EarningLine>()
         val cashWages = EarningLine(
             code = EarningCode("HOURLY"),
             category = EarningCategory.REGULAR,
@@ -232,11 +225,9 @@ class TipCreditEnforcerTest {
             rate = null,
             amount = Money(100_00L), // $100 tips
         )
-        earnings += cashWages
-        earnings += tips
 
         val labor = caLaborStandards()
-        TipCreditEnforcer.applyTipCreditMakeup(
+        val earnings = TipCreditEnforcer.applyTipCreditMakeup(
             input = PaycheckInput(
                 paycheckId = PaycheckId("chk-tip-ca"),
                 payRunId = PayRunId("run-tip-ca"),
@@ -249,7 +240,7 @@ class TipCreditEnforcerTest {
                 priorYtd = YtdSnapshot(year = 2025),
             ),
             laborStandards = labor,
-            earnings = earnings,
+            earnings = listOf(cashWages, tips),
         )
 
         val makeUp = earnings.firstOrNull { it.code == EarningCode("TIP_MAKEUP") }

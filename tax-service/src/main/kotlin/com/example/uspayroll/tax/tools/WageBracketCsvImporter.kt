@@ -6,7 +6,6 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 
 /**
@@ -27,8 +26,7 @@ object WageBracketCsvImporter {
     fun main(args: Array<String>) {
         val params = parseArgs(args.toList())
 
-        val projectDir: Path = Paths.get("").toAbsolutePath()
-        val resourcesDir = projectDir.resolve("src/main/resources")
+        val resourcesDir = TaxContentPaths.resourcesDir()
 
         val csvPath = resourcesDir.resolve(params.csvRelativePath)
         require(Files.exists(csvPath)) { "Missing wage-bracket CSV: $csvPath" }

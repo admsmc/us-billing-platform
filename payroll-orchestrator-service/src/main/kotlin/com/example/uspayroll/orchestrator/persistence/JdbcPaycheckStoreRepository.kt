@@ -33,9 +33,9 @@ class JdbcPaycheckStoreRepository(
         val json = objectMapper.writeValueAsString(payload.copy(trace = CalculationTrace()))
 
         // "Immutable" insert: if the paycheck already exists (retry), we do nothing.
-        try {
-            jdbcTemplate.update(
-                """
+        // Use ON CONFLICT DO NOTHING to avoid Postgres transaction aborts.
+        jdbcTemplate.update(
+            """
                 INSERT INTO paycheck (
                   employer_id, paycheck_id,
                   pay_run_id, employee_id, pay_period_id, run_type, run_sequence, check_date,
@@ -43,25 +43,23 @@ class JdbcPaycheckStoreRepository(
                   status, version,
                   payload_json
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """.trimIndent(),
-                employerId.value,
-                paycheckId,
-                payRunId,
-                employeeId,
-                payPeriodId,
-                runType,
-                runSequence,
-                Date.valueOf(checkDateIso),
-                payload.gross.currency.name,
-                grossCents,
-                netCents,
-                "FINAL",
-                version,
-                json,
-            )
-        } catch (e: org.springframework.dao.DataIntegrityViolationException) {
-            // Primary key or uq_paycheck_slot constraint hit: treat as idempotent no-op.
-        }
+                ON CONFLICT DO NOTHING
+            """.trimIndent(),
+            employerId.value,
+            paycheckId,
+            payRunId,
+            employeeId,
+            payPeriodId,
+            runType,
+            runSequence,
+            Date.valueOf(checkDateIso),
+            payload.gross.currency.name,
+            grossCents,
+            netCents,
+            "FINAL",
+            version,
+            json,
+        )
     }
 
     override fun findPaycheck(employerId: EmployerId, paycheckId: String): PaycheckResult? {

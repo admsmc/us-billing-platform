@@ -62,7 +62,7 @@ class TaxesCalculatorTest {
             priorYtd = YtdSnapshot(year = 2025),
         )
 
-        val result = PayrollEngine.calculatePaycheck(input)
+        val result = calculatePaycheckDebug(input)
 
         // Gross should still be 10,000 (as in the salaried test)
         assertEquals(10_000_00L, result.gross.amount)
@@ -127,7 +127,7 @@ class TaxesCalculatorTest {
             priorYtd = YtdSnapshot(year = 2025),
         )
 
-        val result = PayrollEngine.calculatePaycheck(input)
+        val result = calculatePaycheckDebug(input)
 
         assertEquals(10_000_00L, result.gross.amount)
         val employeeTax = result.employeeTaxes.single()
@@ -205,7 +205,7 @@ class TaxesCalculatorTest {
             priorYtd = YtdSnapshot(year = 2025),
         )
 
-        val result = PayrollEngine.calculatePaycheck(input)
+        val result = calculatePaycheckDebug(input)
 
         assertEquals(10_000_00L, result.gross.amount)
 

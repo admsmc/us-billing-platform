@@ -14,6 +14,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.time.Duration
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 @ConfigurationProperties(prefix = "payments.outbox.relay")
 data class OutboxRelayProperties(
@@ -41,11 +42,14 @@ class OutboxRelay(
 
     @Scheduled(fixedDelayString = "\${payments.outbox.relay.fixed-delay-millis:1000}")
     fun tick() {
+        val now = Instant.now().truncatedTo(ChronoUnit.MILLIS)
         val lockTtl = Duration.ofSeconds(props.lockTtlSeconds.coerceAtLeast(5L))
+        val lockCutoff = now.minus(lockTtl)
         val claimed = outboxRepository.claimBatch(
             limit = props.batchSize,
             lockOwner = props.lockOwner,
             lockTtl = lockTtl,
+            now = now,
         )
 
         if (claimed.isEmpty()) return
@@ -67,7 +71,7 @@ class OutboxRelay(
                     .build()
 
                 kafkaTemplate.send(msg).get()
-                outboxRepository.markSent(row.outboxId)
+                outboxRepository.markSent(row.outboxId, lockOwner = props.lockOwner, lockedAt = row.lockedAt, now = now)
             } catch (t: Throwable) {
                 val next = computeNextAttempt(row.attempts)
                 logger.warn(
@@ -80,8 +84,11 @@ class OutboxRelay(
                 )
                 outboxRepository.markFailed(
                     outboxId = row.outboxId,
+                    lockOwner = props.lockOwner,
+                    lockedAt = row.lockedAt,
                     error = t.message ?: t::class.java.name,
-                    nextAttemptAt = Instant.now().plus(next),
+                    nextAttemptAt = now.plus(next),
+                    now = now,
                 )
             }
         }

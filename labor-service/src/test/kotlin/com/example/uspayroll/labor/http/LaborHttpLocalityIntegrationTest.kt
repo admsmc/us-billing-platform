@@ -4,10 +4,10 @@ import com.example.uspayroll.labor.LaborHttpController
 import com.example.uspayroll.labor.api.LaborStandardSourceKind
 import com.example.uspayroll.labor.api.LaborStandardSourceRef
 import com.example.uspayroll.labor.api.LaborStandardsCatalog
+import com.example.uspayroll.labor.api.LaborStandardsContextProvider
 import com.example.uspayroll.labor.api.LaborStandardsQuery
 import com.example.uspayroll.labor.api.StateLaborStandard
 import com.example.uspayroll.labor.impl.CatalogBackedLaborStandardsContextProvider
-import com.example.uspayroll.labor.impl.LaborStandardsContextProvider
 import com.example.uspayroll.labor.web.CorrelationIdFilter
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired

@@ -21,7 +21,7 @@ Status: **Completed on 2025-12-10**
      - `tax/service/FederalWithholdingIntegrationTest.kt`
      - `tax/tools/Pub15TWageBracketGenerator.kt`
      - `tax/persistence/*Pub15T*Test.kt`
-     - `src/main/resources/tax-config/federal-2025-*.json`
+     - `tax-content/src/main/resources/tax-config/federal-2025-*.json`
    - `hr-service`:
      - `hr/db/JdbcHrAdapters.kt`
      - `src/main/resources/db/migration/V001__create_hr_schema.sql`
@@ -168,25 +168,25 @@ Status: **Completed on 2025-12-10**
 Goal: Make it possible to select different FIT rules when W-4 Step 2 multiple jobs checkbox is checked.
 
 1. Extend tax config model
-   - File: `tax-service/src/main/kotlin/com/example/uspayroll/tax/config/TaxRuleConfig.kt`
+   - File: `tax-impl/src/main/kotlin/com/example/uspayroll/tax/config/TaxRuleConfig.kt`
    - Add an optional field:
      - `val fitVariant: String? = null`
 2. Extend DB schema for tax rules
-   - File: `tax-service/src/main/resources/db/migration/V1__init_tax_rule.sql`
+   - File: `tax-content/src/main/resources/db/migration/tax/V1__init_tax_rule.sql`
    - Add column:
      - `fit_variant VARCHAR(32)` (nullable)
 3. Update repository mapping
-   - File: `tax-service/src/main/kotlin/com/example/uspayroll/tax/persistence/JooqTaxRuleRepository.kt`
+   - File: `tax-impl/src/main/kotlin/com/example/uspayroll/tax/persistence/JooqTaxRuleRepository.kt`
    - Ensure `fit_variant` is mapped into the in-memory representation (`TaxRuleRecord`/`TaxRuleConfig`) and back.
 4. Update JSON configs
    - Files:
-     - `tax-service/src/main/resources/tax-config/federal-2025-pub15t.json`
-     - `tax-service/src/main/resources/tax-config/federal-2025-pub15t-weekly.json`
-     - `tax-service/src/main/resources/tax-config/federal-2025-pub15t-wage-bracket-biweekly.json`
+     - `tax-content/src/main/resources/tax-config/federal-2025-pub15t.json`
+     - `tax-content/src/main/resources/tax-config/federal-2025-pub15t-weekly.json`
+     - `tax-content/src/main/resources/tax-config/federal-2025-pub15t-wage-bracket-biweekly.json`
    - Add `"fitVariant": "STANDARD"` to existing rules.
    - Define additional rules for Step 2 variants with `"fitVariant": "STEP2_CHECKBOX"` and distinct IDs (e.g. `US_FED_FIT_2025_PUB15T_SINGLE_STEP2`).
 5. Selection logic in tax catalog
-   - File: `tax-service/src/main/kotlin/com/example/uspayroll/tax/impl/DbTaxCatalog.kt` or equivalent catalog provider
+   - File: `tax-impl/src/main/kotlin/com/example/uspayroll/tax/impl/TaxCatalogDb.kt` or equivalent catalog provider
    - Extend query logic to optionally filter rules by `fitVariant`.
    - Option: define a small local enum `FitVariant { STANDARD, STEP2_CHECKBOX }` in tax-service and convert strings.
 6. Golden tests
@@ -384,7 +384,7 @@ This appendix documents the enterprise-grade approach the project uses to source
 ### A.2 Curated CSV as primary internal representation
 
 - The project maintains a year- and frequency-specific CSV file under version control:
-  - `tax-service/src/main/resources/wage-bracket-2025-biweekly.csv`.
+  - `tax-content/src/main/resources/wage-bracket-2025-biweekly.csv`.
 - This CSV encodes, per wage band, filing status, and variant:
   - `frequency` – e.g. `BIWEEKLY`.
   - `filingStatus` – `SINGLE`, `MARRIED`, or `HEAD_OF_HOUSEHOLD`.
@@ -395,7 +395,7 @@ This appendix documents the enterprise-grade approach the project uses to source
 
 ### A.3 Deterministic CSV → JSON transformation
 
-- The TaxRule configuration layer remains the single input to the `tax_rule` database table. For wage-bracket rules, JSON files under `tax-service/src/main/resources/tax-config` are generated from the curated CSV using a deterministic, side-effect-free transformer.
+- The TaxRule configuration layer remains the single input to the `tax_rule` database table. For wage-bracket rules, JSON files under `tax-content/src/main/resources/tax-config` are generated from the curated CSV using a deterministic, side-effect-free transformer.
 - The core components are:
   - `tax-service/src/main/kotlin/com/example/uspayroll/tax/tools/WageBracketCsvParser.kt`
     - Parses the CSV schema described above into in-memory rows.
@@ -406,8 +406,8 @@ This appendix documents the enterprise-grade approach the project uses to source
 - A dedicated Gradle task wires this together without starting Spring Boot:
   - Task: `:tax-service:generateFederal2025BiweeklyWageBrackets` in `tax-service/build.gradle.kts`.
   - Behavior:
-    - Reads `wage-bracket-2025-biweekly.csv` from `src/main/resources`.
-    - Generates `tax-service/src/main/resources/tax-config/federal-2025-pub15t-wage-bracket-biweekly.json`.
+    - Reads `wage-bracket-2025-biweekly.csv` from `tax-content/src/main/resources`.
+    - Generates `tax-content/src/main/resources/tax-config/federal-2025-pub15t-wage-bracket-biweekly.json`.
     - Sets `id` prefixes to `US_FED_FIT_2025_PUB15T_WB`, with suffixes derived from filing status and variant (for example, `US_FED_FIT_2025_PUB15T_WB_SINGLE_BI_STEP2`).
     - Applies effective dates `2025-01-01` through `9999-12-31`.
 

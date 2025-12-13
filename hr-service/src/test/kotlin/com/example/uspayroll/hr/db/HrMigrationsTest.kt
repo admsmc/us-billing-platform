@@ -1,6 +1,6 @@
 package com.example.uspayroll.hr.db
 
-import org.flywaydb.core.Flyway
+import com.example.uspayroll.persistence.flyway.FlywaySupport
 import org.h2.jdbcx.JdbcDataSource
 import kotlin.test.Test
 
@@ -19,11 +19,9 @@ class HrMigrationsTest {
             password = ""
         }
 
-        val flyway = Flyway.configure()
-            .dataSource(dataSource)
-            .locations("classpath:db/migration")
-            .load()
-
-        flyway.migrate()
+        FlywaySupport.migrate(
+            dataSource = dataSource,
+            "classpath:db/migration",
+        )
     }
 }

@@ -66,7 +66,7 @@ class FicaTaxTest {
         val input = baseInput(employerId, employeeId, priorYtd)
             .copy(taxContext = TaxContext(federal = listOf(ssRule)))
 
-        val result = PayrollEngine.calculatePaycheck(input)
+        val result = calculatePaycheckDebug(input)
 
         // Salaried tests use biweekly gross of 10,000
         assertEquals(10_000_00L, result.gross.amount)
@@ -99,7 +99,7 @@ class FicaTaxTest {
         val input = baseInput(employerId, employeeId, priorYtd)
             .copy(taxContext = TaxContext(federal = listOf(ssRule)))
 
-        val result = PayrollEngine.calculatePaycheck(input)
+        val result = calculatePaycheckDebug(input)
 
         // Gross is 10,000; prior wages = 15,000; cap = 20,000 -> only 5,000 taxable this period
         assertEquals(10_000_00L, result.gross.amount)
@@ -134,7 +134,7 @@ class FicaTaxTest {
         val input = baseInput(employerId, employeeId, priorYtd)
             .copy(taxContext = TaxContext(federal = listOf(ssRule)))
 
-        val result = PayrollEngine.calculatePaycheck(input)
+        val result = calculatePaycheckDebug(input)
 
         assertEquals(10_000_00L, result.gross.amount)
         // No SS tax lines because we were already above the wage cap
@@ -165,7 +165,7 @@ class FicaTaxTest {
         val input = baseInput(employerId, employeeId, priorYtd)
             .copy(taxContext = TaxContext(federal = listOf(medicareRule)))
 
-        val result = PayrollEngine.calculatePaycheck(input)
+        val result = calculatePaycheckDebug(input)
 
         assertEquals(10_000_00L, result.gross.amount)
         val tax = result.employeeTaxes.single()
@@ -206,7 +206,7 @@ class FicaTaxTest {
             ),
         )
 
-        val result = PayrollEngine.calculatePaycheck(input)
+        val result = calculatePaycheckDebug(input)
 
         assertEquals(10_000_00L, result.gross.amount)
 

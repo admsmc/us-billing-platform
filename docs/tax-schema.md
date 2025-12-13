@@ -183,9 +183,9 @@ Typically represented as flat rules with caps:
 ## Config-managed tax content and importer
 
 Tax rules are authored and versioned as configuration files in Git (for
-example, JSON files under `tax-service/src/main/resources/tax-config`). These
+example, JSON files under `tax-content/src/main/resources/tax-config`). These
 files use the `TaxRuleFile` / `TaxRuleConfig` / `TaxBracketConfig` model
-(`tax-service/src/main/kotlin/com/example/uspayroll/tax/config/TaxRuleConfig.kt`).
+(`tax-impl/src/main/kotlin/com/example/uspayroll/tax/config/TaxRuleConfig.kt`).
 
 Example config (simplified):
 
@@ -213,7 +213,7 @@ Example config (simplified):
 ```
 
 An importer (`TaxRuleConfigImporter` in
-`tax-service/src/main/kotlin/com/example/uspayroll/tax/persistence/TaxRuleConfigImporter.kt`)
+`tax-impl/src/main/kotlin/com/example/uspayroll/tax/persistence/TaxRuleConfigImporter.kt`)
 reads these files using Jackson (`TaxRuleFile`) and inserts corresponding SCD2
 rows into the `tax_rule` table via jOOQ:
 

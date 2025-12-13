@@ -10,7 +10,7 @@ ALTER TABLE garnishment_order
     ADD COLUMN formula_type VARCHAR(64);
 
 ALTER TABLE garnishment_order
-    ADD COLUMN percent_of_disposable DOUBLE;
+    ADD COLUMN percent_of_disposable DOUBLE PRECISION;
 
 ALTER TABLE garnishment_order
     ADD COLUMN fixed_amount_cents BIGINT;
@@ -23,7 +23,7 @@ ALTER TABLE garnishment_order
     ADD COLUMN protected_min_wage_hourly_rate_cents BIGINT;
 
 ALTER TABLE garnishment_order
-    ADD COLUMN protected_min_wage_hours DOUBLE;
+    ADD COLUMN protected_min_wage_hours DOUBLE PRECISION;
 
 ALTER TABLE garnishment_order
-    ADD COLUMN protected_min_wage_multiplier DOUBLE;
+    ADD COLUMN protected_min_wage_multiplier DOUBLE PRECISION;

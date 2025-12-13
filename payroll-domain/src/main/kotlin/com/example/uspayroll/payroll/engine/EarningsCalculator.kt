@@ -13,9 +13,7 @@ object EarningsCalculator {
         val period = input.period
         val slice = input.timeSlice
 
-        val lines = mutableListOf<EarningLine>()
-
-        when (base) {
+        val baseLines: List<EarningLine> = when (base) {
             is BaseCompensation.Salaried -> {
                 // Derive an effective pay schedule, preferring an explicit schedule if provided,
                 // otherwise falling back to a default based on the period frequency.
@@ -39,16 +37,18 @@ object EarningsCalculator {
                 val category = def?.category ?: EarningCategory.REGULAR
                 val description = def?.displayName ?: "Base salary"
 
-                val baseLine = EarningLine(
-                    code = code,
-                    category = category,
-                    description = description,
-                    units = 1.0,
-                    rate = perPeriodMoney,
-                    amount = perPeriodMoney,
+                listOf(
+                    EarningLine(
+                        code = code,
+                        category = category,
+                        description = description,
+                        units = 1.0,
+                        rate = perPeriodMoney,
+                        amount = perPeriodMoney,
+                    ),
                 )
-                lines += baseLine
             }
+
             is BaseCompensation.Hourly -> {
                 val regularHours = slice.regularHours
 
@@ -67,7 +67,6 @@ object EarningsCalculator {
                     rate = base.hourlyRate,
                     amount = Money(regularCents),
                 )
-                lines += regularLine
 
                 // Delegate overtime behaviour to the policy
                 val overtimeLines = overtimePolicy.computeOvertimeLines(
@@ -76,12 +75,13 @@ object EarningsCalculator {
                     timeSlice = slice,
                     earningConfig = earningConfig,
                 )
-                lines += overtimeLines
+
+                listOf(regularLine) + overtimeLines
             }
         }
 
         // Process any additional earnings explicitly provided on the TimeSlice
-        slice.otherEarnings.forEach { inputEarning ->
+        val otherLines: List<EarningLine> = slice.otherEarnings.map { inputEarning ->
             val def = earningConfig?.findByEmployerAndCode(input.employerId, inputEarning.code)
             val category = def?.category ?: EarningCategory.BONUS
             val description = def?.displayName ?: inputEarning.code.value
@@ -92,10 +92,12 @@ object EarningsCalculator {
                     val cents = (inputEarning.rate.amount * inputEarning.units).toLong()
                     Money(cents)
                 }
+
                 def?.defaultRate != null -> {
                     val cents = (def.defaultRate.amount * inputEarning.units).toLong()
                     Money(cents)
                 }
+
                 else -> Money(0L)
             }
 
@@ -105,10 +107,11 @@ object EarningsCalculator {
                     val unitRateCents = (inputEarning.amount.amount / inputEarning.units).toLong()
                     Money(unitRateCents)
                 }
+
                 else -> def?.defaultRate
             }
 
-            val line = EarningLine(
+            EarningLine(
                 code = inputEarning.code,
                 category = category,
                 description = description,
@@ -116,9 +119,8 @@ object EarningsCalculator {
                 rate = rate,
                 amount = amount,
             )
-            lines += line
         }
 
-        return lines
+        return baseLines + otherLines
     }
 }

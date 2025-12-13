@@ -2,6 +2,7 @@ package com.example.uspayroll.tax.support
 
 import com.example.uspayroll.payroll.model.TaxBasis
 import com.example.uspayroll.payroll.model.TaxJurisdictionType
+import com.example.uspayroll.persistence.flyway.FlywaySupport
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.tax.api.TaxQuery
 import com.example.uspayroll.tax.config.TaxRuleFile
@@ -39,16 +40,10 @@ object H2TaxTestSupport {
         // Apply the same Flyway migrations used in production (against Postgres)
         // to this in-memory H2 database running in PostgreSQL compatibility
         // mode. This ensures our H2-backed tests exercise the real DDL.
-        val flyway = org.flywaydb.core.Flyway.configure()
-            .dataSource(ds)
-            .locations("classpath:db/migration")
-            .cleanDisabled(false)
-            .load()
-
-        // Clean is safe here because each test gets an isolated in-memory
-        // database and we want a fresh schema for every invocation.
-        flyway.clean()
-        flyway.migrate()
+        FlywaySupport.cleanAndMigrate(
+            dataSource = ds,
+            "classpath:db/migration",
+        )
 
         return DSL.using(ds, SQLDialect.H2)
     }

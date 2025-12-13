@@ -38,6 +38,7 @@ import java.time.Instant
         "orchestrator.payments.group-id=payroll-orchestrator-payments-it",
         "orchestrator.payments.payment-status-changed-topic=paycheck.payment.status_changed",
         "orchestrator.internal-auth.shared-secret=dev-internal-token",
+        "orchestrator.payrun.execute.enabled=true",
         "spring.kafka.bootstrap-servers=\${spring.embedded.kafka.brokers}",
         "spring.kafka.consumer.auto-offset-reset=earliest",
         "spring.kafka.consumer.enable-auto-commit=false",

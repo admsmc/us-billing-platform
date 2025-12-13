@@ -8,12 +8,12 @@ State income tax content is maintained as CSV files in Git, then compiled into J
 
 ### 1. Authoritative CSVs (per tax year)
 
-For each tax year (e.g. 2025), there are two CSV files under this module:
+For each tax year (e.g. 2025), the canonical CSV inputs live in `tax-content`:
 
 - Rules:
-  - `src/main/resources/state-income-tax-2025-rules.csv`
+  - `tax-content/src/main/resources/state-income-tax-2025-rules.csv`
 - Brackets:
-  - `src/main/resources/state-income-tax-2025-brackets.csv`
+  - `tax-content/src/main/resources/state-income-tax-2025-brackets.csv`
 
 #### Rules CSV
 
@@ -77,12 +77,12 @@ To regenerate the JSON for a given year (from the project root):
 
 This will read:
 
-- `src/main/resources/state-income-tax-2025-rules.csv`
-- `src/main/resources/state-income-tax-2025-brackets.csv`
+- `tax-content/src/main/resources/state-income-tax-2025-rules.csv`
+- `tax-content/src/main/resources/state-income-tax-2025-brackets.csv`
 
 and produce:
 
-- `src/main/resources/tax-config/state-income-2025.json`
+- `tax-content/src/main/resources/tax-config/state-income-2025.json`
 
 as a `TaxRuleFile` JSON document.
 
@@ -90,7 +90,7 @@ as a `TaxRuleFile` JSON document.
 
 The JSON output is then imported into the `tax_rule` table using the existing importer:
 
-- `TaxRuleConfigImporter` (`src/main/kotlin/com/example/uspayroll/tax/persistence/TaxRuleConfigImporter.kt`).
+- `TaxRuleConfigImporter` (`tax-impl/src/main/kotlin/com/example/uspayroll/tax/persistence/TaxRuleConfigImporter.kt`).
 
 This utility:
 
@@ -110,7 +110,7 @@ The `state-income-tax-2025-rules.csv` file already contains **skeleton rows for 
    - `flat_rate`
    - `standard_deduction`
    - the brackets CSV (`up_to`, `rate`).
-2. Export the sheet back to CSV and overwrite the files in `src/main/resources`.
+2. Export the sheet back to CSV and overwrite the files in `tax-content/src/main/resources`.
 3. Run the Gradle commands above to regenerate the JSON.
 4. Use `TaxRuleConfigImporter` to push the resulting rules into the `tax_rule` table.
 
@@ -122,7 +122,7 @@ Beyond statutory rules, the `tax_rule` table supports employer-specific overlays
 
 ### Defining an overlay
 
-To define an employer-specific rule (for example, a 1% CA state surcharge for a single employer), add a JSON config under `src/main/resources/tax-config`:
+To define an employer-specific rule (for example, a 1% CA state surcharge for a single employer), add a JSON config under `tax-content/src/main/resources/tax-config`:
 
 ```json
 {
@@ -159,7 +159,7 @@ Key points:
 
 Overlays are imported with the same pipeline as other tax rules. For example, using H2 or Postgres via `TaxRuleConfigImporter`:
 
-1. Place your overlay JSON under `src/main/resources/tax-config`.
+1. Place your overlay JSON under `tax-content/src/main/resources/tax-config`.
 2. Point `TaxRuleConfigImporter` at the directory (including both `state-income-YYYY.json` and any overlay files).
 3. Run the importer; it will append rows into `tax_rule`, setting `employer_id` based on `employerId` in the config.
 

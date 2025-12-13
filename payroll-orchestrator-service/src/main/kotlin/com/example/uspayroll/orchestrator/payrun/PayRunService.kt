@@ -1,5 +1,6 @@
 package com.example.uspayroll.orchestrator.payrun
 
+import com.example.uspayroll.orchestrator.jobs.PayRunFinalizeJobProducer
 import com.example.uspayroll.orchestrator.payments.PaymentRequestService
 import com.example.uspayroll.orchestrator.payrun.model.ApprovalStatus
 import com.example.uspayroll.orchestrator.payrun.model.PayRunRecord
@@ -12,6 +13,7 @@ import com.example.uspayroll.orchestrator.payrun.persistence.PayRunRepository
 import com.example.uspayroll.orchestrator.persistence.PaycheckLifecycleRepository
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
 import java.util.UUID
 
@@ -21,6 +23,7 @@ class PayRunService(
     private val payRunItemRepository: PayRunItemRepository,
     private val paycheckLifecycleRepository: PaycheckLifecycleRepository,
     private val paymentRequestService: PaymentRequestService,
+    private val jobProducer: PayRunFinalizeJobProducer,
 ) {
 
     data class StartPayRunResult(
@@ -29,6 +32,7 @@ class PayRunService(
         val wasCreated: Boolean,
     )
 
+    @Transactional
     fun startFinalization(
         employerId: String,
         payPeriodId: String,
@@ -51,7 +55,7 @@ class PayRunService(
             return StartPayRunResult(payRun = existingByKey, counts = counts, wasCreated = false)
         }
 
-        val payRun = payRunRepository.createOrGetPayRun(
+        val createOrGet = payRunRepository.createOrGetPayRun(
             employerId = employerId,
             payRunId = payRunId,
             payPeriodId = payPeriodId,
@@ -60,14 +64,33 @@ class PayRunService(
             requestedIdempotencyKey = idempotencyKey,
         )
 
+        if (!createOrGet.wasCreated) {
+            val existing = createOrGet.payRun
+            val counts = payRunItemRepository.countsForPayRun(employerId, existing.payRunId)
+            return StartPayRunResult(payRun = existing, counts = counts, wasCreated = false)
+        }
+
+        val payRun = createOrGet.payRun
+
         payRunItemRepository.upsertQueuedItems(
             employerId = employerId,
             payRunId = payRun.payRunId,
             employeeIds = employeeIds,
         )
 
+        // If we are using queue-driven execution, enqueue one work item per employee.
+        jobProducer.enqueueFinalizeEmployeeJobs(
+            employerId = employerId,
+            payRunId = payRun.payRunId,
+            employeeIds = employeeIds,
+        )
+
+        // Mark the run as RUNNING so the finalizer can pick it up.
+        payRunRepository.markRunningIfQueued(employerId, payRun.payRunId)
+
         val counts = payRunItemRepository.countsForPayRun(employerId, payRun.payRunId)
-        return StartPayRunResult(payRun = payRun, counts = counts, wasCreated = true)
+        val updatedPayRun = payRunRepository.findPayRun(employerId, payRun.payRunId) ?: payRun
+        return StartPayRunResult(payRun = updatedPayRun, counts = counts, wasCreated = true)
     }
 
     data class PayRunStatusView(

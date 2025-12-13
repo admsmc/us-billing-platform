@@ -1,6 +1,7 @@
 package com.example.uspayroll.orchestrator.support
 
-import com.example.uspayroll.orchestrator.client.HrClient
+import com.example.uspayroll.hr.client.HrClient
+import com.example.uspayroll.hr.http.GarnishmentWithholdingRequest
 import com.example.uspayroll.orchestrator.client.LaborStandardsClient
 import com.example.uspayroll.orchestrator.client.TaxClient
 import com.example.uspayroll.payroll.model.BaseCompensation
@@ -57,7 +58,11 @@ class StubClientsTestConfig {
             )
         }
 
+        override fun findPayPeriodByCheckDate(employerId: EmployerId, checkDate: LocalDate): PayPeriod? = null
+
         override fun getGarnishmentOrders(employerId: EmployerId, employeeId: EmployeeId, asOfDate: LocalDate): List<GarnishmentOrder> = emptyList()
+
+        override fun recordGarnishmentWithholding(employerId: EmployerId, employeeId: EmployeeId, request: GarnishmentWithholdingRequest) = Unit
     }
 
     @Bean

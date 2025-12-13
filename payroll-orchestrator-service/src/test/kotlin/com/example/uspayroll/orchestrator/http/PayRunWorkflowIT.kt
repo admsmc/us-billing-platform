@@ -2,6 +2,10 @@ package com.example.uspayroll.orchestrator.http
 
 import com.example.uspayroll.orchestrator.payrun.model.PayRunStatus
 import com.example.uspayroll.orchestrator.support.StubClientsTestConfig
+import com.example.uspayroll.payroll.engine.PayrollEngine
+import com.example.uspayroll.payroll.model.PaycheckResult
+import com.example.uspayroll.payroll.model.audit.PaycheckAudit
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
@@ -23,12 +27,14 @@ import java.net.URI
 @TestPropertySource(
     properties = [
         "orchestrator.internal-auth.shared-secret=dev-internal-token",
+        "orchestrator.payrun.execute.enabled=true",
     ],
 )
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class PayRunWorkflowIT(
     private val rest: TestRestTemplate,
     private val jdbcTemplate: JdbcTemplate,
+    private val objectMapper: ObjectMapper,
 ) {
 
     @Test
@@ -90,10 +96,75 @@ class PayRunWorkflowIT(
 
         val paycheck = rest.getForEntity(
             "/employers/$employerId/paychecks/$paycheckId",
-            Any::class.java,
+            PaycheckResult::class.java,
         )
         assertEquals(HttpStatus.OK, paycheck.statusCode)
         assertNotNull(paycheck.body)
+        assertEquals(0, paycheck.body!!.trace.steps.size)
+
+        val auditCount = jdbcTemplate.queryForObject(
+            """
+            SELECT COUNT(*)
+            FROM paycheck_audit
+            WHERE employer_id = ? AND paycheck_id = ?
+            """.trimIndent(),
+            Long::class.java,
+            employerId,
+            paycheckId,
+        ) ?: 0L
+        assertEquals(1L, auditCount)
+
+        val schemaVersion = jdbcTemplate.queryForObject(
+            """
+            SELECT schema_version
+            FROM paycheck_audit
+            WHERE employer_id = ? AND paycheck_id = ?
+            """.trimIndent(),
+            Int::class.java,
+            employerId,
+            paycheckId,
+        )
+        assertEquals(1, schemaVersion)
+
+        // Internal-only audit API exposure.
+        val auditResponse = rest.exchange(
+            RequestEntity.get(URI.create("/employers/$employerId/paychecks/internal/$paycheckId/audit"))
+                .headers(execHeaders)
+                .build(),
+            PaycheckAudit::class.java,
+        )
+        assertEquals(HttpStatus.OK, auditResponse.statusCode)
+        assertNotNull(auditResponse.body)
+
+        val fromApi = auditResponse.body!!
+        assertEquals(1, fromApi.schemaVersion)
+        assertEquals(PayrollEngine.version(), fromApi.engineVersion)
+        assertEquals(employerId, fromApi.employerId)
+        assertEquals(paycheckId, fromApi.paycheckId)
+        assertEquals("run-it-1", fromApi.payRunId)
+        assertEquals("pp-1", fromApi.payPeriodId)
+
+        val auditJson = jdbcTemplate.queryForObject(
+            """
+            SELECT audit_json
+            FROM paycheck_audit
+            WHERE employer_id = ? AND paycheck_id = ?
+            """.trimIndent(),
+            String::class.java,
+            employerId,
+            paycheckId,
+        )
+        assertNotNull(auditJson)
+
+        val fromDb = objectMapper.readValue(auditJson, PaycheckAudit::class.java)
+        assertEquals(fromApi, fromDb)
+
+        val auditUnauthorized = rest.exchange(
+            RequestEntity.get(URI.create("/employers/$employerId/paychecks/internal/$paycheckId/audit"))
+                .build(),
+            Any::class.java,
+        )
+        assertEquals(HttpStatus.UNAUTHORIZED, auditUnauthorized.statusCode)
     }
 
     @Test
@@ -167,6 +238,42 @@ class PayRunWorkflowIT(
                         employeeIds = listOf("e-2"),
                         requestedPayRunId = "run-it-3-different",
                         idempotencyKey = "idem-1",
+                    ),
+                ),
+            PayRunController.StartFinalizeResponse::class.java,
+        )
+
+        assertEquals(HttpStatus.ACCEPTED, r2.statusCode)
+        assertEquals(r1.body!!.payRunId, r2.body!!.payRunId)
+        assertEquals(false, r2.body!!.created)
+    }
+
+    @Test
+    fun `business key collision returns existing payrun instead of 500`() {
+        val employerId = "emp-1"
+
+        val r1 = rest.exchange(
+            RequestEntity.post(URI.create("/employers/$employerId/payruns/finalize"))
+                .body(
+                    PayRunController.StartFinalizeRequest(
+                        payPeriodId = "pp-1",
+                        employeeIds = listOf("e-1"),
+                        requestedPayRunId = "run-it-business-1",
+                    ),
+                ),
+            PayRunController.StartFinalizeResponse::class.java,
+        )
+        assertEquals(HttpStatus.ACCEPTED, r1.statusCode)
+
+        // Second request uses a different requestedPayRunId, but the same business key:
+        // (employerId, payPeriodId, runType=REGULAR, runSequence=1).
+        val r2 = rest.exchange(
+            RequestEntity.post(URI.create("/employers/$employerId/payruns/finalize"))
+                .body(
+                    PayRunController.StartFinalizeRequest(
+                        payPeriodId = "pp-1",
+                        employeeIds = listOf("e-2"),
+                        requestedPayRunId = "run-it-business-2",
                     ),
                 ),
             PayRunController.StartFinalizeResponse::class.java,

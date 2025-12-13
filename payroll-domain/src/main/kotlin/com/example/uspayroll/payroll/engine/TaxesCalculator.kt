@@ -27,53 +27,63 @@ object TaxesCalculator {
         var remaining = taxableTotal
         var previousUpper = 0L
         var totalTaxCents = 0L
-        val applications = mutableListOf<BracketApplication>()
+
+        val applications = ArrayList<BracketApplication>(rule.brackets.size)
 
         for (bracket in rule.brackets) {
             if (remaining <= 0L) break
+
             val upper = bracket.upTo?.amount ?: Long.MAX_VALUE
             if (upper <= previousUpper) continue
+
             val span = upper - previousUpper
             val applied = minOf(remaining, span)
-            if (applied > 0L) {
-                val taxCents = (applied * bracket.rate.value).toLong()
-                totalTaxCents += taxCents
-                applications += BracketApplication(
+            if (applied <= 0L) {
+                previousUpper = upper
+                continue
+            }
+
+            val taxCents = (applied * bracket.rate.value).toLong()
+            totalTaxCents += taxCents
+
+            applications.add(
+                BracketApplication(
                     bracket = bracket,
                     appliedTo = Money(applied, basisMoney.currency),
                     amount = Money(taxCents, basisMoney.currency),
-                )
-                remaining -= applied
-            }
+                ),
+            )
+
+            remaining -= applied
             previousUpper = upper
         }
 
         return Money(totalTaxCents, basisMoney.currency) to applications
     }
 
-    fun computeTaxes(input: PaycheckInput, bases: Map<TaxBasis, Money>, basisComponents: Map<TaxBasis, Map<String, Money>>): TaxComputationResult {
-        val traceSteps = mutableListOf<TraceStep>()
-        val employeeTaxes = mutableListOf<TaxLine>()
-        val employerTaxes = mutableListOf<TaxLine>()
-
-        // Basis steps for each known basis value
-        bases.forEach { (basis, amount) ->
-            val components = basisComponents[basis] ?: mapOf(
-                when (basis) {
-                    TaxBasis.Gross -> "gross"
-                    TaxBasis.FederalTaxable -> "federalTaxable"
-                    TaxBasis.StateTaxable -> "stateTaxable"
-                    TaxBasis.SocialSecurityWages -> "socialSecurityWages"
-                    TaxBasis.MedicareWages -> "medicareWages"
-                    TaxBasis.SupplementalWages -> "supplementalWages"
-                    TaxBasis.FutaWages -> "futaWages"
-                } to amount,
-            )
-            traceSteps += TraceStep.BasisComputed(
-                basis = basis,
-                components = components,
-                result = amount,
-            )
+    fun computeTaxes(input: PaycheckInput, bases: Map<TaxBasis, Money>, basisComponents: Map<TaxBasis, Map<String, Money>>, includeTrace: Boolean = true): TaxComputationResult {
+        // Basis steps for each known basis value (debug trace only)
+        val basisTraceSteps: List<TraceStep> = if (includeTrace) {
+            bases.map { (basis, amount) ->
+                val components = basisComponents[basis] ?: mapOf(
+                    when (basis) {
+                        TaxBasis.Gross -> "gross"
+                        TaxBasis.FederalTaxable -> "federalTaxable"
+                        TaxBasis.StateTaxable -> "stateTaxable"
+                        TaxBasis.SocialSecurityWages -> "socialSecurityWages"
+                        TaxBasis.MedicareWages -> "medicareWages"
+                        TaxBasis.SupplementalWages -> "supplementalWages"
+                        TaxBasis.FutaWages -> "futaWages"
+                    } to amount,
+                )
+                TraceStep.BasisComputed(
+                    basis = basis,
+                    components = components,
+                    result = amount,
+                )
+            }
+        } else {
+            emptyList()
         }
 
         fun shouldSkipFicaOrMedicare(basis: TaxBasis, basisMoney: Money): Boolean {
@@ -104,7 +114,7 @@ object TaxesCalculator {
             return false
         }
 
-        fun applyFlatTax(rule: TaxRule.FlatRateTax, descriptionPrefix: String, target: MutableList<TaxLine>) {
+        fun applyFlatTax(rule: TaxRule.FlatRateTax, descriptionPrefix: String, target: MutableList<TaxLine>, trace: MutableList<TraceStep>?) {
             val basisMoney = bases[rule.basis] ?: return
 
             if (shouldSkipFicaOrMedicare(rule.basis, basisMoney)) {
@@ -124,40 +134,42 @@ object TaxesCalculator {
                 basisMoney.amount
             }
 
-            var amountCents = (taxableCents * rule.rate.value).toLong()
-
-            // Per-employee extra withholding applies on top of rule-based tax
             val perEmployeeExtra = input.employeeSnapshot.additionalWithholdingPerPeriod
-            if (perEmployeeExtra != null) {
-                amountCents += perEmployeeExtra.amount
-            }
+            val amountCents = (taxableCents * rule.rate.value).toLong() + (perEmployeeExtra?.amount ?: 0L)
             if (amountCents == 0L) return
 
             val taxedBasis = Money(taxableCents, basisMoney.currency)
             val taxAmount = Money(amountCents, basisMoney.currency)
-            val line = TaxLine(
-                ruleId = rule.id,
-                jurisdiction = rule.jurisdiction,
-                description = "$descriptionPrefix ${rule.jurisdiction.code}",
-                basis = taxedBasis,
-                rate = rule.rate,
-                amount = taxAmount,
+
+            target.add(
+                TaxLine(
+                    ruleId = rule.id,
+                    jurisdiction = rule.jurisdiction,
+                    description = "$descriptionPrefix ${rule.jurisdiction.code}",
+                    basis = taxedBasis,
+                    rate = rule.rate,
+                    amount = taxAmount,
+                ),
             )
-            target += line
-            traceSteps += TraceStep.TaxApplied(
-                ruleId = rule.id,
-                jurisdiction = rule.jurisdiction,
-                basis = taxedBasis,
-                brackets = null,
-                rate = rule.rate,
-                amount = taxAmount,
-            )
-            if (perEmployeeExtra != null) {
-                traceSteps += TraceStep.AdditionalWithholdingApplied(amount = perEmployeeExtra)
+
+            if (trace != null) {
+                trace.add(
+                    TraceStep.TaxApplied(
+                        ruleId = rule.id,
+                        jurisdiction = rule.jurisdiction,
+                        basis = taxedBasis,
+                        brackets = null,
+                        rate = rule.rate,
+                        amount = taxAmount,
+                    ),
+                )
+                if (perEmployeeExtra != null) {
+                    trace.add(TraceStep.AdditionalWithholdingApplied(amount = perEmployeeExtra))
+                }
             }
         }
 
-        fun applyBracketedTax(rule: TaxRule.BracketedIncomeTax, descriptionPrefix: String, target: MutableList<TaxLine>) {
+        fun applyBracketedTax(rule: TaxRule.BracketedIncomeTax, descriptionPrefix: String, target: MutableList<TaxLine>, trace: MutableList<TraceStep>?) {
             val basisMoney = bases[rule.basis] ?: return
             if (shouldSkipFicaOrMedicare(rule.basis, basisMoney)) {
                 return
@@ -177,64 +189,71 @@ object TaxesCalculator {
                 if (addlTaxCents <= 0L) {
                     return
                 }
+
                 val taxAmount = Money(addlTaxCents, basisMoney.currency)
-                val line = TaxLine(
-                    ruleId = rule.id,
-                    jurisdiction = rule.jurisdiction,
-                    description = "$descriptionPrefix ${rule.jurisdiction.code}",
-                    basis = basisMoney,
-                    rate = null,
-                    amount = taxAmount,
+                target.add(
+                    TaxLine(
+                        ruleId = rule.id,
+                        jurisdiction = rule.jurisdiction,
+                        description = "$descriptionPrefix ${rule.jurisdiction.code}",
+                        basis = basisMoney,
+                        rate = null,
+                        amount = taxAmount,
+                    ),
                 )
-                target += line
-                traceSteps += TraceStep.TaxApplied(
-                    ruleId = rule.id,
-                    jurisdiction = rule.jurisdiction,
-                    basis = basisMoney,
-                    brackets = emptyList(),
-                    rate = null,
-                    amount = taxAmount,
+                trace?.add(
+                    TraceStep.TaxApplied(
+                        ruleId = rule.id,
+                        jurisdiction = rule.jurisdiction,
+                        basis = basisMoney,
+                        brackets = emptyList(),
+                        rate = null,
+                        amount = taxAmount,
+                    ),
                 )
                 return
             }
 
             val (bracketTax, brackets) = computeBracketedTax(basisMoney, rule)
 
-            var totalTaxCents = bracketTax.amount
             val ruleExtra = rule.additionalWithholding
-            if (ruleExtra != null) {
-                totalTaxCents += ruleExtra.amount
-            }
             val perEmployeeExtra = input.employeeSnapshot.additionalWithholdingPerPeriod
-            if (perEmployeeExtra != null) {
-                totalTaxCents += perEmployeeExtra.amount
-            }
+
+            val totalTaxCents = bracketTax.amount +
+                (ruleExtra?.amount ?: 0L) +
+                (perEmployeeExtra?.amount ?: 0L)
+
             if (totalTaxCents == 0L) return
 
             val taxAmount = Money(totalTaxCents, basisMoney.currency)
-            val line = TaxLine(
-                ruleId = rule.id,
-                jurisdiction = rule.jurisdiction,
-                description = "$descriptionPrefix ${rule.jurisdiction.code}",
-                basis = basisMoney,
-                rate = null,
-                amount = taxAmount,
+            target.add(
+                TaxLine(
+                    ruleId = rule.id,
+                    jurisdiction = rule.jurisdiction,
+                    description = "$descriptionPrefix ${rule.jurisdiction.code}",
+                    basis = basisMoney,
+                    rate = null,
+                    amount = taxAmount,
+                ),
             )
-            target += line
-            traceSteps += TraceStep.TaxApplied(
-                ruleId = rule.id,
-                jurisdiction = rule.jurisdiction,
-                basis = basisMoney,
-                brackets = brackets,
-                rate = null,
-                amount = taxAmount,
-            )
-            if (perEmployeeExtra != null) {
-                traceSteps += TraceStep.AdditionalWithholdingApplied(amount = perEmployeeExtra)
+            if (trace != null) {
+                trace.add(
+                    TraceStep.TaxApplied(
+                        ruleId = rule.id,
+                        jurisdiction = rule.jurisdiction,
+                        basis = basisMoney,
+                        brackets = brackets,
+                        rate = null,
+                        amount = taxAmount,
+                    ),
+                )
+                if (perEmployeeExtra != null) {
+                    trace.add(TraceStep.AdditionalWithholdingApplied(amount = perEmployeeExtra))
+                }
             }
         }
 
-        fun applyWageBracketTax(rule: TaxRule.WageBracketTax, descriptionPrefix: String, target: MutableList<TaxLine>) {
+        fun applyWageBracketTax(rule: TaxRule.WageBracketTax, descriptionPrefix: String, target: MutableList<TaxLine>, trace: MutableList<TraceStep>?) {
             val basisMoney = bases[rule.basis] ?: return
             if (shouldSkipFicaOrMedicare(rule.basis, basisMoney)) {
                 return
@@ -247,72 +266,70 @@ object TaxesCalculator {
                 amount <= upper
             } ?: return
 
-            var totalTaxCents = row.tax.amount
             val perEmployeeExtra = input.employeeSnapshot.additionalWithholdingPerPeriod
-            if (perEmployeeExtra != null) {
-                totalTaxCents += perEmployeeExtra.amount
-            }
+            val totalTaxCents = row.tax.amount + (perEmployeeExtra?.amount ?: 0L)
             if (totalTaxCents == 0L) return
 
             val taxAmount = Money(totalTaxCents, basisMoney.currency)
-            val line = TaxLine(
-                ruleId = rule.id,
-                jurisdiction = rule.jurisdiction,
-                description = "$descriptionPrefix ${rule.jurisdiction.code}",
-                basis = basisMoney,
-                rate = null,
-                amount = taxAmount,
+            target.add(
+                TaxLine(
+                    ruleId = rule.id,
+                    jurisdiction = rule.jurisdiction,
+                    description = "$descriptionPrefix ${rule.jurisdiction.code}",
+                    basis = basisMoney,
+                    rate = null,
+                    amount = taxAmount,
+                ),
             )
-            target += line
-            traceSteps += TraceStep.TaxApplied(
-                ruleId = rule.id,
-                jurisdiction = rule.jurisdiction,
-                basis = basisMoney,
-                brackets = emptyList(),
-                rate = null,
-                amount = taxAmount,
-            )
-            if (perEmployeeExtra != null) {
-                traceSteps += TraceStep.AdditionalWithholdingApplied(amount = perEmployeeExtra)
+            if (trace != null) {
+                trace.add(
+                    TraceStep.TaxApplied(
+                        ruleId = rule.id,
+                        jurisdiction = rule.jurisdiction,
+                        basis = basisMoney,
+                        brackets = emptyList(),
+                        rate = null,
+                        amount = taxAmount,
+                    ),
+                )
+                if (perEmployeeExtra != null) {
+                    trace.add(TraceStep.AdditionalWithholdingApplied(amount = perEmployeeExtra))
+                }
             }
         }
 
-        // Treat federal/state/local rules as employee taxes for now
-        input.taxContext.federal.forEach { rule ->
-            when (rule) {
-                is TaxRule.FlatRateTax -> applyFlatTax(rule, "Employee tax", employeeTaxes)
-                is TaxRule.BracketedIncomeTax -> applyBracketedTax(rule, "Employee tax", employeeTaxes)
-                is TaxRule.WageBracketTax -> applyWageBracketTax(rule, "Employee tax", employeeTaxes)
+        val employeeRules = input.taxContext.federal + input.taxContext.state + input.taxContext.local
+
+        val employeeTaxes = ArrayList<TaxLine>(employeeRules.size)
+        val employerTaxes = ArrayList<TaxLine>(input.taxContext.employerSpecific.size)
+        val traceSteps: MutableList<TraceStep>? = if (includeTrace) {
+            ArrayList<TraceStep>(basisTraceSteps.size + employeeRules.size + input.taxContext.employerSpecific.size).apply {
+                addAll(basisTraceSteps)
             }
+        } else {
+            null
         }
-        input.taxContext.state.forEach { rule ->
+
+        for (rule in employeeRules) {
             when (rule) {
-                is TaxRule.FlatRateTax -> applyFlatTax(rule, "Employee tax", employeeTaxes)
-                is TaxRule.BracketedIncomeTax -> applyBracketedTax(rule, "Employee tax", employeeTaxes)
-                is TaxRule.WageBracketTax -> applyWageBracketTax(rule, "Employee tax", employeeTaxes)
-            }
-        }
-        input.taxContext.local.forEach { rule ->
-            when (rule) {
-                is TaxRule.FlatRateTax -> applyFlatTax(rule, "Employee tax", employeeTaxes)
-                is TaxRule.BracketedIncomeTax -> applyBracketedTax(rule, "Employee tax", employeeTaxes)
-                is TaxRule.WageBracketTax -> applyWageBracketTax(rule, "Employee tax", employeeTaxes)
+                is TaxRule.FlatRateTax -> applyFlatTax(rule, "Employee tax", employeeTaxes, traceSteps)
+                is TaxRule.BracketedIncomeTax -> applyBracketedTax(rule, "Employee tax", employeeTaxes, traceSteps)
+                is TaxRule.WageBracketTax -> applyWageBracketTax(rule, "Employee tax", employeeTaxes, traceSteps)
             }
         }
 
-        // Employer-specific rules are treated as employer taxes
-        input.taxContext.employerSpecific.forEach { rule ->
+        for (rule in input.taxContext.employerSpecific) {
             when (rule) {
-                is TaxRule.FlatRateTax -> applyFlatTax(rule, "Employer tax", employerTaxes)
-                is TaxRule.BracketedIncomeTax -> applyBracketedTax(rule, "Employer tax", employerTaxes)
-                is TaxRule.WageBracketTax -> applyWageBracketTax(rule, "Employer tax", employerTaxes)
+                is TaxRule.FlatRateTax -> applyFlatTax(rule, "Employer tax", employerTaxes, traceSteps)
+                is TaxRule.BracketedIncomeTax -> applyBracketedTax(rule, "Employer tax", employerTaxes, traceSteps)
+                is TaxRule.WageBracketTax -> applyWageBracketTax(rule, "Employer tax", employerTaxes, traceSteps)
             }
         }
 
         return TaxComputationResult(
             employeeTaxes = employeeTaxes,
             employerTaxes = employerTaxes,
-            traceSteps = traceSteps,
+            traceSteps = traceSteps ?: emptyList(),
         )
     }
 }

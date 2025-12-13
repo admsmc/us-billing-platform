@@ -1,8 +1,8 @@
 package com.example.uspayroll.labor.config
 
 import com.example.uspayroll.labor.api.LaborStandardsCatalog
+import com.example.uspayroll.labor.api.LaborStandardsContextProvider
 import com.example.uspayroll.labor.impl.CatalogBackedLaborStandardsContextProvider
-import com.example.uspayroll.labor.impl.LaborStandardsContextProvider
 import com.example.uspayroll.labor.persistence.JooqLaborStandardsCatalog
 import org.jooq.DSLContext
 import org.jooq.impl.DSL

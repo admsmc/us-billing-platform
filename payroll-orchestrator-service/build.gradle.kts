@@ -19,18 +19,26 @@ dependencies {
     implementation(project(":shared-kernel"))
     implementation(project(":payroll-domain"))
     implementation(project(":messaging-core"))
+    implementation(project(":web-core"))
+    implementation(project(":hr-api"))
+    implementation(project(":hr-client"))
     // Reuse stable wire DTOs for tax/labor service calls.
-    implementation(project(":tax-service"))
-    implementation(project(":labor-service"))
+    implementation(project(":tax-api"))
+    implementation(project(":labor-api"))
 
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
+    runtimeOnly("org.postgresql:postgresql")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
 
     // Kafka domain events (cloud-agnostic).
     implementation("org.springframework.kafka:spring-kafka")
 
-    implementation("org.flywaydb:flyway-core:10.14.0")
+    // Work queue publishing / relay via RabbitMQ (cloud-agnostic).
+    implementation("org.springframework.boot:spring-boot-starter-amqp")
+
+    implementation("org.flywaydb:flyway-core:11.19.0")
+    implementation("org.flywaydb:flyway-database-postgresql:11.19.0")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 

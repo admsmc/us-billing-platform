@@ -1,11 +1,11 @@
 package com.example.uspayroll.worker
 
 import com.example.uspayroll.hr.HrApplication
+import com.example.uspayroll.hr.client.HrClientProperties
 import com.example.uspayroll.payroll.model.TraceStep
 import com.example.uspayroll.payroll.model.garnishment.GarnishmentType
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
-import com.example.uspayroll.worker.client.HrClientProperties
 import com.example.uspayroll.worker.support.StubTaxLaborClientsTestConfig
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.BeforeEach

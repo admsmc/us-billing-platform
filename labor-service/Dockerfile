@@ -12,6 +12,8 @@ COPY gradle.properties gradle.properties
 
 COPY shared-kernel shared-kernel
 COPY payroll-domain payroll-domain
+COPY web-core web-core
+COPY labor-api labor-api
 COPY labor-service labor-service
 
 RUN ./gradlew --no-daemon :labor-service:bootJar

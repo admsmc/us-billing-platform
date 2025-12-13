@@ -76,7 +76,7 @@ class SupplementalTaxTest {
             taxContext = TaxContext(federal = listOf(rule)),
         )
 
-        val result = PayrollEngine.calculatePaycheck(taxedInput)
+        val result = calculatePaycheckDebug(taxedInput)
 
         // Gross: 2,000 regular + 1,000 supplemental = 3,000
         assertEquals(3_000_00L, result.gross.amount)
@@ -125,7 +125,7 @@ class SupplementalTaxTest {
             taxContext = TaxContext(federal = listOf(regRule, suppRule)),
         )
 
-        val result = PayrollEngine.calculatePaycheck(taxedInput)
+        val result = calculatePaycheckDebug(taxedInput)
 
         // Gross remains the same as before
         assertEquals(3_000_00L, result.gross.amount)

@@ -9,6 +9,7 @@ plugins {
     kotlin("plugin.spring") version "2.0.21" apply false
     id("org.jlleitschuh.gradle.ktlint") version "12.3.0" apply false
     id("io.gitlab.arturbosch.detekt") version "1.23.8" apply false
+    id("me.champeau.jmh") version "0.7.2" apply false
     jacoco
 }
 

@@ -40,9 +40,12 @@ object RegularRateCalculator {
         val totalHours = input.timeSlice.regularHours + otHours
         if (otHours <= 0.0 || totalHours <= 0.0) return Money(0L)
 
-        val bonusCents: Long = earnings
-            .filter { it.category == EarningCategory.BONUS }
-            .fold(0L) { acc, line -> acc + line.amount.amount }
+        var bonusCents = 0L
+        for (line in earnings) {
+            if (line.category == EarningCategory.BONUS) {
+                bonusCents += line.amount.amount
+            }
+        }
         if (bonusCents <= 0L) return Money(0L)
 
         val fractionOt = otHours / totalHours

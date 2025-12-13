@@ -50,7 +50,7 @@ class EarningsCalculatorTest {
             priorYtd = YtdSnapshot(year = 2025),
         )
 
-        val result = PayrollEngine.calculatePaycheck(input)
+        val result = calculatePaycheckDebug(input)
 
         // 260,000 annual / 26 biweekly periods = 10,000 per period
         assertEquals(10_000_00L, result.gross.amount)
@@ -99,7 +99,7 @@ class EarningsCalculatorTest {
             )
         }
 
-        fun grossFor(freq: PayFrequency, periodId: String): Long = PayrollEngine.calculatePaycheck(makeInput(freq, periodId)).gross.amount
+        fun grossFor(freq: PayFrequency, periodId: String): Long = calculatePaycheckDebug(makeInput(freq, periodId)).gross.amount
 
         // 260,000 / 52 weekly = 5,000
         assertEquals(5_000_00L, grossFor(PayFrequency.WEEKLY, "WEEKLY"))
@@ -150,7 +150,7 @@ class EarningsCalculatorTest {
             priorYtd = YtdSnapshot(year = 2025),
         )
 
-        val result = PayrollEngine.calculatePaycheck(input)
+        val result = calculatePaycheckDebug(input)
 
         // 40 hours * $50 = $2,000
         assertEquals(2_000_00L, result.gross.amount)
@@ -205,8 +205,8 @@ class EarningsCalculatorTest {
             timeSlice = halfPeriodInput.timeSlice.copy(proration = null),
         )
 
-        val fullResult = PayrollEngine.calculatePaycheck(fullPeriodInput)
-        val halfResult = PayrollEngine.calculatePaycheck(halfPeriodInput)
+        val fullResult = calculatePaycheckDebug(fullPeriodInput)
+        val halfResult = calculatePaycheckDebug(halfPeriodInput)
 
         // Full period: 120,000 / 24 = 5,000
         assertEquals(5_000_00L, fullResult.gross.amount)
@@ -259,7 +259,7 @@ class EarningsCalculatorTest {
             priorYtd = YtdSnapshot(year = 2025),
         )
 
-        val result = PayrollEngine.calculatePaycheck(input)
+        val result = calculatePaycheckDebug(input)
 
         val fullPeriodCents = annual.amount / 24 // 5,000
         val expectedFraction = 8.0 / 15.0
@@ -326,9 +326,9 @@ class EarningsCalculatorTest {
         val schedule = PaySchedule.defaultFor(employerId, PayFrequency.SEMI_MONTHLY)
         kotlin.test.assertEquals(24, schedule.periodsPerYear)
 
-        val firstPeriodGross = PayrollEngine.calculatePaycheck(makeInput(1)).gross.amount
-        val sixteenthPeriodGross = PayrollEngine.calculatePaycheck(makeInput(16)).gross.amount
-        val seventeenthPeriodGross = PayrollEngine.calculatePaycheck(makeInput(17)).gross.amount
+        val firstPeriodGross = calculatePaycheckDebug(makeInput(1)).gross.amount
+        val sixteenthPeriodGross = calculatePaycheckDebug(makeInput(16)).gross.amount
+        val seventeenthPeriodGross = calculatePaycheckDebug(makeInput(17)).gross.amount
 
         val baseCents = annual.amount / schedule.periodsPerYear
         kotlin.test.assertEquals(baseCents + 1, firstPeriodGross)
@@ -371,7 +371,7 @@ class EarningsCalculatorTest {
             priorYtd = YtdSnapshot(year = 2025),
         )
 
-        val result = PayrollEngine.calculatePaycheck(input)
+        val result = calculatePaycheckDebug(input)
 
         // 40 * 50 = 2000, 5 * (50 * 1.5) = 375 -> total 2375
         assertEquals(2_375_00L, result.gross.amount)

@@ -1,6 +1,6 @@
 package com.example.uspayroll.worker.config
 
-import com.example.uspayroll.labor.impl.LaborStandardsContextProvider
+import com.example.uspayroll.labor.api.LaborStandardsContextProvider
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.tax.api.TaxContextProvider
 import com.example.uspayroll.tax.service.DefaultFederalWithholdingCalculator
@@ -8,11 +8,13 @@ import com.example.uspayroll.tax.service.FederalWithholdingCalculator
 import com.example.uspayroll.worker.client.LaborStandardsClient
 import com.example.uspayroll.worker.client.TaxClient
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import java.time.LocalDate
 
 @Configuration
+@EnableConfigurationProperties(WorkerPayrollProperties::class)
 class WorkerServiceWiringConfig {
 
     @Bean
@@ -36,11 +38,7 @@ class WorkerServiceWiringConfig {
     }
 
     @Bean
-    fun federalWithholdingCalculator(
-        @Value("\${tax.federalWithholding.method:PERCENTAGE}") method: String,
-        @Value("\${tax.federalWithholding.pub15tStrictMode:false}") strictMode: Boolean,
-    ): FederalWithholdingCalculator = DefaultFederalWithholdingCalculator(
+    fun federalWithholdingCalculator(@Value("\${tax.federalWithholding.method:PERCENTAGE}") method: String): FederalWithholdingCalculator = DefaultFederalWithholdingCalculator(
         method = method,
-        pub15tStrictMode = strictMode,
     )
 }

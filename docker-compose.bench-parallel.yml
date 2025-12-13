@@ -1,0 +1,60 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  payroll-orchestrator-service:
+    depends_on:
+      - rabbitmq
+    environment:
+      # Enable queue-driven finalize flow
+      ORCHESTRATOR_JOBS_RABBIT_ENABLED: "true"
+      ORCHESTRATOR_OUTBOX_RABBIT_RELAY_ENABLED: "true"
+      ORCHESTRATOR_PAYRUN_FINALIZER_ENABLED: "true"
+
+      # RabbitMQ connection
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-guest}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
+
+      # Required so worker can call internal endpoints
+      ORCHESTRATOR_INTERNAL_AUTH_SHARED_SECRET: ${ORCHESTRATOR_INTERNAL_AUTH_SHARED_SECRET:-dev-internal-token}
+
+  payroll-worker-service:
+    depends_on:
+      - rabbitmq
+
+    # Important: when scaling worker replicas, do NOT publish a fixed host port.
+    # (Use edge-service or direct service-to-service networking instead.)
+    ports: []
+
+    environment:
+      # Enable queue consumption for per-employee finalize jobs
+      WORKER_JOBS_RABBIT_ENABLED: "true"
+      WORKER_JOBS_FINALIZE_EMPLOYEE_ENABLED: "true"
+      WORKER_JOBS_LEGACY_PAYRUN_ENABLED: "false"
+
+      # RabbitMQ connection
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-guest}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
+
+      # Internal token for orchestrator internal endpoints
+      ORCHESTRATOR_INTERNAL_TOKEN: ${ORCHESTRATOR_INTERNAL_AUTH_SHARED_SECRET:-dev-internal-token}
+
+      # Optional: enable queue depth gauges to resolve queue properties
+      # (Requires broker access; safe defaults.)
+      WORKER_METRICS_RABBIT_QUEUE_DEPTH_FIXED_DELAY_MILLIS: "5000"
+
+  edge-service:
+    # For parallel benchmarks we typically hit orchestrator directly.
+    # Keeping edge-service port exposed is fine.
+    depends_on:
+      - payroll-orchestrator-service

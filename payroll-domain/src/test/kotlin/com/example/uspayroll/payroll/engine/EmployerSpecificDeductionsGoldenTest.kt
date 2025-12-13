@@ -104,13 +104,13 @@ class EmployerSpecificDeductionsGoldenTest {
 
         val repo = EmployerRetirementConfigRepository()
 
-        val pretaxResult = PayrollEngine.calculatePaycheck(
+        val pretaxResult = calculatePaycheckDebug(
             input = pretaxInput,
             earningConfig = null,
             deductionConfig = repo,
         )
 
-        val rothResult = PayrollEngine.calculatePaycheck(
+        val rothResult = calculatePaycheckDebug(
             input = rothInput,
             earningConfig = null,
             deductionConfig = repo,

@@ -1,6 +1,6 @@
 package com.example.uspayroll.hr.garnishment
 
-import org.flywaydb.core.Flyway
+import com.example.uspayroll.persistence.flyway.FlywaySupport
 import org.h2.jdbcx.JdbcDataSource
 import org.junit.jupiter.api.Test
 import org.springframework.jdbc.core.JdbcTemplate
@@ -15,11 +15,10 @@ class GarnishmentOrderOverrideDbAuditTest {
             password = ""
         }
 
-        Flyway.configure()
-            .dataSource(ds)
-            .locations("classpath:db/migration")
-            .load()
-            .migrate()
+        FlywaySupport.migrate(
+            dataSource = ds,
+            "classpath:db/migration",
+        )
 
         return JdbcTemplate(ds)
     }

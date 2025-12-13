@@ -16,7 +16,7 @@ import java.nio.file.Path
  *     <hrBaseUrl> <employerId> <employeeId> <jsonFilePath>
  *
  * Where <jsonFilePath> contains a JSON body compatible with
- * GarnishmentWithholdingRequestHr / GarnishmentWithholdingRequest.
+ * GarnishmentWithholdingRequest.
  */
 object GarnishmentWithholdingReplayCli {
 

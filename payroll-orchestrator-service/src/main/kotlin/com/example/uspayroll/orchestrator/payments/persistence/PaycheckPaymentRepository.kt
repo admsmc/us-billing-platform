@@ -2,7 +2,6 @@ package com.example.uspayroll.orchestrator.payments.persistence
 
 import com.example.uspayroll.orchestrator.payments.model.PaycheckPaymentRecord
 import com.example.uspayroll.orchestrator.payments.model.PaycheckPaymentStatus
-import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Repository
 
@@ -21,9 +20,8 @@ class PaycheckPaymentRepository(
         netCents: Long,
         status: PaycheckPaymentStatus = PaycheckPaymentStatus.CREATED,
     ): Boolean {
-        return try {
-            val inserted = jdbcTemplate.update(
-                """
+        val inserted = jdbcTemplate.update(
+            """
                 INSERT INTO paycheck_payment (
                   employer_id, payment_id, paycheck_id,
                   pay_run_id, employee_id, pay_period_id,
@@ -31,21 +29,19 @@ class PaycheckPaymentRepository(
                   status,
                   created_at, updated_at
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-                """.trimIndent(),
-                employerId,
-                paymentId,
-                paycheckId,
-                payRunId,
-                employeeId,
-                payPeriodId,
-                currency,
-                netCents,
-                status.name,
-            )
-            inserted == 1
-        } catch (_: DataIntegrityViolationException) {
-            false
-        }
+                ON CONFLICT DO NOTHING
+            """.trimIndent(),
+            employerId,
+            paymentId,
+            paycheckId,
+            payRunId,
+            employeeId,
+            payPeriodId,
+            currency,
+            netCents,
+            status.name,
+        )
+        return inserted == 1
     }
 
     fun countByPayRun(employerId: String, payRunId: String): Long = jdbcTemplate.queryForObject(

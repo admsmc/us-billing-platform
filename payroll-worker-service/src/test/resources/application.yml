@@ -13,3 +13,7 @@ server:
 spring:
   flyway:
     enabled: false
+
+worker:
+  payroll:
+    traceLevel: DEBUG

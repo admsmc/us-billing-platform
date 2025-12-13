@@ -69,7 +69,7 @@ class BracketedTaxTest {
         val input = baseInput(employerId, employeeId, priorYtd)
             .copy(taxContext = TaxContext(federal = listOf(rule)))
 
-        val result = PayrollEngine.calculatePaycheck(input)
+        val result = calculatePaycheckDebug(input)
 
         assertEquals(10_000_00L, result.gross.amount)
         val tax = result.employeeTaxes.single()
@@ -101,7 +101,7 @@ class BracketedTaxTest {
         val input = baseInput(employerId, employeeId, priorYtd)
             .copy(taxContext = TaxContext(federal = listOf(rule)))
 
-        val result = PayrollEngine.calculatePaycheck(input)
+        val result = calculatePaycheckDebug(input)
 
         assertEquals(10_000_00L, result.gross.amount)
         val tax = result.employeeTaxes.single()
@@ -140,7 +140,7 @@ class BracketedTaxTest {
         val input = baseInput(employerId, employeeId, priorYtd)
             .copy(taxContext = TaxContext(federal = listOf(rule)))
 
-        val result = PayrollEngine.calculatePaycheck(input)
+        val result = calculatePaycheckDebug(input)
 
         // Gross 10,000 < standard deduction 20,000 -> taxable 0
         assertEquals(10_000_00L, result.gross.amount)
@@ -182,7 +182,7 @@ class BracketedTaxTest {
         val input = baseInput(employerId, employeeId, priorYtd)
             .copy(taxContext = TaxContext(federal = listOf(rule)))
 
-        val result = PayrollEngine.calculatePaycheck(
+        val result = calculatePaycheckDebug(
             input = input,
             earningConfig = null,
             deductionConfig = deductionRepo,

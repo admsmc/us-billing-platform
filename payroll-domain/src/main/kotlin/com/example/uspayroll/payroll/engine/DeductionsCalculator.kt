@@ -21,7 +21,7 @@ data class DeductionComputationResult(
  */
 object DeductionsCalculator {
 
-    fun computeDeductions(input: PaycheckInput, earnings: List<EarningLine>, repo: DeductionConfigRepository? = null): DeductionComputationResult {
+    fun computeDeductions(input: PaycheckInput, earnings: List<EarningLine>, repo: DeductionConfigRepository? = null, includeTrace: Boolean = true): DeductionComputationResult {
         if (repo == null) {
             return DeductionComputationResult(
                 preTaxDeductions = emptyList(),
@@ -32,11 +32,7 @@ object DeductionsCalculator {
         }
 
         val plans = repo.findPlansForEmployer(input.employerId)
-
-        val preTax = mutableListOf<DeductionLine>()
-        val postTax = mutableListOf<DeductionLine>()
-        val traceSteps = mutableListOf<TraceStep>()
-        val plansByCode = mutableMapOf<DeductionCode, DeductionPlan>()
+        val plansByCode: Map<DeductionCode, DeductionPlan> = plans.associateBy { DeductionCode(it.id) }
 
         val gross = earnings.fold(0L) { acc, e -> acc + e.amount.amount }.let { Money(it) }
 
@@ -47,93 +43,101 @@ object DeductionsCalculator {
             return input.priorYtd.deductionsByCode[code]?.amount ?: 0L
         }
 
-        fun applyCaps(plan: DeductionPlan, rawCents: Long, ytdCents: Long): Pair<Long, Money?> {
-            var finalCents = rawCents
-            var cappedAt: Money? = null
+        data class CapResult(
+            val finalCents: Long,
+            val cappedAt: Money?,
+        )
 
-            plan.annualCap?.let { cap ->
-                val remaining = cap.amount - ytdCents
-                if (remaining <= 0L) {
-                    finalCents = 0L
-                } else if (finalCents > remaining) {
-                    finalCents = remaining
-                    cappedAt = cap
+        fun applyCaps(plan: DeductionPlan, rawCents: Long, ytdCents: Long): CapResult {
+            val annualCapResult: CapResult = plan.annualCap
+                ?.let { cap ->
+                    val remaining = cap.amount - ytdCents
+                    when {
+                        remaining <= 0L -> CapResult(finalCents = 0L, cappedAt = cap)
+                        rawCents > remaining -> CapResult(finalCents = remaining, cappedAt = cap)
+                        else -> CapResult(finalCents = rawCents, cappedAt = null)
+                    }
                 }
-            }
+                ?: CapResult(finalCents = rawCents, cappedAt = null)
 
-            plan.perPeriodCap?.let { cap ->
-                if (finalCents > cap.amount) {
-                    finalCents = cap.amount
-                    cappedAt = cap
+            val perPeriodCapResult: CapResult = plan.perPeriodCap
+                ?.let { cap ->
+                    when {
+                        annualCapResult.finalCents > cap.amount -> CapResult(finalCents = cap.amount, cappedAt = cap)
+                        else -> annualCapResult
+                    }
                 }
-            }
+                ?: annualCapResult
 
-            return finalCents to cappedAt
+            return perPeriodCapResult
         }
 
-        for (plan in sortedPlans) {
-            val code = DeductionCode(plan.id)
-            plansByCode[code] = plan
+        data class DeductionApplied(
+            val kind: DeductionKind,
+            val line: DeductionLine,
+            val trace: TraceStep?,
+        )
 
-            if (plan.kind == DeductionKind.GARNISHMENT) {
-                // Garnishments are computed by GarnishmentsCalculator after taxes.
-                continue
+        val applied: List<DeductionApplied> = sortedPlans
+            .asSequence()
+            .filterNot { it.kind == DeductionKind.GARNISHMENT }
+            .mapNotNull { plan ->
+                val code = DeductionCode(plan.id)
+
+                // Compute raw employee amount from rate and/or flat
+                val rawCents: Long =
+                    (plan.employeeRate?.let { rate -> (gross.amount * rate.value).toLong() } ?: 0L) +
+                        (plan.employeeFlat?.amount ?: 0L)
+
+                if (rawCents == 0L) {
+                    return@mapNotNull null
+                }
+
+                val ytd = ytdFor(plan)
+                val capResult = applyCaps(plan, rawCents, ytd)
+                if (capResult.finalCents == 0L) {
+                    return@mapNotNull null
+                }
+
+                val amount = Money(capResult.finalCents, gross.currency)
+
+                val line = DeductionLine(
+                    code = code,
+                    description = plan.name,
+                    amount = amount,
+                )
+
+                val trace: TraceStep? = if (includeTrace) {
+                    val planEffects = if (plan.employeeEffects.isNotEmpty()) plan.employeeEffects else plan.kind.defaultEmployeeEffects()
+                    TraceStep.DeductionApplied(
+                        description = plan.name,
+                        basis = gross,
+                        rate = plan.employeeRate,
+                        amount = amount,
+                        cappedAt = capResult.cappedAt,
+                        effects = planEffects,
+                    )
+                } else {
+                    null
+                }
+
+                DeductionApplied(kind = plan.kind, line = line, trace = trace)
             }
+            .toList()
 
-            // Compute raw employee amount from rate and/or flat
-            var rawCents = 0L
-            plan.employeeRate?.let { rate ->
-                rawCents += (gross.amount * rate.value).toLong()
-            }
-            plan.employeeFlat?.let { flat ->
-                rawCents += flat.amount
-            }
-            if (rawCents == 0L) continue
+        val preTaxKinds = setOf(
+            DeductionKind.PRETAX_RETIREMENT_EMPLOYEE,
+            DeductionKind.HSA,
+            DeductionKind.FSA,
+        )
 
-            val ytd = ytdFor(plan)
-            var (finalCents, cappedAt) = applyCaps(plan, rawCents, ytd)
-            if (finalCents == 0L) continue
-
-            val amount = Money(finalCents, gross.currency)
-
-            val targetList = when (plan.kind) {
-                DeductionKind.PRETAX_RETIREMENT_EMPLOYEE,
-                DeductionKind.HSA,
-                DeductionKind.FSA,
-                -> preTax
-
-                DeductionKind.ROTH_RETIREMENT_EMPLOYEE,
-                DeductionKind.POSTTAX_VOLUNTARY,
-                DeductionKind.OTHER_POSTTAX,
-                -> postTax
-
-                // GARNISHMENT plans are filtered out above and handled by
-                // GarnishmentsCalculator; this branch is unreachable but kept
-                // for exhaustiveness.
-                DeductionKind.GARNISHMENT -> postTax
-            }
-
-            targetList += DeductionLine(
-                code = code,
-                description = plan.name,
-                amount = amount,
-            )
-
-            val planEffects = if (plan.employeeEffects.isNotEmpty()) plan.employeeEffects else plan.kind.defaultEmployeeEffects()
-
-            traceSteps += TraceStep.DeductionApplied(
-                description = plan.name,
-                basis = gross,
-                rate = plan.employeeRate,
-                amount = amount,
-                cappedAt = cappedAt,
-                effects = planEffects,
-            )
-        }
+        val preTaxDeductions = applied.filter { it.kind in preTaxKinds }.map { it.line }
+        val postTaxDeductions = applied.filter { it.kind !in preTaxKinds }.map { it.line }
+        val traceSteps = if (includeTrace) applied.mapNotNull { it.trace } else emptyList()
 
         return DeductionComputationResult(
-            preTaxDeductions = preTax,
-            postTaxDeductions = postTax,
+            preTaxDeductions = preTaxDeductions,
+            postTaxDeductions = postTaxDeductions,
             traceSteps = traceSteps,
             plansByCode = plansByCode,
         )

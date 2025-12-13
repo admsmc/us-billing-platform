@@ -2,9 +2,6 @@ package com.example.uspayroll.hr.http
 
 import com.example.uspayroll.hr.db.GarnishmentRuleConfigRepository
 import com.example.uspayroll.hr.garnishment.GarnishmentOrderRepository
-import com.example.uspayroll.payroll.model.TaxJurisdiction
-import com.example.uspayroll.payroll.model.garnishment.GarnishmentFormula
-import com.example.uspayroll.payroll.model.garnishment.GarnishmentType
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.shared.Money
@@ -20,7 +17,7 @@ import java.time.LocalDate
  * Controller that exposes a /garnishments endpoint compatible with the
  * worker-service HttpHrClient expectations. Orders are sourced from the
  * HR database (garnishment_order) and combined with statutory rule
- * configuration to produce full GarnishmentOrderResponse objects.
+ * configuration to produce full GarnishmentOrderDto objects.
  */
 @RestController
 @RequestMapping("/employers/{employerId}")
@@ -34,7 +31,7 @@ class GarnishmentHttpController(
         @PathVariable employerId: String,
         @PathVariable employeeId: String,
         @RequestParam("asOf") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) asOf: LocalDate,
-    ): List<GarnishmentOrderResponse> {
+    ): List<GarnishmentOrderDto> {
         val employer = EmployerId(employerId)
         val employee = EmployeeId(employeeId)
 
@@ -51,7 +48,7 @@ class GarnishmentHttpController(
             if (rules.isEmpty()) return emptyList()
 
             return rules.mapIndexed { index, rule ->
-                GarnishmentOrderResponse(
+                GarnishmentOrderDto(
                     orderId = "ORDER-RULE-${index + 1}",
                     planId = "GARN_PLAN_${rule.type.name}",
                     type = rule.type,
@@ -89,7 +86,7 @@ class GarnishmentHttpController(
                 return@mapNotNull null
             }
 
-            GarnishmentOrderResponse(
+            GarnishmentOrderDto(
                 orderId = orderRow.orderId,
                 planId = "GARN_PLAN_${orderRow.type.name}",
                 type = orderRow.type,
@@ -109,27 +106,3 @@ class GarnishmentHttpController(
         }
     }
 }
-
-/**
- * HR-service side DTO matching the JSON shape expected by
- * worker-service's GarnishmentOrderDto. The two modules do not share the
- * class directly, but as long as the fields and types line up, Jackson can
- * map between them.
- */
-data class GarnishmentOrderResponse(
-    val orderId: String,
-    val planId: String,
-    val type: GarnishmentType,
-    val issuingJurisdiction: TaxJurisdiction? = null,
-    val caseNumber: String? = null,
-    val servedDate: LocalDate? = null,
-    val endDate: LocalDate? = null,
-    val priorityClass: Int = 0,
-    val sequenceWithinClass: Int = 0,
-    val formula: GarnishmentFormula,
-    val protectedEarningsRule: com.example.uspayroll.payroll.model.garnishment.ProtectedEarningsRule? = null,
-    val arrearsBefore: Money? = null,
-    val lifetimeCap: Money? = null,
-    val supportsOtherDependents: Boolean? = null,
-    val arrearsAtLeast12Weeks: Boolean? = null,
-)

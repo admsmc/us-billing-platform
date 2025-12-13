@@ -13,6 +13,9 @@ data class OrchestratorPayRunJobProperties(
     /** Wall-clock time limit orchestrator should respect per execute call. */
     var executeMaxMillis: Long = 2_000L,
 
+    /** Max number of employees to process concurrently within a single execute call. */
+    var executeParallelism: Int = 4,
+
     /** How long to consider RUNNING items stale and eligible to be requeued. */
     var requeueStaleMillis: Long = 10 * 60 * 1000L,
 
