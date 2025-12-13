@@ -85,13 +85,6 @@ class PaycheckPaymentBatchOps(
 
         val ids = rows.map { it.paymentId }
         val placeholders = ids.joinToString(",") { "?" }
-        val args: MutableList<Any> = mutableListOf(
-            PaycheckPaymentLifecycleStatus.SUBMITTED.name,
-            lockOwner,
-            nowTs,
-            nowTs,
-        )
-        args.addAll(ids)
 
         jdbcTemplate.update(
             """
@@ -105,17 +98,18 @@ class PaycheckPaymentBatchOps(
               AND status = 'CREATED'
               AND payment_id IN ($placeholders)
             """.trimIndent(),
-            *(
-                mutableListOf<Any>(
-                    PaycheckPaymentLifecycleStatus.SUBMITTED.name,
-                    lockOwner,
-                    nowTs,
-                    nowTs,
-                    nowTs,
-                    employerId,
-                ).apply { addAll(ids) }.toTypedArray()
-                ),
-        )
+        ) { ps ->
+            ps.setString(1, PaycheckPaymentLifecycleStatus.SUBMITTED.name)
+            ps.setString(2, lockOwner)
+            ps.setTimestamp(3, nowTs)
+            ps.setTimestamp(4, nowTs)
+            ps.setTimestamp(5, nowTs)
+            ps.setString(6, employerId)
+
+            ids.forEachIndexed { idx, id ->
+                ps.setString(7 + idx, id)
+            }
+        }
 
         return rows
     }

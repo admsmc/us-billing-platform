@@ -80,6 +80,7 @@ class PayRunItemFinalizationService(
                 employeeId = employeeId,
             )
 
+            @Suppress("TooGenericExceptionCaught")
             try {
                 val paycheck = paycheckComputationService.computeAndPersistFinalPaycheckForEmployee(
                     employerId = EmployerId(employerId),
@@ -110,7 +111,7 @@ class PayRunItemFinalizationService(
                     paycheckId = paycheck.paycheckId.value,
                     retryable = false,
                 )
-            } catch (t: Throwable) {
+            } catch (t: Exception) {
                 val latest = payRunItemRepository.findItem(employerId, payRunId, employeeId)
                 val attempts = latest?.attemptCount ?: claim.item.attemptCount
                 val maxAttempts = props.maxAttempts.coerceAtLeast(1)

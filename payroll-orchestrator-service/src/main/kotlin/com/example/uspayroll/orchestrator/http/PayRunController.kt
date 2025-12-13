@@ -173,11 +173,7 @@ class PayRunController(
      * call into orchestrator to perform the DB-backed finalize step idempotently.
      */
     @PostMapping("/internal/{payRunId}/items/{employeeId}/finalize")
-    fun finalizeEmployeeItem(
-        @PathVariable employerId: String,
-        @PathVariable payRunId: String,
-        @PathVariable employeeId: String,
-    ): ResponseEntity<Map<String, Any?>> {
+    fun finalizeEmployeeItem(@PathVariable employerId: String, @PathVariable payRunId: String, @PathVariable employeeId: String): ResponseEntity<Map<String, Any?>> {
         val result = itemFinalizationService.finalizeOneEmployeeItem(
             employerId = EmployerId(employerId).value,
             payRunId = payRunId,

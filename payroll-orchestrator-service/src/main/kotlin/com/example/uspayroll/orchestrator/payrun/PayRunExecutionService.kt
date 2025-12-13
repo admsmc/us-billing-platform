@@ -90,50 +90,50 @@ class PayRunExecutionService(
 
         try {
             while (processed < maxToProcess && System.currentTimeMillis() < deadlineMs) {
-            // Heartbeat before each claim/batch.
-            stillOwnLease = payRunRepository.renewLeaseIfOwned(
-                employerId = employerId,
-                payRunId = payRunId,
-                leaseOwner = leaseOwner,
-                leaseDuration = leaseDuration,
-            )
-            if (!stillOwnLease) break
+                // Heartbeat before each claim/batch.
+                stillOwnLease = payRunRepository.renewLeaseIfOwned(
+                    employerId = employerId,
+                    payRunId = payRunId,
+                    leaseOwner = leaseOwner,
+                    leaseDuration = leaseDuration,
+                )
+                if (!stillOwnLease) break
 
-            val claimedEmployeeIds = payRunItemRepository.claimQueuedItems(
-                employerId = employerId,
-                payRunId = payRunId,
-                batchSize = minOf(batchSize, maxToProcess - processed),
-            )
+                val claimedEmployeeIds = payRunItemRepository.claimQueuedItems(
+                    employerId = employerId,
+                    payRunId = payRunId,
+                    batchSize = minOf(batchSize, maxToProcess - processed),
+                )
 
-            if (claimedEmployeeIds.isEmpty()) break
+                if (claimedEmployeeIds.isEmpty()) break
 
-            // Once items are claimed (status=RUNNING), we must process them all
-            // to avoid leaving rows stuck in RUNNING.
-            if (executor == null) {
-                claimedEmployeeIds.forEach { eid ->
-                    processOneEmployeeItem(
-                        employerId = employerId,
-                        payRun = payRun,
-                        payRunId = payRunId,
-                        employeeId = eid,
-                    )
-                    processed += 1
-                }
-            } else {
-                val futures = claimedEmployeeIds.map { eid ->
-                    executor.submit {
+                // Once items are claimed (status=RUNNING), we must process them all
+                // to avoid leaving rows stuck in RUNNING.
+                if (executor == null) {
+                    claimedEmployeeIds.forEach { eid ->
                         processOneEmployeeItem(
                             employerId = employerId,
                             payRun = payRun,
                             payRunId = payRunId,
                             employeeId = eid,
                         )
+                        processed += 1
                     }
+                } else {
+                    val futures = claimedEmployeeIds.map { eid ->
+                        executor.submit {
+                            processOneEmployeeItem(
+                                employerId = employerId,
+                                payRun = payRun,
+                                payRunId = payRunId,
+                                employeeId = eid,
+                            )
+                        }
+                    }
+                    futures.forEach { it.get() }
+                    processed += claimedEmployeeIds.size
                 }
-                futures.forEach { it.get() }
-                processed += claimedEmployeeIds.size
             }
-        }
         } finally {
             executor?.shutdown()
         }

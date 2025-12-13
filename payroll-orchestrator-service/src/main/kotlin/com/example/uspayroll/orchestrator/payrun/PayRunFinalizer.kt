@@ -52,6 +52,7 @@ class PayRunFinalizer(
 
             if (computedStatus == PayRunStatus.RUNNING) return@forEach
 
+            @Suppress("TooGenericExceptionCaught")
             try {
                 outboxEnqueuer.finalizePayRunAndEnqueueOutboxEvents(
                     employerId = run.employerId,
@@ -62,7 +63,7 @@ class PayRunFinalizer(
                     succeeded = counts.succeeded,
                     failed = counts.failed,
                 )
-            } catch (t: Throwable) {
+            } catch (t: Exception) {
                 logger.warn(
                     "payrun.finalize.failed employer={} pay_run_id={} err={}",
                     run.employerId,

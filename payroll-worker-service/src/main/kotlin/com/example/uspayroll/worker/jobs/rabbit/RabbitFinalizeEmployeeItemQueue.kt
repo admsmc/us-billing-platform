@@ -51,20 +51,21 @@ class RabbitFinalizeEmployeeItemQueueConfig {
 
     @Bean
     @ConditionalOnProperty(prefix = "worker.jobs.rabbit", name = ["enabled"], havingValue = "true")
-    fun finalizeEmployeeMainBinding(exchange: TopicExchange, finalizeEmployeeMainQueue: Queue): Binding =
-        BindingBuilder.bind(finalizeEmployeeMainQueue).to(exchange).with(FinalizePayRunJobRouting.FINALIZE_EMPLOYEE)
+    fun finalizeEmployeeMainBinding(exchange: TopicExchange, finalizeEmployeeMainQueue: Queue): Binding = BindingBuilder.bind(finalizeEmployeeMainQueue)
+        .to(exchange)
+        .with(FinalizePayRunJobRouting.FINALIZE_EMPLOYEE)
 
     @Bean
     @ConditionalOnProperty(prefix = "worker.jobs.rabbit", name = ["enabled"], havingValue = "true")
-    fun finalizeEmployeeDlqBinding(exchange: TopicExchange, finalizeEmployeeDlq: Queue): Binding =
-        BindingBuilder.bind(finalizeEmployeeDlq).to(exchange).with(FinalizePayRunJobRouting.DLQ)
+    fun finalizeEmployeeDlqBinding(exchange: TopicExchange, finalizeEmployeeDlq: Queue): Binding = BindingBuilder.bind(finalizeEmployeeDlq)
+        .to(exchange)
+        .with(FinalizePayRunJobRouting.DLQ)
 
-    private fun retryQueue(name: String, ttlMillis: Int, exchange: TopicExchange, deadLetterRoutingKey: String): Queue =
-        QueueBuilder.durable(name)
-            .withArgument("x-message-ttl", ttlMillis)
-            .withArgument("x-dead-letter-exchange", exchange.name)
-            .withArgument("x-dead-letter-routing-key", deadLetterRoutingKey)
-            .build()
+    private fun retryQueue(name: String, ttlMillis: Int, exchange: TopicExchange, deadLetterRoutingKey: String): Queue = QueueBuilder.durable(name)
+        .withArgument("x-message-ttl", ttlMillis)
+        .withArgument("x-dead-letter-exchange", exchange.name)
+        .withArgument("x-dead-letter-routing-key", deadLetterRoutingKey)
+        .build()
 
     @Bean
     @ConditionalOnProperty(prefix = "worker.jobs.rabbit", name = ["enabled"], havingValue = "true")
@@ -96,43 +97,49 @@ class RabbitFinalizeEmployeeItemQueueConfig {
 
     @Bean
     @ConditionalOnProperty(prefix = "worker.jobs.rabbit", name = ["enabled"], havingValue = "true")
-    fun retry30sBinding(exchange: TopicExchange, finalizeEmployeeRetry30s: Queue): Binding =
-        BindingBuilder.bind(finalizeEmployeeRetry30s).to(exchange).with(FinalizePayRunJobRouting.RETRY_30S)
+    fun retry30sBinding(exchange: TopicExchange, finalizeEmployeeRetry30s: Queue): Binding = BindingBuilder.bind(finalizeEmployeeRetry30s)
+        .to(exchange)
+        .with(FinalizePayRunJobRouting.RETRY_30S)
 
     @Bean
     @ConditionalOnProperty(prefix = "worker.jobs.rabbit", name = ["enabled"], havingValue = "true")
-    fun retry1mBinding(exchange: TopicExchange, finalizeEmployeeRetry1m: Queue): Binding =
-        BindingBuilder.bind(finalizeEmployeeRetry1m).to(exchange).with(FinalizePayRunJobRouting.RETRY_1M)
+    fun retry1mBinding(exchange: TopicExchange, finalizeEmployeeRetry1m: Queue): Binding = BindingBuilder.bind(finalizeEmployeeRetry1m)
+        .to(exchange)
+        .with(FinalizePayRunJobRouting.RETRY_1M)
 
     @Bean
     @ConditionalOnProperty(prefix = "worker.jobs.rabbit", name = ["enabled"], havingValue = "true")
-    fun retry2mBinding(exchange: TopicExchange, finalizeEmployeeRetry2m: Queue): Binding =
-        BindingBuilder.bind(finalizeEmployeeRetry2m).to(exchange).with(FinalizePayRunJobRouting.RETRY_2M)
+    fun retry2mBinding(exchange: TopicExchange, finalizeEmployeeRetry2m: Queue): Binding = BindingBuilder.bind(finalizeEmployeeRetry2m)
+        .to(exchange)
+        .with(FinalizePayRunJobRouting.RETRY_2M)
 
     @Bean
     @ConditionalOnProperty(prefix = "worker.jobs.rabbit", name = ["enabled"], havingValue = "true")
-    fun retry5mBinding(exchange: TopicExchange, finalizeEmployeeRetry5m: Queue): Binding =
-        BindingBuilder.bind(finalizeEmployeeRetry5m).to(exchange).with(FinalizePayRunJobRouting.RETRY_5M)
+    fun retry5mBinding(exchange: TopicExchange, finalizeEmployeeRetry5m: Queue): Binding = BindingBuilder.bind(finalizeEmployeeRetry5m)
+        .to(exchange)
+        .with(FinalizePayRunJobRouting.RETRY_5M)
 
     @Bean
     @ConditionalOnProperty(prefix = "worker.jobs.rabbit", name = ["enabled"], havingValue = "true")
-    fun retry10mBinding(exchange: TopicExchange, finalizeEmployeeRetry10m: Queue): Binding =
-        BindingBuilder.bind(finalizeEmployeeRetry10m).to(exchange).with(FinalizePayRunJobRouting.RETRY_10M)
+    fun retry10mBinding(exchange: TopicExchange, finalizeEmployeeRetry10m: Queue): Binding = BindingBuilder.bind(finalizeEmployeeRetry10m)
+        .to(exchange)
+        .with(FinalizePayRunJobRouting.RETRY_10M)
 
     @Bean
     @ConditionalOnProperty(prefix = "worker.jobs.rabbit", name = ["enabled"], havingValue = "true")
-    fun retry20mBinding(exchange: TopicExchange, finalizeEmployeeRetry20m: Queue): Binding =
-        BindingBuilder.bind(finalizeEmployeeRetry20m).to(exchange).with(FinalizePayRunJobRouting.RETRY_20M)
+    fun retry20mBinding(exchange: TopicExchange, finalizeEmployeeRetry20m: Queue): Binding = BindingBuilder.bind(finalizeEmployeeRetry20m)
+        .to(exchange)
+        .with(FinalizePayRunJobRouting.RETRY_20M)
 
     @Bean
     @ConditionalOnProperty(prefix = "worker.jobs.rabbit", name = ["enabled"], havingValue = "true")
-    fun retry40mBinding(exchange: TopicExchange, finalizeEmployeeRetry40m: Queue): Binding =
-        BindingBuilder.bind(finalizeEmployeeRetry40m).to(exchange).with(FinalizePayRunJobRouting.RETRY_40M)
+    fun retry40mBinding(exchange: TopicExchange, finalizeEmployeeRetry40m: Queue): Binding = BindingBuilder.bind(finalizeEmployeeRetry40m)
+        .to(exchange)
+        .with(FinalizePayRunJobRouting.RETRY_40M)
 
     @Bean
     @ConditionalOnProperty(prefix = "worker.jobs.rabbit", name = ["enabled"], havingValue = "true")
-    fun rabbitMessageConverter(objectMapper: ObjectMapper): Jackson2JsonMessageConverter =
-        Jackson2JsonMessageConverter(objectMapper)
+    fun rabbitMessageConverter(objectMapper: ObjectMapper): Jackson2JsonMessageConverter = Jackson2JsonMessageConverter(objectMapper)
 }
 
 @Component
@@ -160,6 +167,7 @@ class RabbitFinalizeEmployeeItemConsumer(
 
         val employerId = EmployerId(job.employerId)
 
+        @Suppress("TooGenericExceptionCaught")
         try {
             val result = finalizeTimer.recordCallable {
                 orchestratorClient.finalizeEmployeeItem(
@@ -167,7 +175,7 @@ class RabbitFinalizeEmployeeItemConsumer(
                     payRunId = job.payRunId,
                     employeeId = job.employeeId,
                 )
-            } ?: throw IllegalStateException("finalizeEmployeeItem returned null")
+            } ?: error("finalizeEmployeeItem returned null")
 
             if (!result.retryable) {
                 // Terminal from orchestrator perspective.

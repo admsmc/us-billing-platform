@@ -185,12 +185,7 @@ class PayRunRepository(
         payRunId,
     ).firstOrNull()
 
-    fun findPayRunByBusinessKey(
-        employerId: String,
-        payPeriodId: String,
-        runType: com.example.uspayroll.orchestrator.payrun.model.PayRunType,
-        runSequence: Int,
-    ): PayRunRecord? = jdbcTemplate.query(
+    fun findPayRunByBusinessKey(employerId: String, payPeriodId: String, runType: com.example.uspayroll.orchestrator.payrun.model.PayRunType, runSequence: Int): PayRunRecord? = jdbcTemplate.query(
         """
             SELECT employer_id, pay_run_id, pay_period_id, run_type, run_sequence, status,
                    approval_status, payment_status,

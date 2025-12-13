@@ -44,7 +44,6 @@ class OutboxRelay(
     fun tick() {
         val now = Instant.now().truncatedTo(ChronoUnit.MILLIS)
         val lockTtl = Duration.ofSeconds(props.lockTtlSeconds.coerceAtLeast(5L))
-        val lockCutoff = now.minus(lockTtl)
         val claimed = outboxRepository.claimBatch(
             limit = props.batchSize,
             lockOwner = props.lockOwner,

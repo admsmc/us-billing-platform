@@ -55,6 +55,7 @@ class RabbitQueueDepthMetrics(
     @Scheduled(fixedDelayString = "\${worker.metrics.rabbit.queue-depth.fixed-delay-millis:5000}")
     fun refresh() {
         gauges.forEach { (queueName, atomic) ->
+            @Suppress("TooGenericExceptionCaught")
             try {
                 val props = amqpAdmin.getQueueProperties(queueName)
                 val count = (props?.get(RabbitAdmin.QUEUE_MESSAGE_COUNT) as? Int)?.toLong() ?: 0L

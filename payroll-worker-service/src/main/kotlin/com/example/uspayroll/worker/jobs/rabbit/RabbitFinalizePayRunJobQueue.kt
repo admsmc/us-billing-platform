@@ -10,7 +10,6 @@ import org.springframework.amqp.core.Queue
 import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
@@ -39,11 +38,7 @@ class RabbitFinalizePayRunJobQueueConfig {
     @org.springframework.boot.autoconfigure.condition.ConditionalOnExpression(
         "\${worker.jobs.legacy-payrun.enabled:false} and \${worker.jobs.rabbit.enabled:false}",
     )
-    fun rabbitFinalizePayRunJobQueue(
-        rabbitTemplate: RabbitTemplate,
-        props: RabbitJobsProperties,
-        rabbitMessageConverter: Jackson2JsonMessageConverter,
-    ): FinalizePayRunJobQueue {
+    fun rabbitFinalizePayRunJobQueue(rabbitTemplate: RabbitTemplate, props: RabbitJobsProperties, rabbitMessageConverter: Jackson2JsonMessageConverter): FinalizePayRunJobQueue {
         rabbitTemplate.messageConverter = rabbitMessageConverter
         return RabbitFinalizePayRunJobQueue(rabbitTemplate, props)
     }

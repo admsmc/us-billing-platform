@@ -131,7 +131,7 @@ class OutboxRepository(
 
                 if (!existing.isNullOrBlank()) return existing
             }
-            throw IllegalStateException("outbox enqueue conflicted but existing row not found eventId=$eventId")
+            error("outbox enqueue conflicted but existing row not found eventId=$eventId")
         }
     }
 

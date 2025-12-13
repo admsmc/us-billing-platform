@@ -54,7 +54,6 @@ class RabbitOutboxRelay(
     fun tick() {
         val now = Instant.now().truncatedTo(ChronoUnit.MILLIS)
         val lockTtl = Duration.ofSeconds(props.lockTtlSeconds.coerceAtLeast(5L))
-        val lockCutoff = now.minus(lockTtl)
         val claimed = outboxRepository.claimBatch(
             destinationType = OutboxDestinationType.RABBIT,
             limit = props.batchSize,
@@ -66,6 +65,7 @@ class RabbitOutboxRelay(
         if (claimed.isEmpty()) return
 
         claimed.forEach { row ->
+            @Suppress("TooGenericExceptionCaught")
             try {
                 // For Rabbit destinations:
                 // - row.topic = exchange
@@ -92,7 +92,7 @@ class RabbitOutboxRelay(
                     lockedAt = row.lockedAt,
                     now = now,
                 )
-            } catch (t: Throwable) {
+            } catch (t: Exception) {
                 val next = computeNextAttempt(row.attempts)
                 logger.warn(
                     "outbox.rabbit.publish.failed outbox_id={} exchange={} routing_key={} attempts={} next_delay_ms={} err={}",

@@ -46,7 +46,6 @@ class OutboxRelay(
     fun tick() {
         val now = Instant.now().truncatedTo(ChronoUnit.MILLIS)
         val lockTtl = Duration.ofSeconds(props.lockTtlSeconds.coerceAtLeast(5L))
-        val lockCutoff = now.minus(lockTtl)
         val claimed = outboxRepository.claimBatch(
             destinationType = OutboxDestinationType.KAFKA,
             limit = props.batchSize,
@@ -58,6 +57,7 @@ class OutboxRelay(
         if (claimed.isEmpty()) return
 
         claimed.forEach { row ->
+            @Suppress("TooGenericExceptionCaught")
             try {
                 val msg = MessageBuilder.withPayload(row.payloadJson)
                     .setHeader(KafkaHeaders.TOPIC, row.topic)
@@ -81,7 +81,7 @@ class OutboxRelay(
                     lockedAt = row.lockedAt,
                     now = now,
                 )
-            } catch (t: Throwable) {
+            } catch (t: Exception) {
                 val next = computeNextAttempt(row.attempts)
                 logger.warn(
                     "outbox.publish.failed outbox_id={} topic={} attempts={} next_delay_ms={} err={}",
