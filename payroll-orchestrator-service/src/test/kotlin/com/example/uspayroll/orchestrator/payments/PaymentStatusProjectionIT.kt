@@ -19,6 +19,7 @@ import org.springframework.test.context.TestConstructor
 import org.springframework.test.context.TestPropertySource
 import java.net.URI
 import java.time.Instant
+import java.util.UUID
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import(StubClientsTestConfig::class)
@@ -38,6 +39,9 @@ class PaymentStatusProjectionIT(
     @Test
     fun `settled payment event marks paycheck and payrun paid`() {
         val employerId = "emp-1"
+        val payRunId = "run-proj-${UUID.randomUUID()}"
+        // Avoid business-key collisions across concurrently-running Spring contexts.
+        val runSequence = ((UUID.randomUUID().mostSignificantBits ushr 1) % 1_000_000L).toInt() + 1
 
         rest.exchange(
             RequestEntity.post(URI.create("/employers/$employerId/payruns/finalize"))
@@ -45,7 +49,8 @@ class PaymentStatusProjectionIT(
                     PayRunController.StartFinalizeRequest(
                         payPeriodId = "pp-1",
                         employeeIds = listOf("e-1"),
-                        requestedPayRunId = "run-proj-1",
+                        runSequence = runSequence,
+                        requestedPayRunId = payRunId,
                     ),
                 ),
             PayRunController.StartFinalizeResponse::class.java,
@@ -53,21 +58,23 @@ class PaymentStatusProjectionIT(
 
         val execHeaders = HttpHeaders().apply { set("X-Internal-Token", "dev-internal-token") }
         rest.exchange(
-            RequestEntity.post(URI.create("/employers/$employerId/payruns/internal/run-proj-1/execute?batchSize=10"))
+            RequestEntity.post(URI.create("/employers/$employerId/payruns/internal/$payRunId/execute?batchSize=10"))
                 .headers(execHeaders)
                 .build(),
             Map::class.java,
         )
 
+        waitForTerminalFinalize(employerId, payRunId)
+
         val approve = rest.exchange(
-            RequestEntity.post(URI.create("/employers/$employerId/payruns/run-proj-1/approve"))
+            RequestEntity.post(URI.create("/employers/$employerId/payruns/$payRunId/approve"))
                 .build(),
             Map::class.java,
         )
         assertEquals(HttpStatus.OK, approve.statusCode)
 
         val initiate = rest.exchange(
-            RequestEntity.post(URI.create("/employers/$employerId/payruns/run-proj-1/payments/initiate"))
+            RequestEntity.post(URI.create("/employers/$employerId/payruns/$payRunId/payments/initiate"))
                 .build(),
             Map::class.java,
         )
@@ -81,7 +88,7 @@ class PaymentStatusProjectionIT(
             """.trimIndent(),
             String::class.java,
             employerId,
-            "run-proj-1",
+            payRunId,
             "e-1",
         )!!
 
@@ -91,7 +98,7 @@ class PaymentStatusProjectionIT(
                 eventId = "paycheck-payment-status-changed:$employerId:$paycheckId:SETTLED",
                 occurredAt = Instant.now(),
                 employerId = employerId,
-                payRunId = "run-proj-1",
+                payRunId = payRunId,
                 paycheckId = paycheckId,
                 paymentId = "pmt-$paycheckId",
                 status = PaycheckPaymentLifecycleStatus.SETTLED,
@@ -106,11 +113,19 @@ class PaymentStatusProjectionIT(
         )
         assertEquals(PaymentStatus.PAID.name, paycheckStatus)
 
+        val projectionStatus = jdbcTemplate.queryForObject(
+            "SELECT status FROM paycheck_payment WHERE employer_id = ? AND paycheck_id = ?",
+            String::class.java,
+            employerId,
+            paycheckId,
+        )
+        assertEquals("SETTLED", projectionStatus)
+
         val payRunStatus = jdbcTemplate.queryForObject(
             "SELECT payment_status FROM pay_run WHERE employer_id = ? AND pay_run_id = ?",
             String::class.java,
             employerId,
-            "run-proj-1",
+            payRunId,
         )
         assertEquals(PaymentStatus.PAID.name, payRunStatus)
     }
@@ -118,6 +133,9 @@ class PaymentStatusProjectionIT(
     @Test
     fun `mixed settled and failed events mark payrun partially paid`() {
         val employerId = "emp-1"
+        val payRunId = "run-proj-${UUID.randomUUID()}"
+        // Avoid business-key collisions across concurrently-running Spring contexts.
+        val runSequence = ((UUID.randomUUID().mostSignificantBits ushr 1) % 1_000_000L).toInt() + 1
 
         rest.exchange(
             RequestEntity.post(URI.create("/employers/$employerId/payruns/finalize"))
@@ -125,7 +143,8 @@ class PaymentStatusProjectionIT(
                     PayRunController.StartFinalizeRequest(
                         payPeriodId = "pp-1",
                         employeeIds = listOf("e-1", "e-2"),
-                        requestedPayRunId = "run-proj-2",
+                        runSequence = runSequence,
+                        requestedPayRunId = payRunId,
                     ),
                 ),
             PayRunController.StartFinalizeResponse::class.java,
@@ -133,20 +152,22 @@ class PaymentStatusProjectionIT(
 
         val execHeaders = HttpHeaders().apply { set("X-Internal-Token", "dev-internal-token") }
         rest.exchange(
-            RequestEntity.post(URI.create("/employers/$employerId/payruns/internal/run-proj-2/execute?batchSize=10"))
+            RequestEntity.post(URI.create("/employers/$employerId/payruns/internal/$payRunId/execute?batchSize=10"))
                 .headers(execHeaders)
                 .build(),
             Map::class.java,
         )
 
+        waitForTerminalFinalize(employerId, payRunId)
+
         rest.exchange(
-            RequestEntity.post(URI.create("/employers/$employerId/payruns/run-proj-2/approve"))
+            RequestEntity.post(URI.create("/employers/$employerId/payruns/$payRunId/approve"))
                 .build(),
             Map::class.java,
         )
 
         rest.exchange(
-            RequestEntity.post(URI.create("/employers/$employerId/payruns/run-proj-2/payments/initiate"))
+            RequestEntity.post(URI.create("/employers/$employerId/payruns/$payRunId/payments/initiate"))
                 .build(),
             Map::class.java,
         )
@@ -158,7 +179,7 @@ class PaymentStatusProjectionIT(
             """.trimIndent(),
             String::class.java,
             employerId,
-            "run-proj-2",
+            payRunId,
             "e-1",
         )!!
 
@@ -169,7 +190,7 @@ class PaymentStatusProjectionIT(
             """.trimIndent(),
             String::class.java,
             employerId,
-            "run-proj-2",
+            payRunId,
             "e-2",
         )!!
 
@@ -178,7 +199,7 @@ class PaymentStatusProjectionIT(
                 eventId = "paycheck-payment-status-changed:$employerId:$paycheck1:SETTLED",
                 occurredAt = Instant.now(),
                 employerId = employerId,
-                payRunId = "run-proj-2",
+                payRunId = payRunId,
                 paycheckId = paycheck1,
                 paymentId = "pmt-$paycheck1",
                 status = PaycheckPaymentLifecycleStatus.SETTLED,
@@ -190,7 +211,7 @@ class PaymentStatusProjectionIT(
                 eventId = "paycheck-payment-status-changed:$employerId:$paycheck2:FAILED",
                 occurredAt = Instant.now(),
                 employerId = employerId,
-                payRunId = "run-proj-2",
+                payRunId = payRunId,
                 paycheckId = paycheck2,
                 paymentId = "pmt-$paycheck2",
                 status = PaycheckPaymentLifecycleStatus.FAILED,
@@ -201,9 +222,29 @@ class PaymentStatusProjectionIT(
             "SELECT payment_status FROM pay_run WHERE employer_id = ? AND pay_run_id = ?",
             String::class.java,
             employerId,
-            "run-proj-2",
+            payRunId,
         )
 
         assertEquals(PaymentStatus.PARTIALLY_PAID.name, payRunStatus)
+    }
+
+    private fun waitForTerminalFinalize(employerId: String, payRunId: String) {
+        // When running the full multi-module build, containers/DB can be slower; keep this conservative.
+        val deadlineMs = System.currentTimeMillis() + 120_000
+        while (System.currentTimeMillis() < deadlineMs) {
+            val status = jdbcTemplate.query(
+                "SELECT status FROM pay_run WHERE employer_id = ? AND pay_run_id = ?",
+                { rs, _ -> rs.getString("status") },
+                employerId,
+                payRunId,
+            ).firstOrNull()
+
+            if (status == "FINALIZED" || status == "PARTIALLY_FINALIZED" || status == "FAILED") {
+                return
+            }
+            Thread.sleep(100)
+        }
+
+        throw AssertionError("Timed out waiting for terminal pay_run.status")
     }
 }

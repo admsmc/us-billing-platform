@@ -52,4 +52,20 @@ data class TimeSlice(
     val otherEarnings: List<EarningInput> = emptyList(),
     /** Optional partial-period proration for salaried employees. */
     val proration: Proration? = null,
+    /**
+     * When false, the engine will suppress base earnings derived from the employee's
+     * base compensation (salary/hourly) and only include explicitly-provided earnings.
+     *
+     * This is the primary mechanism for modeling off-cycle pay runs (bonuses/commissions)
+     * without double-paying base wages.
+     */
+    val includeBaseEarnings: Boolean = true,
+    /**
+     * Optional hint for allocating local-taxable wages across multiple localities.
+     *
+     * Keys should match locality filter codes passed to tax-service (e.g. "DETROIT", "NYC").
+     * Values are fractions in [0.0, 1.0]. When absent, local taxes will be split
+     * evenly across all selected localities.
+     */
+    val localityAllocations: Map<String, Double> = emptyMap(),
 )

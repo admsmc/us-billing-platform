@@ -27,6 +27,14 @@ dependencies {
 
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("io.micrometer:micrometer-registry-prometheus")
+
+    // Tracing (OTLP)
+    implementation("io.micrometer:micrometer-tracing-bridge-otel")
+    runtimeOnly("io.opentelemetry:opentelemetry-exporter-otlp")
+
+    // Structured JSON logs
+    runtimeOnly("net.logstash.logback:logstash-logback-encoder:8.0")
 
     // SQS-like work queue semantics via RabbitMQ (cloud-agnostic).
     implementation("org.springframework.boot:spring-boot-starter-amqp")

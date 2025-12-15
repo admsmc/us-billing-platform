@@ -62,7 +62,7 @@ class PayRunItemRepository(
     fun findItem(employerId: String, payRunId: String, employeeId: String): PayRunItemRecord? {
         return jdbcTemplate.query(
             """
-            SELECT employer_id, pay_run_id, employee_id, status, paycheck_id, attempt_count, last_error
+            SELECT employer_id, pay_run_id, employee_id, status, paycheck_id, attempt_count, last_error, earning_overrides_json
             FROM pay_run_item
             WHERE employer_id = ? AND pay_run_id = ? AND employee_id = ?
             """.trimIndent(),
@@ -75,6 +75,7 @@ class PayRunItemRepository(
                     paycheckId = rs.getString("paycheck_id"),
                     attemptCount = rs.getInt("attempt_count"),
                     lastError = rs.getString("last_error"),
+                    earningOverridesJson = rs.getString("earning_overrides_json"),
                 )
             },
             employerId,
@@ -95,7 +96,7 @@ class PayRunItemRepository(
         // Lock the row.
         val row = jdbcTemplate.query(
             """
-            SELECT employer_id, pay_run_id, employee_id, status, paycheck_id, attempt_count, last_error, updated_at
+            SELECT employer_id, pay_run_id, employee_id, status, paycheck_id, attempt_count, last_error, earning_overrides_json, updated_at
             FROM pay_run_item
             WHERE employer_id = ? AND pay_run_id = ? AND employee_id = ?
             FOR UPDATE
@@ -110,6 +111,7 @@ class PayRunItemRepository(
                     "paycheckId" to rs.getString("paycheck_id"),
                     "attemptCount" to rs.getInt("attempt_count"),
                     "lastError" to rs.getString("last_error"),
+                    "earningOverridesJson" to rs.getString("earning_overrides_json"),
                     "updatedAt" to updatedAt,
                 )
             },
@@ -162,6 +164,48 @@ class PayRunItemRepository(
 
         val claimedRow = findItem(employerId, payRunId, employeeId) ?: return null
         return ClaimItemResult(item = claimedRow, claimed = true)
+    }
+
+    /**
+     * Attach explicit earning overrides to an item if not already set.
+     *
+     * This is intentionally non-destructive to preserve idempotent start-finalize semantics.
+     */
+    fun setEarningOverridesIfAbsent(employerId: String, payRunId: String, employeeId: String, earningOverridesJson: String): Boolean {
+        val updated = jdbcTemplate.update(
+            """
+            UPDATE pay_run_item
+            SET earning_overrides_json = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE employer_id = ? AND pay_run_id = ? AND employee_id = ?
+              AND earning_overrides_json IS NULL
+            """.trimIndent(),
+            earningOverridesJson,
+            employerId,
+            payRunId,
+            employeeId,
+        )
+        return updated == 1
+    }
+
+    fun setEarningOverridesIfAbsentBatch(employerId: String, payRunId: String, earningOverridesByEmployeeId: Map<String, String>) {
+        if (earningOverridesByEmployeeId.isEmpty()) return
+
+        jdbcTemplate.batchUpdate(
+            """
+            UPDATE pay_run_item
+            SET earning_overrides_json = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE employer_id = ? AND pay_run_id = ? AND employee_id = ?
+              AND earning_overrides_json IS NULL
+            """.trimIndent(),
+            earningOverridesByEmployeeId.entries.map { (employeeId, json) ->
+                arrayOf(
+                    json,
+                    employerId,
+                    payRunId,
+                    employeeId,
+                )
+            },
+        )
     }
 
     fun getOrAssignPaycheckId(employerId: String, payRunId: String, employeeId: String): String {
@@ -477,5 +521,66 @@ class PayRunItemRepository(
             PayRunItemStatus.SUCCEEDED.name,
             effectiveLimit,
         )
+    }
+
+    fun listEmployeeIdsByStatus(employerId: String, payRunId: String, status: PayRunItemStatus, limit: Int = 10_000): List<String> {
+        val effectiveLimit = limit.coerceIn(1, 100_000)
+        return jdbcTemplate.query(
+            """
+            SELECT employee_id
+            FROM pay_run_item
+            WHERE employer_id = ? AND pay_run_id = ? AND status = ?
+            ORDER BY employee_id
+            LIMIT ?
+            """.trimIndent(),
+            { rs, _ -> rs.getString("employee_id") },
+            employerId,
+            payRunId,
+            status.name,
+            effectiveLimit,
+        )
+    }
+
+    /**
+     * Operator-triggered: move FAILED -> QUEUED so the item can be retried.
+     *
+     * This does not reset attempt_count; attempt_count reflects historical attempts.
+     */
+    fun requeueFailedItems(employerId: String, payRunId: String, employeeIds: List<String>, reason: String): Int {
+        val distinct = employeeIds.distinct()
+        if (distinct.isEmpty()) return 0
+
+        val msg = if (reason.length <= 2000) reason else reason.take(2000)
+        val placeholders = distinct.joinToString(",") { "?" }
+
+        val sql =
+            """
+            UPDATE pay_run_item
+            SET status = ?,
+                last_error = CASE
+                    WHEN last_error IS NULL THEN ?
+                    ELSE CONCAT(last_error, '; ', ?)
+                END,
+                started_at = NULL,
+                completed_at = NULL,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE employer_id = ?
+              AND pay_run_id = ?
+              AND status = ?
+              AND employee_id IN ($placeholders)
+            """.trimIndent()
+
+        return jdbcTemplate.update(sql) { ps ->
+            var i = 1
+            ps.setString(i++, PayRunItemStatus.QUEUED.name)
+            ps.setString(i++, msg)
+            ps.setString(i++, msg)
+            ps.setString(i++, employerId)
+            ps.setString(i++, payRunId)
+            ps.setString(i++, PayRunItemStatus.FAILED.name)
+            distinct.forEach { employeeId ->
+                ps.setString(i++, employeeId)
+            }
+        }
     }
 }

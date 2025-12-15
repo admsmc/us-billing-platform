@@ -181,6 +181,8 @@ class PayrollRunService(
             val taxContext = taxClient?.getTaxContext(
                 employerId = employerId,
                 asOfDate = payPeriod.checkDate,
+                residentState = snapshot.homeState,
+                workState = snapshot.workState,
                 localityCodes = localityCodes.toLocalityCodeStrings(),
             ) ?: taxContextProvider.getTaxContext(
                 employerId = employerId,
@@ -194,6 +196,7 @@ class PayrollRunService(
                 asOfDate = payPeriod.checkDate,
                 workState = snapshot.workState,
                 homeState = snapshot.homeState,
+                localityCodes = localityCodes.toLocalityCodeStrings(),
             ) ?: laborStandardsContextProvider.getLaborStandards(
                 employerId = employerId,
                 asOfDate = payPeriod.checkDate,

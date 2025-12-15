@@ -1,0 +1,30 @@
+{
+  "approvals": [
+    {
+      "approved_at": "2025-12-14",
+      "name": "andrewmathers",
+      "reference": "initial-metadata-standard",
+      "role": "ENGINEERING"
+    }
+  ],
+  "artifact": {
+    "media_type": "application/json",
+    "path": "tax-content/src/main/resources/tax-config/federal-2025-wage-bracket-demo.json",
+    "sha256": "c278ae4c7abf9c0c26ae03a7b82d83060ca29b1880e62047284144b707433651"
+  },
+  "contentId": "TAX_FEDERAL_2025_WAGE_BRACKET_DEMO",
+  "coverage": {
+    "effective_from": "2025-01-01",
+    "effective_to": "9999-12-31",
+    "jurisdictions": null,
+    "year": 2025
+  },
+  "domain": "tax",
+  "schemaVersion": 1,
+  "source": {
+    "checksum_sha256": null,
+    "id": "SRC_TAX_FEDERAL_2025_WAGE_BRACKET_DEMO",
+    "kind": "INTERNAL_OR_CURATED_SOURCE",
+    "revision_date": "2025-12-14"
+  }
+}

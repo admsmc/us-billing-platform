@@ -9,6 +9,7 @@ include(
     "persistence-core",
     "messaging-core",
     "web-core",
+    "tenancy-core",
     "edge-service",
     "identity-service",
     "hr-api",

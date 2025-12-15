@@ -7,6 +7,7 @@ import com.example.uspayroll.labor.persistence.JooqLaborStandardsCatalog
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.jdbc.datasource.DriverManagerDataSource
@@ -16,6 +17,7 @@ import javax.sql.DataSource
 class LaborServiceConfig {
 
     @Bean
+    @ConditionalOnProperty(prefix = "tenancy", name = ["mode"], havingValue = "SINGLE", matchIfMissing = true)
     fun laborDataSource(@Value("\${labor.db.url}") url: String, @Value("\${labor.db.username}") username: String, @Value("\${labor.db.password}") password: String): DataSource {
         val driverClassName = when {
             url.startsWith("jdbc:h2:") -> "org.h2.Driver"
@@ -34,6 +36,7 @@ class LaborServiceConfig {
     }
 
     @Bean
+    @ConditionalOnProperty(prefix = "tenancy", name = ["mode"], havingValue = "SINGLE", matchIfMissing = true)
     fun laborDslContext(dataSource: DataSource, @Value("\${labor.db.url}") url: String): DSLContext {
         val dialect = if (url.startsWith("jdbc:h2:")) {
             org.jooq.SQLDialect.H2

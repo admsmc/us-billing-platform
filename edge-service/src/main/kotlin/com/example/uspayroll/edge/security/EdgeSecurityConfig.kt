@@ -4,12 +4,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.security.config.Customizer
-import org.springframework.security.config.annotation.web.builders.HttpSecurity
+import org.springframework.security.config.web.server.ServerHttpSecurity
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm
-import org.springframework.security.oauth2.jwt.JwtDecoder
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
-import org.springframework.security.web.SecurityFilterChain
+import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder
+import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder
+import org.springframework.security.oauth2.jwt.ReactiveJwtDecoders
+import org.springframework.security.web.server.SecurityWebFilterChain
 import java.nio.charset.StandardCharsets
 import javax.crypto.spec.SecretKeySpec
 
@@ -19,9 +19,25 @@ data class EdgeAuthProperties(
      * Valid values:
      * - DISABLED: no auth (explicitly for local dev)
      * - HS256: validate JWTs signed with a shared HMAC secret
+     * - OIDC: validate JWTs using an issuer URI or JWK set URI
      */
-    var mode: String = "DISABLED",
+    var mode: String = "HS256",
+
+    /**
+     * Guardrail for tier-1 posture.
+     *
+     * If false (recommended), edge-service will refuse to start with DISABLED mode.
+     */
+    var allowDisabled: Boolean = false,
+
+    /** HS256 shared secret (dev only). */
     var hs256Secret: String = "",
+
+    /** OIDC issuer URI (preferred). */
+    var issuerUri: String = "",
+
+    /** OIDC JWK set URI (alternative to issuer URI). */
+    var jwkSetUri: String = "",
 )
 
 @Configuration
@@ -29,45 +45,66 @@ data class EdgeAuthProperties(
 class EdgeSecurityConfig {
 
     @Bean
-    fun securityFilterChain(http: HttpSecurity, props: EdgeAuthProperties): SecurityFilterChain {
+    fun securityWebFilterChain(http: ServerHttpSecurity, props: EdgeAuthProperties): SecurityWebFilterChain {
         val mode = props.mode.trim().uppercase()
 
-        // Keep actuator usable locally.
-        http.authorizeHttpRequests {
-            it.requestMatchers("/actuator/**").permitAll()
+        // Keep actuator usable (health, prometheus scrape, etc.).
+        http.authorizeExchange {
+            it.pathMatchers("/actuator/**").permitAll()
         }
 
         if (mode == "DISABLED") {
+            check(props.allowDisabled) {
+                "edge.auth.mode=DISABLED is blocked unless edge.auth.allow-disabled=true"
+            }
+
             http
                 .csrf { it.disable() }
-                .authorizeHttpRequests { it.anyRequest().permitAll() }
+                .authorizeExchange { it.anyExchange().permitAll() }
+
             return http.build()
         }
 
         // Authenticated ingress.
         http
             .csrf { it.disable() }
-            .authorizeHttpRequests { it.anyRequest().authenticated() }
-            .oauth2ResourceServer { it.jwt(Customizer.withDefaults()) }
+            .authorizeExchange { it.anyExchange().authenticated() }
+            .oauth2ResourceServer { rs ->
+                rs.jwt { jwt ->
+                    jwt.jwtDecoder(jwtDecoder(props))
+                }
+            }
 
         return http.build()
     }
 
     @Bean
-    fun jwtDecoder(props: EdgeAuthProperties): JwtDecoder {
+    fun jwtDecoder(props: EdgeAuthProperties): ReactiveJwtDecoder {
         val mode = props.mode.trim().uppercase()
-        if (mode != "HS256") {
-            // If you set a different mode later (e.g. OIDC), replace this with issuer-uri/jwk-set-uri config.
-            throw IllegalStateException("edge.auth.mode must be HS256 or DISABLED (was '${props.mode}')")
+        return when (mode) {
+            "HS256" -> {
+                val secret = props.hs256Secret
+                require(secret.isNotBlank()) { "edge.auth.hs256-secret must be set when edge.auth.mode=HS256" }
+
+                val key = SecretKeySpec(secret.toByteArray(StandardCharsets.UTF_8), "HmacSHA256")
+                NimbusReactiveJwtDecoder
+                    .withSecretKey(key)
+                    .macAlgorithm(MacAlgorithm.HS256)
+                    .build()
+            }
+
+            "OIDC" -> {
+                val issuer = props.issuerUri.trim()
+                val jwk = props.jwkSetUri.trim()
+
+                when {
+                    issuer.isNotBlank() -> ReactiveJwtDecoders.fromIssuerLocation(issuer)
+                    jwk.isNotBlank() -> NimbusReactiveJwtDecoder.withJwkSetUri(jwk).build()
+                    else -> error("edge.auth.issuer-uri or edge.auth.jwk-set-uri must be set when edge.auth.mode=OIDC")
+                }
+            }
+
+            else -> error("edge.auth.mode must be DISABLED, HS256, or OIDC (was '${props.mode}')")
         }
-
-        val secret = props.hs256Secret
-        require(secret.isNotBlank()) { "edge.auth.hs256-secret must be set when edge.auth.mode=HS256" }
-
-        val key = SecretKeySpec(secret.toByteArray(StandardCharsets.UTF_8), "HmacSHA256")
-        return NimbusJwtDecoder
-            .withSecretKey(key)
-            .macAlgorithm(MacAlgorithm.HS256)
-            .build()
     }
 }

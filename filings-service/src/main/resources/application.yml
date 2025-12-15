@@ -1,0 +1,33 @@
+server:
+  port: ${SERVER_PORT:8090}
+
+spring:
+  application:
+    name: filings-service
+  datasource:
+    url: ${FILINGS_DB_URL:jdbc:postgresql://localhost:5432/us_payroll_filings}
+    username: ${FILINGS_DB_USERNAME:filings_service}
+    password: ${FILINGS_DB_PASSWORD:}
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+filings:
+  kafka:
+    enabled: ${FILINGS_KAFKA_ENABLED:false}
+    consumer-name: ${FILINGS_KAFKA_CONSUMER_NAME:filings-service}
+    group-id: ${FILINGS_KAFKA_GROUP_ID:filings-service}
+    paycheck-ledger-topic: ${FILINGS_PAYCHECK_LEDGER_TOPIC:paycheck.ledger}
+    payment-status-changed-topic: ${FILINGS_PAYMENT_STATUS_CHANGED_TOPIC:paycheck.payment.status_changed}
+
+management:
+  tracing:
+    sampling:
+      probability: ${TRACING_SAMPLING_PROBABILITY:0.1}
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus

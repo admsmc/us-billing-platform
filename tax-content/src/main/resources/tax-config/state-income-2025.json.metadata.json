@@ -1,0 +1,30 @@
+{
+  "approvals": [
+    {
+      "approved_at": "2025-12-14",
+      "name": "andrewmathers",
+      "reference": "initial-metadata-standard",
+      "role": "ENGINEERING"
+    }
+  ],
+  "artifact": {
+    "media_type": "application/json",
+    "path": "tax-content/src/main/resources/tax-config/state-income-2025.json",
+    "sha256": "446c2186dfbd727baa9bf41ce2b35a9cd6ba70c1a2de6cdc87468735528ab250"
+  },
+  "contentId": "TAX_STATE_INCOME_2025",
+  "coverage": {
+    "effective_from": "2025-01-01",
+    "effective_to": "9999-12-31",
+    "jurisdictions": null,
+    "year": 2025
+  },
+  "domain": "tax",
+  "schemaVersion": 1,
+  "source": {
+    "checksum_sha256": null,
+    "id": "SRC_TAX_STATE_INCOME_2025",
+    "kind": "INTERNAL_OR_CURATED_SOURCE",
+    "revision_date": "2025-12-14"
+  }
+}

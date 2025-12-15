@@ -156,9 +156,23 @@ export default function (data) {
     : (data && data.employeeIdEnd ? Number(data.employeeIdEnd) : 10);
   const pad = Number(env('EMPLOYEE_ID_PAD', '6'));
 
+  const correctnessMode = env('CORRECTNESS_MODE', '');
+  const expectedDigestXor = env('EXPECTED_DIGEST_XOR', '');
+  const expectedNetTotalCents = env('EXPECTED_NET_TOTAL_CENTS', '');
+  const expectedGrossTotalCents = env('EXPECTED_GROSS_TOTAL_CENTS', '');
+
+  const wantCorrectness = (correctnessMode && correctnessMode.length > 0)
+    || (expectedDigestXor && expectedDigestXor.length > 0)
+    || (expectedNetTotalCents && expectedNetTotalCents.length > 0)
+    || (expectedGrossTotalCents && expectedGrossTotalCents.length > 0);
+
   const payload = {
     payPeriodId,
   };
+
+  if (wantCorrectness) {
+    payload.correctnessMode = correctnessMode && correctnessMode.length > 0 ? correctnessMode : 'digest';
+  }
 
   if (explicitIds.length > 0) {
     payload.employeeIds = explicitIds;
@@ -195,6 +209,50 @@ export default function (data) {
     const count = data && data.employeeCount ? Number(data.employeeCount) : selectedCount;
     if (count && count > 0) {
       e2eMsPerEmployee.add(elapsed / count);
+    }
+
+    // Optional correctness check (digest + aggregates) without returning full paychecks.
+    // Enable by providing any of:
+    // - CORRECTNESS_MODE=digest
+    // - EXPECTED_DIGEST_XOR=<number>
+    // - EXPECTED_NET_TOTAL_CENTS=<number>
+    // - EXPECTED_GROSS_TOTAL_CENTS=<number>
+    const wantCorrectness = payload.correctnessMode && String(payload.correctnessMode).length > 0;
+    if (wantCorrectness) {
+      const json = res.json();
+      const c = json && json.correctness ? json.correctness : null;
+
+      check(c, {
+        'correctness summary present': (x) => x !== null,
+      });
+
+      if (c) {
+        // Basic invariant: Σ(gross - employeeTaxes - deductions - net) == 0
+        check(c, {
+          'net identity delta is zero': (x) => Number(x.netIdentityDeltaCentsTotal) === 0,
+        });
+
+        const expectedDigestXor = env('EXPECTED_DIGEST_XOR', '');
+        if (expectedDigestXor && expectedDigestXor.length > 0) {
+          check(c, {
+            'digestXor matches expected': (x) => String(x.digestXor) === String(expectedDigestXor),
+          });
+        }
+
+        const expectedNetTotalCents = env('EXPECTED_NET_TOTAL_CENTS', '');
+        if (expectedNetTotalCents && expectedNetTotalCents.length > 0) {
+          check(c, {
+            'netCentsTotal matches expected': (x) => String(x.netCentsTotal) === String(expectedNetTotalCents),
+          });
+        }
+
+        const expectedGrossTotalCents = env('EXPECTED_GROSS_TOTAL_CENTS', '');
+        if (expectedGrossTotalCents && expectedGrossTotalCents.length > 0) {
+          check(c, {
+            'grossCentsTotal matches expected': (x) => String(x.grossCentsTotal) === String(expectedGrossTotalCents),
+          });
+        }
+      }
     }
   }
 

@@ -322,6 +322,7 @@ class WorkerHrGarnishmentParamE2ETest {
         jdbcTemplate.update("DELETE FROM garnishment_ledger")
         jdbcTemplate.update("DELETE FROM garnishment_order")
         jdbcTemplate.update("DELETE FROM employment_compensation")
+        jdbcTemplate.update("DELETE FROM employee_profile_effective")
         jdbcTemplate.update("DELETE FROM employee")
         jdbcTemplate.update("DELETE FROM pay_period")
 
@@ -331,6 +332,8 @@ class WorkerHrGarnishmentParamE2ETest {
             "EMP-GARN-NY" -> Triple("NY", "NY", "New York")
             else -> Triple("CA", "CA", "San Francisco")
         }
+
+        val hireDate = LocalDate.of(2024, 6, 1)
 
         jdbcTemplate.update(
             """
@@ -356,7 +359,36 @@ class WorkerHrGarnishmentParamE2ETest {
             homeState,
             workState,
             workCity,
-            LocalDate.of(2024, 6, 1),
+            hireDate,
+        )
+
+        jdbcTemplate.update(
+            """
+            INSERT INTO employee_profile_effective (
+              employer_id, employee_id,
+              effective_from, effective_to,
+              home_state, work_state, work_city,
+              filing_status, employment_type,
+              hire_date, termination_date,
+              dependents,
+              federal_withholding_exempt, is_nonresident_alien,
+              w4_step2_multiple_jobs,
+              additional_withholding_cents,
+              fica_exempt, flsa_enterprise_covered, flsa_exempt_status, is_tipped_employee
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, 'SINGLE', 'REGULAR', ?, NULL, 0,
+                      FALSE, FALSE,
+                      FALSE,
+                      NULL,
+                      FALSE, TRUE, 'NON_EXEMPT', FALSE)
+            """.trimIndent(),
+            employerId.value,
+            employeeId.value,
+            hireDate,
+            LocalDate.of(9999, 12, 31),
+            homeState,
+            workState,
+            workCity,
+            hireDate,
         )
 
         jdbcTemplate.update(

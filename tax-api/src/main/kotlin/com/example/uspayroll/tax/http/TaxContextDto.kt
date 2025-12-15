@@ -39,6 +39,7 @@ data class TaxRuleDto(
     val standardDeductionCents: Long? = null,
     val additionalWithholdingCents: Long? = null,
     val filingStatus: FilingStatus? = null,
+    val localityFilter: String? = null,
 )
 
 data class TaxBracketDto(
@@ -65,6 +66,7 @@ private fun TaxRule.toDto(): TaxRuleDto = when (this) {
         kind = TaxRuleKindDto.FLAT,
         rate = rate.value,
         annualWageCapCents = annualWageCap?.amount,
+        localityFilter = localityFilter,
     )
     is TaxRule.BracketedIncomeTax -> TaxRuleDto(
         id = id,
@@ -76,6 +78,7 @@ private fun TaxRule.toDto(): TaxRuleDto = when (this) {
         standardDeductionCents = standardDeduction?.amount,
         additionalWithholdingCents = additionalWithholding?.amount,
         filingStatus = filingStatus,
+        localityFilter = localityFilter,
     )
     is TaxRule.WageBracketTax -> TaxRuleDto(
         id = id,
@@ -85,6 +88,7 @@ private fun TaxRule.toDto(): TaxRuleDto = when (this) {
         kind = TaxRuleKindDto.WAGE_BRACKET,
         brackets = brackets.map { it.toDto() },
         filingStatus = filingStatus,
+        localityFilter = localityFilter,
     )
 }
 
@@ -132,6 +136,7 @@ fun TaxRuleDto.toDomain(): TaxRule {
             basis = basis.toDomainBasis(),
             rate = Percent(requireNotNull(rate) { "Flat rule '$id' missing rate" }),
             annualWageCap = annualWageCapCents?.let { Money(it) },
+            localityFilter = localityFilter,
         )
         TaxRuleKindDto.BRACKETED -> TaxRule.BracketedIncomeTax(
             id = id,
@@ -141,6 +146,7 @@ fun TaxRuleDto.toDomain(): TaxRule {
             standardDeduction = standardDeductionCents?.let { Money(it) },
             additionalWithholding = additionalWithholdingCents?.let { Money(it) },
             filingStatus = filingStatus,
+            localityFilter = localityFilter,
         )
         TaxRuleKindDto.WAGE_BRACKET -> TaxRule.WageBracketTax(
             id = id,
@@ -148,6 +154,7 @@ fun TaxRuleDto.toDomain(): TaxRule {
             basis = basis.toDomainBasis(),
             brackets = brackets.map { it.toDomainWageRow() },
             filingStatus = filingStatus,
+            localityFilter = localityFilter,
         )
     }
 }

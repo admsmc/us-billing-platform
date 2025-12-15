@@ -11,6 +11,7 @@ import com.example.uspayroll.orchestrator.payrun.model.PaymentStatus
 import com.example.uspayroll.orchestrator.payrun.persistence.PayRunItemRepository
 import com.example.uspayroll.orchestrator.payrun.persistence.PayRunRepository
 import com.example.uspayroll.orchestrator.persistence.PaycheckLifecycleRepository
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -24,6 +25,8 @@ class PayRunService(
     private val paycheckLifecycleRepository: PaycheckLifecycleRepository,
     private val paymentRequestService: PaymentRequestService,
     private val jobProducer: PayRunFinalizeJobProducer,
+    private val earningOverridesCodec: PayRunEarningOverridesCodec,
+    private val outboxEnqueuer: com.example.uspayroll.orchestrator.events.PayRunOutboxEnqueuer,
 ) {
 
     data class StartPayRunResult(
@@ -39,6 +42,7 @@ class PayRunService(
         employeeIds: List<String>,
         runType: PayRunType = PayRunType.REGULAR,
         runSequence: Int = 1,
+        earningOverridesByEmployeeId: Map<String, List<PayRunEarningOverride>> = emptyMap(),
         requestedPayRunId: String? = null,
         idempotencyKey: String? = null,
     ): StartPayRunResult {
@@ -77,6 +81,15 @@ class PayRunService(
             payRunId = payRun.payRunId,
             employeeIds = employeeIds,
         )
+
+        if (earningOverridesByEmployeeId.isNotEmpty()) {
+            val jsonByEmployee = earningOverridesByEmployeeId.mapValues { (_, overrides) -> earningOverridesCodec.encode(overrides) }
+            payRunItemRepository.setEarningOverridesIfAbsentBatch(
+                employerId = employerId,
+                payRunId = payRun.payRunId,
+                earningOverridesByEmployeeId = jsonByEmployee,
+            )
+        }
 
         // If we are using queue-driven execution, enqueue one work item per employee.
         jobProducer.enqueueFinalizeEmployeeJobs(
@@ -125,27 +138,34 @@ class PayRunService(
         )
     }
 
+    fun markFinalizeCompletedIfNull(employerId: String, payRunId: String): Boolean {
+        return payRunRepository.markFinalizeCompletedIfNull(employerId, payRunId)
+    }
+
     data class ApproveResult(
         val payRun: PayRunRecord,
         val effectiveStatus: PayRunStatus,
     )
 
+    @Transactional
     fun approvePayRun(employerId: String, payRunId: String): ApproveResult {
         val view = getStatus(employerId, payRunId, failureLimit = 0)
-            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "payrun not found")
+            ?: notFound("payrun not found")
 
         when (view.effectiveStatus) {
             PayRunStatus.FINALIZED, PayRunStatus.PARTIALLY_FINALIZED -> Unit
-            PayRunStatus.FAILED -> throw ResponseStatusException(HttpStatus.CONFLICT, "cannot approve failed payrun")
-            else -> throw ResponseStatusException(HttpStatus.CONFLICT, "payrun not yet finalized")
+            PayRunStatus.FAILED -> conflict("cannot approve failed payrun")
+            else -> conflict("payrun not yet finalized")
         }
 
         val existing = view.payRun
         if (existing.approvalStatus == ApprovalStatus.APPROVED) {
+            // Idempotent retry: ensure reporting/filings events are present.
+            outboxEnqueuer.enqueuePaycheckLedgerEventsForApprovedPayRun(employerId = employerId, payRunId = payRunId)
             return ApproveResult(payRun = existing, effectiveStatus = view.effectiveStatus)
         }
         if (existing.approvalStatus != ApprovalStatus.PENDING) {
-            throw ResponseStatusException(HttpStatus.CONFLICT, "payrun approval_status=${existing.approvalStatus}")
+            conflict("payrun approval_status=${existing.approvalStatus}")
         }
 
         payRunRepository.markApprovedIfPending(employerId, payRunId)
@@ -155,8 +175,10 @@ class PayRunService(
             approvalStatus = ApprovalStatus.APPROVED,
         )
 
+        outboxEnqueuer.enqueuePaycheckLedgerEventsForApprovedPayRun(employerId = employerId, payRunId = payRunId)
+
         val updated = payRunRepository.findPayRun(employerId, payRunId)
-            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "payrun not found")
+            ?: notFound("payrun not found")
 
         return ApproveResult(payRun = updated, effectiveStatus = view.effectiveStatus)
     }
@@ -168,19 +190,40 @@ class PayRunService(
         val enqueuedEvents: Int,
     )
 
-    fun initiatePayments(employerId: String, payRunId: String): InitiatePaymentsResult {
+    fun initiatePayments(employerId: String, payRunId: String, idempotencyKey: String? = null): InitiatePaymentsResult {
         val view = getStatus(employerId, payRunId, failureLimit = 0)
-            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "payrun not found")
+            ?: notFound("payrun not found")
 
         when (view.effectiveStatus) {
             PayRunStatus.FINALIZED, PayRunStatus.PARTIALLY_FINALIZED -> Unit
-            PayRunStatus.FAILED -> throw ResponseStatusException(HttpStatus.CONFLICT, "cannot pay a failed payrun")
-            else -> throw ResponseStatusException(HttpStatus.CONFLICT, "payrun not yet finalized")
+            PayRunStatus.FAILED -> conflict("cannot pay a failed payrun")
+            else -> conflict("payrun not yet finalized")
         }
 
         val payRun = view.payRun
+        if (payRun.runType == com.example.uspayroll.orchestrator.payrun.model.PayRunType.VOID) {
+            conflict("cannot initiate payments for VOID payrun")
+        }
         if (payRun.approvalStatus != ApprovalStatus.APPROVED) {
-            throw ResponseStatusException(HttpStatus.CONFLICT, "payrun must be approved before payment")
+            conflict("payrun must be approved before payment")
+        }
+
+        val normalizedKey = idempotencyKey?.takeIf { it.isNotBlank() }
+        if (normalizedKey != null) {
+            val existingPayRunId = payRunRepository.findPayRunIdByPaymentInitiateIdempotencyKey(employerId, normalizedKey)
+            if (existingPayRunId != null && existingPayRunId != payRunId) {
+                conflict("idempotency key already used for another payrun")
+            }
+
+            try {
+                val accepted = payRunRepository.acceptPaymentInitiateIdempotencyKey(employerId, payRunId, normalizedKey)
+                if (!accepted) {
+                    conflict("payrun payment initiation idempotency key mismatch")
+                }
+            } catch (_: DataIntegrityViolationException) {
+                // Unique constraint collision (another payrun already used this key).
+                conflict("idempotency key already used for another payrun")
+            }
         }
 
         // If already terminal, treat as idempotent no-op. In the target architecture,
@@ -204,7 +247,7 @@ class PayRunService(
         )
 
         val updated = payRunRepository.findPayRun(employerId, payRunId)
-            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "payrun not found")
+            ?: notFound("payrun not found")
 
         return InitiatePaymentsResult(
             payRun = updated,
@@ -213,4 +256,8 @@ class PayRunService(
             enqueuedEvents = enqueue.enqueued,
         )
     }
+
+    private fun notFound(message: String): Nothing = throw ResponseStatusException(HttpStatus.NOT_FOUND, message)
+
+    private fun conflict(message: String): Nothing = throw ResponseStatusException(HttpStatus.CONFLICT, message)
 }

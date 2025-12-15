@@ -1,0 +1,30 @@
+{
+  "approvals": [
+    {
+      "approved_at": "2025-12-14",
+      "name": "andrewmathers",
+      "reference": "initial-metadata-standard",
+      "role": "ENGINEERING"
+    }
+  ],
+  "artifact": {
+    "media_type": "text/csv",
+    "path": "tax-content/src/main/resources/wage-bracket-2025-biweekly.csv",
+    "sha256": "c2f076f29e3ead63a86fe760f1230be77a3e53e06d91401fe8c58fea55e11d2b"
+  },
+  "contentId": "TAX_WAGE_BRACKET_2025_BIWEEKLY",
+  "coverage": {
+    "effective_from": "2025-01-01",
+    "effective_to": "9999-12-31",
+    "jurisdictions": null,
+    "year": 2025
+  },
+  "domain": "tax",
+  "schemaVersion": 1,
+  "source": {
+    "checksum_sha256": null,
+    "id": "SRC_TAX_WAGE_BRACKET_2025_BIWEEKLY",
+    "kind": "INTERNAL_OR_CURATED_SOURCE",
+    "revision_date": "2025-12-14"
+  }
+}

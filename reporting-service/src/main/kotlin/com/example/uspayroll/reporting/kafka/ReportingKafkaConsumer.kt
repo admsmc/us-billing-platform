@@ -21,6 +21,7 @@ data class ReportingKafkaProperties(
     var groupId: String = "reporting-service",
     var payRunFinalizedTopic: String = "payrun.finalized",
     var paycheckFinalizedTopic: String = "paycheck.finalized",
+    var paycheckLedgerTopic: String = "paycheck.ledger",
 )
 
 @Configuration
@@ -57,6 +58,14 @@ class ReportingKafkaConsumer(
         handle(record, expectedType = "PaycheckFinalized")
     }
 
+    @KafkaListener(
+        topics = ["\${reporting.kafka.paycheck-ledger-topic:paycheck.ledger}"],
+        groupId = "\${reporting.kafka.group-id:reporting-service}",
+    )
+    fun onPaycheckLedger(record: ConsumerRecord<String, String>) {
+        handle(record, expectedType = "PaycheckLedger")
+    }
+
     private fun handle(record: ConsumerRecord<String, String>, expectedType: String) {
         val headerEventId = record.headers().lastHeader("X-Event-Id")?.value()?.toString(Charsets.UTF_8)
         val headerEventType = record.headers().lastHeader("X-Event-Type")?.value()?.toString(Charsets.UTF_8)
@@ -79,8 +88,20 @@ class ReportingKafkaConsumer(
             return
         }
 
-        val first = inbox.tryMarkProcessed(props.consumerName, eventId)
-        if (!first) {
+        val processed = inbox.runIfFirst(props.consumerName, eventId) {
+            // For now, just log. Next step is to materialize a read model for reporting.
+            logger.info(
+                "kafka.event.processed consumer={} event_id={} topic={} key={} type={} payload_size={}",
+                props.consumerName,
+                eventId,
+                record.topic(),
+                record.key(),
+                eventType,
+                payload.length,
+            )
+        }
+
+        if (processed == null) {
             logger.info(
                 "kafka.event.duplicate_ignored consumer={} event_id={} topic={} partition={} offset={} type={}",
                 props.consumerName,
@@ -90,18 +111,6 @@ class ReportingKafkaConsumer(
                 record.offset(),
                 eventType,
             )
-            return
         }
-
-        // For now, just log. Next step is to materialize a read model for reporting.
-        logger.info(
-            "kafka.event.processed consumer={} event_id={} topic={} key={} type={} payload_size={}",
-            props.consumerName,
-            eventId,
-            record.topic(),
-            record.key(),
-            eventType,
-            payload.length,
-        )
     }
 }

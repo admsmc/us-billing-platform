@@ -23,6 +23,17 @@ Use the Gradle wrapper from the repo root.
   - `./gradlew :payroll-domain:test --tests 'fully.qualified.TestClassName'`
   - `./gradlew :payroll-domain:test --tests 'fully.qualified.TestClassName.testMethodName'`
 
+### Supply-chain integrity (dependency verification + locking)
+
+This repo uses:
+- Gradle dependency verification metadata at `gradle/verification-metadata.xml`
+- Dependency lockfiles (`gradle.lockfile` in the repo root and per-module `*/gradle.lockfile`)
+
+CI runs Gradle with `--locked-dependencies`, so changing/adding dependencies requires updating these files.
+
+When you add/upgrade/remove dependencies, refresh both verification metadata and lockfiles from the repo root:
+- `./scripts/gradlew-java21.sh --no-daemon --write-verification-metadata sha256 --write-locks check`
+
 ### Running Spring Boot services
 
 Each deployable service applies the Spring Boot Gradle plugin and is runnable via `bootRun` from the repo root:

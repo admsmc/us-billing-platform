@@ -13,7 +13,7 @@ import org.springframework.web.client.getForObject
 import java.time.LocalDate
 
 interface TaxClient {
-    fun getTaxContext(employerId: EmployerId, asOfDate: LocalDate, localityCodes: List<String> = emptyList()): TaxContext
+    fun getTaxContext(employerId: EmployerId, asOfDate: LocalDate, residentState: String? = null, workState: String? = null, localityCodes: List<String> = emptyList()): TaxContext
 }
 
 @ConfigurationProperties(prefix = "tax")
@@ -34,10 +34,14 @@ class HttpTaxClient(
     private val restTemplate: RestTemplate,
 ) : TaxClient {
 
-    override fun getTaxContext(employerId: EmployerId, asOfDate: LocalDate, localityCodes: List<String>): TaxContext {
-        val localityParam = if (localityCodes.isEmpty()) "" else localityCodes.joinToString("&") { "locality=$it" }
-        val sep = if (localityParam.isEmpty()) "" else "&"
-        val url = "${props.baseUrl}/employers/${employerId.value}/tax-context?asOf=$asOfDate$sep$localityParam"
+    override fun getTaxContext(employerId: EmployerId, asOfDate: LocalDate, residentState: String?, workState: String?, localityCodes: List<String>): TaxContext {
+        val params = ArrayList<String>(3 + localityCodes.size)
+        params.add("asOf=$asOfDate")
+        if (!residentState.isNullOrBlank()) params.add("residentState=$residentState")
+        if (!workState.isNullOrBlank()) params.add("workState=$workState")
+        localityCodes.forEach { code -> params.add("locality=$code") }
+
+        val url = "${props.baseUrl}/employers/${employerId.value}/tax-context?" + params.joinToString("&")
 
         val dto = restTemplate.getForObject<TaxContextDto>(url)
             ?: error("Tax service returned null TaxContext for employer=${employerId.value} asOf=$asOfDate")

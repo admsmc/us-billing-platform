@@ -22,11 +22,20 @@ dependencies {
     implementation(project(":payroll-domain"))
     implementation(project(":labor-api"))
     implementation(project(":web-core"))
+    implementation(project(":tenancy-core"))
 
     // Spring Boot web + JDBC for labor-service HTTP API and DB access.
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("io.micrometer:micrometer-registry-prometheus")
+
+    // Tracing (OTLP)
+    implementation("io.micrometer:micrometer-tracing-bridge-otel")
+    runtimeOnly("io.opentelemetry:opentelemetry-exporter-otlp")
+
+    // Structured JSON logs
+    runtimeOnly("net.logstash.logback:logstash-logback-encoder:8.0")
 
     // Flyway for managing Postgres schema migrations (including labor_standard).
     implementation("org.flywaydb:flyway-core:11.19.0")
@@ -73,4 +82,36 @@ tasks.register<JavaExec>("runLaborStandardsImporter") {
         ?: System.getenv("LABOR_YEAR")
         ?: "2025"
     args(yearProp)
+}
+
+tasks.register<JavaExec>("validateLaborContentMetadata") {
+    group = "verification"
+    description = "Validate *.metadata.json sidecars for curated labor artifacts under labor-service/src/main/resources."
+
+    // Prefer running from repo root so resolution works in CI.
+    workingDir = rootProject.projectDir
+
+    classpath = sourceSets.getByName("main").runtimeClasspath
+    mainClass.set("com.example.uspayroll.labor.tools.LaborContentMetadataValidatorCli")
+}
+
+tasks.register<JavaExec>("validateGeneratedLaborArtifacts") {
+    group = "verification"
+    description = "Validate that generated labor standards JSON/SQL match the CSV inputs."
+
+    // Prefer running from repo root so resolution works in CI.
+    workingDir = rootProject.projectDir
+
+    classpath = sourceSets.getByName("main").runtimeClasspath
+    mainClass.set("com.example.uspayroll.labor.tools.LaborGeneratedArtifactsValidatorCli")
+
+    val yearProp = project.findProperty("laborYear") as? String
+        ?: System.getenv("LABOR_YEAR")
+        ?: "2025"
+    args(yearProp)
+}
+
+tasks.named("check") {
+    dependsOn("validateLaborContentMetadata")
+    dependsOn("validateGeneratedLaborArtifacts")
 }

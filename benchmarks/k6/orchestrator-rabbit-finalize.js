@@ -33,6 +33,18 @@ const e2eMs = new Trend('payrun_finalize_rabbit_e2e_ms');
 const e2eMsPerEmployee = new Trend('payrun_finalize_rabbit_e2e_ms_per_employee');
 const employeesPerSec = new Trend('payrun_finalize_rabbit_employees_per_sec');
 
+// Diagnostics to reveal when results are dominated by client polling cadence.
+const statusPolls = new Trend('payrun_finalize_rabbit_status_polls');
+const pollSleepMs = new Trend('payrun_finalize_rabbit_poll_sleep_ms');
+// Ratio of time spent sleeping between polls vs total client-observed e2e time.
+// Values near 1.0 indicate the benchmark is dominated by polling cadence rather than actual work.
+const pollQuantizationRatio = new Trend('payrun_finalize_rabbit_poll_quantization_ratio');
+
+// Server-derived finalize timing (requires orchestrator status endpoint to return finalizeE2eMs).
+const serverE2eMs = new Trend('payrun_finalize_rabbit_server_e2e_ms');
+const serverE2eMsPerEmployee = new Trend('payrun_finalize_rabbit_server_e2e_ms_per_employee');
+const serverEmployeesPerSec = new Trend('payrun_finalize_rabbit_server_employees_per_sec');
+
 export const options = {
   scenarios: {
     once: {
@@ -99,10 +111,19 @@ export default function () {
   const employerId = env('EMPLOYER_ID', 'EMP-BENCH');
   const payPeriodId = env('PAY_PERIOD_ID', '2025-01-BW1');
 
+  // IMPORTANT: pay_run has a unique constraint on (employer_id, pay_period_id, run_type, run_sequence).
+  // If run_sequence is constant, repeated benchmark runs can reuse an old payrun, which makes server-side
+  // finalize timing meaningless. Make runSequence unique by default.
+  const runSequenceEnv = env('RUN_SEQUENCE', '');
+  const runSequence = runSequenceEnv && runSequenceEnv.length > 0
+    ? Number(runSequenceEnv)
+    : (Math.floor(Date.now() / 1000) + __ITER);
+
   const employeeIds = buildEmployeeIds();
   const employeeCount = employeeIds.length;
 
   const pollIntervalMs = Number(env('POLL_INTERVAL_MS', '250'));
+  const pollStrategy = env('POLL_STRATEGY', 'fixed'); // fixed|adaptive
   const maxWaitSeconds = Number(env('MAX_WAIT_SECONDS', '1800')); // 30m default
 
   const startedAt = nowMs();
@@ -117,6 +138,8 @@ export default function () {
 
   const startPayload = {
     payPeriodId,
+    // Keep run type default (REGULAR), but vary sequence so each run creates a new payrun.
+    runSequence,
     employeeIds,
     idempotencyKey: randId('k6-rabbit'),
   };
@@ -146,7 +169,25 @@ export default function () {
   const deadlineMs = startedAt + maxWaitSeconds * 1000;
   let finalStatus = null;
 
+  let polls = 0;
+  let totalSleepMs = 0;
+  let observedServerE2eMs = null;
+
+  function effectivePollIntervalMs(pollsSoFar) {
+    if (pollStrategy !== 'adaptive') return pollIntervalMs;
+
+    // Adaptive strategy: reduce quantization for fast runs while still avoiding a tight loop.
+    // - first ~0.5s: 25ms
+    // - next ~2s: 100ms
+    // - then: configured pollIntervalMs
+    if (pollsSoFar < 20) return Math.min(25, pollIntervalMs);
+    if (pollsSoFar < 40) return Math.min(100, pollIntervalMs);
+    return pollIntervalMs;
+  }
+
   while (nowMs() < deadlineMs) {
+    polls += 1;
+
     const statusUrl = `${orchUrl}/employers/${employerId}/payruns/${payRunId}?failureLimit=25`;
     const statusRes = http.get(statusUrl, { headers: { 'Accept': 'application/json' } });
 
@@ -157,10 +198,19 @@ export default function () {
     if (statusRes.status === 200) {
       const statusJson = statusRes.json();
       finalStatus = statusJson.status;
+
+      // If orchestrator provides server-side finalize timing, capture it.
+      // This avoids client polling artifacts when comparing worker replica counts.
+      if (statusJson.finalizeE2eMs !== undefined && statusJson.finalizeE2eMs !== null) {
+        observedServerE2eMs = Number(statusJson.finalizeE2eMs);
+      }
+
       if (isTerminal(finalStatus)) break;
     }
 
-    sleep(pollIntervalMs / 1000.0);
+    const sleepMs = effectivePollIntervalMs(polls);
+    totalSleepMs += sleepMs;
+    sleep(sleepMs / 1000.0);
   }
 
   const elapsed = nowMs() - startedAt;
@@ -168,6 +218,20 @@ export default function () {
   if (employeeCount > 0) {
     e2eMsPerEmployee.add(elapsed / employeeCount);
     employeesPerSec.add(employeeCount / (elapsed / 1000.0));
+  }
+
+  // Poll diagnostics
+  statusPolls.add(polls);
+  pollSleepMs.add(totalSleepMs);
+  if (elapsed > 0) {
+    pollQuantizationRatio.add(totalSleepMs / elapsed);
+  }
+
+  // Server-side finalize timing (if available)
+  if (observedServerE2eMs !== null && employeeCount > 0) {
+    serverE2eMs.add(observedServerE2eMs);
+    serverE2eMsPerEmployee.add(observedServerE2eMs / employeeCount);
+    serverEmployeesPerSec.add(employeeCount / (observedServerE2eMs / 1000.0));
   }
 
   check(null, {

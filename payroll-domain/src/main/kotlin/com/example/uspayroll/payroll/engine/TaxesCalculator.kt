@@ -114,9 +114,132 @@ object TaxesCalculator {
             return false
         }
 
-        fun applyFlatTax(rule: TaxRule.FlatRateTax, descriptionPrefix: String, target: MutableList<TaxLine>, trace: MutableList<TraceStep>?) {
-            val basisMoney = bases[rule.basis] ?: return
+        fun TaxRule.localityFilterOrNull(): String? = when (this) {
+            is TaxRule.FlatRateTax -> localityFilter
+            is TaxRule.BracketedIncomeTax -> localityFilter
+            is TaxRule.WageBracketTax -> localityFilter
+        }
 
+        fun normalizeLocalityKey(raw: String): String = raw.trim().uppercase()
+
+        fun resolveLocalityAllocationsForLocals(localityKeys: List<String>): Map<String, Double> {
+            val explicit = input.timeSlice.localityAllocations
+                .mapNotNull { (k, v) ->
+                    val key = k.trim()
+                    if (key.isBlank()) return@mapNotNull null
+                    val value = v
+                    if (!value.isFinite() || value <= 0.0) return@mapNotNull null
+                    normalizeLocalityKey(key) to value
+                }
+                .toMap()
+
+            if (localityKeys.isEmpty()) return emptyMap()
+
+            if (explicit.isEmpty()) {
+                if (localityKeys.size == 1) {
+                    return mapOf(localityKeys.single() to 1.0)
+                }
+                val even = 1.0 / localityKeys.size.toDouble()
+                return localityKeys.associateWith { even }
+            }
+
+            val filtered = localityKeys
+                .mapNotNull { key -> explicit[key]?.let { key to it } }
+                .toMap()
+
+            val sum = filtered.values.sum()
+            if (sum <= 0.0) return emptyMap()
+
+            // If the caller provided fractions summing to > 1, normalize down.
+            val scale = if (sum > 1.0) 1.0 / sum else 1.0
+            return filtered.mapValues { (_, v) -> v * scale }
+        }
+
+        fun allocateCentsByLocality(totalCents: Long, allocations: Map<String, Double>): Map<String, Long> {
+            if (totalCents <= 0L || allocations.isEmpty()) return emptyMap()
+
+            val sortedKeys = allocations.keys.sorted()
+            val scaledSum = sortedKeys.sumOf { allocations.getValue(it) }
+            if (scaledSum <= 0.0) return emptyMap()
+
+            val targetTotal = (totalCents * minOf(1.0, scaledSum)).toLong()
+
+            data class Part(val key: String, val floor: Long, val remainder: Double)
+
+            val parts = sortedKeys.map { key ->
+                val fraction = allocations.getValue(key)
+                val raw = totalCents.toDouble() * fraction
+                val floor = raw.toLong()
+                Part(key = key, floor = floor, remainder = raw - floor.toDouble())
+            }
+
+            val floorSum = parts.sumOf { it.floor }
+            val leftover = (targetTotal - floorSum).coerceAtLeast(0L)
+
+            val ranked = parts.sortedWith(compareByDescending<Part> { it.remainder }.thenBy { it.key })
+
+            val out = LinkedHashMap<String, Long>(parts.size)
+            for (p in parts) out[p.key] = p.floor
+
+            if (ranked.isNotEmpty() && leftover > 0L) {
+                val maxIterations = leftover.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+                for (i in 0 until maxIterations) {
+                    val key = ranked[i % ranked.size].key
+                    out[key] = (out[key] ?: 0L) + 1L
+                }
+            }
+
+            return out
+        }
+
+        val employeeRules = input.taxContext.federal + input.taxContext.state + input.taxContext.local
+
+        val localKeys = employeeRules
+            .asSequence()
+            .filter { it.jurisdiction.type == TaxJurisdictionType.LOCAL }
+            .mapNotNull { it.localityFilterOrNull() }
+            .map(::normalizeLocalityKey)
+            .distinct()
+            .sorted()
+            .toList()
+
+        val localityAllocations = resolveLocalityAllocationsForLocals(localKeys)
+        val allocatedBasisCache = HashMap<TaxBasis, Map<String, Long>>()
+
+        fun basisMoneyForRule(rule: TaxRule): Money? {
+            val base = bases[rule.basis] ?: return null
+
+            if (rule.jurisdiction.type != TaxJurisdictionType.LOCAL) {
+                return base
+            }
+
+            val key = rule.localityFilterOrNull()?.let(::normalizeLocalityKey) ?: return base
+            val fraction = localityAllocations[key] ?: return Money(0L, base.currency)
+
+            if (fraction <= 0.0) return Money(0L, base.currency)
+
+            val centsByLocality = allocatedBasisCache.getOrPut(rule.basis) {
+                allocateCentsByLocality(base.amount, localityAllocations)
+            }
+            val cents = centsByLocality[key] ?: 0L
+            return Money(cents, base.currency)
+        }
+
+        fun isFederalIncomeTaxRule(rule: TaxRule): Boolean {
+            if (rule.jurisdiction.type != TaxJurisdictionType.FEDERAL) return false
+            return rule.basis == TaxBasis.Gross || rule.basis == TaxBasis.FederalTaxable
+        }
+
+        var remainingEmployeeAdditionalWithholdingCents: Long = input.employeeSnapshot.additionalWithholdingPerPeriod?.amount ?: 0L
+
+        fun applyFlatTax(
+            rule: TaxRule.FlatRateTax,
+            descriptionPrefix: String,
+            basisMoney: Money,
+            target: MutableList<TaxLine>,
+            trace: MutableList<TraceStep>?,
+            employeeAdditionalWithholdingCents: Long = 0L,
+        ) {
             if (shouldSkipFicaOrMedicare(rule.basis, basisMoney)) {
                 return
             }
@@ -134,8 +257,7 @@ object TaxesCalculator {
                 basisMoney.amount
             }
 
-            val perEmployeeExtra = input.employeeSnapshot.additionalWithholdingPerPeriod
-            val amountCents = (taxableCents * rule.rate.value).toLong() + (perEmployeeExtra?.amount ?: 0L)
+            val amountCents = (taxableCents * rule.rate.value).toLong() + employeeAdditionalWithholdingCents
             if (amountCents == 0L) return
 
             val taxedBasis = Money(taxableCents, basisMoney.currency)
@@ -163,14 +285,20 @@ object TaxesCalculator {
                         amount = taxAmount,
                     ),
                 )
-                if (perEmployeeExtra != null) {
-                    trace.add(TraceStep.AdditionalWithholdingApplied(amount = perEmployeeExtra))
+                if (employeeAdditionalWithholdingCents != 0L) {
+                    trace.add(TraceStep.AdditionalWithholdingApplied(amount = Money(employeeAdditionalWithholdingCents, basisMoney.currency)))
                 }
             }
         }
 
-        fun applyBracketedTax(rule: TaxRule.BracketedIncomeTax, descriptionPrefix: String, target: MutableList<TaxLine>, trace: MutableList<TraceStep>?) {
-            val basisMoney = bases[rule.basis] ?: return
+        fun applyBracketedTax(
+            rule: TaxRule.BracketedIncomeTax,
+            descriptionPrefix: String,
+            basisMoney: Money,
+            target: MutableList<TaxLine>,
+            trace: MutableList<TraceStep>?,
+            employeeAdditionalWithholdingCents: Long = 0L,
+        ) {
             if (shouldSkipFicaOrMedicare(rule.basis, basisMoney)) {
                 return
             }
@@ -217,11 +345,7 @@ object TaxesCalculator {
             val (bracketTax, brackets) = computeBracketedTax(basisMoney, rule)
 
             val ruleExtra = rule.additionalWithholding
-            val perEmployeeExtra = input.employeeSnapshot.additionalWithholdingPerPeriod
-
-            val totalTaxCents = bracketTax.amount +
-                (ruleExtra?.amount ?: 0L) +
-                (perEmployeeExtra?.amount ?: 0L)
+            val totalTaxCents = bracketTax.amount + (ruleExtra?.amount ?: 0L) + employeeAdditionalWithholdingCents
 
             if (totalTaxCents == 0L) return
 
@@ -247,14 +371,20 @@ object TaxesCalculator {
                         amount = taxAmount,
                     ),
                 )
-                if (perEmployeeExtra != null) {
-                    trace.add(TraceStep.AdditionalWithholdingApplied(amount = perEmployeeExtra))
+                if (employeeAdditionalWithholdingCents != 0L) {
+                    trace.add(TraceStep.AdditionalWithholdingApplied(amount = Money(employeeAdditionalWithholdingCents, basisMoney.currency)))
                 }
             }
         }
 
-        fun applyWageBracketTax(rule: TaxRule.WageBracketTax, descriptionPrefix: String, target: MutableList<TaxLine>, trace: MutableList<TraceStep>?) {
-            val basisMoney = bases[rule.basis] ?: return
+        fun applyWageBracketTax(
+            rule: TaxRule.WageBracketTax,
+            descriptionPrefix: String,
+            basisMoney: Money,
+            target: MutableList<TaxLine>,
+            trace: MutableList<TraceStep>?,
+            employeeAdditionalWithholdingCents: Long = 0L,
+        ) {
             if (shouldSkipFicaOrMedicare(rule.basis, basisMoney)) {
                 return
             }
@@ -266,8 +396,7 @@ object TaxesCalculator {
                 amount <= upper
             } ?: return
 
-            val perEmployeeExtra = input.employeeSnapshot.additionalWithholdingPerPeriod
-            val totalTaxCents = row.tax.amount + (perEmployeeExtra?.amount ?: 0L)
+            val totalTaxCents = row.tax.amount + employeeAdditionalWithholdingCents
             if (totalTaxCents == 0L) return
 
             val taxAmount = Money(totalTaxCents, basisMoney.currency)
@@ -292,13 +421,11 @@ object TaxesCalculator {
                         amount = taxAmount,
                     ),
                 )
-                if (perEmployeeExtra != null) {
-                    trace.add(TraceStep.AdditionalWithholdingApplied(amount = perEmployeeExtra))
+                if (employeeAdditionalWithholdingCents != 0L) {
+                    trace.add(TraceStep.AdditionalWithholdingApplied(amount = Money(employeeAdditionalWithholdingCents, basisMoney.currency)))
                 }
             }
         }
-
-        val employeeRules = input.taxContext.federal + input.taxContext.state + input.taxContext.local
 
         val employeeTaxes = ArrayList<TaxLine>(employeeRules.size)
         val employerTaxes = ArrayList<TaxLine>(input.taxContext.employerSpecific.size)
@@ -311,18 +438,32 @@ object TaxesCalculator {
         }
 
         for (rule in employeeRules) {
+            val basisMoney = basisMoneyForRule(rule) ?: continue
+            if (basisMoney.amount == 0L) continue
+
+            val extraCents = if (remainingEmployeeAdditionalWithholdingCents != 0L && isFederalIncomeTaxRule(rule)) {
+                val applied = remainingEmployeeAdditionalWithholdingCents
+                remainingEmployeeAdditionalWithholdingCents = 0L
+                applied
+            } else {
+                0L
+            }
+
             when (rule) {
-                is TaxRule.FlatRateTax -> applyFlatTax(rule, "Employee tax", employeeTaxes, traceSteps)
-                is TaxRule.BracketedIncomeTax -> applyBracketedTax(rule, "Employee tax", employeeTaxes, traceSteps)
-                is TaxRule.WageBracketTax -> applyWageBracketTax(rule, "Employee tax", employeeTaxes, traceSteps)
+                is TaxRule.FlatRateTax -> applyFlatTax(rule, "Employee tax", basisMoney, employeeTaxes, traceSteps, employeeAdditionalWithholdingCents = extraCents)
+                is TaxRule.BracketedIncomeTax -> applyBracketedTax(rule, "Employee tax", basisMoney, employeeTaxes, traceSteps, employeeAdditionalWithholdingCents = extraCents)
+                is TaxRule.WageBracketTax -> applyWageBracketTax(rule, "Employee tax", basisMoney, employeeTaxes, traceSteps, employeeAdditionalWithholdingCents = extraCents)
             }
         }
 
         for (rule in input.taxContext.employerSpecific) {
+            val basisMoney = basisMoneyForRule(rule) ?: continue
+            if (basisMoney.amount == 0L) continue
+
             when (rule) {
-                is TaxRule.FlatRateTax -> applyFlatTax(rule, "Employer tax", employerTaxes, traceSteps)
-                is TaxRule.BracketedIncomeTax -> applyBracketedTax(rule, "Employer tax", employerTaxes, traceSteps)
-                is TaxRule.WageBracketTax -> applyWageBracketTax(rule, "Employer tax", employerTaxes, traceSteps)
+                is TaxRule.FlatRateTax -> applyFlatTax(rule, "Employer tax", basisMoney, employerTaxes, traceSteps)
+                is TaxRule.BracketedIncomeTax -> applyBracketedTax(rule, "Employer tax", basisMoney, employerTaxes, traceSteps)
+                is TaxRule.WageBracketTax -> applyWageBracketTax(rule, "Employer tax", basisMoney, employerTaxes, traceSteps)
             }
         }
 

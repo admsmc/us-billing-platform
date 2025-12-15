@@ -1,0 +1,30 @@
+{
+  "approvals": [
+    {
+      "approved_at": "2025-12-14",
+      "name": "andrewmathers",
+      "reference": "initial-metadata-standard",
+      "role": "ENGINEERING"
+    }
+  ],
+  "artifact": {
+    "media_type": "application/json",
+    "path": "tax-content/src/main/resources/tax-config/example-federal-2025.json",
+    "sha256": "29e5a62395f2f2bfd57626296ccecc20bea81b91661688dbffe3994c6ae36331"
+  },
+  "contentId": "TAX_EXAMPLE_FEDERAL_2025",
+  "coverage": {
+    "effective_from": "2025-01-01",
+    "effective_to": "9999-12-31",
+    "jurisdictions": null,
+    "year": 2025
+  },
+  "domain": "tax",
+  "schemaVersion": 1,
+  "source": {
+    "checksum_sha256": null,
+    "id": "SRC_TAX_EXAMPLE_FEDERAL_2025",
+    "kind": "INTERNAL_OR_CURATED_SOURCE",
+    "revision_date": "2025-12-14"
+  }
+}

@@ -23,6 +23,8 @@ data class PaymentBatchRow(
     val batchId: String,
     val payRunId: String,
     val status: PaymentBatchStatus,
+    val provider: String,
+    val providerBatchRef: String?,
     val totalPayments: Int,
     val settledPayments: Int,
     val failedPayments: Int,
@@ -48,6 +50,7 @@ class PaymentBatchRepository(
     fun findByBatchId(employerId: String, batchId: String): PaymentBatchRow? = jdbcTemplate.query(
         """
             SELECT employer_id, batch_id, pay_run_id, status,
+                   provider, provider_batch_ref,
                    total_payments, settled_payments, failed_payments,
                    attempts, next_attempt_at, last_error,
                    locked_by, locked_at,
@@ -66,6 +69,8 @@ class PaymentBatchRepository(
                 batchId = rs.getString("batch_id"),
                 payRunId = rs.getString("pay_run_id"),
                 status = PaymentBatchStatus.valueOf(rs.getString("status")),
+                provider = rs.getString("provider"),
+                providerBatchRef = rs.getString("provider_batch_ref"),
                 totalPayments = rs.getInt("total_payments"),
                 settledPayments = rs.getInt("settled_payments"),
                 failedPayments = rs.getInt("failed_payments"),
@@ -97,7 +102,7 @@ class PaymentBatchRepository(
      * Creates a new batch and mapping for a payrun if one does not already exist.
      */
     @Transactional
-    fun getOrCreateBatchForPayRun(employerId: String, payRunId: String, now: Instant = Instant.now()): String {
+    fun getOrCreateBatchForPayRun(employerId: String, payRunId: String, provider: String, now: Instant = Instant.now()): String {
         val existing = findBatchIdForPayRun(employerId, payRunId)
         if (existing != null) return existing
 
@@ -113,16 +118,18 @@ class PaymentBatchRepository(
                     INSERT INTO payment_batch (
                       employer_id, batch_id, pay_run_id,
                       status,
+                      provider, provider_batch_ref,
                       total_payments, settled_payments, failed_payments,
                       attempts, next_attempt_at, last_error,
                       locked_by, locked_at,
                       created_at, updated_at
-                    ) VALUES (?, ?, ?, ?, 0, 0, 0, 0, NULL, NULL, NULL, NULL, ?, ?)
+                    ) VALUES (?, ?, ?, ?, ?, NULL, 0, 0, 0, 0, NULL, NULL, NULL, NULL, ?, ?)
                     """.trimIndent(),
                     employerId,
                     batchId,
                     payRunId,
                     PaymentBatchStatus.CREATED.name,
+                    provider,
                     ts,
                     ts,
                 )
@@ -151,17 +158,19 @@ class PaymentBatchRepository(
                 INSERT INTO payment_batch (
                   employer_id, batch_id, pay_run_id,
                   status,
+                  provider, provider_batch_ref,
                   total_payments, settled_payments, failed_payments,
                   attempts, next_attempt_at, last_error,
                   locked_by, locked_at,
                   created_at, updated_at
-                ) VALUES (?, ?, ?, ?, 0, 0, 0, 0, NULL, NULL, NULL, NULL, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, NULL, 0, 0, 0, 0, NULL, NULL, NULL, NULL, ?, ?)
                 ON CONFLICT DO NOTHING
             """.trimIndent(),
             employerId,
             batchId,
             payRunId,
             PaymentBatchStatus.CREATED.name,
+            provider,
             ts,
             ts,
         )
@@ -224,6 +233,20 @@ class PaymentBatchRepository(
         ).firstOrNull() ?: BatchCounts(0, 0, 0)
     }
 
+    fun setProviderBatchRefIfMissing(employerId: String, batchId: String, providerBatchRef: String): Int {
+        return jdbcTemplate.update(
+            """
+            UPDATE payment_batch
+            SET provider_batch_ref = COALESCE(provider_batch_ref, ?),
+                updated_at = CURRENT_TIMESTAMP
+            WHERE employer_id = ? AND batch_id = ?
+            """.trimIndent(),
+            providerBatchRef,
+            employerId,
+            batchId,
+        )
+    }
+
     fun reconcileBatch(employerId: String, batchId: String): PaymentBatchRow? {
         val batch = findByBatchId(employerId, batchId) ?: return null
         val counts = computeCountsForBatch(employerId, batchId)
@@ -272,6 +295,7 @@ class PaymentBatchRepository(
         val rows = jdbcTemplate.query(
             """
             SELECT employer_id, batch_id, pay_run_id, status,
+                   provider, provider_batch_ref,
                    total_payments, settled_payments, failed_payments,
                    attempts, next_attempt_at, last_error,
                    locked_by, locked_at,
@@ -295,6 +319,8 @@ class PaymentBatchRepository(
                     batchId = rs.getString("batch_id"),
                     payRunId = rs.getString("pay_run_id"),
                     status = PaymentBatchStatus.valueOf(rs.getString("status")),
+                    provider = rs.getString("provider"),
+                    providerBatchRef = rs.getString("provider_batch_ref"),
                     totalPayments = rs.getInt("total_payments"),
                     settledPayments = rs.getInt("settled_payments"),
                     failedPayments = rs.getInt("failed_payments"),

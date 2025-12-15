@@ -52,10 +52,11 @@ class PaymentsStatusKafkaConsumer(
             return
         }
 
-        val first = inbox.tryMarkProcessed(props.consumerName, eventId)
-        if (!first) return
+        val processed = inbox.runIfFirst(props.consumerName, eventId) {
+            val evt = objectMapper.treeToValue(json, PaycheckPaymentStatusChangedEvent::class.java)
+            projectionService.applyPaymentStatusChanged(evt)
+        }
 
-        val evt = objectMapper.treeToValue(json, PaycheckPaymentStatusChangedEvent::class.java)
-        projectionService.applyPaymentStatusChanged(evt)
+        if (processed == null) return
     }
 }

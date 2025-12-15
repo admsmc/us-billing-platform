@@ -1,0 +1,30 @@
+{
+  "approvals": [
+    {
+      "approved_at": "2025-12-14",
+      "name": "andrewmathers",
+      "reference": "initial-metadata-standard",
+      "role": "ENGINEERING"
+    }
+  ],
+  "artifact": {
+    "media_type": "text/csv",
+    "path": "labor-service/src/main/resources/labor-standards-2025.csv",
+    "sha256": "f798b5a6e41ea30621af8c9db8ee71ab6c90d95781b0a1953b242e19319eb68a"
+  },
+  "contentId": "LABOR_LABOR_STANDARDS_2025",
+  "coverage": {
+    "effective_from": "2025-01-01",
+    "effective_to": "9999-12-31",
+    "jurisdictions": null,
+    "year": 2025
+  },
+  "domain": "labor",
+  "schemaVersion": 1,
+  "source": {
+    "checksum_sha256": null,
+    "id": "SRC_LABOR_LABOR_STANDARDS_2025",
+    "kind": "INTERNAL_OR_CURATED_SOURCE",
+    "revision_date": "2025-12-14"
+  }
+}

@@ -51,6 +51,9 @@ data class PayRunRecord(
     val requestedIdempotencyKey: String?,
     val leaseOwner: String?,
     val leaseExpiresAt: Instant?,
+    // Server-side finalize timing (helps avoid client polling artifacts in benchmarks).
+    val finalizeStartedAt: Instant?,
+    val finalizeCompletedAt: Instant?,
 )
 
 data class PayRunItemRecord(
@@ -61,6 +64,8 @@ data class PayRunItemRecord(
     val paycheckId: String?,
     val attemptCount: Int,
     val lastError: String?,
+    /** Optional JSON payload describing explicit earning overrides (off-cycle). */
+    val earningOverridesJson: String? = null,
 )
 
 data class PayRunStatusCounts(

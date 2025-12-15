@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  security-events: write
 
 jobs:
   trivy-fs:
@@ -15,11 +16,109 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Trivy filesystem scan
+      - name: Trivy filesystem scan (SARIF)
         uses: aquasecurity/trivy-action@0.28.0
         with:
           scan-type: fs
           ignore-unfixed: true
           severity: CRITICAL,HIGH
-          format: table
+          format: sarif
+          output: trivy-fs.sarif
           exit-code: '1'
+
+      - name: Upload Trivy SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-fs.sarif
+
+      - name: Upload Trivy artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-fs
+          path: trivy-fs.sarif
+
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: TruffleHog scan (PR diff)
+        if: github.event_name == 'pull_request'
+        uses: trufflesecurity/trufflehog@v3.90.8
+        with:
+          path: .
+          base: ${{ github.event.pull_request.base.sha }}
+          head: ${{ github.event.pull_request.head.sha }}
+          extra_args: --only-verified
+
+      - name: TruffleHog scan (full repo)
+        if: github.event_name != 'pull_request'
+        uses: trufflesecurity/trufflehog@v3.90.8
+        with:
+          path: .
+          extra_args: --only-verified
+
+  dependency-vuln:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: OWASP Dependency-Check (aggregate)
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: ./gradlew --no-daemon dependencyCheckAggregate
+
+      - name: Upload Dependency-Check reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check
+          path: build/reports/dependency-check/**
+
+  sbom:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Generate CycloneDX SBOMs
+        run: ./gradlew --no-daemon sbomAll
+
+      - name: Validate SBOMs
+        run: |
+          set -euo pipefail
+          files=$(find . -path '*/build/reports/sbom/*.json' -type f)
+          if [ -z "$files" ]; then
+            echo "No SBOMs found"
+            exit 1
+          fi
+          for f in $files; do
+            docker run --rm -v "${PWD}:/src" -w /src cyclonedx/cyclonedx-cli:0.27.2 validate --input-file "$f"
+          done
+
+      - name: Upload SBOM artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sboms
+          path: "**/build/reports/sbom/*.json"

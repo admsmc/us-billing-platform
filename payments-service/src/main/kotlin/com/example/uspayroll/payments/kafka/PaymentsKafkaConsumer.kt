@@ -68,8 +68,12 @@ class PaymentsKafkaConsumer(
             return
         }
 
-        val first = inbox.tryMarkProcessed(props.consumerName, eventId)
-        if (!first) {
+        val processed = inbox.runIfFirst(props.consumerName, eventId) {
+            val evt = objectMapper.treeToValue(json, PaycheckPaymentRequestedEvent::class.java)
+            intakeService.handlePaymentRequested(evt)
+        }
+
+        if (processed == null) {
             logger.info(
                 "kafka.event.duplicate_ignored consumer={} event_id={} topic={} partition={} offset={} type={}",
                 props.consumerName,
@@ -79,10 +83,6 @@ class PaymentsKafkaConsumer(
                 record.offset(),
                 eventType,
             )
-            return
         }
-
-        val evt = objectMapper.treeToValue(json, PaycheckPaymentRequestedEvent::class.java)
-        intakeService.handlePaymentRequested(evt)
     }
 }

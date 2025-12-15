@@ -25,7 +25,8 @@ class PayRunRepository(
             SELECT employer_id, pay_run_id, pay_period_id, run_type, run_sequence, status,
                    approval_status, payment_status,
                    requested_idempotency_key,
-                   lease_owner, lease_expires_at_epoch_ms
+                   lease_owner, lease_expires_at_epoch_ms,
+                   finalize_started_at, finalize_completed_at
             FROM pay_run
             WHERE employer_id = ? AND status = ?
             ORDER BY updated_at
@@ -34,6 +35,9 @@ class PayRunRepository(
             { rs, _ ->
                 val leaseEpoch = rs.getLong("lease_expires_at_epoch_ms")
                 val leaseInstant = if (rs.wasNull()) null else Instant.ofEpochMilli(leaseEpoch)
+
+                val finalizeStartedAt = rs.getTimestamp("finalize_started_at")?.toInstant()
+                val finalizeCompletedAt = rs.getTimestamp("finalize_completed_at")?.toInstant()
 
                 PayRunRecord(
                     employerId = rs.getString("employer_id"),
@@ -47,6 +51,8 @@ class PayRunRepository(
                     requestedIdempotencyKey = rs.getString("requested_idempotency_key"),
                     leaseOwner = rs.getString("lease_owner"),
                     leaseExpiresAt = leaseInstant,
+                    finalizeStartedAt = finalizeStartedAt,
+                    finalizeCompletedAt = finalizeCompletedAt,
                 )
             },
             employerId,
@@ -62,7 +68,8 @@ class PayRunRepository(
             SELECT employer_id, pay_run_id, pay_period_id, run_type, run_sequence, status,
                    approval_status, payment_status,
                    requested_idempotency_key,
-                   lease_owner, lease_expires_at_epoch_ms
+                   lease_owner, lease_expires_at_epoch_ms,
+                   finalize_started_at, finalize_completed_at
             FROM pay_run
             WHERE status = ?
             ORDER BY updated_at
@@ -71,6 +78,9 @@ class PayRunRepository(
             { rs, _ ->
                 val leaseEpoch = rs.getLong("lease_expires_at_epoch_ms")
                 val leaseInstant = if (rs.wasNull()) null else Instant.ofEpochMilli(leaseEpoch)
+
+                val finalizeStartedAt = rs.getTimestamp("finalize_started_at")?.toInstant()
+                val finalizeCompletedAt = rs.getTimestamp("finalize_completed_at")?.toInstant()
 
                 PayRunRecord(
                     employerId = rs.getString("employer_id"),
@@ -84,6 +94,8 @@ class PayRunRepository(
                     requestedIdempotencyKey = rs.getString("requested_idempotency_key"),
                     leaseOwner = rs.getString("lease_owner"),
                     leaseExpiresAt = leaseInstant,
+                    finalizeStartedAt = finalizeStartedAt,
+                    finalizeCompletedAt = finalizeCompletedAt,
                 )
             },
             status.name,
@@ -111,8 +123,9 @@ class PayRunRepository(
                   approval_status, payment_status,
                   requested_idempotency_key,
                   lease_owner, lease_expires_at_epoch_ms,
+                  finalize_started_at, finalize_completed_at,
                   created_at, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, CURRENT_TIMESTAMP, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
                 ON CONFLICT DO NOTHING
             """.trimIndent(),
             employerId,
@@ -159,13 +172,17 @@ class PayRunRepository(
             SELECT employer_id, pay_run_id, pay_period_id, run_type, run_sequence, status,
                    approval_status, payment_status,
                    requested_idempotency_key,
-                   lease_owner, lease_expires_at_epoch_ms
+                   lease_owner, lease_expires_at_epoch_ms,
+                   finalize_started_at, finalize_completed_at
             FROM pay_run
             WHERE employer_id = ? AND pay_run_id = ?
         """.trimIndent(),
         { rs, _ ->
             val leaseEpoch = rs.getLong("lease_expires_at_epoch_ms")
             val leaseInstant = if (rs.wasNull()) null else Instant.ofEpochMilli(leaseEpoch)
+
+            val finalizeStartedAt = rs.getTimestamp("finalize_started_at")?.toInstant()
+            val finalizeCompletedAt = rs.getTimestamp("finalize_completed_at")?.toInstant()
 
             PayRunRecord(
                 employerId = rs.getString("employer_id"),
@@ -179,6 +196,8 @@ class PayRunRepository(
                 requestedIdempotencyKey = rs.getString("requested_idempotency_key"),
                 leaseOwner = rs.getString("lease_owner"),
                 leaseExpiresAt = leaseInstant,
+                finalizeStartedAt = finalizeStartedAt,
+                finalizeCompletedAt = finalizeCompletedAt,
             )
         },
         employerId,
@@ -190,7 +209,8 @@ class PayRunRepository(
             SELECT employer_id, pay_run_id, pay_period_id, run_type, run_sequence, status,
                    approval_status, payment_status,
                    requested_idempotency_key,
-                   lease_owner, lease_expires_at_epoch_ms
+                   lease_owner, lease_expires_at_epoch_ms,
+                   finalize_started_at, finalize_completed_at
             FROM pay_run
             WHERE employer_id = ? AND pay_period_id = ? AND run_type = ? AND run_sequence = ?
             LIMIT 1
@@ -198,6 +218,9 @@ class PayRunRepository(
         { rs, _ ->
             val leaseEpoch = rs.getLong("lease_expires_at_epoch_ms")
             val leaseInstant = if (rs.wasNull()) null else Instant.ofEpochMilli(leaseEpoch)
+
+            val finalizeStartedAt = rs.getTimestamp("finalize_started_at")?.toInstant()
+            val finalizeCompletedAt = rs.getTimestamp("finalize_completed_at")?.toInstant()
 
             PayRunRecord(
                 employerId = rs.getString("employer_id"),
@@ -211,6 +234,8 @@ class PayRunRepository(
                 requestedIdempotencyKey = rs.getString("requested_idempotency_key"),
                 leaseOwner = rs.getString("lease_owner"),
                 leaseExpiresAt = leaseInstant,
+                finalizeStartedAt = finalizeStartedAt,
+                finalizeCompletedAt = finalizeCompletedAt,
             )
         },
         employerId,
@@ -224,13 +249,17 @@ class PayRunRepository(
             SELECT employer_id, pay_run_id, pay_period_id, run_type, run_sequence, status,
                    approval_status, payment_status,
                    requested_idempotency_key,
-                   lease_owner, lease_expires_at_epoch_ms
+                   lease_owner, lease_expires_at_epoch_ms,
+                   finalize_started_at, finalize_completed_at
             FROM pay_run
             WHERE employer_id = ? AND requested_idempotency_key = ?
         """.trimIndent(),
         { rs, _ ->
             val leaseEpoch = rs.getLong("lease_expires_at_epoch_ms")
             val leaseInstant = if (rs.wasNull()) null else Instant.ofEpochMilli(leaseEpoch)
+
+            val finalizeStartedAt = rs.getTimestamp("finalize_started_at")?.toInstant()
+            val finalizeCompletedAt = rs.getTimestamp("finalize_completed_at")?.toInstant()
 
             PayRunRecord(
                 employerId = rs.getString("employer_id"),
@@ -244,6 +273,8 @@ class PayRunRepository(
                 requestedIdempotencyKey = rs.getString("requested_idempotency_key"),
                 leaseOwner = rs.getString("lease_owner"),
                 leaseExpiresAt = leaseInstant,
+                finalizeStartedAt = finalizeStartedAt,
+                finalizeCompletedAt = finalizeCompletedAt,
             )
         },
         employerId,
@@ -325,7 +356,9 @@ class PayRunRepository(
         val updated = jdbcTemplate.update(
             """
             UPDATE pay_run
-            SET status = ?, updated_at = CURRENT_TIMESTAMP
+            SET status = ?,
+                finalize_started_at = COALESCE(finalize_started_at, CURRENT_TIMESTAMP),
+                updated_at = CURRENT_TIMESTAMP
             WHERE employer_id = ? AND pay_run_id = ? AND status = ?
             """.trimIndent(),
             PayRunStatus.RUNNING.name,
@@ -344,6 +377,7 @@ class PayRunRepository(
             SET status = ?,
                 lease_owner = NULL,
                 lease_expires_at_epoch_ms = NULL,
+                finalize_completed_at = COALESCE(finalize_completed_at, CURRENT_TIMESTAMP),
                 updated_at = CURRENT_TIMESTAMP
             WHERE employer_id = ? AND pay_run_id = ?
               AND status IN (?, ?)
@@ -354,6 +388,70 @@ class PayRunRepository(
             PayRunStatus.QUEUED.name,
             PayRunStatus.RUNNING.name,
         )
+    }
+
+    /**
+     * Best-effort: if the payrun has reached a terminal state (as *computed* from items),
+     * we still want a stable server-side completion timestamp even if the scheduled
+     * finalizer hasn't persisted a terminal status yet.
+     */
+    fun markFinalizeCompletedIfNull(employerId: String, payRunId: String): Boolean {
+        val updated = jdbcTemplate.update(
+            """
+            UPDATE pay_run
+            SET finalize_completed_at = COALESCE(finalize_completed_at, CURRENT_TIMESTAMP),
+                updated_at = CURRENT_TIMESTAMP
+            WHERE employer_id = ? AND pay_run_id = ?
+              AND finalize_completed_at IS NULL
+            """.trimIndent(),
+            employerId,
+            payRunId,
+        )
+        return updated == 1
+    }
+
+    /**
+     * Attach a correction linkage to a pay run if unset, or verify it matches if already set.
+     */
+    fun acceptCorrectionOfPayRunId(employerId: String, payRunId: String, correctionOfPayRunId: String): Boolean {
+        // Set if NULL, or keep existing.
+        jdbcTemplate.update(
+            """
+            UPDATE pay_run
+            SET correction_of_pay_run_id = COALESCE(correction_of_pay_run_id, ?),
+                updated_at = CURRENT_TIMESTAMP
+            WHERE employer_id = ? AND pay_run_id = ?
+            """.trimIndent(),
+            correctionOfPayRunId,
+            employerId,
+            payRunId,
+        )
+
+        val stored = jdbcTemplate.query(
+            """
+            SELECT correction_of_pay_run_id
+            FROM pay_run
+            WHERE employer_id = ? AND pay_run_id = ?
+            """.trimIndent(),
+            { rs, _ -> rs.getString("correction_of_pay_run_id") },
+            employerId,
+            payRunId,
+        ).firstOrNull()
+
+        return stored == null || stored == correctionOfPayRunId
+    }
+
+    fun findCorrectionOfPayRunId(employerId: String, payRunId: String): String? {
+        return jdbcTemplate.query(
+            """
+            SELECT correction_of_pay_run_id
+            FROM pay_run
+            WHERE employer_id = ? AND pay_run_id = ?
+            """.trimIndent(),
+            { rs, _ -> rs.getString("correction_of_pay_run_id") },
+            employerId,
+            payRunId,
+        ).firstOrNull()
     }
 
     fun markApprovedIfPending(employerId: String, payRunId: String): Boolean {
@@ -401,6 +499,55 @@ class PayRunRepository(
             paymentStatus.name,
             paymentStatus.name,
             paymentStatus.name,
+        )
+        return updated == 1
+    }
+
+    fun findPayRunIdByPaymentInitiateIdempotencyKey(employerId: String, idempotencyKey: String): String? {
+        return jdbcTemplate.query(
+            """
+            SELECT pay_run_id
+            FROM pay_run
+            WHERE employer_id = ? AND payment_initiate_idempotency_key = ?
+            LIMIT 1
+            """.trimIndent(),
+            { rs, _ -> rs.getString("pay_run_id") },
+            employerId,
+            idempotencyKey,
+        ).firstOrNull()
+    }
+
+    fun findPaymentInitiateIdempotencyKeyForPayRun(employerId: String, payRunId: String): String? {
+        return jdbcTemplate.query(
+            """
+            SELECT payment_initiate_idempotency_key
+            FROM pay_run
+            WHERE employer_id = ? AND pay_run_id = ?
+            """.trimIndent(),
+            { rs, _ -> rs.getString("payment_initiate_idempotency_key") },
+            employerId,
+            payRunId,
+        ).firstOrNull()
+    }
+
+    /**
+     * Attach an idempotency key to this payrun if it is currently unset, or verify it matches if already set.
+     *
+     * Returns true when the key is accepted (set or already matches), false otherwise.
+     */
+    fun acceptPaymentInitiateIdempotencyKey(employerId: String, payRunId: String, idempotencyKey: String): Boolean {
+        val updated = jdbcTemplate.update(
+            """
+            UPDATE pay_run
+            SET payment_initiate_idempotency_key = COALESCE(payment_initiate_idempotency_key, ?),
+                updated_at = CURRENT_TIMESTAMP
+            WHERE employer_id = ? AND pay_run_id = ?
+              AND (payment_initiate_idempotency_key IS NULL OR payment_initiate_idempotency_key = ?)
+            """.trimIndent(),
+            idempotencyKey,
+            employerId,
+            payRunId,
+            idempotencyKey,
         )
         return updated == 1
     }

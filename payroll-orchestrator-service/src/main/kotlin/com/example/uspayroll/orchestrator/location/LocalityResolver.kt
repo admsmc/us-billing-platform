@@ -18,13 +18,24 @@ class MichiganLocalityResolver : LocalityResolver {
 
     override fun resolve(workState: String?, workCity: String?): List<LocalityCode> {
         if (!"MI".equals(workState, ignoreCase = true)) return emptyList()
-        val city = workCity?.trim()?.lowercase() ?: return emptyList()
+        val raw = workCity?.trim().orEmpty()
+        if (raw.isBlank()) return emptyList()
 
-        return when (city) {
-            "detroit" -> listOf(LocalityCode("DETROIT"))
-            "grand rapids" -> listOf(LocalityCode("GRAND_RAPIDS"))
-            "lansing" -> listOf(LocalityCode("LANSING"))
-            else -> emptyList()
+        val parts = raw.split(',', ';')
+            .map { it.trim().lowercase() }
+            .filter { it.isNotBlank() }
+
+        val out = ArrayList<LocalityCode>(parts.size)
+        for (city in parts) {
+            val codes = when (city) {
+                "detroit" -> listOf(LocalityCode("DETROIT"))
+                "grand rapids" -> listOf(LocalityCode("GRAND_RAPIDS"))
+                "lansing" -> listOf(LocalityCode("LANSING"))
+                else -> emptyList()
+            }
+            out.addAll(codes)
         }
+
+        return out.distinctBy { it.value }
     }
 }

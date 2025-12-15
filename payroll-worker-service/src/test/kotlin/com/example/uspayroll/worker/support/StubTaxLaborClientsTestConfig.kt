@@ -15,7 +15,7 @@ class StubTaxLaborClientsTestConfig {
     @Bean
     @Primary
     fun stubTaxClient(): TaxClient = object : TaxClient {
-        override fun getTaxContext(employerId: EmployerId, asOfDate: LocalDate, localityCodes: List<String>): TaxContext = TaxContext()
+        override fun getTaxContext(employerId: EmployerId, asOfDate: LocalDate, residentState: String?, workState: String?, localityCodes: List<String>): TaxContext = TaxContext()
     }
 
     @Bean

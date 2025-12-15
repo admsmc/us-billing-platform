@@ -34,11 +34,28 @@ object TaxConfigValidatorCli {
 
         Files.list(taxConfigDir)
             .filter { Files.isRegularFile(it) && it.toString().endsWith(".json") }
+            .filter { !it.fileName.toString().endsWith(".metadata.json") }
             .sorted()
             .forEach { path ->
                 totalFiles += 1
                 val json = Files.readString(path)
                 val file: TaxRuleFile = mapper.readValue(json)
+
+                val metaErrors = ContentMetadataValidation.validateSidecar(
+                    mapper = mapper,
+                    artifactPath = path,
+                    expectedDomain = "tax",
+                )
+                if (metaErrors.isNotEmpty()) {
+                    println("Metadata errors for config file: ${path.fileName}")
+                    metaErrors.forEach { err ->
+                        println("  - ${err.message}")
+                    }
+                    // Surface metadata errors in the same error list so the CLI fails.
+                    allErrors += metaErrors.map { err ->
+                        TaxRuleConfigValidator.ValidationError(ruleId = null, message = "metadata: ${err.message}")
+                    }
+                }
 
                 val result = TaxRuleConfigValidator.validateFile(file)
                 if (!result.isValid) {

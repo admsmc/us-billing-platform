@@ -9,6 +9,9 @@ import com.example.uspayroll.payments.persistence.PaycheckPaymentBatchOps
 import com.example.uspayroll.payments.persistence.PaycheckPaymentRepository
 import com.example.uspayroll.payments.persistence.PaymentBatchRepository
 import com.example.uspayroll.payments.persistence.PaymentBatchStatus
+import com.example.uspayroll.payments.provider.PaymentBatchSubmissionRequest
+import com.example.uspayroll.payments.provider.PaymentInstruction
+import com.example.uspayroll.payments.provider.PaymentProvider
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -32,10 +35,6 @@ data class PaymentsProcessorProperties(
     var lockOwner: String = "payments-processor",
     var lockTtlSeconds: Long = 60,
     var fixedDelayMillis: Long = 1_000L,
-    /** If true, settle immediately after submit (simulated rails). */
-    var autoSettle: Boolean = true,
-    /** Test hook: if set, any payment with this net_cents will be failed instead of settled. */
-    var failIfNetCentsEquals: Long? = null,
 )
 
 @Configuration
@@ -50,6 +49,7 @@ class PaymentsProcessor(
     private val batchRepository: PaymentBatchRepository,
     private val batchOps: PaycheckPaymentBatchOps,
     private val payments: PaycheckPaymentRepository,
+    private val paymentProvider: PaymentProvider,
     private val outbox: OutboxRepository,
     private val events: PaymentsEventsProperties,
     private val batchEvents: PaymentBatchEventPublisher,
@@ -93,25 +93,56 @@ class PaymentsProcessor(
                 enqueueStatusChanged(row.employerId, row.payRunId, row.paycheckId, row.paymentId, PaycheckPaymentLifecycleStatus.SUBMITTED, now)
             }
 
-            if (props.autoSettle) {
-                toProcess.forEach { row ->
-                    val shouldFail = props.failIfNetCentsEquals != null && row.netCents == props.failIfNetCentsEquals && row.attempts == 0
-                    val terminal = if (shouldFail) PaycheckPaymentLifecycleStatus.FAILED else PaycheckPaymentLifecycleStatus.SETTLED
+            // Delegate to the provider seam.
+            val submission = paymentProvider.submitBatch(
+                PaymentBatchSubmissionRequest(
+                    employerId = batch.employerId,
+                    payRunId = batch.payRunId,
+                    batchId = batch.batchId,
+                    payments = toProcess.map { row ->
+                        PaymentInstruction(
+                            paymentId = row.paymentId,
+                            paycheckId = row.paycheckId,
+                            employeeId = row.employeeId,
+                            payPeriodId = row.payPeriodId,
+                            currency = row.currency,
+                            netCents = row.netCents,
+                            attempts = row.attempts,
+                        )
+                    },
+                ),
+                now = now,
+            )
 
+            // Best-effort: persist provider batch ref.
+            if (!submission.providerBatchRef.isNullOrBlank()) {
+                batchRepository.setProviderBatchRefIfMissing(batch.employerId, batch.batchId, submission.providerBatchRef)
+            }
+
+            val byPaymentId = submission.paymentResults.associateBy { it.paymentId }
+
+            toProcess.forEach { row ->
+                val result = byPaymentId[row.paymentId]
+
+                if (result?.providerPaymentRef != null) {
+                    payments.setProviderPaymentRefIfMissing(row.employerId, row.paymentId, result.providerPaymentRef)
+                }
+
+                val terminal = result?.terminalStatus
+                if (terminal == PaycheckPaymentLifecycleStatus.SETTLED || terminal == PaycheckPaymentLifecycleStatus.FAILED) {
                     payments.updateStatus(
                         employerId = row.employerId,
                         paymentId = row.paymentId,
                         status = terminal,
-                        error = if (shouldFail) "simulated_failure" else null,
+                        error = result.error,
                         now = now,
                     )
 
                     enqueueStatusChanged(row.employerId, row.payRunId, row.paycheckId, row.paymentId, terminal, now)
-                    processed += 1
                 }
-            } else {
-                processed += toProcess.size
             }
+
+            processed += toProcess.size
 
             // Always reconcile batch state/counters after processing.
             val reconciled = batchRepository.reconcileBatch(batch.employerId, batch.batchId)
@@ -123,10 +154,10 @@ class PaymentsProcessor(
         }
 
         logger.info(
-            "payments.processor.processed payments={} batches={} auto_settle={}",
+            "payments.processor.processed payments={} batches={} provider={}",
             processed,
             batches.size,
-            props.autoSettle,
+            paymentProvider.providerName,
         )
 
         return processed

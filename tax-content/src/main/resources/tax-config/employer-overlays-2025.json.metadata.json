@@ -1,0 +1,30 @@
+{
+  "approvals": [
+    {
+      "approved_at": "2025-12-14",
+      "name": "andrewmathers",
+      "reference": "initial-metadata-standard",
+      "role": "ENGINEERING"
+    }
+  ],
+  "artifact": {
+    "media_type": "application/json",
+    "path": "tax-content/src/main/resources/tax-config/employer-overlays-2025.json",
+    "sha256": "c9c506fa351342d05fc7b72a2d8c7119f9a520df4e9b63c65da41802cf131925"
+  },
+  "contentId": "TAX_EMPLOYER_OVERLAYS_2025",
+  "coverage": {
+    "effective_from": "2025-01-01",
+    "effective_to": "9999-12-31",
+    "jurisdictions": null,
+    "year": 2025
+  },
+  "domain": "tax",
+  "schemaVersion": 1,
+  "source": {
+    "checksum_sha256": null,
+    "id": "SRC_TAX_EMPLOYER_OVERLAYS_2025",
+    "kind": "INTERNAL_OR_CURATED_SOURCE",
+    "revision_date": "2025-12-14"
+  }
+}

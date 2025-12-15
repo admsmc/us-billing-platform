@@ -20,4 +20,11 @@ interface PaycheckStoreRepository {
     )
 
     fun findPaycheck(employerId: EmployerId, paycheckId: String): PaycheckResult?
+
+    fun findCorrectionOfPaycheckId(employerId: EmployerId, paycheckId: String): String?
+
+    /**
+     * Attach a correction linkage to a paycheck if unset.
+     */
+    fun setCorrectionOfPaycheckIdIfNull(employerId: EmployerId, paycheckId: String, correctionOfPaycheckId: String): Boolean
 }

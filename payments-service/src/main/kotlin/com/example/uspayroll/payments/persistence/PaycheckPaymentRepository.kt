@@ -31,11 +31,15 @@ class PaycheckPaymentRepository(
         val status: PaycheckPaymentLifecycleStatus,
         val attempts: Int,
         val batchId: String?,
+        val provider: String,
+        val providerPaymentRef: String?,
     )
 
     fun findByPaycheck(employerId: String, paycheckId: String): PaymentRow? = jdbcTemplate.query(
         """
-            SELECT employer_id, payment_id, paycheck_id, pay_run_id, employee_id, pay_period_id, currency, net_cents, status, attempts, batch_id
+            SELECT employer_id, payment_id, paycheck_id, pay_run_id, employee_id, pay_period_id, currency, net_cents,
+                   status, attempts, batch_id,
+                   provider, provider_payment_ref
             FROM paycheck_payment
             WHERE employer_id = ? AND paycheck_id = ?
         """.trimIndent(),
@@ -52,6 +56,8 @@ class PaycheckPaymentRepository(
                 status = PaycheckPaymentLifecycleStatus.valueOf(rs.getString("status")),
                 attempts = rs.getInt("attempts"),
                 batchId = rs.getString("batch_id"),
+                provider = rs.getString("provider"),
+                providerPaymentRef = rs.getString("provider_payment_ref"),
             )
         },
         employerId,
@@ -68,6 +74,8 @@ class PaycheckPaymentRepository(
         currency: String,
         netCents: Long,
         batchId: String?,
+        provider: String,
+        providerPaymentRef: String? = null,
         now: Instant = Instant.now(),
     ): Boolean {
         // Postgres: use ON CONFLICT to avoid transaction-aborting constraint violations.
@@ -82,8 +90,9 @@ class PaycheckPaymentRepository(
                   next_attempt_at, last_error,
                   locked_by, locked_at,
                   batch_id,
+                  provider, provider_payment_ref,
                   created_at, submitted_at, settled_at, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NULL, NULL, NULL, NULL, ?, ?, NULL, NULL, ?)
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NULL, NULL, NULL, NULL, ?, ?, ?, ?, NULL, NULL, ?)
                 ON CONFLICT DO NOTHING
                 """.trimIndent(),
                 employerId,
@@ -96,6 +105,8 @@ class PaycheckPaymentRepository(
                 netCents,
                 PaycheckPaymentLifecycleStatus.CREATED.name,
                 batchId,
+                provider,
+                providerPaymentRef,
                 Timestamp.from(now),
                 Timestamp.from(now),
             )
@@ -114,8 +125,9 @@ class PaycheckPaymentRepository(
                   next_attempt_at, last_error,
                   locked_by, locked_at,
                   batch_id,
+                  provider, provider_payment_ref,
                   created_at, submitted_at, settled_at, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NULL, NULL, NULL, NULL, ?, ?, NULL, NULL, ?)
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NULL, NULL, NULL, NULL, ?, ?, ?, ?, NULL, NULL, ?)
                 """.trimIndent(),
                 employerId,
                 paymentId,
@@ -127,6 +139,8 @@ class PaycheckPaymentRepository(
                 netCents,
                 PaycheckPaymentLifecycleStatus.CREATED.name,
                 batchId,
+                provider,
+                providerPaymentRef,
                 Timestamp.from(now),
                 Timestamp.from(now),
             )
@@ -134,6 +148,20 @@ class PaycheckPaymentRepository(
         } catch (_: DataIntegrityViolationException) {
             false
         }
+    }
+
+    fun setProviderPaymentRefIfMissing(employerId: String, paymentId: String, providerPaymentRef: String): Int {
+        return jdbcTemplate.update(
+            """
+            UPDATE paycheck_payment
+            SET provider_payment_ref = COALESCE(provider_payment_ref, ?),
+                updated_at = CURRENT_TIMESTAMP
+            WHERE employer_id = ? AND payment_id = ?
+            """.trimIndent(),
+            providerPaymentRef,
+            employerId,
+            paymentId,
+        )
     }
 
     fun updateStatus(employerId: String, paymentId: String, status: PaycheckPaymentLifecycleStatus, error: String? = null, nextAttemptAt: Instant? = null, now: Instant = Instant.now()): Int {
@@ -219,7 +247,9 @@ class PaycheckPaymentRepository(
 
         val rows = jdbcTemplate.query(
             """
-            SELECT employer_id, payment_id, paycheck_id, pay_run_id, employee_id, pay_period_id, currency, net_cents, status, attempts, batch_id
+            SELECT employer_id, payment_id, paycheck_id, pay_run_id, employee_id, pay_period_id, currency, net_cents,
+                   status, attempts, batch_id,
+                   provider, provider_payment_ref
             FROM paycheck_payment
             WHERE status = 'CREATED'
               AND (next_attempt_at IS NULL OR next_attempt_at <= ?)
@@ -241,6 +271,8 @@ class PaycheckPaymentRepository(
                     status = PaycheckPaymentLifecycleStatus.valueOf(rs.getString("status")),
                     attempts = rs.getInt("attempts"),
                     batchId = rs.getString("batch_id"),
+                    provider = rs.getString("provider"),
+                    providerPaymentRef = rs.getString("provider_payment_ref"),
                 )
             },
             nowTs,
@@ -286,7 +318,9 @@ class PaycheckPaymentRepository(
 
     fun listByPayRun(employerId: String, payRunId: String): List<PaymentRow> = jdbcTemplate.query(
         """
-            SELECT employer_id, payment_id, paycheck_id, pay_run_id, employee_id, pay_period_id, currency, net_cents, status, attempts, batch_id
+            SELECT employer_id, payment_id, paycheck_id, pay_run_id, employee_id, pay_period_id, currency, net_cents,
+                   status, attempts, batch_id,
+                   provider, provider_payment_ref
             FROM paycheck_payment
             WHERE employer_id = ? AND pay_run_id = ?
             ORDER BY employee_id
@@ -304,6 +338,8 @@ class PaycheckPaymentRepository(
                 status = PaycheckPaymentLifecycleStatus.valueOf(rs.getString("status")),
                 attempts = rs.getInt("attempts"),
                 batchId = rs.getString("batch_id"),
+                provider = rs.getString("provider"),
+                providerPaymentRef = rs.getString("provider_payment_ref"),
             )
         },
         employerId,

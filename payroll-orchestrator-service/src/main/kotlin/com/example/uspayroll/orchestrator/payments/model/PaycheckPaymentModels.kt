@@ -2,8 +2,9 @@ package com.example.uspayroll.orchestrator.payments.model
 
 enum class PaycheckPaymentStatus {
     CREATED,
-    FAILED,
+    SUBMITTED,
     SETTLED,
+    FAILED,
 }
 
 data class PaycheckPaymentRecord(

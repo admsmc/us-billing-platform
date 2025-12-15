@@ -34,6 +34,21 @@ Run (after seeding) (range-based):
   - a "safe" end capped to `worker.benchmarks.maxEmployeeIdsPerRequest`
 - `k6 run -e WORKER_URL=http://localhost:8088 -e BENCH_TOKEN=dev-secret -e EMPLOYER_ID=EMP-BENCH -e PAY_PERIOD_ID=2025-01-BW1 -e EMPLOYEE_ID_PREFIX=EE-BENCH- -e EMPLOYEE_ID_START=1 -e VERIFY_SEED=true benchmarks/k6/worker-hr-backed-pay-period.js`
 
+Optional: lightweight correctness check (digest + aggregates)
+- The HR-backed benchmark endpoint can optionally compute a deterministic correctness summary (no full paycheck payload).
+- Enable it in k6 with any of:
+  - `-e CORRECTNESS_MODE=digest`
+  - `-e EXPECTED_DIGEST_XOR=<number>`
+  - `-e EXPECTED_NET_TOTAL_CENTS=<number>`
+  - `-e EXPECTED_GROSS_TOTAL_CENTS=<number>`
+
+Locking in expected values (baseline)
+1. Run once with digest enabled (example):
+   - `k6 run -e WORKER_URL=http://localhost:8088 -e BENCH_TOKEN=dev-secret -e EMPLOYER_ID=EMP-BENCH -e PAY_PERIOD_ID=2025-01-BW1 -e EMPLOYEE_ID_PREFIX=EE-BENCH- -e EMPLOYEE_ID_START=1 -e EMPLOYEE_ID_END=200 -e CORRECTNESS_MODE=digest benchmarks/k6/worker-hr-backed-pay-period.js`
+2. Capture the returned `correctness.digestXor` and (optionally) `correctness.netCentsTotal` / `correctness.grossCentsTotal`.
+3. Re-run with expectations set to turn it into a fast regression guardrail:
+   - `k6 run ... -e EXPECTED_DIGEST_XOR=<copied> -e EXPECTED_NET_TOTAL_CENTS=<copied> benchmarks/k6/worker-hr-backed-pay-period.js`
+
 Recommended range discovery:
 - `curl -H 'X-Benchmark-Token: dev-secret' 'http://localhost:8088/benchmarks/employers/EMP-BENCH/employee-id-range?prefix=EE-BENCH-&padWidth=6&startInclusive=1'`
 

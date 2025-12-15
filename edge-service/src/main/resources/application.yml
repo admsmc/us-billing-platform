@@ -1,10 +1,22 @@
 server:
   port: ${SERVER_PORT:8080}
 
+spring:
+  application:
+    name: edge-service
+
 edge:
   auth:
-    mode: ${EDGE_AUTH_MODE:DISABLED}
+    # Valid values: DISABLED, HS256, OIDC
+    #
+    # Enterprise posture:
+    # - Prefer OIDC in production.
+    # - Allow DISABLED only when explicitly opted in (EDGE_AUTH_ALLOW_DISABLED=true).
+    mode: ${EDGE_AUTH_MODE:HS256}
+    allow-disabled: ${EDGE_AUTH_ALLOW_DISABLED:false}
     hs256-secret: ${EDGE_AUTH_HS256_SECRET:}
+    issuer-uri: ${EDGE_AUTH_ISSUER_URI:}
+    jwk-set-uri: ${EDGE_AUTH_JWK_SET_URI:}
 
 spring:
   cloud:
@@ -18,7 +30,17 @@ spring:
             - Path=/**
 
 management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  tracing:
+    sampling:
+      probability: ${TRACING_SAMPLING_PROBABILITY:0.1}
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318/v1/traces}
   endpoints:
     web:
       exposure:
-        include: health,info,prometheus
+        include: health,info,metrics,prometheus

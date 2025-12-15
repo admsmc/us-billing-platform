@@ -13,6 +13,7 @@ import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.web.RestTemplateMdcPropagationInterceptor
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.client.SimpleClientHttpRequestFactory
@@ -33,15 +34,19 @@ class HrClientConfig {
      * connect/read timeouts, which are injected via [HrClientProperties].
      */
     @Bean
-    fun restTemplate(messageConverter: MappingJackson2HttpMessageConverter, props: HrClientProperties): RestTemplate {
+    fun restTemplate(messageConverter: MappingJackson2HttpMessageConverter, props: HrClientProperties, builder: RestTemplateBuilder): RestTemplate {
         val requestFactory = SimpleClientHttpRequestFactory().apply {
             setConnectTimeout(props.connectTimeout)
             setReadTimeout(props.readTimeout)
         }
-        return RestTemplate(listOf(messageConverter)).apply {
-            setRequestFactory(requestFactory)
-            interceptors = listOf(RestTemplateMdcPropagationInterceptor())
-        }
+
+        val restTemplate = builder
+            .messageConverters(messageConverter)
+            .build()
+
+        restTemplate.setRequestFactory(requestFactory)
+        restTemplate.interceptors = restTemplate.interceptors + RestTemplateMdcPropagationInterceptor()
+        return restTemplate
     }
 
     @Bean

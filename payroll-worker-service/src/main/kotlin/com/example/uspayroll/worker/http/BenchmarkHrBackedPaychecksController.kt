@@ -2,6 +2,7 @@ package com.example.uspayroll.worker.http
 
 import com.example.uspayroll.hr.client.HrClient
 import com.example.uspayroll.hr.client.HrClientProperties
+import com.example.uspayroll.payroll.model.PaycheckResult
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.shared.toLocalityCodeStrings
@@ -75,6 +76,33 @@ class BenchmarkHrBackedPaychecksController(
         val employeeIdPadWidth: Int = 6,
         /** Optional explicit run id. If omitted, a UUID is used. */
         val runId: String? = null,
+        /**
+         * Optional correctness mode.
+         * - null/"off": no extra correctness work (fastest)
+         * - "digest": compute aggregate invariants + a commutative digest over paycheck line items
+         */
+        val correctnessMode: String? = null,
+    )
+
+    data class CorrectnessSummary(
+        val schemaVersion: Int,
+        val digestXor: Long,
+        val digestSum: Long,
+        val paycheckCount: Int,
+        val grossCentsTotal: Long,
+        val netCentsTotal: Long,
+        val earningsCentsTotal: Long,
+        val employeeTaxesCentsTotal: Long,
+        val employerTaxesCentsTotal: Long,
+        val deductionsCentsTotal: Long,
+        val employerContribCentsTotal: Long,
+        /** Σ(gross - employeeTaxes - deductions - net) across paychecks; should be 0. */
+        val netIdentityDeltaCentsTotal: Long,
+        val earningsLineCount: Int,
+        val employeeTaxLineCount: Int,
+        val employerTaxLineCount: Int,
+        val deductionLineCount: Int,
+        val employerContribLineCount: Int,
     )
 
     data class HrBackedPayPeriodResponse(
@@ -84,6 +112,7 @@ class BenchmarkHrBackedPaychecksController(
         val paychecks: Int,
         val totalGarnishmentWithheldCents: Long,
         val elapsedMillis: Long,
+        val correctness: CorrectnessSummary? = null,
     )
 
     @PostMapping("/hr-backed-pay-period")
@@ -124,6 +153,12 @@ class BenchmarkHrBackedPaychecksController(
             .filter { it.code.value.startsWith("ORDER-") }
             .sumOf { it.amount.amount }
 
+        val correctness = when (request.correctnessMode?.trim()?.lowercase()) {
+            null, "", "off" -> null
+            "digest" -> computeCorrectnessSummary(paychecks)
+            else -> return ResponseEntity.badRequest().body(mapOf("error" to "unknown correctnessMode: ${request.correctnessMode}"))
+        }
+
         return ResponseEntity.ok(
             HrBackedPayPeriodResponse(
                 employerId = employerId,
@@ -132,7 +167,184 @@ class BenchmarkHrBackedPaychecksController(
                 paychecks = paychecks.size,
                 totalGarnishmentWithheldCents = withheldCents,
                 elapsedMillis = elapsedMillis,
+                correctness = correctness,
             ),
+        )
+    }
+
+    private fun computeCorrectnessSummary(paychecks: List<PaycheckResult>): CorrectnessSummary {
+        var digestXor = 0L
+        var digestSum = 0L
+
+        var grossCentsTotal = 0L
+        var netCentsTotal = 0L
+        var earningsCentsTotal = 0L
+        var employeeTaxesCentsTotal = 0L
+        var employerTaxesCentsTotal = 0L
+        var deductionsCentsTotal = 0L
+        var employerContribCentsTotal = 0L
+        var netIdentityDeltaCentsTotal = 0L
+
+        var earningsLineCount = 0
+        var employeeTaxLineCount = 0
+        var employerTaxLineCount = 0
+        var deductionLineCount = 0
+        var employerContribLineCount = 0
+
+        fun mix64(x0: Long): Long {
+            var x = x0
+            x = (x xor (x ushr 33)) * -0xae502812aa7333L
+            x = (x xor (x ushr 33)) * -0x3d4d51cb5a3b1b9L
+            x = x xor (x ushr 33)
+            return x
+        }
+
+        fun hashString64(s: String?): Long {
+            // Keep this cheap. We intentionally do not do a cryptographic hash.
+            val h = (s ?: "").hashCode().toLong()
+            return mix64(h)
+        }
+
+        fun hashLong64(v: Long): Long = mix64(v)
+
+        fun hashDoubleBits64(v: Double?): Long {
+            val bits = if (v == null) 0L else java.lang.Double.doubleToLongBits(v)
+            return mix64(bits)
+        }
+
+        fun combine(a: Long, b: Long): Long = mix64(a xor b)
+
+        fun addRecord(h: Long) {
+            digestXor = digestXor xor h
+            digestSum += h
+        }
+
+        for (p in paychecks) {
+            val header = run {
+                // Do NOT include paycheckId/payRunId because the benchmark controller may vary runId.
+                var h = hashString64(p.employerId.value)
+                h = combine(h, hashString64(p.employeeId.value))
+                h = combine(h, hashString64(p.period.id))
+                h = combine(h, hashLong64(p.period.checkDate.toEpochDay()))
+                h
+            }
+
+            val grossCents = p.gross.amount
+            val netCents = p.net.amount
+            grossCentsTotal += grossCents
+            netCentsTotal += netCents
+
+            var paycheckEmployeeTaxCents = 0L
+            var paycheckDeductionCents = 0L
+
+            // Top-level snapshot record
+            addRecord(
+                combine(
+                    header,
+                    combine(hashLong64(grossCents), hashLong64(netCents)),
+                ),
+            )
+
+            // Earnings
+            earningsLineCount += p.earnings.size
+            for (e in p.earnings) {
+                earningsCentsTotal += e.amount.amount
+
+                val rec = run {
+                    var h = combine(header, hashString64(e.code.value))
+                    h = combine(h, hashString64(e.category.name))
+                    h = combine(h, hashLong64(e.amount.amount))
+                    h = combine(h, hashDoubleBits64(e.units))
+                    h = combine(h, hashLong64(e.rate?.amount ?: 0L))
+                    h
+                }
+                addRecord(rec)
+            }
+
+            // Employee taxes
+            employeeTaxLineCount += p.employeeTaxes.size
+            for (t in p.employeeTaxes) {
+                employeeTaxesCentsTotal += t.amount.amount
+                paycheckEmployeeTaxCents += t.amount.amount
+
+                val rec = run {
+                    var h = combine(header, hashString64(t.ruleId))
+                    h = combine(h, hashString64(t.jurisdiction.type.name))
+                    h = combine(h, hashString64(t.jurisdiction.code))
+                    h = combine(h, hashLong64(t.basis.amount))
+                    h = combine(h, hashDoubleBits64(t.rate?.value))
+                    h = combine(h, hashLong64(t.amount.amount))
+                    h
+                }
+                addRecord(rec)
+            }
+
+            // Employer taxes
+            employerTaxLineCount += p.employerTaxes.size
+            for (t in p.employerTaxes) {
+                employerTaxesCentsTotal += t.amount.amount
+
+                val rec = run {
+                    var h = combine(header, hashString64(t.ruleId))
+                    h = combine(h, hashString64("EMPLOYER"))
+                    h = combine(h, hashString64(t.jurisdiction.type.name))
+                    h = combine(h, hashString64(t.jurisdiction.code))
+                    h = combine(h, hashLong64(t.basis.amount))
+                    h = combine(h, hashDoubleBits64(t.rate?.value))
+                    h = combine(h, hashLong64(t.amount.amount))
+                    h
+                }
+                addRecord(rec)
+            }
+
+            // Deductions
+            deductionLineCount += p.deductions.size
+            for (d in p.deductions) {
+                deductionsCentsTotal += d.amount.amount
+                paycheckDeductionCents += d.amount.amount
+
+                val rec = run {
+                    var h = combine(header, hashString64(d.code.value))
+                    h = combine(h, hashLong64(d.amount.amount))
+                    h
+                }
+                addRecord(rec)
+            }
+
+            // Employer contributions
+            employerContribLineCount += p.employerContributions.size
+            for (c in p.employerContributions) {
+                employerContribCentsTotal += c.amount.amount
+
+                val rec = run {
+                    var h = combine(header, hashString64(c.code.value))
+                    h = combine(h, hashLong64(c.amount.amount))
+                    h
+                }
+                addRecord(rec)
+            }
+
+            netIdentityDeltaCentsTotal += (grossCents - paycheckEmployeeTaxCents - paycheckDeductionCents - netCents)
+        }
+
+        return CorrectnessSummary(
+            schemaVersion = 1,
+            digestXor = digestXor,
+            digestSum = digestSum,
+            paycheckCount = paychecks.size,
+            grossCentsTotal = grossCentsTotal,
+            netCentsTotal = netCentsTotal,
+            earningsCentsTotal = earningsCentsTotal,
+            employeeTaxesCentsTotal = employeeTaxesCentsTotal,
+            employerTaxesCentsTotal = employerTaxesCentsTotal,
+            deductionsCentsTotal = deductionsCentsTotal,
+            employerContribCentsTotal = employerContribCentsTotal,
+            netIdentityDeltaCentsTotal = netIdentityDeltaCentsTotal,
+            earningsLineCount = earningsLineCount,
+            employeeTaxLineCount = employeeTaxLineCount,
+            employerTaxLineCount = employerTaxLineCount,
+            deductionLineCount = deductionLineCount,
+            employerContribLineCount = employerContribLineCount,
         )
     }
 
@@ -179,6 +391,8 @@ class BenchmarkHrBackedPaychecksController(
         val taxContext = tax.getTaxContext(
             employerId = employer,
             asOfDate = period.checkDate,
+            residentState = snapshot.homeState,
+            workState = snapshot.workState,
             localityCodes = localityCodes,
         )
 

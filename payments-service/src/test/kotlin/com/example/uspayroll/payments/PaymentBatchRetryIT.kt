@@ -21,8 +21,9 @@ import java.time.Instant
         "spring.datasource.url=jdbc:h2:mem:payments_batch_retry_it;DB_CLOSE_DELAY=-1",
 
         "payments.processor.enabled=true",
-        "payments.processor.auto-settle=true",
-        "payments.processor.fail-if-net-cents-equals=200000",
+        "payments.provider.type=sandbox",
+        "payments.provider.sandbox.auto-settle=true",
+        "payments.provider.sandbox.fail-if-net-cents-equals=200000",
         "payments.kafka.enabled=false",
         "payments.outbox.relay.enabled=false",
 

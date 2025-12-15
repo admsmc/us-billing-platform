@@ -52,7 +52,43 @@ class JdbcEventInbox(
         }
     }
 
+    /**
+     * Best-effort rollback of a previously-marked event.
+     *
+     * This is primarily used to avoid "lost" processing when a consumer marks an event
+     * as processed and then throws before completing business effects.
+     */
+    fun unmarkProcessed(consumer: String, eventId: String): Int {
+        return dataSource.connection.use { conn ->
+            conn.prepareStatement(
+                "DELETE FROM $tableName WHERE consumer = ? AND event_id = ?",
+            ).use { ps ->
+                ps.setString(1, consumer)
+                ps.setString(2, eventId)
+                ps.executeUpdate()
+            }
+        }
+    }
+
+    /**
+     * Runs [block] at most once per (consumer, eventId).
+     *
+     * If [block] throws, this will best-effort remove the inbox marker so that
+     * the message can be retried.
+     */
+    @Suppress("TooGenericExceptionCaught")
     inline fun <T> runIfFirst(consumer: String, eventId: String, block: () -> T): T? {
-        return if (tryMarkProcessed(consumer, eventId)) block() else null
+        if (!tryMarkProcessed(consumer, eventId)) return null
+
+        return try {
+            block()
+        } catch (t: Throwable) {
+            try {
+                unmarkProcessed(consumer, eventId)
+            } catch (_: SQLException) {
+                // If we cannot unmark, the original error still matters most.
+            }
+            throw t
+        }
     }
 }

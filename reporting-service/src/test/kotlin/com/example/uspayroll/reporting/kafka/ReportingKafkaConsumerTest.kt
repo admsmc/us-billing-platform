@@ -121,4 +121,25 @@ class ReportingKafkaConsumerTest {
         consumer.onPayRunFinalized(rec)
         assertEquals(1L, countInboxRows(ds))
     }
+
+    @Test
+    fun `paycheck ledger events are inbox-idempotent`() {
+        val ds = newDataSource("reporting_kafka_consumer_ledger")
+        initInbox(ds)
+
+        val props = ReportingKafkaProperties(enabled = true, consumerName = "reporting-service")
+        val consumer = ReportingKafkaConsumer(props, jacksonObjectMapper(), JdbcEventInbox(ds))
+
+        val rec = record(
+            topic = "paycheck.ledger",
+            value = """{"action":"COMMITTED"}""",
+            headers = mapOf("X-Event-Id" to "evt-ledger-1"),
+        )
+
+        consumer.onPaycheckLedger(rec)
+        assertEquals(1L, countInboxRows(ds))
+
+        consumer.onPaycheckLedger(rec)
+        assertEquals(1L, countInboxRows(ds))
+    }
 }

@@ -26,6 +26,7 @@ class TaxConfigFilesValidationTest {
     fun `all tax-config JSON files validate successfully`() {
         val resolver = PathMatchingResourcePatternResolver()
         val resources = resolver.getResources("classpath*:tax-config/*.json")
+            .filterNot { it.filename.orEmpty().endsWith(".metadata.json") }
 
         val failures = mutableListOf<String>()
 

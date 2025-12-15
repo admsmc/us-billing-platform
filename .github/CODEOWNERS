@@ -1,0 +1,10 @@
+# CODEOWNERS
+#
+# B1 (P0): Formal approval workflow for content changes
+#
+# These paths represent payroll-critical, curated content artifacts.
+#
+# NOTE: Replace/extend these owners with your real compliance/SME teams.
+
+/tax-content/src/main/resources/ @andrewmathers
+/labor-service/src/main/resources/ @andrewmathers

@@ -8,6 +8,7 @@ import com.example.uspayroll.payments.outbox.OutboxRepository
 import com.example.uspayroll.payments.persistence.PaycheckPaymentBatchOps
 import com.example.uspayroll.payments.persistence.PaycheckPaymentRepository
 import com.example.uspayroll.payments.persistence.PaymentBatchRepository
+import com.example.uspayroll.payments.provider.PaymentProvider
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
@@ -18,6 +19,7 @@ import java.time.Instant
 class PaymentIntakeService(
     private val payments: PaycheckPaymentRepository,
     private val paymentBatchRepository: PaymentBatchRepository,
+    private val paymentProvider: PaymentProvider,
     private val batchOps: PaycheckPaymentBatchOps,
     private val outbox: OutboxRepository,
     private val props: PaymentsEventsProperties,
@@ -29,9 +31,12 @@ class PaymentIntakeService(
         val paymentId = "pmt-${evt.paycheckId}"
         val now = Instant.now()
 
+        val provider = paymentProvider.providerName
+
         val batchId = paymentBatchRepository.getOrCreateBatchForPayRun(
             employerId = evt.employerId,
             payRunId = evt.payRunId,
+            provider = provider,
             now = now,
         )
 
@@ -45,6 +50,8 @@ class PaymentIntakeService(
             currency = evt.currency,
             netCents = evt.netCents,
             batchId = batchId,
+            provider = provider,
+            providerPaymentRef = null,
             now = now,
         )
 

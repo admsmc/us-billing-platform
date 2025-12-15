@@ -30,10 +30,6 @@ services:
     depends_on:
       - rabbitmq
 
-    # Important: when scaling worker replicas, do NOT publish a fixed host port.
-    # (Use edge-service or direct service-to-service networking instead.)
-    ports: []
-
     environment:
       # Enable queue consumption for per-employee finalize jobs
       WORKER_JOBS_RABBIT_ENABLED: "true"

@@ -10,6 +10,11 @@ plugins {
     id("org.jlleitschuh.gradle.ktlint") version "12.3.0" apply false
     id("io.gitlab.arturbosch.detekt") version "1.23.8" apply false
     id("me.champeau.jmh") version "0.7.2" apply false
+
+    // Supply-chain / security tooling
+    id("org.owasp.dependencycheck") version "12.1.9"
+    id("org.cyclonedx.bom") version "1.8.2" apply false
+
     jacoco
 }
 
@@ -22,7 +27,20 @@ allprojects {
     }
 }
 
+// Supply-chain hardening: lock resolved dependency versions.
+// Lockfiles are written by running Gradle with `--write-locks`.
+dependencyLocking {
+    lockAllConfigurations()
+    lockMode.set(org.gradle.api.artifacts.dsl.LockMode.STRICT)
+}
+
 subprojects {
+    // Supply-chain hardening: lock resolved dependency versions per module.
+    dependencyLocking {
+        lockAllConfigurations()
+        lockMode.set(org.gradle.api.artifacts.dsl.LockMode.STRICT)
+    }
+
     // Only apply linting/static analysis/coverage to Kotlin modules.
     pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
         apply(plugin = "org.jlleitschuh.gradle.ktlint")
@@ -163,4 +181,58 @@ subprojects {
         sourceCompatibility = "21"
         targetCompatibility = "21"
     }
+}
+
+// ----------------------------
+// Security and SBOM tooling
+// ----------------------------
+
+dependencyCheck {
+    // Fail the build when a dependency has a CVSS score >= this value.
+    failBuildOnCVSS = 7.0f
+
+    // Allow tuning via env; improves performance and avoids NVD rate limits.
+    nvd.apiKey = System.getenv("NVD_API_KEY")
+
+    // Keep noise manageable; teams typically start with HIGH/CRITICAL and tighten over time.
+    analyzers.assemblyEnabled = false
+
+    suppressionFile = "${rootProject.projectDir}/config/dependency-check/suppressions.xml"
+
+    formats = listOf("HTML", "JSON")
+    outputDirectory.set(layout.buildDirectory.dir("reports/dependency-check"))
+
+    // Aggregate report is the repo-level artifact we gate on.
+    scanConfigurations = listOf("runtimeClasspath")
+}
+
+val sbomProjects = listOf(
+    project(":edge-service"),
+    project(":payroll-worker-service"),
+    project(":payroll-orchestrator-service"),
+    project(":hr-service"),
+    project(":tax-service"),
+    project(":labor-service"),
+    project(":payments-service"),
+    project(":reporting-service"),
+)
+
+sbomProjects.forEach { p ->
+    p.pluginManager.apply("org.cyclonedx.bom")
+
+    // Configure via Groovy builder to avoid compile-time coupling to plugin classes.
+    p.tasks.named("cyclonedxBom").configure {
+        withGroovyBuilder {
+            setProperty("includeConfigs", listOf("runtimeClasspath"))
+            setProperty("skipConfigs", listOf("testRuntimeClasspath"))
+            setProperty("includeLicenseText", false)
+            setProperty("outputFormat", "json")
+            setProperty("outputName", "${p.name}-sbom")
+            setProperty("destination", p.file("build/reports/sbom"))
+        }
+    }
+}
+
+tasks.register("sbomAll") {
+    dependsOn(sbomProjects.map { "${it.path}:cyclonedxBom" })
 }

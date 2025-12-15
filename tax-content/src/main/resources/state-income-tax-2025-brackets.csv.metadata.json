@@ -1,0 +1,30 @@
+{
+  "approvals": [
+    {
+      "approved_at": "2025-12-14",
+      "name": "andrewmathers",
+      "reference": "initial-metadata-standard",
+      "role": "ENGINEERING"
+    }
+  ],
+  "artifact": {
+    "media_type": "text/csv",
+    "path": "tax-content/src/main/resources/state-income-tax-2025-brackets.csv",
+    "sha256": "1d2aad420581606ca7807725e68c2b2c5e9849e509d96566b22e0644f700b776"
+  },
+  "contentId": "TAX_STATE_INCOME_TAX_2025_BRACKETS",
+  "coverage": {
+    "effective_from": "2025-01-01",
+    "effective_to": "9999-12-31",
+    "jurisdictions": null,
+    "year": 2025
+  },
+  "domain": "tax",
+  "schemaVersion": 1,
+  "source": {
+    "checksum_sha256": null,
+    "id": "SRC_TAX_STATE_INCOME_TAX_2025_BRACKETS",
+    "kind": "INTERNAL_OR_CURATED_SOURCE",
+    "revision_date": "2025-12-14"
+  }
+}

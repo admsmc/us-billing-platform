@@ -1,0 +1,30 @@
+{
+  "approvals": [
+    {
+      "approved_at": "2025-12-14",
+      "name": "andrewmathers",
+      "reference": "initial-metadata-standard",
+      "role": "ENGINEERING"
+    }
+  ],
+  "artifact": {
+    "media_type": "text/csv",
+    "path": "tax-content/src/main/resources/state-income-tax-2025-rules.csv",
+    "sha256": "5841a2f5113f21e7dd4dd08312a227cbe6e576def090d63da149ee2b3b74769f"
+  },
+  "contentId": "TAX_STATE_INCOME_TAX_2025_RULES",
+  "coverage": {
+    "effective_from": "2025-01-01",
+    "effective_to": "9999-12-31",
+    "jurisdictions": null,
+    "year": 2025
+  },
+  "domain": "tax",
+  "schemaVersion": 1,
+  "source": {
+    "checksum_sha256": null,
+    "id": "SRC_TAX_STATE_INCOME_TAX_2025_RULES",
+    "kind": "INTERNAL_OR_CURATED_SOURCE",
+    "revision_date": "2025-12-14"
+  }
+}

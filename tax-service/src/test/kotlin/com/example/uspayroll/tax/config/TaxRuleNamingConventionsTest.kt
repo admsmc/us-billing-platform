@@ -21,6 +21,7 @@ class TaxRuleNamingConventionsTest {
     private fun loadAllRules(): List<TaxRuleConfig> {
         val resolver = PathMatchingResourcePatternResolver()
         val resources = resolver.getResources("classpath*:tax-config/*.json")
+            .filterNot { it.filename.orEmpty().endsWith(".metadata.json") }
 
         return resources.flatMap { resource ->
             val json = resource.inputStream.bufferedReader().use { it.readText() }

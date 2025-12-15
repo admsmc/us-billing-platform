@@ -19,9 +19,10 @@ import java.time.Instant
         "spring.datasource.url=jdbc:h2:mem:payments_processor_it;DB_CLOSE_DELAY=-1",
 
         "payments.processor.enabled=true",
-        "payments.processor.auto-settle=true",
-        "payments.outbox.relay.enabled=false",
+        "payments.provider.type=sandbox",
+        "payments.provider.sandbox.auto-settle=true",
         "payments.kafka.enabled=false",
+        "payments.outbox.relay.enabled=false",
     ],
 )
 class PaymentsProcessorIT(

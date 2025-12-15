@@ -12,6 +12,7 @@ import com.example.uspayroll.tax.service.FederalWithholdingCalculator
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.jdbc.datasource.DriverManagerDataSource
@@ -28,6 +29,7 @@ import javax.sql.DataSource
 class TaxServiceConfig {
 
     @Bean
+    @ConditionalOnProperty(prefix = "tenancy", name = ["mode"], havingValue = "SINGLE", matchIfMissing = true)
     fun dataSource(@Value("\${tax.db.url}") url: String, @Value("\${tax.db.username}") username: String, @Value("\${tax.db.password}") password: String): DataSource {
         val driverClassName = when {
             url.startsWith("jdbc:h2:") -> "org.h2.Driver"
@@ -46,6 +48,7 @@ class TaxServiceConfig {
     }
 
     @Bean
+    @ConditionalOnProperty(prefix = "tenancy", name = ["mode"], havingValue = "SINGLE", matchIfMissing = true)
     fun dslContext(dataSource: DataSource, @Value("\${tax.db.url}") url: String): DSLContext {
         val dialect = if (url.startsWith("jdbc:h2:")) org.jooq.SQLDialect.H2 else org.jooq.SQLDialect.POSTGRES
         return DSL.using(dataSource, dialect)

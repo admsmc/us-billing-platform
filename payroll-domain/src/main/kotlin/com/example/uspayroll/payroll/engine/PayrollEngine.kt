@@ -130,45 +130,50 @@ object PayrollEngine {
         }
         val gross = Money(cashGrossCents)
 
-        // Optional proration trace for salaried employees
-        val prorationTraceStep: TraceStep? = when (val base = input.employeeSnapshot.baseCompensation) {
-            is BaseCompensation.Salaried -> {
-                val schedule = input.paySchedule ?: PaySchedule.defaultFor(input.employerId, input.period.frequency)
-                val allocation = RemainderAwareEvenAllocation.compute(base.annualSalary, schedule)
+        // Optional proration trace for salaried employees.
+        // For off-cycle runs, base earnings are suppressed; proration is therefore not applicable.
+        val prorationTraceStep: TraceStep? = if (!input.timeSlice.includeBaseEarnings) {
+            null
+        } else {
+            when (val base = input.employeeSnapshot.baseCompensation) {
+                is BaseCompensation.Salaried -> {
+                    val schedule = input.paySchedule ?: PaySchedule.defaultFor(input.employerId, input.period.frequency)
+                    val allocation = RemainderAwareEvenAllocation.compute(base.annualSalary, schedule)
 
-                val baseCentsForPeriod: Long = input.period.sequenceInYear
-                    ?.let { seq ->
-                        val zeroBasedIndex = seq - 1
-                        if (zeroBasedIndex in 0 until schedule.periodsPerYear) {
-                            allocation.amountForPeriod(zeroBasedIndex, schedule).amount
-                        } else {
-                            allocation.basePerPeriod.amount
+                    val baseCentsForPeriod: Long = input.period.sequenceInYear
+                        ?.let { seq ->
+                            val zeroBasedIndex = seq - 1
+                            if (zeroBasedIndex in 0 until schedule.periodsPerYear) {
+                                allocation.amountForPeriod(zeroBasedIndex, schedule).amount
+                            } else {
+                                allocation.basePerPeriod.amount
+                            }
                         }
-                    }
-                    ?: allocation.basePerPeriod.amount
+                        ?: allocation.basePerPeriod.amount
 
-                val explicitProration = input.timeSlice.proration
-                val strategyProration = ProrationStrategy.CalendarDays
-                    .computeProration(input.period, input.employeeSnapshot.hireDate, input.employeeSnapshot.terminationDate)
+                    val explicitProration = input.timeSlice.proration
+                    val strategyProration = ProrationStrategy.CalendarDays
+                        .computeProration(input.period, input.employeeSnapshot.hireDate, input.employeeSnapshot.terminationDate)
 
-                val resolvedProration = explicitProration ?: strategyProration
+                    val resolvedProration = explicitProration ?: strategyProration
 
-                val baseEarningLine = earnings.firstOrNull { it.code == EarningCode("BASE") }
-                val appliedCents = baseEarningLine?.amount?.amount ?: baseCentsForPeriod
+                    val baseEarningLine = earnings.firstOrNull { it.code == EarningCode("BASE") }
+                    val appliedCents = baseEarningLine?.amount?.amount ?: baseCentsForPeriod
 
-                val strategyName = if (strategyProration != null) "CalendarDays" else "none"
-                val explicitFlag = explicitProration != null
-                val fraction = resolvedProration?.fraction ?: 1.0
+                    val strategyName = if (strategyProration != null) "CalendarDays" else "none"
+                    val explicitFlag = explicitProration != null
+                    val fraction = resolvedProration?.fraction ?: 1.0
 
-                TraceStep.ProrationApplied(
-                    strategy = strategyName,
-                    explicitOverride = explicitFlag,
-                    fraction = fraction,
-                    fullCents = baseCentsForPeriod,
-                    appliedCents = appliedCents,
-                )
+                    TraceStep.ProrationApplied(
+                        strategy = strategyName,
+                        explicitOverride = explicitFlag,
+                        fraction = fraction,
+                        fullCents = baseCentsForPeriod,
+                        appliedCents = appliedCents,
+                    )
+                }
+                is BaseCompensation.Hourly -> null
             }
-            is BaseCompensation.Hourly -> null
         }
 
         val deductionResult = DeductionsCalculator.computeDeductions(

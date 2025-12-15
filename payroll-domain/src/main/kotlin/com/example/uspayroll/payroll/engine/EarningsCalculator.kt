@@ -13,70 +13,74 @@ object EarningsCalculator {
         val period = input.period
         val slice = input.timeSlice
 
-        val baseLines: List<EarningLine> = when (base) {
-            is BaseCompensation.Salaried -> {
-                // Derive an effective pay schedule, preferring an explicit schedule if provided,
-                // otherwise falling back to a default based on the period frequency.
-                val schedule = input.paySchedule
-                    ?: PaySchedule.defaultFor(input.employerId, period.frequency)
+        val baseLines: List<EarningLine> = if (!slice.includeBaseEarnings) {
+            emptyList()
+        } else {
+            when (base) {
+                is BaseCompensation.Salaried -> {
+                    // Derive an effective pay schedule, preferring an explicit schedule if provided,
+                    // otherwise falling back to a default based on the period frequency.
+                    val schedule = input.paySchedule
+                        ?: PaySchedule.defaultFor(input.employerId, period.frequency)
 
-                // Delegate salaried allocation (including optional proration) to a policy
-                // so the strategy can evolve independently of the engine.
-                val perPeriodMoney = SalaryProrationPolicy.Default
-                    .amountForPeriod(
-                        annualSalary = base.annualSalary,
-                        schedule = schedule,
-                        period = period,
-                        employeeSnapshot = input.employeeSnapshot,
-                        explicitProration = slice.proration,
+                    // Delegate salaried allocation (including optional proration) to a policy
+                    // so the strategy can evolve independently of the engine.
+                    val perPeriodMoney = SalaryProrationPolicy.Default
+                        .amountForPeriod(
+                            annualSalary = base.annualSalary,
+                            schedule = schedule,
+                            period = period,
+                            employeeSnapshot = input.employeeSnapshot,
+                            explicitProration = slice.proration,
+                        )
+
+                    val defaultCode = EarningCode("BASE")
+                    val def = earningConfig?.findByEmployerAndCode(input.employerId, defaultCode)
+                    val code = def?.code ?: defaultCode
+                    val category = def?.category ?: EarningCategory.REGULAR
+                    val description = def?.displayName ?: "Base salary"
+
+                    listOf(
+                        EarningLine(
+                            code = code,
+                            category = category,
+                            description = description,
+                            units = 1.0,
+                            rate = perPeriodMoney,
+                            amount = perPeriodMoney,
+                        ),
                     )
+                }
 
-                val defaultCode = EarningCode("BASE")
-                val def = earningConfig?.findByEmployerAndCode(input.employerId, defaultCode)
-                val code = def?.code ?: defaultCode
-                val category = def?.category ?: EarningCategory.REGULAR
-                val description = def?.displayName ?: "Base salary"
+                is BaseCompensation.Hourly -> {
+                    val regularHours = slice.regularHours
 
-                listOf(
-                    EarningLine(
+                    val defaultCode = EarningCode("HOURLY")
+                    val def = earningConfig?.findByEmployerAndCode(input.employerId, defaultCode)
+                    val code = def?.code ?: defaultCode
+                    val category = def?.category ?: EarningCategory.REGULAR
+                    val description = def?.displayName ?: "Hourly wages"
+
+                    val regularCents = (base.hourlyRate.amount * regularHours).toLong()
+                    val regularLine = EarningLine(
                         code = code,
                         category = category,
                         description = description,
-                        units = 1.0,
-                        rate = perPeriodMoney,
-                        amount = perPeriodMoney,
-                    ),
-                )
-            }
+                        units = regularHours,
+                        rate = base.hourlyRate,
+                        amount = Money(regularCents),
+                    )
 
-            is BaseCompensation.Hourly -> {
-                val regularHours = slice.regularHours
+                    // Delegate overtime behaviour to the policy
+                    val overtimeLines = overtimePolicy.computeOvertimeLines(
+                        employerId = input.employerId,
+                        baseComp = base,
+                        timeSlice = slice,
+                        earningConfig = earningConfig,
+                    )
 
-                val defaultCode = EarningCode("HOURLY")
-                val def = earningConfig?.findByEmployerAndCode(input.employerId, defaultCode)
-                val code = def?.code ?: defaultCode
-                val category = def?.category ?: EarningCategory.REGULAR
-                val description = def?.displayName ?: "Hourly wages"
-
-                val regularCents = (base.hourlyRate.amount * regularHours).toLong()
-                val regularLine = EarningLine(
-                    code = code,
-                    category = category,
-                    description = description,
-                    units = regularHours,
-                    rate = base.hourlyRate,
-                    amount = Money(regularCents),
-                )
-
-                // Delegate overtime behaviour to the policy
-                val overtimeLines = overtimePolicy.computeOvertimeLines(
-                    employerId = input.employerId,
-                    baseComp = base,
-                    timeSlice = slice,
-                    earningConfig = earningConfig,
-                )
-
-                listOf(regularLine) + overtimeLines
+                    listOf(regularLine) + overtimeLines
+                }
             }
         }
 

@@ -23,6 +23,7 @@ import org.springframework.test.context.TestConstructor
 import org.springframework.test.context.TestPropertySource
 import java.net.URI
 import java.time.Instant
+import java.util.UUID
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import(StubClientsTestConfig::class)
@@ -54,6 +55,10 @@ class PaymentsStatusKafkaConsumerIT(
     fun `listener consumes payment status changed event and updates DB projection`() {
         val employerId = "emp-1"
 
+        val payRunId = "run-kafka-it-${UUID.randomUUID()}"
+        // Avoid business-key collisions across concurrently-running Spring contexts.
+        val runSequence = ((UUID.randomUUID().mostSignificantBits ushr 1) % 1_000_000L).toInt() + 1
+
         // Set up a payrun with one succeeded paycheck.
         val start = rest.exchange(
             RequestEntity.post(URI.create("/employers/$employerId/payruns/finalize"))
@@ -61,7 +66,8 @@ class PaymentsStatusKafkaConsumerIT(
                     PayRunController.StartFinalizeRequest(
                         payPeriodId = "pp-1",
                         employeeIds = listOf("e-1"),
-                        requestedPayRunId = "run-kafka-it-1",
+                        runSequence = runSequence,
+                        requestedPayRunId = payRunId,
                     ),
                 ),
             PayRunController.StartFinalizeResponse::class.java,
@@ -70,35 +76,27 @@ class PaymentsStatusKafkaConsumerIT(
 
         val execHeaders = HttpHeaders().apply { set("X-Internal-Token", "dev-internal-token") }
         rest.exchange(
-            RequestEntity.post(URI.create("/employers/$employerId/payruns/internal/run-kafka-it-1/execute?batchSize=10"))
+            RequestEntity.post(URI.create("/employers/$employerId/payruns/internal/$payRunId/execute?batchSize=10"))
                 .headers(execHeaders)
                 .build(),
             Map::class.java,
         )
 
+        waitForTerminalFinalize(employerId, payRunId)
+
         rest.exchange(
-            RequestEntity.post(URI.create("/employers/$employerId/payruns/run-kafka-it-1/approve"))
+            RequestEntity.post(URI.create("/employers/$employerId/payruns/$payRunId/approve"))
                 .build(),
             Map::class.java,
         )
 
         rest.exchange(
-            RequestEntity.post(URI.create("/employers/$employerId/payruns/run-kafka-it-1/payments/initiate"))
+            RequestEntity.post(URI.create("/employers/$employerId/payruns/$payRunId/payments/initiate"))
                 .build(),
             Map::class.java,
         )
 
-        val paycheckId = jdbcTemplate.queryForObject(
-            """
-            SELECT paycheck_id
-            FROM pay_run_item
-            WHERE employer_id = ? AND pay_run_id = ? AND employee_id = ?
-            """.trimIndent(),
-            String::class.java,
-            employerId,
-            "run-kafka-it-1",
-            "e-1",
-        )
+        val paycheckId = waitForPaycheckId(employerId, payRunId, "e-1")
         assertNotNull(paycheckId)
 
         // Publish payment status event to embedded Kafka.
@@ -107,7 +105,7 @@ class PaymentsStatusKafkaConsumerIT(
             eventId = "evt-kafka-it-1",
             occurredAt = now,
             employerId = employerId,
-            payRunId = "run-kafka-it-1",
+            payRunId = payRunId,
             paycheckId = paycheckId!!,
             paymentId = "pmt-$paycheckId",
             status = PaycheckPaymentLifecycleStatus.SETTLED,
@@ -116,7 +114,7 @@ class PaymentsStatusKafkaConsumerIT(
         val mapper = com.fasterxml.jackson.module.kotlin.jacksonObjectMapper().findAndRegisterModules()
         val msg = MessageBuilder.withPayload(mapper.writeValueAsString(evt))
             .setHeader(KafkaHeaders.TOPIC, "paycheck.payment.status_changed")
-            .setHeader(KafkaHeaders.KEY, "$employerId:run-kafka-it-1")
+            .setHeader(KafkaHeaders.KEY, "$employerId:$payRunId")
             .setHeader("X-Event-Id", evt.eventId)
             .setHeader("X-Event-Type", "PaycheckPaymentStatusChanged")
             .build()
@@ -124,7 +122,7 @@ class PaymentsStatusKafkaConsumerIT(
         kafkaTemplate.send(msg).get()
 
         // Poll DB until projection updates (listener is async).
-        val deadlineMs = System.currentTimeMillis() + 5_000
+        val deadlineMs = System.currentTimeMillis() + 45_000
         while (System.currentTimeMillis() < deadlineMs) {
             val status = jdbcTemplate.queryForObject(
                 "SELECT payment_status FROM paycheck WHERE employer_id = ? AND paycheck_id = ?",
@@ -139,5 +137,50 @@ class PaymentsStatusKafkaConsumerIT(
         }
 
         throw AssertionError("Timed out waiting for paycheck payment_status=PAID")
+    }
+
+    private fun waitForTerminalFinalize(employerId: String, payRunId: String) {
+        // When running the full multi-module build, containers/DB can be slower; keep this conservative.
+        val deadlineMs = System.currentTimeMillis() + 120_000
+        while (System.currentTimeMillis() < deadlineMs) {
+            val status = jdbcTemplate.query(
+                "SELECT status FROM pay_run WHERE employer_id = ? AND pay_run_id = ?",
+                { rs, _ -> rs.getString("status") },
+                employerId,
+                payRunId,
+            ).firstOrNull()
+
+            if (status == "FINALIZED" || status == "PARTIALLY_FINALIZED" || status == "FAILED") {
+                return
+            }
+            Thread.sleep(100)
+        }
+
+        throw AssertionError("Timed out waiting for terminal pay_run.status")
+    }
+
+    private fun waitForPaycheckId(employerId: String, payRunId: String, employeeId: String): String? {
+        val deadlineMs = System.currentTimeMillis() + 10_000
+        while (System.currentTimeMillis() < deadlineMs) {
+            val paycheckId = jdbcTemplate.query(
+                """
+                SELECT paycheck_id
+                FROM pay_run_item
+                WHERE employer_id = ? AND pay_run_id = ? AND employee_id = ?
+                """.trimIndent(),
+                { rs, _ -> rs.getString("paycheck_id") },
+                employerId,
+                payRunId,
+                employeeId,
+            ).firstOrNull()
+
+            if (!paycheckId.isNullOrBlank()) {
+                return paycheckId
+            }
+
+            Thread.sleep(100)
+        }
+
+        return null
     }
 }

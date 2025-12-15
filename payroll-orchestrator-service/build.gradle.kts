@@ -20,6 +20,7 @@ dependencies {
     implementation(project(":payroll-domain"))
     implementation(project(":messaging-core"))
     implementation(project(":web-core"))
+    implementation(project(":tenancy-core"))
     implementation(project(":hr-api"))
     implementation(project(":hr-client"))
     // Reuse stable wire DTOs for tax/labor service calls.
@@ -30,6 +31,14 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
     runtimeOnly("org.postgresql:postgresql")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("io.micrometer:micrometer-registry-prometheus")
+
+    // Tracing (OTLP)
+    implementation("io.micrometer:micrometer-tracing-bridge-otel")
+    runtimeOnly("io.opentelemetry:opentelemetry-exporter-otlp")
+
+    // Structured JSON logs
+    runtimeOnly("net.logstash.logback:logstash-logback-encoder:8.0")
 
     // Kafka domain events (cloud-agnostic).
     implementation("org.springframework.kafka:spring-kafka")

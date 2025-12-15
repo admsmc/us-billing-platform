@@ -87,6 +87,59 @@ class PayRunQueueDrivenIT(
     }
 
     @Test
+    fun `start finalize is idempotent via Idempotency-Key header`() {
+        val employerId = "emp-1"
+
+        val idempotencyKey = "idem-queue-1"
+
+        val start1 = rest.exchange(
+            RequestEntity.post(URI.create("/employers/$employerId/payruns/finalize"))
+                .header("Idempotency-Key", idempotencyKey)
+                .body(
+                    PayRunController.StartFinalizeRequest(
+                        payPeriodId = "pp-1",
+                        employeeIds = listOf("e-1", "e-2"),
+                        requestedPayRunId = "run-queue-idem-1",
+                    ),
+                ),
+            PayRunController.StartFinalizeResponse::class.java,
+        )
+
+        assertEquals(HttpStatus.ACCEPTED, start1.statusCode)
+        val payRunId = start1.body!!.payRunId
+
+        val start2 = rest.exchange(
+            RequestEntity.post(URI.create("/employers/$employerId/payruns/finalize"))
+                .header("Idempotency-Key", idempotencyKey)
+                .body(
+                    PayRunController.StartFinalizeRequest(
+                        payPeriodId = "pp-1",
+                        employeeIds = listOf("e-1", "e-2"),
+                        // Even if the client retries with a different requested id, the idempotency key wins.
+                        requestedPayRunId = "run-queue-idem-2",
+                    ),
+                ),
+            PayRunController.StartFinalizeResponse::class.java,
+        )
+
+        assertEquals(HttpStatus.ACCEPTED, start2.statusCode)
+        assertEquals(payRunId, start2.body!!.payRunId)
+        assertEquals(false, start2.body!!.created)
+
+        val rabbitOutbox = jdbcTemplate.queryForObject(
+            """
+            SELECT COUNT(*)
+            FROM outbox_event
+            WHERE destination_type = 'RABBIT' AND event_type = 'FinalizePayRunEmployeeJob'
+            """.trimIndent(),
+            Long::class.java,
+        ) ?: 0L
+
+        // Still 2 total jobs (not doubled by the retry).
+        assertEquals(2L, rabbitOutbox)
+    }
+
+    @Test
     fun `internal finalize item endpoint computes paycheck idempotently`() {
         val employerId = "emp-1"
 

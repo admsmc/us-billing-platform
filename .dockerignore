@@ -1,0 +1,32 @@
+# Reduce Docker build context to lower memory usage and speed up builds.
+
+# VCS / editor
+.git
+.github
+.idea
+.vscode
+*.iml
+
+# OS cruft
+.DS_Store
+
+# Gradle / Kotlin caches
+.gradle
+**/.gradle
+.kotlin
+**/.kotlin
+
+# Build outputs
+**/build
+**/build/
+**/out
+**/out/
+
+# Local tooling / reports
+**/coverage
+**/coverage/
+**/*.log
+
+# Benchmark artifacts (not needed for building service images)
+/tmp
+benchmarks/**/out

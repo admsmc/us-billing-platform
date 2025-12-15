@@ -22,6 +22,7 @@ class TaxLocalityRegistryTest {
     private fun loadAllLocalityFilters(): Set<String> {
         val resolver = PathMatchingResourcePatternResolver()
         val resources = resolver.getResources("classpath*:tax-config/*.json")
+            .filterNot { it.filename.orEmpty().endsWith(".metadata.json") }
 
         val filters = mutableSetOf<String>()
         resources.forEach { resource ->

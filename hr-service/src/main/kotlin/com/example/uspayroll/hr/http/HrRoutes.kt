@@ -41,4 +41,12 @@ class HrHttpController(
             payPeriodId = payPeriodId,
         )
     }
+
+    @GetMapping("/pay-periods/by-check-date")
+    fun getPayPeriodByCheckDate(@PathVariable employerId: String, @RequestParam("checkDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) checkDate: LocalDate): PayPeriod? {
+        return payPeriodProvider.findPayPeriodByCheckDate(
+            employerId = EmployerId(employerId),
+            checkDate = checkDate,
+        )
+    }
 }

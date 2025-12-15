@@ -32,8 +32,12 @@ class HrHttpIntegrationTest {
     fun seedData() {
         jdbcTemplate.update("DELETE FROM garnishment_order")
         jdbcTemplate.update("DELETE FROM employment_compensation")
+        jdbcTemplate.update("DELETE FROM employee_profile_effective")
         jdbcTemplate.update("DELETE FROM employee")
         jdbcTemplate.update("DELETE FROM pay_period")
+        jdbcTemplate.update("DELETE FROM pay_schedule")
+        jdbcTemplate.update("DELETE FROM hr_audit_event")
+        jdbcTemplate.update("DELETE FROM hr_idempotency_record")
 
         jdbcTemplate.update(
             """
@@ -56,6 +60,39 @@ class HrHttpIntegrationTest {
             """.trimIndent(),
             employerId.value,
             employeeId.value,
+            LocalDate.of(2024, 6, 1),
+        )
+
+        // Snapshot reads are now based on effective-dated profiles.
+        jdbcTemplate.update(
+            """
+            INSERT INTO employee_profile_effective (
+              employer_id, employee_id,
+              effective_from, effective_to,
+              home_state, work_state, work_city,
+              filing_status, employment_type,
+              hire_date, termination_date,
+              dependents,
+              federal_withholding_exempt, is_nonresident_alien,
+              w4_annual_credit_cents, w4_other_income_cents, w4_deductions_cents,
+              w4_step2_multiple_jobs,
+              w4_version, legacy_allowances, legacy_additional_withholding_cents, legacy_marital_status,
+              w4_effective_date,
+              additional_withholding_cents,
+              fica_exempt, flsa_enterprise_covered, flsa_exempt_status, is_tipped_employee
+            ) VALUES (?, ?, ?, ?, 'CA', 'CA', 'San Francisco', 'SINGLE', 'REGULAR', ?, NULL, 0,
+                      FALSE, FALSE,
+                      NULL, NULL, NULL,
+                      FALSE,
+                      NULL, NULL, NULL, NULL,
+                      NULL,
+                      NULL,
+                      FALSE, TRUE, 'NON_EXEMPT', FALSE)
+            """.trimIndent(),
+            employerId.value,
+            employeeId.value,
+            LocalDate.of(2024, 6, 1),
+            LocalDate.of(9999, 12, 31),
             LocalDate.of(2024, 6, 1),
         )
 

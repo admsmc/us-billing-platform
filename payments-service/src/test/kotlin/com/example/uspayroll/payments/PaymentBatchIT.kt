@@ -20,8 +20,9 @@ import java.time.Instant
         "spring.datasource.url=jdbc:h2:mem:payments_batch_it;DB_CLOSE_DELAY=-1",
 
         "payments.processor.enabled=true",
-        "payments.processor.auto-settle=true",
-        "payments.processor.fail-if-net-cents-equals=200000",
+        "payments.provider.type=sandbox",
+        "payments.provider.sandbox.auto-settle=true",
+        "payments.provider.sandbox.fail-if-net-cents-equals=200000",
         "payments.kafka.enabled=false",
         "payments.outbox.relay.enabled=false",
     ],
@@ -83,5 +84,29 @@ class PaymentBatchIT(
         )
 
         assertEquals(listOf("chk-fail", "chk-ok"), statuses.map { it["PAYCHECK_ID"].toString() })
+
+        val batchProvider = jdbcTemplate.queryForObject(
+            "SELECT provider FROM payment_batch WHERE employer_id = ? AND batch_id = ?",
+            String::class.java,
+            employerId,
+            batchId,
+        )
+        assertEquals("SANDBOX", batchProvider)
+
+        val batchRef = jdbcTemplate.queryForObject(
+            "SELECT provider_batch_ref FROM payment_batch WHERE employer_id = ? AND batch_id = ?",
+            String::class.java,
+            employerId,
+            batchId,
+        )
+        // Sandbox returns deterministic batch ref and processor persists it.
+        org.junit.jupiter.api.Assertions.assertTrue(batchRef?.startsWith("sandbox-batch:") == true)
+
+        val paymentRefs = jdbcTemplate.queryForList(
+            "SELECT paycheck_id, provider_payment_ref FROM paycheck_payment WHERE employer_id = ? AND pay_run_id = ? ORDER BY paycheck_id",
+            employerId,
+            payRunId,
+        )
+        org.junit.jupiter.api.Assertions.assertTrue(paymentRefs.all { it["PROVIDER_PAYMENT_REF"] != null })
     }
 }

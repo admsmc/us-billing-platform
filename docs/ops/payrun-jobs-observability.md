@@ -112,6 +112,40 @@ Operational guidance:
   - `worker.payrun.finalize_employee.total{outcome="retry_enqueued"}`
   - `worker.payrun.finalize_employee.total{outcome="failed_terminal"}`
 
+For the full set of safety rules (when replay is safe vs when to reconcile), see:
+- `docs/ops/dlq-replay-reconciliation.md`
+
+For the canonical list of idempotency + replay invariants, see:
+- `docs/ops/idempotency-and-replay-invariants.md`
+
+SLOs and incident response:
+- `docs/ops/slo-core-workflows.md`
+- `docs/ops/incident-response.md`
+
+Tracing setup:
+- `docs/ops/tracing-local.md`
+
+## HTTP idempotency (client-facing)
+For tier-1 reliability, clients should treat *all* POST endpoints that create work as retryable and supply an idempotency key.
+
+Canonical invariants:
+- `docs/ops/idempotency-and-replay-invariants.md`
+
+In this repository:
+- Payrun finalize start:
+  - `POST /employers/{employerId}/payruns/finalize`
+  - Supported idempotency key:
+    - `Idempotency-Key: <client-generated-key>` (preferred)
+    - `{"idempotencyKey": "..."}` in the JSON body (backwards compatible)
+  - Orchestrator enforces uniqueness per employer (`pay_run.requested_idempotency_key`).
+  - If a request is replayed with the same idempotency key, orchestrator returns the original `payRunId` and does **not** enqueue duplicate Rabbit outbox jobs.
+
+- Payment initiation:
+  - `POST /employers/{employerId}/payruns/{payRunId}/payments/initiate`
+  - Supported idempotency key:
+    - `Idempotency-Key: <client-generated-key>`
+  - Orchestrator records the key on the payrun (`pay_run.payment_initiate_idempotency_key`) so clients can safely retry without double-enqueue.
+
 ## Notes on tier-1 payroll expectations
 - Transport duplicates can happen; the system’s idempotency guarantees should make duplicates a no-op at the business boundary.
 - Alerts should focus on:

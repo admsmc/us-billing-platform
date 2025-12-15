@@ -3,6 +3,7 @@ package com.example.uspayroll.orchestrator.payments
 import com.example.uspayroll.messaging.events.payments.PaycheckPaymentRequestedEvent
 import com.example.uspayroll.orchestrator.outbox.OutboxRepository
 import com.example.uspayroll.orchestrator.payments.persistence.PayRunPaycheckQueryRepository
+import com.example.uspayroll.orchestrator.payments.persistence.PaycheckPaymentRepository
 import com.example.uspayroll.orchestrator.persistence.PaycheckLifecycleRepository
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.dao.DataIntegrityViolationException
@@ -15,6 +16,7 @@ class PaymentRequestService(
     private val props: OrchestratorPaymentsProperties,
     private val paychecks: PayRunPaycheckQueryRepository,
     private val paycheckLifecycleRepository: PaycheckLifecycleRepository,
+    private val paycheckPayments: PaycheckPaymentRepository,
     private val outbox: OutboxRepository,
     private val objectMapper: ObjectMapper,
 ) {
@@ -44,6 +46,18 @@ class PaymentRequestService(
 
         var enqueued = 0
         candidates.forEach { c ->
+            // Best-effort projection row for UI/reconciliation. payments-service is still the system of record.
+            paycheckPayments.insertIfAbsent(
+                employerId = employerId,
+                paymentId = "pmt-${c.paycheckId}",
+                paycheckId = c.paycheckId,
+                payRunId = payRunId,
+                employeeId = c.employeeId,
+                payPeriodId = c.payPeriodId,
+                currency = c.currency,
+                netCents = c.netCents,
+            )
+
             val evt = PaycheckPaymentRequestedEvent(
                 eventId = "paycheck-payment-requested:$employerId:${c.paycheckId}",
                 occurredAt = now,

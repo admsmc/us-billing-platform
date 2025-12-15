@@ -1,6 +1,7 @@
 package com.example.uspayroll.orchestrator.payrun
 
 import com.example.uspayroll.hr.client.HrClient
+import com.example.uspayroll.orchestrator.audit.InputFingerprinter
 import com.example.uspayroll.orchestrator.client.LaborStandardsClient
 import com.example.uspayroll.orchestrator.client.TaxClient
 import com.example.uspayroll.orchestrator.garnishment.SupportProfiles
@@ -8,10 +9,12 @@ import com.example.uspayroll.orchestrator.location.LocalityResolver
 import com.example.uspayroll.orchestrator.persistence.PaycheckAuditStoreRepository
 import com.example.uspayroll.orchestrator.persistence.PaycheckStoreRepository
 import com.example.uspayroll.payroll.engine.PayrollEngine
+import com.example.uspayroll.payroll.model.EarningInput
 import com.example.uspayroll.payroll.model.PaycheckInput
 import com.example.uspayroll.payroll.model.PaycheckResult
 import com.example.uspayroll.payroll.model.TimeSlice
 import com.example.uspayroll.payroll.model.YtdSnapshot
+import com.example.uspayroll.payroll.model.audit.PaycheckComputation
 import com.example.uspayroll.payroll.model.audit.TraceLevel
 import com.example.uspayroll.payroll.model.config.DeductionConfigRepository
 import com.example.uspayroll.payroll.model.config.EarningConfigRepository
@@ -21,6 +24,7 @@ import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.shared.PayRunId
 import com.example.uspayroll.shared.PaycheckId
 import com.example.uspayroll.shared.toLocalityCodeStrings
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.stereotype.Service
 import java.time.Instant
 
@@ -34,7 +38,10 @@ class PaycheckComputationService(
     private val deductionConfigRepository: DeductionConfigRepository,
     private val paycheckStoreRepository: PaycheckStoreRepository,
     private val paycheckAuditStoreRepository: PaycheckAuditStoreRepository,
+    objectMapper: ObjectMapper,
 ) {
+
+    private val inputFingerprinter: InputFingerprinter = InputFingerprinter(objectMapper)
 
     /**
      * HR-backed paycheck computation used by orchestrator finalization flows.
@@ -46,11 +53,53 @@ class PaycheckComputationService(
         employerId: EmployerId,
         payRunId: String,
         payPeriodId: String,
-        runType: String,
+        runType: com.example.uspayroll.orchestrator.payrun.model.PayRunType,
         runSequence: Int,
         paycheckId: String,
         employeeId: EmployeeId,
+        earningOverrides: List<EarningInput> = emptyList(),
     ): PaycheckResult {
+        val computation = computePaycheckComputationForEmployee(
+            employerId = employerId,
+            payRunId = payRunId,
+            payPeriodId = payPeriodId,
+            runType = runType,
+            paycheckId = paycheckId,
+            employeeId = employeeId,
+            earningOverrides = earningOverrides,
+        )
+
+        val paycheck = computation.paycheck
+
+        paycheckStoreRepository.insertFinalPaycheckIfAbsent(
+            employerId = employerId,
+            paycheckId = paycheck.paycheckId.value,
+            payRunId = paycheck.payRunId?.value ?: payRunId,
+            employeeId = paycheck.employeeId.value,
+            payPeriodId = paycheck.period.id,
+            runType = runType.name,
+            runSequence = runSequence,
+            checkDateIso = paycheck.period.checkDate.toString(),
+            grossCents = paycheck.gross.amount,
+            netCents = paycheck.net.amount,
+            version = 1,
+            payload = paycheck,
+        )
+
+        paycheckAuditStoreRepository.insertAuditIfAbsent(computation.audit)
+
+        return paycheck
+    }
+
+    fun computePaycheckComputationForEmployee(
+        employerId: EmployerId,
+        payRunId: String,
+        payPeriodId: String,
+        runType: com.example.uspayroll.orchestrator.payrun.model.PayRunType,
+        paycheckId: String,
+        employeeId: EmployeeId,
+        earningOverrides: List<EarningInput> = emptyList(),
+    ): PaycheckComputation {
         val payPeriod = hrClient.getPayPeriod(employerId, payPeriodId)
             ?: error("No pay period '$payPeriodId' for employer ${employerId.value}")
 
@@ -68,6 +117,8 @@ class PaycheckComputationService(
         val taxContext = taxClient.getTaxContext(
             employerId = employerId,
             asOfDate = payPeriod.checkDate,
+            residentState = snapshot.homeState,
+            workState = snapshot.workState,
             localityCodes = localityCodes.toLocalityCodeStrings(),
         )
 
@@ -92,6 +143,8 @@ class PaycheckComputationService(
             orders = garnishmentOrders,
         )
 
+        val includeBaseEarnings = runType != com.example.uspayroll.orchestrator.payrun.model.PayRunType.OFF_CYCLE
+
         val input = PaycheckInput(
             paycheckId = PaycheckId(paycheckId),
             payRunId = PayRunId(payRunId),
@@ -103,6 +156,8 @@ class PaycheckComputationService(
                 period = payPeriod,
                 regularHours = 0.0,
                 overtimeHours = 0.0,
+                otherEarnings = earningOverrides,
+                includeBaseEarnings = includeBaseEarnings,
             ),
             taxContext = taxContext,
             priorYtd = YtdSnapshot(year = payPeriod.checkDate.year),
@@ -119,25 +174,17 @@ class PaycheckComputationService(
             supportCapContext = supportCapContext,
         )
 
-        val paycheck = computation.paycheck
-
-        paycheckStoreRepository.insertFinalPaycheckIfAbsent(
+        val fingerprinted = inputFingerprinter.stamp(
+            audit = computation.audit,
             employerId = employerId,
-            paycheckId = paycheck.paycheckId.value,
-            payRunId = paycheck.payRunId?.value ?: payRunId,
-            employeeId = paycheck.employeeId.value,
-            payPeriodId = paycheck.period.id,
-            runType = runType,
-            runSequence = runSequence,
-            checkDateIso = paycheck.period.checkDate.toString(),
-            grossCents = paycheck.gross.amount,
-            netCents = paycheck.net.amount,
-            version = 1,
-            payload = paycheck,
+            employeeSnapshot = snapshot,
+            taxContext = taxContext,
+            laborStandards = laborStandards,
+            earningOverrides = earningOverrides,
+            earningConfigRepository = earningConfigRepository,
+            deductionConfigRepository = deductionConfigRepository,
         )
 
-        paycheckAuditStoreRepository.insertAuditIfAbsent(computation.audit)
-
-        return paycheck
+        return computation.copy(audit = fingerprinted)
     }
 }

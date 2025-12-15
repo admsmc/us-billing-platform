@@ -15,6 +15,7 @@ import java.time.Instant
     properties = [
         "spring.task.scheduling.enabled=false",
         "spring.datasource.url=jdbc:h2:mem:payments_intake_it;DB_CLOSE_DELAY=-1",
+        "payments.provider.type=sandbox",
         "payments.kafka.enabled=false",
         "payments.outbox.relay.enabled=false",
     ],
@@ -51,6 +52,23 @@ class PaymentIntakeIT(
             paycheckId,
         ) ?: 0L
         assertEquals(1L, paymentCount)
+
+        val provider = jdbcTemplate.queryForObject(
+            "SELECT provider FROM paycheck_payment WHERE employer_id = ? AND paycheck_id = ?",
+            String::class.java,
+            employerId,
+            paycheckId,
+        )
+        assertEquals("SANDBOX", provider)
+
+        val providerRef = jdbcTemplate.queryForObject(
+            "SELECT provider_payment_ref FROM paycheck_payment WHERE employer_id = ? AND paycheck_id = ?",
+            String::class.java,
+            employerId,
+            paycheckId,
+        )
+        // Provider refs are attached at submission time (processor), not intake time.
+        assertEquals(null, providerRef)
 
         val createdEventId = "paycheck-payment-status-changed:$employerId:$paycheckId:CREATED"
         val outboxCount = jdbcTemplate.queryForObject(

@@ -1,0 +1,17 @@
+services:
+  hr-service:
+    ports:
+      - "8081:8081"
+  tax-service:
+    ports:
+      - "8082:8082"
+  labor-service:
+    ports:
+      - "8083:8083"
+  payroll-orchestrator-service:
+    ports:
+      - "8085:8085"
+  # Publish worker 8088 to a random host port per replica (enables scraping /actuator/prometheus per replica).
+  payroll-worker-service:
+    ports:
+      - "8088"

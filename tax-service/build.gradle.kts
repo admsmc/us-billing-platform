@@ -21,6 +21,7 @@ dependencies {
     implementation(project(":shared-kernel"))
     implementation(project(":payroll-domain"))
     implementation(project(":web-core"))
+    implementation(project(":tenancy-core"))
     implementation(project(":tax-api"))
     implementation(project(":tax-config"))
     implementation(project(":tax-catalog-ports"))
@@ -31,6 +32,14 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("io.micrometer:micrometer-registry-prometheus")
+
+    // Tracing (OTLP)
+    implementation("io.micrometer:micrometer-tracing-bridge-otel")
+    runtimeOnly("io.opentelemetry:opentelemetry-exporter-otlp")
+
+    // Structured JSON logs
+    runtimeOnly("net.logstash.logback:logstash-logback-encoder:8.0")
 
     // Flyway for managing Postgres schema migrations (including tax_rule).
     implementation("org.flywaydb:flyway-core:11.19.0")
@@ -94,15 +103,79 @@ tasks.register<JavaExec>("validateTaxConfig") {
     group = "verification"
     description = "Validate tax rule JSON config files under src/main/resources/tax-config."
 
+    // Ensure TaxContentPaths can find tax-content/src/main/resources.
+    workingDir = rootProject.projectDir
+
     classpath = sourceSets.getByName("main").runtimeClasspath
     mainClass.set("com.example.uspayroll.tax.tools.TaxConfigValidatorCli")
 }
 
-// Generate 2025 federal Pub. 15-T biweekly wage-bracket JSON from curated CSV.
+// Validate metadata sidecars for curated tax-content CSV inputs.
+tasks.register<JavaExec>("validateTaxContentMetadata") {
+    group = "verification"
+    description = "Validate *.metadata.json sidecars for curated CSV inputs under tax-content/src/main/resources."
+
+    // Ensure TaxContentPaths can find tax-content/src/main/resources.
+    workingDir = rootProject.projectDir
+
+    classpath = sourceSets.getByName("main").runtimeClasspath
+    mainClass.set("com.example.uspayroll.tax.tools.TaxContentMetadataValidatorCli")
+}
+
+tasks.register<JavaExec>("validateGeneratedTaxArtifacts") {
+    group = "verification"
+    description = "Validate that generated tax-config JSON artifacts match the curated CSV inputs."
+
+    workingDir = rootProject.projectDir
+
+    classpath = sourceSets.getByName("main").runtimeClasspath
+    mainClass.set("com.example.uspayroll.tax.tools.GeneratedTaxArtifactsValidatorCli")
+
+    val yearProp = project.findProperty("taxYear") as? String
+        ?: System.getenv("TAX_YEAR")
+        ?: "2025"
+    args(yearProp)
+}
+
+tasks.named("check") {
+    dependsOn("validateTaxConfig")
+    dependsOn("validateTaxContentMetadata")
+    dependsOn("validateGeneratedTaxArtifacts")
+}
+
+// Generate federal Pub. 15-T biweekly wage-bracket JSON from curated CSV.
 // This is a pure data build step and does not start the Spring Boot application.
+//
+// Use -PtaxYear=YYYY to control both input CSV name and output JSON name.
+tasks.register<JavaExec>("generateFederalPub15TWageBracketBiweekly") {
+    group = "application"
+    description = "Generate federal Pub. 15-T biweekly wage-bracket TaxRuleFile JSON from IRS-derived CSV. Use -PtaxYear=YYYY."
+
+    // Ensure TaxContentPaths can find tax-content/src/main/resources.
+    workingDir = rootProject.projectDir
+
+    classpath = sourceSets.getByName("main").runtimeClasspath
+    mainClass.set("com.example.uspayroll.tax.tools.WageBracketCsvImporter")
+
+    val yearProp = project.findProperty("taxYear") as? String
+        ?: System.getenv("TAX_YEAR")
+        ?: "2025"
+
+    args(
+        "--wageBracketCsv=wage-bracket-$yearProp-biweekly.csv",
+        "--output=tax-config/federal-$yearProp-pub15t-wage-bracket-biweekly.json",
+        "--baseIdPrefix=US_FED_FIT_${yearProp}_PUB15T_WB",
+        "--effectiveFrom=$yearProp-01-01",
+        "--effectiveTo=9999-12-31",
+    )
+}
+
+// Back-compat alias for the original 2025-specific task name.
 tasks.register<JavaExec>("generateFederal2025BiweeklyWageBrackets") {
     group = "application"
-    description = "Generate 2025 federal Pub. 15-T biweekly wage-bracket TaxRuleFile JSON from IRS-derived CSV."
+    description = "Generate 2025 federal Pub. 15-T biweekly wage-bracket TaxRuleFile JSON from IRS-derived CSV (alias)."
+
+    workingDir = rootProject.projectDir
 
     classpath = sourceSets.getByName("main").runtimeClasspath
     mainClass.set("com.example.uspayroll.tax.tools.WageBracketCsvImporter")

@@ -17,10 +17,22 @@ kotlin {
 
 dependencies {
     implementation(project(":messaging-core"))
+    implementation(project(":tenancy-core"))
+    implementation(project(":web-core"))
 
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("io.micrometer:micrometer-registry-prometheus")
+
+    // Tracing (OTLP)
+    implementation("io.micrometer:micrometer-tracing-bridge-otel")
+    runtimeOnly("io.opentelemetry:opentelemetry-exporter-otlp")
+
+    // Structured JSON logs
+    runtimeOnly("net.logstash.logback:logstash-logback-encoder:8.0")
+
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
+    runtimeOnly("org.postgresql:postgresql")
 
     implementation("org.flywaydb:flyway-core:10.14.0")
     implementation("org.springframework.kafka:spring-kafka")

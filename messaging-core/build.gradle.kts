@@ -14,6 +14,9 @@ kotlin {
 
 dependencies {
     // Intentionally minimal: consumers can use these utilities without Spring.
+
+    testImplementation(kotlin("test"))
+    testImplementation("com.h2database:h2:2.3.232")
 }
 
 tasks.withType<JavaCompile> {

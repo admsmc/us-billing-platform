@@ -16,6 +16,7 @@ class PayRunExecutionService(
     private val payRunRepository: PayRunRepository,
     private val payRunItemRepository: PayRunItemRepository,
     private val paycheckComputationService: PaycheckComputationService,
+    private val earningOverridesCodec: PayRunEarningOverridesCodec,
     private val outboxEnqueuer: PayRunOutboxEnqueuer,
 ) {
 
@@ -183,14 +184,20 @@ class PayRunExecutionService(
                 employeeId = employeeId,
             )
 
+            val earningOverrides = payRunItemRepository.findItem(employerId, payRunId, employeeId)
+                ?.earningOverridesJson
+                ?.let { earningOverridesCodec.decodeToEarningInputs(it) }
+                ?: emptyList()
+
             val paycheck = paycheckComputationService.computeAndPersistFinalPaycheckForEmployee(
                 employerId = EmployerId(employerId),
                 payRunId = payRunId,
                 payPeriodId = payRun.payPeriodId,
-                runType = payRun.runType.name,
+                runType = payRun.runType,
                 runSequence = payRun.runSequence,
                 paycheckId = paycheckId,
                 employeeId = EmployeeId(employeeId),
+                earningOverrides = earningOverrides,
             )
 
             payRunItemRepository.markSucceeded(

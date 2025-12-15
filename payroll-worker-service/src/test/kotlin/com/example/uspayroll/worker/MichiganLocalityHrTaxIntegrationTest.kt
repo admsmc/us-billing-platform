@@ -86,10 +86,13 @@ class MichiganLocalityHrTaxIntegrationTest {
 
                 dataSource.connection.use { conn ->
                     conn.exec("DELETE FROM employment_compensation")
+                    conn.exec("DELETE FROM employee_profile_effective")
                     conn.exec("DELETE FROM employee")
                     conn.exec("DELETE FROM pay_period")
 
                     fun insertEmployee(employeeId: String, workCity: String) {
+                        val hireDate = LocalDate.of(2024, 6, 1)
+
                         conn.exec(
                             """
                             INSERT INTO employee (
@@ -112,7 +115,35 @@ class MichiganLocalityHrTaxIntegrationTest {
                             employerId,
                             employeeId,
                             workCity,
-                            LocalDate.of(2024, 6, 1),
+                            hireDate,
+                        )
+
+                        // HR snapshots now read from employee_profile_effective.
+                        conn.exec(
+                            """
+                            INSERT INTO employee_profile_effective (
+                              employer_id, employee_id,
+                              effective_from, effective_to,
+                              home_state, work_state, work_city,
+                              filing_status, employment_type,
+                              hire_date, termination_date,
+                              dependents,
+                              federal_withholding_exempt, is_nonresident_alien,
+                              w4_step2_multiple_jobs,
+                              additional_withholding_cents,
+                              fica_exempt, flsa_enterprise_covered, flsa_exempt_status, is_tipped_employee
+                            ) VALUES (?, ?, ?, ?, 'MI', 'MI', ?, 'SINGLE', 'REGULAR', ?, NULL, 0,
+                                      FALSE, FALSE,
+                                      FALSE,
+                                      NULL,
+                                      FALSE, TRUE, 'NON_EXEMPT', FALSE)
+                            """.trimIndent(),
+                            employerId,
+                            employeeId,
+                            hireDate,
+                            LocalDate.of(9999, 12, 31),
+                            workCity,
+                            hireDate,
                         )
                     }
 
@@ -196,12 +227,12 @@ class MichiganLocalityHrTaxIntegrationTest {
             catalog = CachingTaxCatalog(dbCatalog)
         }
 
-        override fun getTaxContext(employerId: EmployerId, asOfDate: LocalDate, localityCodes: List<String>): TaxContext {
+        override fun getTaxContext(employerId: EmployerId, asOfDate: LocalDate, residentState: String?, workState: String?, localityCodes: List<String>): TaxContext {
             val query = TaxQuery(
                 employerId = employerId,
                 asOfDate = asOfDate,
-                residentState = "MI",
-                workState = "MI",
+                residentState = residentState ?: "MI",
+                workState = workState ?: "MI",
                 localJurisdictions = localityCodes,
             )
 

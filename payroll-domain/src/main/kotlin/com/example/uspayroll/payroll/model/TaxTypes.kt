@@ -51,6 +51,11 @@ sealed class TaxRule {
          * null, the rule is treated as generic and may apply to all statuses.
          */
         val filingStatus: FilingStatus? = null,
+        /**
+         * Optional locality filter code (e.g. "DETROIT", "NYC") used to select this rule
+         * from the tax catalog and to support multi-locality pay periods.
+         */
+        val localityFilter: String? = null,
     ) : TaxRule()
 
     data class FlatRateTax(
@@ -59,6 +64,11 @@ sealed class TaxRule {
         override val basis: TaxBasis,
         val rate: Percent,
         val annualWageCap: Money? = null,
+        /**
+         * Optional locality filter code (e.g. "DETROIT", "NYC") used to select this rule
+         * from the tax catalog and to support multi-locality pay periods.
+         */
+        val localityFilter: String? = null,
     ) : TaxRule()
 
     /**
@@ -72,6 +82,11 @@ sealed class TaxRule {
         override val basis: TaxBasis,
         val brackets: List<WageBracketRow>,
         val filingStatus: FilingStatus? = null,
+        /**
+         * Optional locality filter code (e.g. "DETROIT", "NYC") used to select this rule
+         * from the tax catalog and to support multi-locality pay periods.
+         */
+        val localityFilter: String? = null,
     ) : TaxRule()
 }
 

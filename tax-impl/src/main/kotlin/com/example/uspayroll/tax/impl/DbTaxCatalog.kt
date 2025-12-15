@@ -52,6 +52,7 @@ class DbTaxCatalog(
                     },
                 ),
                 annualWageCap = normalizedCapCents?.let { Money(it) },
+                localityFilter = localityFilter,
             )
             TaxRuleRecord.RuleType.BRACKETED -> TaxRule.BracketedIncomeTax(
                 id = id,
@@ -67,6 +68,7 @@ class DbTaxCatalog(
                         throw IllegalArgumentException("Unknown filing status '$raw' on tax rule '$id'", e)
                     }
                 },
+                localityFilter = localityFilter,
             )
             TaxRuleRecord.RuleType.WAGE_BRACKET -> TaxRule.WageBracketTax(
                 id = id,
@@ -80,6 +82,7 @@ class DbTaxCatalog(
                         throw IllegalArgumentException("Unknown filing status '$raw' on tax rule '$id'", e)
                     }
                 },
+                localityFilter = localityFilter,
             )
         }
     }

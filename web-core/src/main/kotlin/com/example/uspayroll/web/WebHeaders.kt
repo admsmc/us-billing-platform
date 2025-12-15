@@ -4,6 +4,9 @@ package com.example.uspayroll.web
 object WebHeaders {
     const val CORRELATION_ID = "X-Correlation-ID"
 
+    // HTTP idempotency
+    const val IDEMPOTENCY_KEY = "Idempotency-Key"
+
     // Identity context propagated by edge-service
     const val PRINCIPAL_SUB = "X-Principal-Sub"
     const val PRINCIPAL_SCOPE = "X-Principal-Scope"

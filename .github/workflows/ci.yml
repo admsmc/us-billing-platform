@@ -16,6 +16,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Guard: dependency changes require updated locks + verification metadata
+        if: github.event_name == 'pull_request'
+        run: ./scripts/ci/check-dependency-locks-and-verification.sh "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}"
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4

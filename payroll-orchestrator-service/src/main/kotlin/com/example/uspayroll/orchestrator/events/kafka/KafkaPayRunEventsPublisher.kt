@@ -16,6 +16,7 @@ data class KafkaEventsProperties(
     var enabled: Boolean = false,
     var payRunFinalizedTopic: String = "payrun.finalized",
     var paycheckFinalizedTopic: String = "paycheck.finalized",
+    var paycheckLedgerTopic: String = "paycheck.ledger",
 )
 
 @Configuration

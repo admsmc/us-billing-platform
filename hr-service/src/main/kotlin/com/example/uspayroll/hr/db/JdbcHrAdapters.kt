@@ -21,20 +21,35 @@ class JdbcEmployeeSnapshotProvider(
     override fun getEmployeeSnapshot(employerId: EmployerId, employeeId: EmployeeId, asOfDate: LocalDate): EmployeeSnapshot? {
         val sql =
             """
-            SELECT e.*, c.compensation_type, c.annual_salary_cents, c.hourly_rate_cents, c.pay_frequency
-            FROM employee e
+            SELECT p.*, c.compensation_type, c.annual_salary_cents, c.hourly_rate_cents, c.pay_frequency
+            FROM employee_profile_effective p
             LEFT JOIN employment_compensation c
-              ON c.employer_id = e.employer_id
-             AND c.employee_id = e.employee_id
+              ON c.employer_id = p.employer_id
+             AND c.employee_id = p.employee_id
              AND c.effective_from <= ?
              AND c.effective_to > ?
-            WHERE e.employer_id = ?
-              AND e.employee_id = ?
-            ORDER BY c.effective_from DESC
+             AND c.system_from <= CURRENT_TIMESTAMP
+             AND c.system_to > CURRENT_TIMESTAMP
+            WHERE p.employer_id = ?
+              AND p.employee_id = ?
+              AND p.effective_from <= ?
+              AND p.effective_to > ?
+              AND p.system_from <= CURRENT_TIMESTAMP
+              AND p.system_to > CURRENT_TIMESTAMP
+            ORDER BY p.effective_from DESC, p.system_from DESC, c.effective_from DESC, c.system_from DESC
             FETCH FIRST 1 ROW ONLY
             """.trimIndent()
 
-        val rows = jdbcTemplate.query(sql, EmployeeWithCompRowMapper, asOfDate, asOfDate, employerId.value, employeeId.value)
+        val rows = jdbcTemplate.query(
+            sql,
+            EmployeeWithCompRowMapper,
+            asOfDate,
+            asOfDate,
+            employerId.value,
+            employeeId.value,
+            asOfDate,
+            asOfDate,
+        )
         val row = rows.firstOrNull() ?: return null
 
         val filingStatus = FilingStatus.valueOf(row.filingStatus)

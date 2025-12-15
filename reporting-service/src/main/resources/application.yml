@@ -1,0 +1,25 @@
+server:
+  port: ${SERVER_PORT:8089}
+
+spring:
+  application:
+    name: reporting-service
+  datasource:
+    url: ${REPORTING_DB_URL:jdbc:postgresql://localhost:5432/us_payroll_reporting}
+    username: ${REPORTING_DB_USERNAME:reporting_service}
+    password: ${REPORTING_DB_PASSWORD:}
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+management:
+  tracing:
+    sampling:
+      probability: ${TRACING_SAMPLING_PROBABILITY:0.1}
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus

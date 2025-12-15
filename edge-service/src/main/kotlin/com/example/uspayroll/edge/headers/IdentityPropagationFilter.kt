@@ -1,5 +1,6 @@
 package com.example.uspayroll.edge.headers
 
+import com.example.uspayroll.web.WebHeaders
 import org.springframework.cloud.gateway.filter.GatewayFilterChain
 import org.springframework.cloud.gateway.filter.GlobalFilter
 import org.springframework.core.Ordered
@@ -21,8 +22,8 @@ class IdentityPropagationFilter : GlobalFilter {
 
         // Echo correlation id for easier debugging.
         exchangeWithCorrelation.response.beforeCommit {
-            if (!exchangeWithCorrelation.response.headers.containsKey(HEADER_CORRELATION_ID)) {
-                exchangeWithCorrelation.response.headers.add(HEADER_CORRELATION_ID, correlationId)
+            if (!exchangeWithCorrelation.response.headers.containsKey(WebHeaders.CORRELATION_ID)) {
+                exchangeWithCorrelation.response.headers.add(WebHeaders.CORRELATION_ID, correlationId)
             }
             Mono.empty()
         }
@@ -37,9 +38,9 @@ class IdentityPropagationFilter : GlobalFilter {
                         .request(
                             exchangeWithCorrelation.request
                                 .mutate()
-                                .header(HEADER_PRINCIPAL_SUB, jwt.subject ?: "")
-                                .header(HEADER_PRINCIPAL_SCOPE, jwt.getClaimAsString("scope") ?: "")
-                                .header(HEADER_EMPLOYER_ID, jwt.getClaimAsString("employer_id") ?: "")
+                                .header(WebHeaders.PRINCIPAL_SUB, jwt.subject ?: "")
+                                .header(WebHeaders.PRINCIPAL_SCOPE, jwt.getClaimAsString("scope") ?: "")
+                                .header(WebHeaders.EMPLOYER_ID, jwt.getClaimAsString("employer_id") ?: "")
                                 .build(),
                         )
                         .build()
@@ -50,7 +51,7 @@ class IdentityPropagationFilter : GlobalFilter {
     }
 
     private fun ensureCorrelationId(exchange: ServerWebExchange): Pair<ServerWebExchange, String> {
-        val existing = exchange.request.headers.getFirst(HEADER_CORRELATION_ID)
+        val existing = exchange.request.headers.getFirst(WebHeaders.CORRELATION_ID)
         val correlationId = if (existing.isNullOrBlank()) UUID.randomUUID().toString() else existing
 
         if (!existing.isNullOrBlank()) {
@@ -59,18 +60,9 @@ class IdentityPropagationFilter : GlobalFilter {
 
         val mutatedRequest: ServerHttpRequest = exchange.request
             .mutate()
-            .header(HEADER_CORRELATION_ID, correlationId)
+            .header(WebHeaders.CORRELATION_ID, correlationId)
             .build()
 
         return exchange.mutate().request(mutatedRequest).build() to correlationId
-    }
-
-    private companion object {
-        private const val HEADER_CORRELATION_ID = "X-Correlation-ID"
-
-        // First-pass identity propagation headers.
-        private const val HEADER_PRINCIPAL_SUB = "X-Principal-Sub"
-        private const val HEADER_PRINCIPAL_SCOPE = "X-Principal-Scope"
-        private const val HEADER_EMPLOYER_ID = "X-Employer-Id"
     }
 }

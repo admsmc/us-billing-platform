@@ -20,11 +20,20 @@ dependencies {
     implementation(project(":payroll-domain"))
     implementation(project(":hr-api"))
     implementation(project(":web-core"))
+    implementation(project(":tenancy-core"))
 
     // Spring Boot application + web + JDBC.
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("io.micrometer:micrometer-registry-prometheus")
+
+    // Tracing (OTLP)
+    implementation("io.micrometer:micrometer-tracing-bridge-otel")
+    runtimeOnly("io.opentelemetry:opentelemetry-exporter-otlp")
+
+    // Structured JSON logs
+    runtimeOnly("net.logstash.logback:logstash-logback-encoder:8.0")
 
     // Jackson Kotlin module so Kotlin data classes / value classes serialize with stable property names.
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
