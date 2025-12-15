@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     kotlin("jvm")
+    id("java-test-fixtures")
 }
 
 kotlin {
@@ -26,6 +27,8 @@ dependencies {
 
     // Optional at compile time (used by interceptor signatures).
     compileOnly("jakarta.servlet:jakarta.servlet-api:6.0.0")
+
+    testFixturesImplementation("org.springframework:spring-test:6.1.8")
 
     testImplementation(kotlin("test"))
     testImplementation("org.springframework:spring-test:6.1.8")

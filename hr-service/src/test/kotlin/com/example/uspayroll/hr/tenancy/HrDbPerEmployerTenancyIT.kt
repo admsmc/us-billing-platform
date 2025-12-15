@@ -1,31 +1,36 @@
 package com.example.uspayroll.hr.tenancy
 
 import com.example.uspayroll.tenancy.db.TenantDataSources
+import com.example.uspayroll.tenancy.testsupport.DbPerEmployerTenancyTestSupport
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.test.context.DynamicPropertyRegistry
+import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import java.time.LocalDate
 
-@SpringBootTest(
-    properties = [
-        "tenancy.mode=DB_PER_EMPLOYER",
-        "tenancy.databases.EMP1.url=jdbc:h2:mem:hr_emp1;MODE=PostgreSQL;DB_CLOSE_DELAY=-1",
-        "tenancy.databases.EMP1.username=sa",
-        "tenancy.databases.EMP1.password=",
-        "tenancy.databases.EMP2.url=jdbc:h2:mem:hr_emp2;MODE=PostgreSQL;DB_CLOSE_DELAY=-1",
-        "tenancy.databases.EMP2.username=sa",
-        "tenancy.databases.EMP2.password=",
-        // Run on random port in case the context starts a server; MockMvc is used.
-        "server.port=0",
-    ],
-)
+@SpringBootTest
 @AutoConfigureMockMvc
 class HrDbPerEmployerTenancyIT {
+
+    companion object {
+        @JvmStatic
+        @DynamicPropertySource
+        fun tenancyProps(registry: DynamicPropertyRegistry) {
+            DbPerEmployerTenancyTestSupport.registerH2Tenants(
+                registry,
+                tenantToDbName = mapOf(
+                    "EMP1" to "hr_emp1",
+                    "EMP2" to "hr_emp2",
+                ),
+            )
+        }
+    }
 
     @Autowired
     lateinit var mockMvc: MockMvc

@@ -2,6 +2,7 @@ package com.example.uspayroll.orchestrator.tenancy
 
 import com.example.uspayroll.orchestrator.support.StubClientsTestConfig
 import com.example.uspayroll.tenancy.db.TenantDataSources
+import com.example.uspayroll.tenancy.testsupport.DbPerEmployerTenancyTestSupport
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -9,26 +10,31 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
 import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.test.context.DynamicPropertyRegistry
+import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import kotlin.test.assertEquals
 
-@SpringBootTest(
-    properties = [
-        "tenancy.mode=DB_PER_EMPLOYER",
-        "tenancy.databases.EMP1.url=jdbc:h2:mem:orch_emp1;MODE=PostgreSQL;DB_CLOSE_DELAY=-1",
-        "tenancy.databases.EMP1.username=sa",
-        "tenancy.databases.EMP1.password=",
-        "tenancy.databases.EMP2.url=jdbc:h2:mem:orch_emp2;MODE=PostgreSQL;DB_CLOSE_DELAY=-1",
-        "tenancy.databases.EMP2.username=sa",
-        "tenancy.databases.EMP2.password=",
-        "orchestrator.internal-auth.shared-secret=dev-internal-token",
-        "server.port=0",
-    ],
-)
+@SpringBootTest
 @AutoConfigureMockMvc
 @Import(StubClientsTestConfig::class)
 class OrchestratorDbPerEmployerTenancyIT {
+
+    companion object {
+        @JvmStatic
+        @DynamicPropertySource
+        fun tenancyProps(registry: DynamicPropertyRegistry) {
+            DbPerEmployerTenancyTestSupport.registerH2Tenants(
+                registry,
+                tenantToDbName = mapOf(
+                    "EMP1" to "orch_emp1",
+                    "EMP2" to "orch_emp2",
+                ),
+            )
+            registry.add("orchestrator.internal-auth.shared-secret") { "dev-internal-token" }
+        }
+    }
 
     @Autowired
     lateinit var mockMvc: MockMvc
