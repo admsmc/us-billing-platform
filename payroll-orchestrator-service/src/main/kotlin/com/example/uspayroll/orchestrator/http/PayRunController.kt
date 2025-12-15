@@ -4,6 +4,7 @@ import com.example.uspayroll.orchestrator.payrun.PayRunService
 import com.example.uspayroll.orchestrator.payrun.model.PayRunStatus
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.web.WebHeaders
+import com.example.uspayroll.web.security.SecurityAuditLogger
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -199,16 +200,54 @@ class PayRunController(
 
     @PostMapping("/{payRunId}/approve")
     fun approve(@PathVariable employerId: String, @PathVariable payRunId: String): ResponseEntity<ApprovePayRunResponse> {
-        val result = payRunService.approvePayRun(employerId, payRunId)
-        return ResponseEntity.ok(
-            ApprovePayRunResponse(
+        val method = "POST"
+        val path = "/employers/$employerId/payruns/$payRunId/approve"
+
+        @Suppress("TooGenericExceptionCaught")
+        try {
+            val result = payRunService.approvePayRun(employerId, payRunId)
+
+            SecurityAuditLogger.privilegedOperationGranted(
+                component = "orchestrator",
+                method = method,
+                path = path,
+                operation = "payroll_approve",
+                status = HttpStatus.OK.value(),
                 employerId = employerId,
-                payRunId = payRunId,
-                status = result.effectiveStatus,
-                approvalStatus = result.payRun.approvalStatus,
-                paymentStatus = result.payRun.paymentStatus,
-            ),
-        )
+            )
+
+            return ResponseEntity.ok(
+                ApprovePayRunResponse(
+                    employerId = employerId,
+                    payRunId = payRunId,
+                    status = result.effectiveStatus,
+                    approvalStatus = result.payRun.approvalStatus,
+                    paymentStatus = result.payRun.paymentStatus,
+                ),
+            )
+        } catch (ex: ResponseStatusException) {
+            SecurityAuditLogger.privilegedOperationFailed(
+                component = "orchestrator",
+                method = method,
+                path = path,
+                operation = "payroll_approve",
+                status = ex.statusCode.value(),
+                reason = ex.reason ?: "error",
+                employerId = employerId,
+            )
+            throw ex
+        } catch (t: Exception) {
+            SecurityAuditLogger.privilegedOperationFailed(
+                component = "orchestrator",
+                method = method,
+                path = path,
+                operation = "payroll_approve",
+                status = HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                reason = t.message ?: t::class.java.name,
+                employerId = employerId,
+            )
+            throw t
+        }
     }
 
     data class InitiatePaymentsResponse(
@@ -259,25 +298,63 @@ class PayRunController(
         @PathVariable payRunId: String,
         @RequestHeader(name = WebHeaders.IDEMPOTENCY_KEY, required = false) idempotencyKey: String?,
     ): ResponseEntity<InitiatePaymentsResponse> {
+        val method = "POST"
+        val path = "/employers/$employerId/payruns/$payRunId/payments/initiate"
+
         val normalizedKey = idempotencyKey?.takeIf { it.isNotBlank() }
-        val result = payRunService.initiatePayments(employerId, payRunId, idempotencyKey = normalizedKey)
 
-        val body = InitiatePaymentsResponse(
-            employerId = employerId,
-            payRunId = payRunId,
-            status = result.effectiveStatus,
-            approvalStatus = result.payRun.approvalStatus,
-            paymentStatus = result.payRun.paymentStatus,
-            candidates = result.candidates,
-            enqueuedEvents = result.enqueuedEvents,
-        )
+        @Suppress("TooGenericExceptionCaught")
+        try {
+            val result = payRunService.initiatePayments(employerId, payRunId, idempotencyKey = normalizedKey)
 
-        return if (normalizedKey == null) {
-            ResponseEntity.ok(body)
-        } else {
-            ResponseEntity.ok()
-                .header(WebHeaders.IDEMPOTENCY_KEY, normalizedKey)
-                .body(body)
+            SecurityAuditLogger.privilegedOperationGranted(
+                component = "orchestrator",
+                method = method,
+                path = path,
+                operation = "payroll_payments_initiate",
+                status = HttpStatus.OK.value(),
+                employerId = employerId,
+            )
+
+            val body = InitiatePaymentsResponse(
+                employerId = employerId,
+                payRunId = payRunId,
+                status = result.effectiveStatus,
+                approvalStatus = result.payRun.approvalStatus,
+                paymentStatus = result.payRun.paymentStatus,
+                candidates = result.candidates,
+                enqueuedEvents = result.enqueuedEvents,
+            )
+
+            return if (normalizedKey == null) {
+                ResponseEntity.ok(body)
+            } else {
+                ResponseEntity.ok()
+                    .header(WebHeaders.IDEMPOTENCY_KEY, normalizedKey)
+                    .body(body)
+            }
+        } catch (ex: ResponseStatusException) {
+            SecurityAuditLogger.privilegedOperationFailed(
+                component = "orchestrator",
+                method = method,
+                path = path,
+                operation = "payroll_payments_initiate",
+                status = ex.statusCode.value(),
+                reason = ex.reason ?: "error",
+                employerId = employerId,
+            )
+            throw ex
+        } catch (t: Exception) {
+            SecurityAuditLogger.privilegedOperationFailed(
+                component = "orchestrator",
+                method = method,
+                path = path,
+                operation = "payroll_payments_initiate",
+                status = HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                reason = t.message ?: t::class.java.name,
+                employerId = employerId,
+            )
+            throw t
         }
     }
 

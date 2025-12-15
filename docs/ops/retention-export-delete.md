@@ -45,3 +45,19 @@ Intended usage:
 Important:
 - Payroll artifacts (payruns/paychecks/audits) often have multi-year retention requirements; do not delete them without an explicit policy decision.
 - Prefer starting with low-risk operational data such as outbox rows and transient job state.
+
+### Orchestrator outbox retention (initial safe rule)
+The orchestrator can be configured to periodically delete durable outbox rows that have already been published.
+
+Implementation:
+- `payroll-orchestrator-service/src/main/kotlin/com/example/uspayroll/orchestrator/ops/OutboxRetentionJob.kt`
+
+Rule (initial):
+- table: `outbox_event`
+- delete rows where `status = 'SENT'` and `published_at` is older than the retention window.
+
+Config (opt-in):
+- `orchestrator.retention.outbox.enabled=true`
+- `orchestrator.retention.outbox.apply-deletes=false` (default; dry-run)
+- `orchestrator.retention.outbox.retention-days=30` (default)
+- `orchestrator.retention.outbox.fixed-delay-millis=3600000` (default)

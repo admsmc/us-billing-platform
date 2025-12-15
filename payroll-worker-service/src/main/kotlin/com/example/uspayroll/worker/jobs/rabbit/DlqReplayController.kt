@@ -2,6 +2,7 @@ package com.example.uspayroll.worker.jobs.rabbit
 
 import com.example.uspayroll.messaging.jobs.FinalizePayRunEmployeeJob
 import com.example.uspayroll.messaging.jobs.FinalizePayRunJobRouting
+import com.example.uspayroll.web.security.SecurityAuditLogger
 import com.example.uspayroll.worker.security.WorkerInternalAuthProperties
 import io.micrometer.core.instrument.MeterRegistry
 import jakarta.servlet.http.HttpServletRequest
@@ -38,7 +39,19 @@ class DlqReplayController(
         val expected = auth.sharedSecret
         val headerName = auth.headerName
 
+        val method = request.method ?: "POST"
+        val path = request.requestURI ?: "/internal/jobs/finalize-employee/dlq/replay"
+
         if (expected.isBlank()) {
+            SecurityAuditLogger.privilegedOperationFailed(
+                component = "worker",
+                method = method,
+                path = path,
+                operation = "payroll_replay",
+                status = HttpStatus.UNAUTHORIZED.value(),
+                reason = "internal_auth_not_configured",
+            )
+
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
                 mapOf(
                     "error" to "unauthorized",
@@ -50,6 +63,15 @@ class DlqReplayController(
 
         val token = request.getHeader(headerName)
         if (token != expected) {
+            SecurityAuditLogger.privilegedOperationFailed(
+                component = "worker",
+                method = method,
+                path = path,
+                operation = "payroll_replay",
+                status = HttpStatus.UNAUTHORIZED.value(),
+                reason = "internal_auth_invalid",
+            )
+
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
                 mapOf(
                     "error" to "unauthorized",
@@ -81,6 +103,14 @@ class DlqReplayController(
         }
 
         if (moved > 0) replayCounter.increment(moved.toDouble())
+
+        SecurityAuditLogger.privilegedOperationGranted(
+            component = "worker",
+            method = method,
+            path = path,
+            operation = "payroll_replay",
+            status = HttpStatus.OK.value(),
+        )
 
         return ResponseEntity.ok(
             mapOf(
