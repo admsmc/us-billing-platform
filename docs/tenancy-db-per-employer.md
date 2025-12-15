@@ -45,3 +45,12 @@ For a tier-1 offering, plan for automation:
 - secrets management integration
 - migration orchestration and safety controls
 - incident playbooks (restore for a single tenant)
+
+## Repo-local ops automation (dev/staging helpers)
+This repo includes scripts under `scripts/ops/` to make common tenancy operations repeatable:
+- Provision per-tenant DBs/roles: `scripts/ops/tenancy-provision.sh`
+- Run migrations per tenant: `scripts/ops/tenancy-migrate.sh`
+- Backup a single tenant DB: `scripts/ops/tenancy-backup.sh`
+- Restore a single tenant DB: `scripts/ops/tenancy-restore.sh`
+
+These are intended as a baseline; production deployments should integrate with platform-native tooling (managed Postgres snapshots/PITR, secrets managers, etc.).
