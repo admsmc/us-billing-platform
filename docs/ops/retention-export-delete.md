@@ -31,3 +31,17 @@ Suggested categories:
 Given the DB-per-employer model (`docs/tenancy-db-per-employer.md`):
 - Export/delete can be executed per tenant database.
 - Restore can be scoped to a single tenant without cross-tenant blast radius.
+
+## Executable retention hooks (scaffolding)
+This repo includes a generic per-tenant SQL retention runner that supports dry-run and apply modes.
+
+Touchpoint:
+- `tenancy-core/src/main/kotlin/com/example/uspayroll/tenancy/ops/TenantRetentionRunner.kt`
+
+Intended usage:
+- Each service defines a small set of retention rules for *operational* tables (example: outbox rows that are already published and older than a configured window).
+- A scheduled job (Kubernetes CronJob / platform scheduler) invokes the retention runner across tenant DBs.
+
+Important:
+- Payroll artifacts (payruns/paychecks/audits) often have multi-year retention requirements; do not delete them without an explicit policy decision.
+- Prefer starting with low-risk operational data such as outbox rows and transient job state.
