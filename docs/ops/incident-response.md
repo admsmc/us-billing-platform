@@ -55,6 +55,15 @@ Actions:
 See:
 - `docs/ops/dlq-replay-reconciliation.md`
 
+## Incident drill artifacts (repeatability)
+When running a DR drill or tabletop exercise, produce an artifact you can attach to a ticket.
+
+Repo-local helper:
+- `scripts/ops/incident-drill-template.sh`
+
+Example:
+- `EMPLOYER_ID=EMP1 SCENARIO=dlq-growth ./scripts/ops/incident-drill-template.sh`
+
 ## Using traces effectively
 - Run local tracing backend:
   - `docs/ops/tracing-local.md`

@@ -1,0 +1,58 @@
+name: dast
+
+on:
+  pull_request:
+  schedule:
+    - cron: '0 8 * * 1' # weekly (Mondays)
+
+permissions:
+  contents: read
+
+jobs:
+  zap-baseline:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Boot stack (auth disabled for scan)
+        env:
+          EDGE_AUTH_MODE: DISABLED
+          EDGE_AUTH_ALLOW_DISABLED: 'true'
+        run: |
+          set -euo pipefail
+          docker compose up -d --build
+
+      - name: Wait for edge-service health
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:8080/actuator/health >/dev/null; then
+              echo "edge-service is healthy"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "edge-service did not become healthy" >&2
+          docker compose ps
+          docker compose logs edge-service --no-color || true
+          exit 1
+
+      - name: OWASP ZAP baseline
+        run: |
+          set -euo pipefail
+          mkdir -p zap-reports
+          docker run --rm --network host -v "${PWD}/zap-reports:/zap/wrk" ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py -t http://localhost:8080 -a -m 5 -r zap-report.html -J zap-report.json
+
+      - name: Upload ZAP reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-baseline
+          path: zap-reports/*
+
+      - name: Teardown
+        if: always()
+        run: docker compose down -v
