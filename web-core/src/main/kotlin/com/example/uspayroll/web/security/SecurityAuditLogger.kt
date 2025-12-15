@@ -82,6 +82,54 @@ object SecurityAuditLogger {
         )
     }
 
+    fun privilegedOperationGranted(
+        component: String,
+        method: String,
+        path: String,
+        operation: String,
+        status: Int,
+        principalSub: String? = null,
+        employerId: String? = null,
+        correlationId: String? = null,
+    ) {
+        logger.warn(
+            "security_audit event=privileged_op outcome=granted component={} method={} path={} operation={} status={} correlationId={} employerId={} principalSub={}",
+            component,
+            method,
+            path,
+            operation,
+            status,
+            correlationId ?: MDC.get(WebMdcKeys.CORRELATION_ID),
+            employerId ?: MDC.get(WebMdcKeys.EMPLOYER_ID),
+            principalSub ?: MDC.get(WebMdcKeys.PRINCIPAL_SUB),
+        )
+    }
+
+    fun privilegedOperationFailed(
+        component: String,
+        method: String,
+        path: String,
+        operation: String,
+        status: Int,
+        reason: String,
+        principalSub: String? = null,
+        employerId: String? = null,
+        correlationId: String? = null,
+    ) {
+        logger.warn(
+            "security_audit event=privileged_op outcome=failed component={} method={} path={} operation={} status={} reason={} correlationId={} employerId={} principalSub={}",
+            component,
+            method,
+            path,
+            operation,
+            status,
+            reason,
+            correlationId ?: MDC.get(WebMdcKeys.CORRELATION_ID),
+            employerId ?: MDC.get(WebMdcKeys.EMPLOYER_ID),
+            principalSub ?: MDC.get(WebMdcKeys.PRINCIPAL_SUB),
+        )
+    }
+
     /**
      * Utility to extract correlation id from request headers in services that don't use MDC.
      */

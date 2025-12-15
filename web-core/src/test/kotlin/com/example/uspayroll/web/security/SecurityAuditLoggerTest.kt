@@ -82,5 +82,22 @@ class SecurityAuditLoggerTest {
             method = "GET",
             path = "/employers/EMP1/payruns",
         )
+
+        SecurityAuditLogger.privilegedOperationGranted(
+            component = "test",
+            method = "POST",
+            path = "/employers/EMP1/payruns/PR1/approve",
+            operation = "payroll_approve",
+            status = 200,
+        )
+
+        SecurityAuditLogger.privilegedOperationFailed(
+            component = "test",
+            method = "POST",
+            path = "/employers/EMP1/payruns/PR1/approve",
+            operation = "payroll_approve",
+            status = 403,
+            reason = "insufficient_scope",
+        )
     }
 }

@@ -35,8 +35,14 @@ Treat these as sensitive by default:
 For production, log/emit audit events for:
 - Authentication failures
 - Authorization denials
-- Admin/config changes
-- Payrun approvals, payment initiation, and any manual replay
+- Privileged operations (success + failure), including:
+  - Admin/config changes
+  - Payrun approvals
+  - Payment initiation
+  - Manual replay / operational actions
+
+See also:
+- `docs/security-privileged-ops.md`
 
 ## Code review checklist
 - Does this change introduce any new fields that may contain PII?
