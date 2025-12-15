@@ -3,6 +3,7 @@ package com.example.uspayroll.orchestrator.security
 import com.example.uspayroll.web.ProblemDetails
 import com.example.uspayroll.web.WebHeaders
 import com.example.uspayroll.web.security.InternalJwtHs256
+import com.example.uspayroll.web.security.SecurityAuditLogger
 import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
@@ -39,16 +40,32 @@ class InternalAuthFilter(
             ?.trim()
             ?.takeIf { it.isNotBlank() }
 
-        if (bearer != null && props.jwtSharedSecret.isNotBlank()) {
+        val jwtKeyring: Map<String, String> = when {
+            props.jwtKeys.isNotEmpty() -> props.jwtKeys
+            props.jwtSharedSecret.isNotBlank() -> mapOf("legacy" to props.jwtSharedSecret)
+            else -> emptyMap()
+        }
+
+        if (bearer != null && jwtKeyring.isNotEmpty()) {
             val ok = try {
-                InternalJwtHs256.verify(
+                InternalJwtHs256.verifyWithKeyring(
                     token = bearer,
-                    secret = props.jwtSharedSecret,
+                    secretsByKid = jwtKeyring,
+                    defaultKid = props.jwtDefaultKid.takeIf { it.isNotBlank() },
                     expectedIssuer = props.jwtIssuer,
                     expectedAudience = props.jwtAudience,
                 )
                 true
             } catch (ex: IllegalArgumentException) {
+                SecurityAuditLogger.internalAuthFailed(
+                    component = "payroll-orchestrator-service",
+                    method = request.method,
+                    path = request.requestURI ?: "",
+                    status = HttpStatus.UNAUTHORIZED.value(),
+                    reason = "invalid_bearer_jwt",
+                    mechanism = "bearer_jwt",
+                    correlationId = SecurityAuditLogger.correlationIdFromServletHeader(request::getHeader),
+                )
                 logger.warn("Invalid internal JWT bearer token", ex)
                 false
             }
@@ -66,6 +83,16 @@ class InternalAuthFilter(
             filterChain.doFilter(request, response)
             return
         }
+
+        SecurityAuditLogger.internalAuthFailed(
+            component = "payroll-orchestrator-service",
+            method = request.method,
+            path = request.requestURI ?: "",
+            status = HttpStatus.UNAUTHORIZED.value(),
+            reason = "missing_or_mismatched_internal_auth",
+            mechanism = if (bearer != null) "bearer_jwt" else "shared_secret_header",
+            correlationId = SecurityAuditLogger.correlationIdFromServletHeader(request::getHeader),
+        )
 
         val instance = request.requestURI
             ?.let { raw ->

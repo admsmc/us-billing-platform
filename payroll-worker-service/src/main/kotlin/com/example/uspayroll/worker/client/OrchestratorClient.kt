@@ -58,6 +58,9 @@ data class OrchestratorClientProperties(
     /** Subject claim identifying the caller service. */
     var internalJwtSubject: String = "payroll-worker-service",
 
+    /** Key id (kid) for the internal JWT signing key. */
+    var internalJwtKid: String = "v1",
+
     /** Token TTL (seconds). Keep this short in production. */
     var internalJwtTtlSeconds: Long = 60,
 )
@@ -85,6 +88,7 @@ class HttpOrchestratorClient(
                 subject = props.internalJwtSubject,
                 audience = props.internalJwtAudience,
                 ttlSeconds = props.internalJwtTtlSeconds,
+                kid = props.internalJwtKid,
             )
             headers.setBearerAuth(token)
             return headers

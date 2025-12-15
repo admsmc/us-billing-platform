@@ -2,6 +2,7 @@ package com.example.uspayroll.edge.security
 
 import com.example.uspayroll.web.WebErrorCode
 import com.example.uspayroll.web.WebHeaders
+import com.example.uspayroll.web.security.SecurityAuditLogger
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.cloud.gateway.filter.GatewayFilterChain
 import org.springframework.cloud.gateway.filter.GlobalFilter
@@ -44,21 +45,77 @@ class EdgeAuthorizationFilter(
         return exchange.getPrincipal<Authentication>()
             .flatMap { auth ->
                 val jwt = auth.principal as? Jwt
-                    ?: return@flatMap deny(exchange, HttpStatus.UNAUTHORIZED, "unauthorized")
+                    ?: run {
+                        SecurityAuditLogger.authenticationFailed(
+                            component = "edge",
+                            method = method,
+                            path = path,
+                            status = HttpStatus.UNAUTHORIZED.value(),
+                            reason = "missing_jwt_principal",
+                            correlationId = exchange.request.headers.getFirst(WebHeaders.CORRELATION_ID),
+                        )
+                        return@flatMap deny(exchange, HttpStatus.UNAUTHORIZED, "unauthorized").thenReturn(Unit)
+                    }
 
                 val scopes = extractScopes(jwt)
                 if (!isScopeSatisfied(scopes, requiredScope)) {
-                    return@flatMap deny(exchange, HttpStatus.FORBIDDEN, "insufficient_scope")
+                    SecurityAuditLogger.authorizationDenied(
+                        component = "edge",
+                        method = method,
+                        path = path,
+                        status = HttpStatus.FORBIDDEN.value(),
+                        reason = "insufficient_scope",
+                        principalSub = jwt.subject,
+                        correlationId = exchange.request.headers.getFirst(WebHeaders.CORRELATION_ID),
+                        requiredScope = requiredScope,
+                    )
+                    return@flatMap deny(exchange, HttpStatus.FORBIDDEN, "insufficient_scope").thenReturn(Unit)
                 }
 
                 val employerIdFromPath = employerIdFromPath(path)
-                if (employerIdFromPath != null && !isEmployerAllowed(jwt, employerIdFromPath)) {
-                    return@flatMap deny(exchange, HttpStatus.FORBIDDEN, "employer_scope_mismatch")
+                if (employerIdFromPath != null) {
+                    val decision = employerDecision(jwt, employerIdFromPath)
+                    if (!decision.allowed) {
+                        SecurityAuditLogger.authorizationDenied(
+                            component = "edge",
+                            method = method,
+                            path = path,
+                            status = HttpStatus.FORBIDDEN.value(),
+                            reason = "employer_scope_mismatch",
+                            principalSub = jwt.subject,
+                            employerId = employerIdFromPath,
+                            correlationId = exchange.request.headers.getFirst(WebHeaders.CORRELATION_ID),
+                            requiredScope = requiredScope,
+                        )
+                        return@flatMap deny(exchange, HttpStatus.FORBIDDEN, "employer_scope_mismatch").thenReturn(Unit)
+                    }
+                    if (decision.breakGlassUsed) {
+                        SecurityAuditLogger.breakGlassAccessGranted(
+                            component = "edge",
+                            method = method,
+                            path = path,
+                            principalSub = jwt.subject,
+                            correlationId = exchange.request.headers.getFirst(WebHeaders.CORRELATION_ID),
+                        )
+                    }
                 }
 
-                chain.filter(exchange)
+                chain.filter(exchange).thenReturn(Unit)
             }
-            .switchIfEmpty(deny(exchange, HttpStatus.UNAUTHORIZED, "unauthorized"))
+            .switchIfEmpty(
+                Mono.defer {
+                    SecurityAuditLogger.authenticationFailed(
+                        component = "edge",
+                        method = method,
+                        path = path,
+                        status = HttpStatus.UNAUTHORIZED.value(),
+                        reason = "missing_principal",
+                        correlationId = exchange.request.headers.getFirst(WebHeaders.CORRELATION_ID),
+                    )
+                    deny(exchange, HttpStatus.UNAUTHORIZED, "unauthorized").thenReturn(Unit)
+                },
+            )
+            .then()
     }
 
     private fun requiredScope(path: String, method: String): String {
@@ -79,9 +136,9 @@ class EdgeAuthorizationFilter(
         return m.groupValues[1].trim().takeIf { it.isNotBlank() }
     }
 
-    private fun isEmployerAllowed(jwt: Jwt, employerId: String): Boolean {
-        if (jwt.getClaimAsBoolean("platform_admin") == true) return true
+    private data class EmployerDecision(val allowed: Boolean, val breakGlassUsed: Boolean)
 
+    private fun employerDecision(jwt: Jwt, employerId: String): EmployerDecision {
         val allowed = mutableSetOf<String>()
         jwt.getClaimAsString("employer_id")?.takeIf { it.isNotBlank() }?.let { allowed += it }
 
@@ -90,7 +147,14 @@ class EdgeAuthorizationFilter(
             is Collection<*> -> employerIds.filterIsInstance<String>().map { it.trim() }.filter { it.isNotBlank() }.forEach { allowed += it }
         }
 
-        return employerId in allowed
+        val isAllowed = employerId in allowed
+        val isPlatformAdmin = jwt.getClaimAsBoolean("platform_admin") == true
+
+        return when {
+            isAllowed -> EmployerDecision(allowed = true, breakGlassUsed = false)
+            isPlatformAdmin -> EmployerDecision(allowed = true, breakGlassUsed = true)
+            else -> EmployerDecision(allowed = false, breakGlassUsed = false)
+        }
     }
 
     private fun extractScopes(jwt: Jwt): Set<String> {
@@ -133,8 +197,8 @@ class EdgeAuthorizationFilter(
         exchange.request.headers.getFirst(WebHeaders.CORRELATION_ID)?.let { pd.setProperty("correlationId", it) }
 
         val bytes = objectMapper.writeValueAsBytes(pd)
-        exchange.response.statusCode = status
         exchange.response.headers.contentType = MediaType.APPLICATION_PROBLEM_JSON
+        exchange.response.statusCode = status
         return exchange.response.writeWith(Mono.just(exchange.response.bufferFactory().wrap(bytes)))
     }
 }

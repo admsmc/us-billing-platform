@@ -39,9 +39,14 @@ mTLS remains an infrastructure concern (service mesh / SPIFFE), but this repo su
 Orchestrator internal endpoints (e.g. `/payruns/internal/**`) accept either:
 
 1) **Preferred**: short-lived internal JWT (HS256)
-- `orchestrator.internal-auth.jwt-shared-secret=<random>`
-- `orchestrator.internal-auth.jwt-issuer=us-payroll-platform` (default)
-- `orchestrator.internal-auth.jwt-audience=payroll-orchestrator-service` (default)
+- Keyring (recommended for rotation):
+  - `orchestrator.internal-auth.jwt-keys.<kid>=<random>` (e.g. `orchestrator.internal-auth.jwt-keys.v1=...`)
+  - `orchestrator.internal-auth.jwt-default-kid=v1` (optional; used only when a token has no `kid` header)
+- Legacy single-key verifier (supported, but not rotatable):
+  - `orchestrator.internal-auth.jwt-shared-secret=<random>`
+- Token claims constraints:
+  - `orchestrator.internal-auth.jwt-issuer=us-payroll-platform` (default)
+  - `orchestrator.internal-auth.jwt-audience=payroll-orchestrator-service` (default)
 - Request header:
   - `Authorization: Bearer <internal-jwt>`
 
@@ -55,11 +60,26 @@ The worker client prefers internal JWT when configured:
 - `orchestrator.internal-jwt-issuer=us-payroll-platform` (default)
 - `orchestrator.internal-jwt-audience=payroll-orchestrator-service` (default)
 - `orchestrator.internal-jwt-subject=payroll-worker-service` (default)
+- `orchestrator.internal-jwt-kid=v1` (default)
 - `orchestrator.internal-jwt-ttl-seconds=60` (default)
 
 If the internal JWT secret is not set, it falls back to the shared secret:
 - `orchestrator.internal-token=<random>`
 - `orchestrator.internal-token-header=X-Internal-Token` (default)
+
+### Internal JWT key rotation runbook (HS256)
+This runbook assumes you are using the orchestrator verifier keyring (`orchestrator.internal-auth.jwt-keys.*`) and the worker internal JWT client.
+
+1) Generate a new random secret and choose a new `kid` (e.g. rotate from `v1` → `v2`).
+2) Deploy the orchestrator with **both** keys present:
+   - `orchestrator.internal-auth.jwt-keys.v1=<old>`
+   - `orchestrator.internal-auth.jwt-keys.v2=<new>`
+   - (Optional) keep `orchestrator.internal-auth.jwt-default-kid=v1`.
+3) Deploy the worker configured to issue tokens with the new `kid`:
+   - `orchestrator.internal-jwt-kid=v2`
+   - `orchestrator.internal-jwt-secret=<new>`
+4) Observe for a full rollout window (longer than the token TTL). The default TTL is 60 seconds.
+5) Retire the old key by removing it from the orchestrator keyring (remove `jwt-keys.v1`).
 
 ### Worker internal endpoints
 Worker internal endpoints (e.g. DLQ replay) require:

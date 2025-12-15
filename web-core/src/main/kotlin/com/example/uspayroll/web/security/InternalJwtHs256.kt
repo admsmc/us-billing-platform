@@ -30,9 +30,10 @@ object InternalJwtHs256 {
         val issuedAtEpochSeconds: Long,
         val expiresAtEpochSeconds: Long,
         val jwtId: String,
+        val keyId: String? = null,
     )
 
-    fun issue(secret: String, issuer: String, subject: String, audience: String, ttlSeconds: Long = 60, now: Instant = Instant.now()): String {
+    fun issue(secret: String, issuer: String, subject: String, audience: String, ttlSeconds: Long = 60, now: Instant = Instant.now(), kid: String? = null): String {
         require(secret.isNotBlank()) { "secret must be non-blank" }
         require(issuer.isNotBlank()) { "issuer must be non-blank" }
         require(subject.isNotBlank()) { "subject must be non-blank" }
@@ -43,7 +44,11 @@ object InternalJwtHs256 {
         val exp = now.plusSeconds(ttlSeconds).epochSecond
         val jti = UUID.randomUUID().toString()
 
-        val headerJson = "{\"alg\":\"HS256\",\"typ\":\"JWT\"}"
+        val headerJson = if (kid.isNullOrBlank()) {
+            "{\"alg\":\"HS256\",\"typ\":\"JWT\"}"
+        } else {
+            "{\"alg\":\"HS256\",\"typ\":\"JWT\",\"kid\":\"${jsonEscape(kid)}\"}"
+        }
         val payloadJson = buildString {
             append('{')
             append("\"iss\":\"").append(jsonEscape(issuer)).append("\",")
@@ -76,6 +81,7 @@ object InternalJwtHs256 {
         val headerJson = decodeBase64Url(parts[0])
         val headerAlg = extractStringClaim(headerJson, "alg")
         require(headerAlg == "HS256") { "unexpected alg: $headerAlg" }
+        val headerKid = extractStringClaim(headerJson, "kid")
 
         val signingInput = parts[0] + "." + parts[1]
         val expectedSig = hmacSha256(secret, signingInput)
@@ -110,7 +116,48 @@ object InternalJwtHs256 {
             issuedAtEpochSeconds = iat,
             expiresAtEpochSeconds = exp,
             jwtId = jti,
+            keyId = headerKid,
         )
+    }
+
+    fun verifyWithKeyring(
+        token: String,
+        secretsByKid: Map<String, String>,
+        defaultKid: String? = null,
+        expectedIssuer: String? = null,
+        expectedAudience: String? = null,
+        now: Instant = Instant.now(),
+        leewaySeconds: Long = 5,
+    ): VerifiedClaims {
+        require(secretsByKid.isNotEmpty()) { "secretsByKid must be non-empty" }
+
+        val parts = token.split('.')
+        require(parts.size == 3) { "invalid JWT format" }
+
+        val headerJson = decodeBase64Url(parts[0])
+        val headerAlg = extractStringClaim(headerJson, "alg")
+        require(headerAlg == "HS256") { "unexpected alg: $headerAlg" }
+
+        val kid = extractStringClaim(headerJson, "kid")
+            ?: when {
+                secretsByKid.size == 1 -> secretsByKid.keys.single()
+                !defaultKid.isNullOrBlank() -> defaultKid
+                else -> null
+            }
+
+        require(!kid.isNullOrBlank()) { "missing kid" }
+        val secret = requireNotNull(secretsByKid[kid]) { "unknown kid" }
+
+        val verified = verify(
+            token = token,
+            secret = secret,
+            expectedIssuer = expectedIssuer,
+            expectedAudience = expectedAudience,
+            now = now,
+            leewaySeconds = leewaySeconds,
+        )
+
+        return verified.copy(keyId = kid)
     }
 
     private fun hmacSha256(secret: String, data: String): ByteArray {

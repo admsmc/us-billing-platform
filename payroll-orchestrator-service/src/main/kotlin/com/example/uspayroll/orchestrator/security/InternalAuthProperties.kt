@@ -16,12 +16,21 @@ data class InternalAuthProperties(
     var headerName: String = "X-Internal-Token",
 
     /**
-     * Optional HS256 secret for internal JWT verification.
+     * Optional HS256 secret for internal JWT verification (single key).
      *
-     * When set, internal endpoints will accept:
-     * - Authorization: Bearer <internal-jwt>
+     * Prefer using [jwtKeys] for key rotation.
      */
     var jwtSharedSecret: String = "",
+
+    /**
+     * HS256 verification keyring for internal JWTs (kid -> secret).
+     *
+     * Use this to support key rotation: publish multiple keys, then rotate the issuer.
+     */
+    var jwtKeys: Map<String, String> = emptyMap(),
+
+    /** Optional default kid to use when a token has no kid header. */
+    var jwtDefaultKid: String = "",
 
     /** Expected issuer for internal JWTs. */
     var jwtIssuer: String = "us-payroll-platform",
