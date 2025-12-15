@@ -32,7 +32,7 @@ class IdentityPropagationFilter : GlobalFilter {
             .flatMap { auth ->
                 val jwt = auth.principal as? Jwt
                 if (jwt == null) {
-                    chain.filter(exchangeWithCorrelation)
+                    chain.filter(exchangeWithCorrelation).thenReturn(Unit)
                 } else {
                     val mutated = exchangeWithCorrelation.mutate()
                         .request(
@@ -44,10 +44,11 @@ class IdentityPropagationFilter : GlobalFilter {
                                 .build(),
                         )
                         .build()
-                    chain.filter(mutated)
+                    chain.filter(mutated).thenReturn(Unit)
                 }
             }
-            .switchIfEmpty(chain.filter(exchangeWithCorrelation))
+            .switchIfEmpty(chain.filter(exchangeWithCorrelation).thenReturn(Unit))
+            .then()
     }
 
     private fun ensureCorrelationId(exchange: ServerWebExchange): Pair<ServerWebExchange, String> {

@@ -23,7 +23,12 @@ This repo expects:
 - `scope` (space-delimited) and/or `scp` (array)
   - `payroll:read`
   - `payroll:write`
-  - `payroll:admin` (umbrella)
+- `payroll:admin` (umbrella)
+
+Additional enterprise-grade permissions supported by edge policy:
+- `payroll:bench` (benchmark-only endpoints under `/benchmarks/**`)
+- `payroll:replay` (internal operational endpoints under `/internal/**`)
+- `payroll:ops` (legacy job endpoints under `/jobs/**`)
 - Employer scoping:
   - `employer_id` (single employer) and/or
   - `employer_ids` (array of employers)

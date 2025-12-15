@@ -22,7 +22,7 @@ class EdgeAuthorizationFilterTest {
 
     @Test
     fun `blocks write when payroll write scope is missing`() {
-        val filter = EdgeAuthorizationFilter(mapper)
+        val filter = EdgeAuthorizationFilter(mapper, EdgeAuthorizationPolicy.default())
 
         val jwt = Jwt.withTokenValue("t")
             .header("alg", "none")
@@ -54,7 +54,7 @@ class EdgeAuthorizationFilterTest {
 
     @Test
     fun `blocks employer mismatch`() {
-        val filter = EdgeAuthorizationFilter(mapper)
+        val filter = EdgeAuthorizationFilter(mapper, EdgeAuthorizationPolicy.default())
 
         val jwt = Jwt.withTokenValue("t")
             .header("alg", "none")
@@ -79,7 +79,7 @@ class EdgeAuthorizationFilterTest {
 
     @Test
     fun `allows when employer_ids contains employer`() {
-        val filter = EdgeAuthorizationFilter(mapper)
+        val filter = EdgeAuthorizationFilter(mapper, EdgeAuthorizationPolicy.default())
 
         val jwt = Jwt.withTokenValue("t")
             .header("alg", "none")
@@ -106,5 +106,93 @@ class EdgeAuthorizationFilterTest {
         StepVerifier.create(filter.filter(exchange, chain)).verifyComplete()
         assertEquals(1, called.get())
         assertEquals(200, exchange.response.statusCode?.value())
+    }
+
+    @Test
+    fun `blocks benchmarks when payroll bench scope is missing`() {
+        val filter = EdgeAuthorizationFilter(mapper, EdgeAuthorizationPolicy.default())
+
+        val jwt = Jwt.withTokenValue("t")
+            .header("alg", "none")
+            .subject("sub")
+            .claim("scope", "payroll:write")
+            .build()
+
+        val auth = JwtAuthenticationToken(jwt)
+
+        val exchange = MockServerWebExchange.from(
+            MockServerHttpRequest.method(HttpMethod.POST, "/benchmarks/employers/EMP1/hr-backed-pay-period")
+                .header(WebHeaders.CORRELATION_ID, "c")
+                .build(),
+        ).mutate().principal(Mono.just(auth)).build()
+
+        val called = AtomicInteger(0)
+        val chain = GatewayFilterChain { ex ->
+            called.incrementAndGet()
+            ex.response.setComplete()
+        }
+
+        StepVerifier.create(filter.filter(exchange, chain)).verifyComplete()
+        assertEquals(0, called.get())
+        assertEquals(403, exchange.response.statusCode?.value())
+    }
+
+    @Test
+    fun `allows benchmarks when payroll bench scope is present`() {
+        val filter = EdgeAuthorizationFilter(mapper, EdgeAuthorizationPolicy.default())
+
+        val jwt = Jwt.withTokenValue("t")
+            .header("alg", "none")
+            .subject("sub")
+            .claim("scope", "payroll:bench")
+            .build()
+
+        val auth = JwtAuthenticationToken(jwt)
+
+        val exchange = MockServerWebExchange.from(
+            MockServerHttpRequest.method(HttpMethod.POST, "/benchmarks/employers/EMP1/hr-backed-pay-period")
+                .header(WebHeaders.CORRELATION_ID, "c")
+                .build(),
+        ).mutate().principal(Mono.just(auth)).build()
+
+        val called = AtomicInteger(0)
+        val chain = GatewayFilterChain { ex ->
+            called.incrementAndGet()
+            ex.response.statusCode = HttpStatus.OK
+            ex.response.setComplete()
+        }
+
+        StepVerifier.create(filter.filter(exchange, chain)).verifyComplete()
+        assertEquals(1, called.get())
+        assertEquals(200, exchange.response.statusCode?.value())
+    }
+
+    @Test
+    fun `blocks internal replay when payroll replay scope is missing`() {
+        val filter = EdgeAuthorizationFilter(mapper, EdgeAuthorizationPolicy.default())
+
+        val jwt = Jwt.withTokenValue("t")
+            .header("alg", "none")
+            .subject("sub")
+            .claim("scope", "payroll:write")
+            .build()
+
+        val auth = JwtAuthenticationToken(jwt)
+
+        val exchange = MockServerWebExchange.from(
+            MockServerHttpRequest.method(HttpMethod.POST, "/internal/jobs/finalize-employee/dlq/replay")
+                .header(WebHeaders.CORRELATION_ID, "c")
+                .build(),
+        ).mutate().principal(Mono.just(auth)).build()
+
+        val called = AtomicInteger(0)
+        val chain = GatewayFilterChain { ex ->
+            called.incrementAndGet()
+            ex.response.setComplete()
+        }
+
+        StepVerifier.create(filter.filter(exchange, chain)).verifyComplete()
+        assertEquals(0, called.get())
+        assertEquals(403, exchange.response.statusCode?.value())
     }
 }

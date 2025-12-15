@@ -29,6 +29,7 @@ import java.net.URI
 @Order(Ordered.HIGHEST_PRECEDENCE + 10)
 class EdgeAuthorizationFilter(
     private val objectMapper: ObjectMapper,
+    private val policy: EdgeAuthorizationPolicy = EdgeAuthorizationPolicy.default(),
 ) : GlobalFilter {
 
     private val employerPathRegex = Regex("^/employers/([^/]+)(/.*)?$")
@@ -40,7 +41,8 @@ class EdgeAuthorizationFilter(
         }
 
         val method = exchange.request.method?.name()?.uppercase() ?: ""
-        val requiredScope = requiredScope(path, method)
+        val requiredScope = policy.requiredScope(path, method)
+            ?: requiredScopeFallback(path, method)
 
         return exchange.getPrincipal<Authentication>()
             .flatMap { auth ->
@@ -118,7 +120,8 @@ class EdgeAuthorizationFilter(
             .then()
     }
 
-    private fun requiredScope(path: String, method: String): String {
+    private fun requiredScopeFallback(path: String, method: String): String {
+        // Fallback heuristic for new/unknown endpoints.
         if (path.startsWith("/internal/")) return "payroll:admin"
         return when (method) {
             "GET", "HEAD", "OPTIONS" -> "payroll:read"
