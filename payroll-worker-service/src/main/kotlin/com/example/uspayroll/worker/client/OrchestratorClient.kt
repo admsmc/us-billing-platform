@@ -1,6 +1,7 @@
 package com.example.uspayroll.worker.client
 
 import com.example.uspayroll.shared.EmployerId
+import com.example.uspayroll.web.security.InternalJwtHs256
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
@@ -33,10 +34,32 @@ interface OrchestratorClient {
 @ConfigurationProperties(prefix = "orchestrator")
 data class OrchestratorClientProperties(
     var baseUrl: String = "http://localhost:8085",
-    /** Shared-secret token sent to orchestrator internal endpoints. */
+
+    /** Shared-secret token sent to orchestrator internal endpoints (legacy / fallback). */
     var internalToken: String = "",
+
     /** Header name for internal auth token. */
     var internalTokenHeader: String = "X-Internal-Token",
+
+    /**
+     * Preferred internal auth mechanism: short-lived internal JWT (HS256).
+     *
+     * When set, the worker will send:
+     * - Authorization: Bearer <internal-jwt>
+     */
+    var internalJwtSecret: String = "",
+
+    /** Expected issuer configured on the orchestrator verifier. */
+    var internalJwtIssuer: String = "us-payroll-platform",
+
+    /** Expected audience configured on the orchestrator verifier. */
+    var internalJwtAudience: String = "payroll-orchestrator-service",
+
+    /** Subject claim identifying the caller service. */
+    var internalJwtSubject: String = "payroll-worker-service",
+
+    /** Token TTL (seconds). Keep this short in production. */
+    var internalJwtTtlSeconds: Long = 60,
 )
 
 @Configuration
@@ -51,6 +74,25 @@ class HttpOrchestratorClient(
     private val props: OrchestratorClientProperties,
     private val restTemplate: RestTemplate,
 ) : OrchestratorClient {
+
+    private fun internalAuthHeaders(): HttpHeaders {
+        val headers = HttpHeaders()
+
+        if (props.internalJwtSecret.isNotBlank()) {
+            val token = InternalJwtHs256.issue(
+                secret = props.internalJwtSecret,
+                issuer = props.internalJwtIssuer,
+                subject = props.internalJwtSubject,
+                audience = props.internalJwtAudience,
+                ttlSeconds = props.internalJwtTtlSeconds,
+            )
+            headers.setBearerAuth(token)
+            return headers
+        }
+
+        headers.set(props.internalTokenHeader, props.internalToken)
+        return headers
+    }
 
     override fun startFinalize(employerId: EmployerId, payPeriodId: String, employeeIds: List<String>, requestedPayRunId: String?, idempotencyKey: String?): StartFinalizeResponse {
         val url = "${props.baseUrl}/employers/${employerId.value}/payruns/finalize"
@@ -71,9 +113,7 @@ class HttpOrchestratorClient(
     override fun execute(employerId: EmployerId, payRunId: String, batchSize: Int, maxItems: Int, maxMillis: Long, requeueStaleMillis: Long, leaseOwner: String, parallelism: Int): Map<String, Any?> {
         val url = "${props.baseUrl}/employers/${employerId.value}/payruns/internal/$payRunId/execute?batchSize=$batchSize&maxItems=$maxItems&maxMillis=$maxMillis&requeueStaleMillis=$requeueStaleMillis&leaseOwner=$leaseOwner&parallelism=$parallelism"
 
-        val headers = HttpHeaders().apply {
-            set(props.internalTokenHeader, props.internalToken)
-        }
+        val headers = internalAuthHeaders()
 
         val response = restTemplate.exchange<Map<*, *>>(
             RequestEntity.post(URI.create(url))
@@ -89,9 +129,7 @@ class HttpOrchestratorClient(
     override fun finalizeEmployeeItem(employerId: EmployerId, payRunId: String, employeeId: String): FinalizeEmployeeItemResponse {
         val url = "${props.baseUrl}/employers/${employerId.value}/payruns/internal/$payRunId/items/$employeeId/finalize"
 
-        val headers = HttpHeaders().apply {
-            set(props.internalTokenHeader, props.internalToken)
-        }
+        val headers = internalAuthHeaders()
 
         val response = restTemplate.exchange<FinalizeEmployeeItemResponse>(
             RequestEntity.post(URI.create(url))

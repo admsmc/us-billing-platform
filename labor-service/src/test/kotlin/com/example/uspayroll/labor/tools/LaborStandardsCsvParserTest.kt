@@ -28,4 +28,32 @@ class LaborStandardsCsvParserTest {
         assertEquals(8.0, ca.dailyOvertimeThresholdHours)
         assertEquals(12.0, ca.dailyDoubleTimeThresholdHours)
     }
+
+    @Test
+    fun `parse sample CSV and validate additional statewide wage values`() {
+        val stream = javaClass.classLoader.getResourceAsStream("labor-standards-2025.csv")
+            ?: error("Missing labor-standards-2025.csv on test classpath")
+
+        val standards = InputStreamReader(stream).use { reader ->
+            LaborStandardsCsvParser.parse(reader)
+        }
+
+        val fl = standards.firstOrNull { it.stateCode == "FL" }
+        assertNotNull(fl, "Expected FL row in labor-standards-2025.csv")
+        assertEquals(1_300L, fl.regularMinimumWageCents)
+        assertEquals(998L, fl.tippedMinimumCashWageCents)
+        assertEquals(302L, fl.maxTipCreditCents)
+
+        val wa = standards.firstOrNull { it.stateCode == "WA" }
+        assertNotNull(wa, "Expected WA row in labor-standards-2025.csv")
+        assertEquals(1_666L, wa.regularMinimumWageCents)
+        assertEquals(1_666L, wa.tippedMinimumCashWageCents)
+        assertEquals(0L, wa.maxTipCreditCents)
+
+        val al = standards.firstOrNull { it.stateCode == "AL" }
+        assertNotNull(al, "Expected AL row in labor-standards-2025.csv")
+        assertEquals(null, al.regularMinimumWageCents, "AL regular min wage is blank in the statewide CSV")
+        assertEquals(213L, al.tippedMinimumCashWageCents)
+        assertEquals(512L, al.maxTipCreditCents)
+    }
 }

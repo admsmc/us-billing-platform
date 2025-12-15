@@ -14,6 +14,7 @@
 ### Gateway auth (JWT)
 - Gateway validates JWT on inbound requests.
 - Gateway enforces route-level authorization (scopes/roles → endpoint groups).
+- Gateway enforces employer scoping: tokens must be authorized for `/employers/{employerId}/...`.
 - Gateway propagates:
   - `X-Correlation-ID` (generated if missing)
   - identity context as headers to downstream services:
@@ -28,13 +29,15 @@ Local dev options:
 Production target:
 - OIDC/JWT validation using an IdP (issuer URI + rotating JWK set).
 
-### Internal auth (shared secret)
-- For internal-only endpoints (e.g., orchestrator "internal execution" routes), require a shared-secret header.
-- Store the shared secret in a secret manager and mount/inject via environment.
-- Rotate periodically; keep header name stable.
+### Internal auth (internal JWT or shared secret)
+For internal-only endpoints (e.g., orchestrator "internal execution" routes), require one of:
+- **Preferred**: short-lived internal JWTs (HS256) using `Authorization: Bearer <token>`.
+- **Fallback**: a shared-secret header (e.g. `X-Internal-Token`).
 
-Notes:
-- Shared secrets are a stop-gap. Treat them as an internal-only control, not a full zero-trust posture.
+Operational expectations:
+- Store secrets in a secret manager and inject via environment.
+- Keep JWT TTL short and rotate signing keys.
+- Header-based shared secrets are a compatibility/fallback mechanism.
 
 ## Phase 2 (production hardening)
 ### Service-to-service auth (mTLS or signed JWT)

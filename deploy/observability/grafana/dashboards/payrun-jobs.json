@@ -1,0 +1,112 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": { "type": "prometheus", "uid": "PROMETHEUS" },
+      "description": "RabbitMQ main queue depth for per-employee payrun finalize jobs.",
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "id": 1,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [
+        {
+          "expr": "worker_rabbit_queue_depth{queue=\"payrun-finalize-employee-jobs\"}",
+          "legendFormat": "main",
+          "refId": "A"
+        }
+      ],
+      "title": "Payrun finalize-employee queue depth",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "PROMETHEUS" },
+      "description": "Dead-letter queue depth for per-employee finalize jobs.",
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "id": 2,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [
+        {
+          "expr": "worker_rabbit_queue_depth{queue=\"payrun-finalize-employee-jobs-dlq\"}",
+          "legendFormat": "dlq",
+          "refId": "A"
+        }
+      ],
+      "title": "Payrun finalize-employee DLQ depth",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "PROMETHEUS" },
+      "description": "Succeeded and terminal failure throughput (per minute).",
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "id": 3,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [
+        {
+          "expr": "sum(rate(worker_payrun_finalize_employee_total{outcome=\"succeeded\"}[5m])) * 60",
+          "legendFormat": "succeeded/min",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(worker_payrun_finalize_employee_total{outcome=\"failed_terminal\"}[5m])) * 60",
+          "legendFormat": "failed_terminal/min",
+          "refId": "B"
+        }
+      ],
+      "title": "Finalize-employee throughput",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "PROMETHEUS" },
+      "description": "p95 latency for the worker finalize step and orchestrator per-item finalize endpoint.",
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "id": 4,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(worker_payrun_finalize_employee_duration_seconds_bucket[5m])))",
+          "legendFormat": "worker p95",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(orchestrator_payrun_item_finalize_duration_seconds_bucket[5m])))",
+          "legendFormat": "orchestrator p95",
+          "refId": "B"
+        }
+      ],
+      "title": "Finalize latency (p95)",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": ["payruns", "rabbitmq", "worker", "orchestrator"],
+  "templating": { "list": [] },
+  "time": { "from": "now-6h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Payrun jobs (finalize employee)",
+  "uid": "payrun-jobs",
+  "version": 1
+}

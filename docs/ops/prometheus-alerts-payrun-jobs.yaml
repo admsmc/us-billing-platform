@@ -1,3 +1,5 @@
+# Reference copy of the canonical Prometheus Operator manifest:
+# - deploy/observability/prometheus/prometheus-rule-payrun-jobs.yaml
 groups:
   - name: payrun-jobs-rabbit
     rules:

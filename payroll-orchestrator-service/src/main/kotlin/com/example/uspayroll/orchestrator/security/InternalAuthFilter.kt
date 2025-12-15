@@ -2,6 +2,7 @@ package com.example.uspayroll.orchestrator.security
 
 import com.example.uspayroll.web.ProblemDetails
 import com.example.uspayroll.web.WebHeaders
+import com.example.uspayroll.web.security.InternalJwtHs256
 import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
@@ -9,6 +10,7 @@ import jakarta.servlet.http.HttpServletResponse
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Configuration
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.web.filter.OncePerRequestFilter
@@ -30,6 +32,33 @@ class InternalAuthFilter(
     }
 
     override fun doFilterInternal(request: HttpServletRequest, response: HttpServletResponse, filterChain: FilterChain) {
+        val bearer = request.getHeader(HttpHeaders.AUTHORIZATION)
+            ?.trim()
+            ?.takeIf { it.startsWith("Bearer ") }
+            ?.removePrefix("Bearer ")
+            ?.trim()
+            ?.takeIf { it.isNotBlank() }
+
+        if (bearer != null && props.jwtSharedSecret.isNotBlank()) {
+            val ok = try {
+                InternalJwtHs256.verify(
+                    token = bearer,
+                    secret = props.jwtSharedSecret,
+                    expectedIssuer = props.jwtIssuer,
+                    expectedAudience = props.jwtAudience,
+                )
+                true
+            } catch (ex: IllegalArgumentException) {
+                logger.warn("Invalid internal JWT bearer token", ex)
+                false
+            }
+
+            if (ok) {
+                filterChain.doFilter(request, response)
+                return
+            }
+        }
+
         val expected = props.sharedSecret
         val headerValue = request.getHeader(props.headerName)
 

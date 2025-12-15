@@ -99,7 +99,15 @@ If you do not have histogram buckets enabled, fall back to average duration:
      clamp_min(rate(orchestrator_payrun_item_finalize_duration_seconds_count[5m]), 1e-9)`
 
 ## Example Prometheus alert rules
-See `docs/ops/prometheus-alerts-payrun-jobs.yaml`.
+Canonical Prometheus Operator manifest:
+- `deploy/observability/prometheus/prometheus-rule-payrun-jobs.yaml`
+
+Reference copy (same rules) for quick reading:
+- `docs/ops/prometheus-alerts-payrun-jobs.yaml`
+
+## Example Grafana dashboard
+Canonical dashboard JSON:
+- `deploy/observability/grafana/dashboards/payrun-jobs.json`
 
 ## DLQ replay (operator workflow)
 This repository includes a worker-only DLQ replay endpoint (disabled by default):

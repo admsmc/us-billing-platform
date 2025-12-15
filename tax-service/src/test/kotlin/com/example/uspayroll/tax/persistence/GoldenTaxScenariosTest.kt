@@ -644,4 +644,96 @@ class GoldenTaxScenariosTest {
         assertEquals(17_500L, nycResidentLocal, "Expected NYC local tax of $175.00 on $5,000 when querying for NYC")
         assertEquals(0L, nonNyResidentLocal, "Expected no NYC local tax when querying for a non-NYC locality")
     }
+
+    @Test
+    fun `flat state income tax scenario FL vs PA vs CO`() {
+        val dsl = createDslContext("taxdb-golden-state-flat-fl-pa-co")
+
+        importConfig(dsl, "tax-config/example-federal-2025.json")
+        importConfig(dsl, "tax-config/state-income-2025.json")
+
+        val repository: TaxRuleRepository = H2TaxRuleRepository(dsl)
+        val dbCatalog = DbTaxCatalog(repository)
+        val cachingCatalog = CachingTaxCatalog(dbCatalog)
+        val provider = CatalogBackedTaxContextProvider(cachingCatalog)
+
+        val employerId = EmployerId("EMP-STATE-GOLDEN-FLAT")
+        val asOfDate = LocalDate.of(2025, 1, 15)
+
+        val baseTaxContext = provider.getTaxContext(employerId, asOfDate)
+
+        fun taxContextFor(stateCode: String): TaxContext = baseTaxContext.copy(
+            state = baseTaxContext.state.filter {
+                it.jurisdiction.type == TaxJurisdictionType.STATE && it.jurisdiction.code == stateCode
+            },
+        )
+
+        val stateTaxableCents = 100_000L // $1,000.00
+
+        val bases: Map<TaxBasis, Money> = mapOf(
+            TaxBasis.StateTaxable to Money(stateTaxableCents),
+        )
+        val basisComponents: Map<TaxBasis, Map<String, Money>> = mapOf(
+            TaxBasis.StateTaxable to mapOf("stateTaxable" to Money(stateTaxableCents)),
+        )
+
+        fun computeStateTaxFor(stateCode: String): Long {
+            val stateTaxContext = taxContextFor(stateCode)
+
+            val period = PayPeriod(
+                id = "STATE-GOLDEN-FLAT-$stateCode",
+                employerId = employerId,
+                dateRange = LocalDateRange(asOfDate, asOfDate),
+                checkDate = asOfDate,
+                frequency = PayFrequency.ANNUAL,
+            )
+
+            val snapshot = EmployeeSnapshot(
+                employerId = employerId,
+                employeeId = EmployeeId("EE-$stateCode-GOLDEN-FLAT"),
+                homeState = stateCode,
+                workState = stateCode,
+                filingStatus = FilingStatus.SINGLE,
+                baseCompensation = BaseCompensation.Salaried(
+                    annualSalary = Money(stateTaxableCents),
+                    frequency = PayFrequency.ANNUAL,
+                ),
+            )
+
+            val input = PaycheckInput(
+                paycheckId = PaycheckId("CHK-$stateCode-GOLDEN-FLAT"),
+                payRunId = PayRunId("RUN-STATE-GOLDEN-FLAT"),
+                employerId = employerId,
+                employeeId = snapshot.employeeId,
+                period = period,
+                employeeSnapshot = snapshot,
+                timeSlice = TimeSlice(
+                    period = period,
+                    regularHours = 0.0,
+                    overtimeHours = 0.0,
+                ),
+                taxContext = stateTaxContext,
+                priorYtd = YtdSnapshot(year = asOfDate.year),
+            )
+
+            val result = TaxesCalculator.computeTaxes(input, bases, basisComponents)
+
+            val stateLine = result.employeeTaxes
+                .firstOrNull { it.jurisdiction.type == TaxJurisdictionType.STATE }
+
+            return stateLine?.amount?.amount ?: 0L
+        }
+
+        val flTax = computeStateTaxFor("FL")
+        val paTax = computeStateTaxFor("PA")
+        val coTax = computeStateTaxFor("CO")
+
+        // Expected:
+        // - FL: 0%
+        // - PA: 3.07% -> $30.70
+        // - CO: 4.4% -> $44.00
+        assertEquals(0L, flTax)
+        assertEquals(3_070L, paTax)
+        assertEquals(4_400L, coTax)
+    }
 }
