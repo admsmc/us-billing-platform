@@ -1,0 +1,16 @@
+services:
+  postgres:
+    # Bench-only performance experiment: reduce commit fsync latency.
+    # WARNING: This changes durability semantics; do not use outside benchmarks.
+    command:
+      - postgres
+      - -c
+      - shared_preload_libraries=pg_stat_statements
+      - -c
+      - pg_stat_statements.track=top
+      - -c
+      - pg_stat_statements.max=10000
+      - -c
+      - pg_stat_statements.save=off
+      - -c
+      - synchronous_commit=off

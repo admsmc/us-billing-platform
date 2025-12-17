@@ -5,7 +5,6 @@ import com.example.uspayroll.labor.api.LaborStandardsQuery
 import com.example.uspayroll.labor.api.StateLaborStandard
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.Record
 import org.jooq.impl.DSL
 import java.time.LocalDate
 
@@ -18,31 +17,33 @@ class JooqLaborStandardsCatalog(
     private val dsl: DSLContext,
 ) : LaborStandardsCatalog {
 
-    private fun <T> Record.getCaseInsensitive(fieldName: String, type: Class<T>): T? {
-        val candidates = listOf(fieldName, fieldName.lowercase(), fieldName.uppercase())
-        for (candidate in candidates) {
-            val value = runCatching { get(candidate, type) }.getOrNull()
-            if (value != null) return value
-        }
-        // If the field exists but the value is NULL, the above will keep trying. Handle that case.
-        for (candidate in candidates) {
-            val exists = runCatching { fields().any { it.name == candidate } }.getOrDefault(false)
-            if (exists) return runCatching { get(candidate, type) }.getOrNull()
-        }
-        return null
-    }
+    // Prefer typed fields over runtime-discovered fields. This reduces reliance on JDBC/driver metadata
+    // and avoids repeated pg_catalog lookups under high request volume.
+    // Use string-based identifiers so H2 (unquoted identifiers -> uppercased) stays compatible
+    // while still keeping field types explicit.
+    private val t = DSL.table("labor_standard")
+
+    private val fStateCode = DSL.field("state_code", String::class.java)
+    private val fEffectiveFrom = DSL.field("effective_from", LocalDate::class.java)
+    private val fEffectiveTo = DSL.field("effective_to", LocalDate::class.java)
+    private val fRegularMinWageCents = DSL.field("regular_minimum_wage_cents", java.lang.Long::class.java)
+    private val fTippedMinCashWageCents = DSL.field("tipped_minimum_cash_wage_cents", java.lang.Long::class.java)
+    private val fMaxTipCreditCents = DSL.field("max_tip_credit_cents", java.lang.Long::class.java)
+    private val fWeeklyOtThresholdHours = DSL.field("weekly_ot_threshold_hours", java.lang.Double::class.java)
+    private val fDailyOtThresholdHours = DSL.field("daily_ot_threshold_hours", java.lang.Double::class.java)
+    private val fDailyDtThresholdHours = DSL.field("daily_dt_threshold_hours", java.lang.Double::class.java)
+    private val fLocalityCode = DSL.field("locality_code", String::class.java)
+    private val fLocalityKind = DSL.field("locality_kind", String::class.java)
 
     override fun loadStateStandard(query: LaborStandardsQuery): StateLaborStandard? {
         val state = query.workState ?: return null
         val asOf = query.asOfDate
-        val t = DSL.table("labor_standard")
-
         val conditions = mutableListOf<Condition>()
-        conditions += DSL.field("state_code").eq(state)
-        conditions += DSL.field("effective_from", LocalDate::class.java).le(asOf)
+        conditions += fStateCode.eq(state)
+        conditions += fEffectiveFrom.le(asOf)
         conditions += DSL.or(
-            DSL.field("effective_to", LocalDate::class.java).isNull,
-            DSL.field("effective_to", LocalDate::class.java).ge(asOf),
+            fEffectiveTo.isNull,
+            fEffectiveTo.ge(asOf),
         )
 
         // If locality codes are provided, restrict to rows that are either
@@ -51,11 +52,11 @@ class JooqLaborStandardsCatalog(
         // rows only so that generic baselines are used.
         val localityCodes = query.localityCodes.map { it.uppercase() }
         if (localityCodes.isEmpty()) {
-            conditions += DSL.field("locality_code").isNull
+            conditions += fLocalityCode.isNull
         } else {
             conditions += DSL.or(
-                DSL.field("locality_code").isNull,
-                DSL.field("locality_code").`in`(localityCodes),
+                fLocalityCode.isNull,
+                fLocalityCode.`in`(localityCodes),
             )
         }
 
@@ -66,67 +67,92 @@ class JooqLaborStandardsCatalog(
         val orderBy = if (localityCodes.isNotEmpty()) {
             listOf(
                 // Local rows (non-null locality_code) first, then statewide.
-                DSL.field("locality_code").isNotNull.desc(),
-                DSL.field("effective_from").desc(),
+                fLocalityCode.isNotNull.desc(),
+                fEffectiveFrom.desc(),
             )
         } else {
-            listOf(DSL.field("effective_from").desc())
+            listOf(fEffectiveFrom.desc())
         }
 
         val record = dsl
-            .selectFrom(t)
+            .select(
+                fStateCode,
+                fEffectiveFrom,
+                fEffectiveTo,
+                fRegularMinWageCents,
+                fTippedMinCashWageCents,
+                fMaxTipCreditCents,
+                fWeeklyOtThresholdHours,
+                fDailyOtThresholdHours,
+                fDailyDtThresholdHours,
+                fLocalityCode,
+                fLocalityKind,
+            )
+            .from(t)
             .where(whereCondition)
             .orderBy(orderBy)
             .limit(1)
             .fetchOne() ?: return null
 
         return StateLaborStandard(
-            stateCode = requireNotNull(record.getCaseInsensitive("state_code", String::class.java)),
-            effectiveFrom = requireNotNull(record.getCaseInsensitive("effective_from", LocalDate::class.java)),
-            effectiveTo = record.getCaseInsensitive("effective_to", LocalDate::class.java),
-            regularMinimumWageCents = record.getCaseInsensitive("regular_minimum_wage_cents", java.lang.Long::class.java)?.toLong(),
-            tippedMinimumCashWageCents = record.getCaseInsensitive("tipped_minimum_cash_wage_cents", java.lang.Long::class.java)?.toLong(),
-            maxTipCreditCents = record.getCaseInsensitive("max_tip_credit_cents", java.lang.Long::class.java)?.toLong(),
-            weeklyOvertimeThresholdHours = record.getCaseInsensitive("weekly_ot_threshold_hours", java.lang.Double::class.java)?.toDouble() ?: 40.0,
-            dailyOvertimeThresholdHours = record.getCaseInsensitive("daily_ot_threshold_hours", java.lang.Double::class.java)?.toDouble(),
-            dailyDoubleTimeThresholdHours = record.getCaseInsensitive("daily_dt_threshold_hours", java.lang.Double::class.java)?.toDouble(),
-            localityCode = record.getCaseInsensitive("locality_code", String::class.java),
-            localityKind = record.getCaseInsensitive("locality_kind", String::class.java),
+            stateCode = requireNotNull(record.get(fStateCode)),
+            effectiveFrom = requireNotNull(record.get(fEffectiveFrom)),
+            effectiveTo = record.get(fEffectiveTo),
+            regularMinimumWageCents = record.get(fRegularMinWageCents)?.toLong(),
+            tippedMinimumCashWageCents = record.get(fTippedMinCashWageCents)?.toLong(),
+            maxTipCreditCents = record.get(fMaxTipCreditCents)?.toLong(),
+            weeklyOvertimeThresholdHours = record.get(fWeeklyOtThresholdHours)?.toDouble() ?: 40.0,
+            dailyOvertimeThresholdHours = record.get(fDailyOtThresholdHours)?.toDouble(),
+            dailyDoubleTimeThresholdHours = record.get(fDailyDtThresholdHours)?.toDouble(),
+            localityCode = record.get(fLocalityCode),
+            localityKind = record.get(fLocalityKind),
         )
     }
 
     override fun listStateStandards(asOfDate: LocalDate?): List<StateLaborStandard> {
-        val t = DSL.table("labor_standard")
         var whereCondition: Condition = DSL.noCondition()
         if (asOfDate != null) {
             whereCondition = whereCondition
-                .and(DSL.field("effective_from", LocalDate::class.java).le(asOfDate))
+                .and(fEffectiveFrom.le(asOfDate))
                 .and(
                     DSL.or(
-                        DSL.field("effective_to", LocalDate::class.java).isNull,
-                        DSL.field("effective_to", LocalDate::class.java).ge(asOfDate),
+                        fEffectiveTo.isNull,
+                        fEffectiveTo.ge(asOfDate),
                     ),
                 )
         }
 
         val records = dsl
-            .selectFrom(t)
+            .select(
+                fStateCode,
+                fEffectiveFrom,
+                fEffectiveTo,
+                fRegularMinWageCents,
+                fTippedMinCashWageCents,
+                fMaxTipCreditCents,
+                fWeeklyOtThresholdHours,
+                fDailyOtThresholdHours,
+                fDailyDtThresholdHours,
+                fLocalityCode,
+                fLocalityKind,
+            )
+            .from(t)
             .where(whereCondition)
             .fetch()
 
         return records.map { r ->
             StateLaborStandard(
-                stateCode = requireNotNull(r.getCaseInsensitive("state_code", String::class.java)),
-                effectiveFrom = requireNotNull(r.getCaseInsensitive("effective_from", LocalDate::class.java)),
-                effectiveTo = r.getCaseInsensitive("effective_to", LocalDate::class.java),
-                regularMinimumWageCents = r.getCaseInsensitive("regular_minimum_wage_cents", java.lang.Long::class.java)?.toLong(),
-                tippedMinimumCashWageCents = r.getCaseInsensitive("tipped_minimum_cash_wage_cents", java.lang.Long::class.java)?.toLong(),
-                maxTipCreditCents = r.getCaseInsensitive("max_tip_credit_cents", java.lang.Long::class.java)?.toLong(),
-                weeklyOvertimeThresholdHours = r.getCaseInsensitive("weekly_ot_threshold_hours", java.lang.Double::class.java)?.toDouble() ?: 40.0,
-                dailyOvertimeThresholdHours = r.getCaseInsensitive("daily_ot_threshold_hours", java.lang.Double::class.java)?.toDouble(),
-                dailyDoubleTimeThresholdHours = r.getCaseInsensitive("daily_dt_threshold_hours", java.lang.Double::class.java)?.toDouble(),
-                localityCode = r.getCaseInsensitive("locality_code", String::class.java),
-                localityKind = r.getCaseInsensitive("locality_kind", String::class.java),
+                stateCode = requireNotNull(r.get(fStateCode)),
+                effectiveFrom = requireNotNull(r.get(fEffectiveFrom)),
+                effectiveTo = r.get(fEffectiveTo),
+                regularMinimumWageCents = r.get(fRegularMinWageCents)?.toLong(),
+                tippedMinimumCashWageCents = r.get(fTippedMinCashWageCents)?.toLong(),
+                maxTipCreditCents = r.get(fMaxTipCreditCents)?.toLong(),
+                weeklyOvertimeThresholdHours = r.get(fWeeklyOtThresholdHours)?.toDouble() ?: 40.0,
+                dailyOvertimeThresholdHours = r.get(fDailyOtThresholdHours)?.toDouble(),
+                dailyDoubleTimeThresholdHours = r.get(fDailyDtThresholdHours)?.toDouble(),
+                localityCode = r.get(fLocalityCode),
+                localityKind = r.get(fLocalityKind),
             )
         }
     }

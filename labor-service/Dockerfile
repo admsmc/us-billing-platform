@@ -18,7 +18,9 @@ COPY gradle.lockfile gradle.lockfile
 
 COPY shared-kernel shared-kernel
 COPY payroll-domain payroll-domain
+COPY persistence-core persistence-core
 COPY web-core web-core
+COPY tenancy-core tenancy-core
 COPY labor-api labor-api
 COPY labor-service labor-service
 

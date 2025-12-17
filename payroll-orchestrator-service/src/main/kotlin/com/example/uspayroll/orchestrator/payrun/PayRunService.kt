@@ -91,11 +91,42 @@ class PayRunService(
             )
         }
 
+        // Assign paycheck IDs up-front so queue-driven job payloads can carry them.
+        // This avoids needing orchestrator-side ID generation at execution time.
+        val distinctEmployeeIds = employeeIds.distinct()
+        val newPaycheckIds = distinctEmployeeIds.associateWith { "chk-${UUID.randomUUID()}" }
+        payRunItemRepository.assignPaycheckIdsIfAbsentBatch(
+            employerId = employerId,
+            payRunId = payRun.payRunId,
+            paycheckIdsByEmployeeId = newPaycheckIds,
+        )
+        val paycheckIdsByEmployee = payRunItemRepository.findPaycheckIds(
+            employerId = employerId,
+            payRunId = payRun.payRunId,
+            employeeIds = distinctEmployeeIds,
+        )
+
+        val overridesByEmployee: Map<String, List<com.example.uspayroll.messaging.jobs.PayRunEarningOverrideJob>> =
+            earningOverridesByEmployeeId.mapValues { (_, overrides) ->
+                overrides.map { o ->
+                    com.example.uspayroll.messaging.jobs.PayRunEarningOverrideJob(
+                        code = o.code,
+                        units = o.units,
+                        rateCents = o.rateCents,
+                        amountCents = o.amountCents,
+                    )
+                }
+            }
+
         // If we are using queue-driven execution, enqueue one work item per employee.
         jobProducer.enqueueFinalizeEmployeeJobs(
             employerId = employerId,
             payRunId = payRun.payRunId,
-            employeeIds = employeeIds,
+            payPeriodId = payRun.payPeriodId,
+            runType = payRun.runType.name,
+            runSequence = payRun.runSequence,
+            paycheckIdsByEmployeeId = paycheckIdsByEmployee,
+            earningOverridesByEmployeeId = overridesByEmployee,
         )
 
         // Mark the run as RUNNING so the finalizer can pick it up.

@@ -33,16 +33,30 @@ class PayRunFinalizeJobProducer(
      * Transactionally enqueue one job per employee (idempotent via deterministic eventId).
      */
     @Transactional
-    fun enqueueFinalizeEmployeeJobs(employerId: String, payRunId: String, employeeIds: List<String>, now: Instant = Instant.now()): Int {
+    fun enqueueFinalizeEmployeeJobs(
+        employerId: String,
+        payRunId: String,
+        payPeriodId: String,
+        runType: String,
+        runSequence: Int,
+        paycheckIdsByEmployeeId: Map<String, String>,
+        earningOverridesByEmployeeId: Map<String, List<com.example.uspayroll.messaging.jobs.PayRunEarningOverrideJob>> = emptyMap(),
+        now: Instant = Instant.now(),
+    ): Int {
         if (!props.enabled) return 0
-        if (employeeIds.isEmpty()) return 0
+        if (paycheckIdsByEmployeeId.isEmpty()) return 0
 
-        val rows = employeeIds.distinct().map { employeeId ->
+        val rows = paycheckIdsByEmployeeId.entries.map { (employeeId, paycheckId) ->
             val msg = FinalizePayRunEmployeeJob(
                 messageId = "msg-${UUID.randomUUID()}",
                 employerId = employerId,
                 payRunId = payRunId,
+                payPeriodId = payPeriodId,
+                runType = runType,
+                runSequence = runSequence,
                 employeeId = employeeId,
+                paycheckId = paycheckId,
+                earningOverrides = earningOverridesByEmployeeId[employeeId] ?: emptyList(),
                 attempt = 1,
             )
 

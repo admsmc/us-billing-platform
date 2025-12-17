@@ -3,7 +3,9 @@ package com.example.uspayroll.worker.jobs.rabbit
 import com.example.uspayroll.messaging.jobs.FinalizePayRunEmployeeJob
 import com.example.uspayroll.messaging.jobs.FinalizePayRunJobRouting
 import com.example.uspayroll.shared.EmployerId
+import com.example.uspayroll.worker.client.CompleteEmployeeItemRequest
 import com.example.uspayroll.worker.client.OrchestratorClient
+import com.example.uspayroll.worker.payrun.WorkerPaycheckComputationService
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Timer
@@ -147,6 +149,7 @@ class RabbitFinalizeEmployeeItemQueueConfig {
 class RabbitFinalizeEmployeeItemConsumer(
     private val props: FinalizeEmployeeJobsProperties,
     private val orchestratorClient: OrchestratorClient,
+    private val computationService: WorkerPaycheckComputationService,
     private val rabbitTemplate: RabbitTemplate,
     meterRegistry: MeterRegistry,
 ) {
@@ -170,12 +173,19 @@ class RabbitFinalizeEmployeeItemConsumer(
         @Suppress("TooGenericExceptionCaught")
         try {
             val result = finalizeTimer.recordCallable {
-                orchestratorClient.finalizeEmployeeItem(
+                val computation = computationService.computeForFinalizeJob(job)
+                orchestratorClient.completeEmployeeItem(
                     employerId = employerId,
                     payRunId = job.payRunId,
                     employeeId = job.employeeId,
+                    request = CompleteEmployeeItemRequest(
+                        paycheckId = job.paycheckId,
+                        paycheck = computation.paycheck,
+                        audit = computation.audit,
+                        error = null,
+                    ),
                 )
-            } ?: error("finalizeEmployeeItem returned null")
+            } ?: error("completeEmployeeItem returned null")
 
             if (!result.retryable) {
                 // Terminal from orchestrator perspective.
@@ -206,7 +216,43 @@ class RabbitFinalizeEmployeeItemConsumer(
             }
         } catch (t: Throwable) {
             clientErrorCounter.increment()
-            val outcome = republishRetryOrDlq(job, reason = t.message ?: t::class.java.name)
+
+            val msg = t.message ?: t::class.java.name
+
+            @Suppress("TooGenericExceptionCaught")
+            try {
+                val result = orchestratorClient.completeEmployeeItem(
+                    employerId = employerId,
+                    payRunId = job.payRunId,
+                    employeeId = job.employeeId,
+                    request = CompleteEmployeeItemRequest(
+                        paycheckId = job.paycheckId,
+                        paycheck = null,
+                        audit = null,
+                        error = msg,
+                    ),
+                )
+
+                if (!result.retryable) {
+                    when (result.itemStatus) {
+                        "SUCCEEDED" -> succeededCounter.increment()
+                        "FAILED" -> failedTerminalCounter.increment()
+                        else -> outcomeCounter.increment()
+                    }
+                    return
+                }
+
+                val outcome = republishRetryOrDlq(job, reason = result.error ?: msg)
+                when (outcome) {
+                    RepublishOutcome.RETRY -> retryEnqueuedCounter.increment()
+                    RepublishOutcome.DLQ -> dlqCounter.increment()
+                }
+                return
+            } catch (_: Throwable) {
+                // Fall through to local retry if we couldn't report the failure.
+            }
+
+            val outcome = republishRetryOrDlq(job, reason = msg)
             when (outcome) {
                 RepublishOutcome.RETRY -> retryEnqueuedCounter.increment()
                 RepublishOutcome.DLQ -> dlqCounter.increment()

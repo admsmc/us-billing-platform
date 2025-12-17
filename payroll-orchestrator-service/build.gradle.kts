@@ -18,6 +18,7 @@ kotlin {
 dependencies {
     implementation(project(":shared-kernel"))
     implementation(project(":payroll-domain"))
+    implementation(project(":payroll-jackson"))
     implementation(project(":messaging-core"))
     implementation(project(":web-core"))
     implementation(project(":tenancy-core"))

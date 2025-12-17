@@ -3,13 +3,17 @@ package com.example.uspayroll.orchestrator.payrun
 import com.example.uspayroll.orchestrator.payrun.model.PayRunItemStatus
 import com.example.uspayroll.orchestrator.payrun.persistence.PayRunItemRepository
 import com.example.uspayroll.orchestrator.payrun.persistence.PayRunRepository
-import com.example.uspayroll.shared.EmployeeId
+import com.example.uspayroll.orchestrator.persistence.PaycheckAuditStoreRepository
+import com.example.uspayroll.orchestrator.persistence.PaycheckStoreRepository
+import com.example.uspayroll.payroll.model.PaycheckResult
+import com.example.uspayroll.payroll.model.audit.PaycheckAudit
 import com.example.uspayroll.shared.EmployerId
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Timer
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @ConfigurationProperties(prefix = "orchestrator.payrun.items")
 data class PayRunItemFinalizationProperties(
@@ -25,8 +29,8 @@ class PayRunItemFinalizationService(
     private val props: PayRunItemFinalizationProperties,
     private val payRunRepository: PayRunRepository,
     private val payRunItemRepository: PayRunItemRepository,
-    private val paycheckComputationService: PaycheckComputationService,
-    private val earningOverridesCodec: PayRunEarningOverridesCodec,
+    private val paycheckStoreRepository: PaycheckStoreRepository,
+    private val paycheckAuditStoreRepository: PaycheckAuditStoreRepository,
     meterRegistry: MeterRegistry,
 ) {
 
@@ -47,7 +51,15 @@ class PayRunItemFinalizationService(
         val error: String? = null,
     )
 
-    fun finalizeOneEmployeeItem(employerId: String, payRunId: String, employeeId: String): FinalizeItemResult? {
+    data class CompleteItemRequest(
+        val paycheckId: String,
+        val paycheck: PaycheckResult? = null,
+        val audit: PaycheckAudit? = null,
+        val error: String? = null,
+    )
+
+    @Transactional
+    fun completeOneEmployeeItem(employerId: String, payRunId: String, employeeId: String, request: CompleteItemRequest): FinalizeItemResult? {
         return finalizeTimer.recordCallable {
             val payRun = payRunRepository.findPayRun(employerId, payRunId) ?: return@recordCallable null
 
@@ -58,10 +70,10 @@ class PayRunItemFinalizationService(
                 requeueStaleMillis = props.requeueStaleMillis,
             ) ?: return@recordCallable null
 
-            // If we didn't claim, return current state.
+            // If we didn't claim, return current state. We treat non-claimed states as non-retryable
+            // to avoid job storms on duplicate delivery.
             if (!claim.claimed) {
                 val current = claim.item
-                val retryable = current.status == PayRunItemStatus.QUEUED || current.status == PayRunItemStatus.RUNNING
                 noopCounter.increment()
                 return@recordCallable FinalizeItemResult(
                     employerId = employerId,
@@ -70,42 +82,46 @@ class PayRunItemFinalizationService(
                     itemStatus = current.status.name,
                     attemptCount = current.attemptCount,
                     paycheckId = current.paycheckId,
-                    retryable = retryable,
+                    retryable = false,
                     error = current.lastError,
                 )
             }
 
-            val paycheckId = payRunItemRepository.getOrAssignPaycheckId(
-                employerId = employerId,
-                payRunId = payRunId,
-                employeeId = employeeId,
-            )
+            val resolvedPaycheckId = request.paycheckId
 
             @Suppress("TooGenericExceptionCaught")
             try {
-                val earningOverrides = claim.item.earningOverridesJson
-                    ?.let { earningOverridesCodec.decodeToEarningInputs(it) }
-                    ?: emptyList()
+                if (request.error != null) {
+                    throw IllegalStateException(request.error)
+                }
 
-                val paycheck = paycheckComputationService.computeAndPersistFinalPaycheckForEmployee(
+                val paycheck = requireNotNull(request.paycheck) { "paycheck is required on success" }
+                val audit = requireNotNull(request.audit) { "audit is required on success" }
+
+                paycheckStoreRepository.insertFinalPaycheckIfAbsent(
                     employerId = EmployerId(employerId),
+                    paycheckId = resolvedPaycheckId,
                     payRunId = payRunId,
+                    employeeId = employeeId,
                     payPeriodId = payRun.payPeriodId,
-                    runType = payRun.runType,
+                    runType = payRun.runType.name,
                     runSequence = payRun.runSequence,
-                    paycheckId = paycheckId,
-                    employeeId = EmployeeId(employeeId),
-                    earningOverrides = earningOverrides,
+                    checkDateIso = paycheck.period.checkDate.toString(),
+                    grossCents = paycheck.gross.amount,
+                    netCents = paycheck.net.amount,
+                    version = 1,
+                    payload = paycheck,
                 )
+
+                paycheckAuditStoreRepository.insertAuditIfAbsent(audit)
 
                 payRunItemRepository.markSucceeded(
                     employerId = employerId,
                     payRunId = payRunId,
                     employeeId = employeeId,
-                    paycheckId = paycheck.paycheckId.value,
+                    paycheckId = resolvedPaycheckId,
                 )
 
-                val updated = payRunItemRepository.findItem(employerId, payRunId, employeeId)
                 succeededCounter.increment()
 
                 return@recordCallable FinalizeItemResult(
@@ -113,13 +129,12 @@ class PayRunItemFinalizationService(
                     payRunId = payRunId,
                     employeeId = employeeId,
                     itemStatus = PayRunItemStatus.SUCCEEDED.name,
-                    attemptCount = updated?.attemptCount ?: claim.item.attemptCount,
-                    paycheckId = paycheck.paycheckId.value,
+                    attemptCount = claim.item.attemptCount,
+                    paycheckId = resolvedPaycheckId,
                     retryable = false,
                 )
             } catch (t: Exception) {
-                val latest = payRunItemRepository.findItem(employerId, payRunId, employeeId)
-                val attempts = latest?.attemptCount ?: claim.item.attemptCount
+                val attempts = claim.item.attemptCount
                 val maxAttempts = props.maxAttempts.coerceAtLeast(1)
                 val retryable = attempts < maxAttempts
 
@@ -142,14 +157,13 @@ class PayRunItemFinalizationService(
                     )
                 }
 
-                val final = payRunItemRepository.findItem(employerId, payRunId, employeeId)
                 return@recordCallable FinalizeItemResult(
                     employerId = employerId,
                     payRunId = payRunId,
                     employeeId = employeeId,
-                    itemStatus = final?.status?.name ?: (if (retryable) PayRunItemStatus.QUEUED.name else PayRunItemStatus.FAILED.name),
-                    attemptCount = final?.attemptCount ?: attempts,
-                    paycheckId = final?.paycheckId ?: paycheckId,
+                    itemStatus = if (retryable) PayRunItemStatus.QUEUED.name else PayRunItemStatus.FAILED.name,
+                    attemptCount = attempts,
+                    paycheckId = resolvedPaycheckId,
                     retryable = retryable,
                     error = msg,
                 )

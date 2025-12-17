@@ -55,7 +55,12 @@ class DlqReplayControllerTest {
             messageId = "old",
             employerId = "EMP",
             payRunId = "PR",
+            payPeriodId = "PP",
+            runType = "REGULAR",
+            runSequence = 1,
             employeeId = "EE",
+            paycheckId = "CHK-1",
+            earningOverrides = emptyList(),
             attempt = 7,
         )
 

@@ -3,6 +3,7 @@ rootProject.name = "us-payroll-platform"
 include(
     "shared-kernel",
     "payroll-domain",
+    "payroll-jackson",
     "hr-domain",
     "time-domain",
     "tax-domain",

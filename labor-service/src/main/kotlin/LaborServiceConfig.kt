@@ -4,13 +4,14 @@ import com.example.uspayroll.labor.api.LaborStandardsCatalog
 import com.example.uspayroll.labor.api.LaborStandardsContextProvider
 import com.example.uspayroll.labor.impl.CatalogBackedLaborStandardsContextProvider
 import com.example.uspayroll.labor.persistence.JooqLaborStandardsCatalog
+import com.example.uspayroll.tenancy.db.TenantDataSourceFactory
+import com.example.uspayroll.tenancy.db.TenantDbConfig
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.jdbc.datasource.DriverManagerDataSource
 import javax.sql.DataSource
 
 @Configuration
@@ -25,14 +26,18 @@ class LaborServiceConfig {
             else -> null
         }
 
-        return DriverManagerDataSource().apply {
-            if (driverClassName != null) {
-                setDriverClassName(driverClassName)
-            }
-            this.url = url
-            this.username = username
-            this.password = password
-        }
+        // IMPORTANT: Use a pool (Hikari) rather than DriverManagerDataSource.
+        // DriverManagerDataSource opens a new physical connection per operation and defeats
+        // driver-level caches, which can create heavy pg_catalog metadata traffic.
+        return TenantDataSourceFactory.buildHikari(
+            tenant = "labor-single",
+            cfg = TenantDbConfig(
+                url = url,
+                username = username,
+                password = password,
+                driverClassName = driverClassName,
+            ),
+        )
     }
 
     @Bean

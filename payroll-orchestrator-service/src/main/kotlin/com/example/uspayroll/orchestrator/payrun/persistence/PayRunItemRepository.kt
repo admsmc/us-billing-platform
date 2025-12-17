@@ -253,6 +253,81 @@ class PayRunItemRepository(
     }
 
     /**
+     * Assign paycheck IDs for items that don't have one yet.
+     *
+     * This is intended for queue-driven payruns so job payloads can include
+     * paycheckId without requiring orchestration-time generation.
+     */
+    fun assignPaycheckIdsIfAbsentBatch(employerId: String, payRunId: String, paycheckIdsByEmployeeId: Map<String, String>) {
+        if (paycheckIdsByEmployeeId.isEmpty()) return
+
+        jdbcTemplate.batchUpdate(
+            """
+            UPDATE pay_run_item
+            SET paycheck_id = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE employer_id = ? AND pay_run_id = ? AND employee_id = ?
+              AND paycheck_id IS NULL
+            """.trimIndent(),
+            paycheckIdsByEmployeeId.entries.map { (employeeId, paycheckId) ->
+                arrayOf(
+                    paycheckId,
+                    employerId,
+                    payRunId,
+                    employeeId,
+                )
+            },
+        )
+    }
+
+    fun findPaycheckIds(employerId: String, payRunId: String, employeeIds: List<String>): Map<String, String> {
+        val distinct = employeeIds.distinct()
+        if (distinct.isEmpty()) return emptyMap()
+
+        val placeholders = distinct.joinToString(",") { "?" }
+        val args: MutableList<Any> = mutableListOf(employerId, payRunId)
+        args.addAll(distinct)
+
+        val rows = jdbcTemplate.query(
+            """
+            SELECT employee_id, paycheck_id
+            FROM pay_run_item
+            WHERE employer_id = ? AND pay_run_id = ?
+              AND employee_id IN ($placeholders)
+            """.trimIndent(),
+            { rs, _ -> rs.getString("employee_id") to rs.getString("paycheck_id") },
+            *args.toTypedArray(),
+        )
+
+        return rows
+            .filter { (_, paycheckId) -> !paycheckId.isNullOrBlank() }
+            .associate { (employeeId, paycheckId) -> employeeId to paycheckId }
+    }
+
+    fun findEarningOverridesJson(employerId: String, payRunId: String, employeeIds: List<String>): Map<String, String> {
+        val distinct = employeeIds.distinct()
+        if (distinct.isEmpty()) return emptyMap()
+
+        val placeholders = distinct.joinToString(",") { "?" }
+        val args: MutableList<Any> = mutableListOf(employerId, payRunId)
+        args.addAll(distinct)
+
+        val rows = jdbcTemplate.query(
+            """
+            SELECT employee_id, earning_overrides_json
+            FROM pay_run_item
+            WHERE employer_id = ? AND pay_run_id = ?
+              AND employee_id IN ($placeholders)
+            """.trimIndent(),
+            { rs, _ -> rs.getString("employee_id") to rs.getString("earning_overrides_json") },
+            *args.toTypedArray(),
+        )
+
+        return rows
+            .filter { (_, json) -> !json.isNullOrBlank() }
+            .associate { (employeeId, json) -> employeeId to json }
+    }
+
+    /**
      * Atomically claims up to [batchSize] QUEUED items by selecting them with
      * row locks and updating their status within a single transaction.
      */

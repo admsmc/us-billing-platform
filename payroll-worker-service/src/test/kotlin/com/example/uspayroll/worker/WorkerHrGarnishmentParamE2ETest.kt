@@ -37,6 +37,9 @@ import kotlin.test.assertTrue
         // application.yml defaults can otherwise leak onto the classpath).
         "spring.flyway.enabled=true",
         "spring.flyway.locations=classpath:db/migration/hr",
+
+        // This suite validates rule-driven garnishment behavior via the HR HTTP API.
+        "hr.garnishments.fallback-enabled=true",
     ],
 )
 @Import(StubTaxLaborClientsTestConfig::class)

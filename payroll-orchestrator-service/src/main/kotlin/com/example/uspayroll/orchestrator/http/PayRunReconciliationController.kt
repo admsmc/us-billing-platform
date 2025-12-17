@@ -1,6 +1,7 @@
 package com.example.uspayroll.orchestrator.http
 
 import com.example.uspayroll.messaging.events.payments.PaycheckPaymentLifecycleStatus
+import com.example.uspayroll.messaging.jobs.PayRunEarningOverrideJob
 import com.example.uspayroll.orchestrator.client.PaymentsQueryClient
 import com.example.uspayroll.orchestrator.events.PayRunOutboxEnqueuer
 import com.example.uspayroll.orchestrator.jobs.PayRunFinalizeJobProducer
@@ -9,6 +10,8 @@ import com.example.uspayroll.orchestrator.payments.model.PaycheckPaymentStatus
 import com.example.uspayroll.orchestrator.payments.persistence.PayRunPaycheckQueryRepository
 import com.example.uspayroll.orchestrator.payments.persistence.PaycheckPaymentRepository
 import com.example.uspayroll.orchestrator.payments.persistence.PaymentStatusProjectionRepository
+import com.example.uspayroll.orchestrator.payrun.PayRunEarningOverride
+import com.example.uspayroll.orchestrator.payrun.PayRunEarningOverridesCodec
 import com.example.uspayroll.orchestrator.payrun.PayRunService
 import com.example.uspayroll.orchestrator.payrun.model.ApprovalStatus
 import com.example.uspayroll.orchestrator.payrun.model.PayRunItemStatus
@@ -27,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
 import java.time.Duration
 import java.time.Instant
+import java.util.UUID
 
 /**
  * Internal-only reconciliation endpoints.
@@ -46,6 +50,7 @@ class PayRunReconciliationController(
     private val outboxEnqueuer: PayRunOutboxEnqueuer,
     private val paymentStatusProjectionRepository: PaymentStatusProjectionRepository,
     private val paycheckPaymentRepository: PaycheckPaymentRepository,
+    private val earningOverridesCodec: PayRunEarningOverridesCodec,
 ) {
 
     data class StuckPayRunView(
@@ -110,6 +115,9 @@ class PayRunReconciliationController(
      */
     @PostMapping("/{payRunId}/reconcile/requeue-queued")
     fun requeueQueued(@PathVariable employerId: String, @PathVariable payRunId: String, @RequestParam(name = "limit", defaultValue = "10000") limit: Int): ResponseEntity<RequeueResult> {
+        val payRun = payRunRepository.findPayRun(employerId, payRunId)
+            ?: notFound("payrun not found")
+
         val employeeIds = payRunItemRepository.listEmployeeIdsByStatus(
             employerId = employerId,
             payRunId = payRunId,
@@ -117,10 +125,17 @@ class PayRunReconciliationController(
             limit = limit,
         )
 
+        val paycheckIdsByEmployeeId = ensurePaycheckIds(employerId, payRunId, employeeIds)
+        val earningOverridesByEmployeeId = loadEarningOverridesAsJobs(employerId, payRunId, employeeIds)
+
         val enqueued = jobProducer.enqueueFinalizeEmployeeJobs(
             employerId = employerId,
             payRunId = payRunId,
-            employeeIds = employeeIds,
+            payPeriodId = payRun.payPeriodId,
+            runType = payRun.runType.name,
+            runSequence = payRun.runSequence,
+            paycheckIdsByEmployeeId = paycheckIdsByEmployeeId,
+            earningOverridesByEmployeeId = earningOverridesByEmployeeId,
         )
 
         return ResponseEntity.ok(
@@ -154,6 +169,9 @@ class PayRunReconciliationController(
             reason = "reconcile_requeue_stale_running staleMillis=$staleMillis",
         )
 
+        val payRun = payRunRepository.findPayRun(employerId, payRunId)
+            ?: notFound("payrun not found")
+
         val queued = payRunItemRepository.listEmployeeIdsByStatus(
             employerId = employerId,
             payRunId = payRunId,
@@ -161,10 +179,17 @@ class PayRunReconciliationController(
             limit = limit,
         )
 
+        val paycheckIdsByEmployeeId = ensurePaycheckIds(employerId, payRunId, queued)
+        val earningOverridesByEmployeeId = loadEarningOverridesAsJobs(employerId, payRunId, queued)
+
         val enqueued = jobProducer.enqueueFinalizeEmployeeJobs(
             employerId = employerId,
             payRunId = payRunId,
-            employeeIds = queued,
+            payPeriodId = payRun.payPeriodId,
+            runType = payRun.runType.name,
+            runSequence = payRun.runSequence,
+            paycheckIdsByEmployeeId = paycheckIdsByEmployeeId,
+            earningOverridesByEmployeeId = earningOverridesByEmployeeId,
         )
 
         return ResponseEntity.ok(
@@ -202,6 +227,9 @@ class PayRunReconciliationController(
             reason = reason,
         )
 
+        val payRun = payRunRepository.findPayRun(employerId, payRunId)
+            ?: notFound("payrun not found")
+
         val queued = payRunItemRepository.listEmployeeIdsByStatus(
             employerId = employerId,
             payRunId = payRunId,
@@ -209,10 +237,17 @@ class PayRunReconciliationController(
             limit = limit,
         )
 
+        val paycheckIdsByEmployeeId = ensurePaycheckIds(employerId, payRunId, queued)
+        val earningOverridesByEmployeeId = loadEarningOverridesAsJobs(employerId, payRunId, queued)
+
         val enqueued = jobProducer.enqueueFinalizeEmployeeJobs(
             employerId = employerId,
             payRunId = payRunId,
-            employeeIds = queued,
+            payPeriodId = payRun.payPeriodId,
+            runType = payRun.runType.name,
+            runSequence = payRun.runSequence,
+            paycheckIdsByEmployeeId = paycheckIdsByEmployeeId,
+            earningOverridesByEmployeeId = earningOverridesByEmployeeId,
         )
 
         return ResponseEntity.ok(
@@ -274,6 +309,67 @@ class PayRunReconciliationController(
                 paymentStatus = updated.paymentStatus.name,
             ),
         )
+    }
+
+    private fun ensurePaycheckIds(employerId: String, payRunId: String, employeeIds: List<String>): Map<String, String> {
+        if (employeeIds.isEmpty()) return emptyMap()
+
+        var paycheckIds = payRunItemRepository.findPaycheckIds(
+            employerId = employerId,
+            payRunId = payRunId,
+            employeeIds = employeeIds,
+        )
+
+        val missing = employeeIds.filterNot { paycheckIds.containsKey(it) }
+        if (missing.isNotEmpty()) {
+            val newIds = missing.associateWith { "chk-${UUID.randomUUID()}" }
+            payRunItemRepository.assignPaycheckIdsIfAbsentBatch(
+                employerId = employerId,
+                payRunId = payRunId,
+                paycheckIdsByEmployeeId = newIds,
+            )
+
+            paycheckIds = payRunItemRepository.findPaycheckIds(
+                employerId = employerId,
+                payRunId = payRunId,
+                employeeIds = employeeIds,
+            )
+
+            val stillMissing = employeeIds.filterNot { paycheckIds.containsKey(it) }
+            if (stillMissing.isNotEmpty()) {
+                paycheckIds = paycheckIds + stillMissing.associateWith { employeeId ->
+                    payRunItemRepository.getOrAssignPaycheckId(employerId = employerId, payRunId = payRunId, employeeId = employeeId)
+                }
+            }
+        }
+
+        return paycheckIds
+    }
+
+    private fun loadEarningOverridesAsJobs(
+        employerId: String,
+        payRunId: String,
+        employeeIds: List<String>,
+    ): Map<String, List<PayRunEarningOverrideJob>> {
+        if (employeeIds.isEmpty()) return emptyMap()
+
+        val jsonByEmployee = payRunItemRepository.findEarningOverridesJson(
+            employerId = employerId,
+            payRunId = payRunId,
+            employeeIds = employeeIds,
+        )
+
+        return jsonByEmployee.mapValues { (_, json) ->
+            val overrides: List<PayRunEarningOverride> = earningOverridesCodec.decodeToOverrides(json)
+            overrides.map { o ->
+                PayRunEarningOverrideJob(
+                    code = o.code,
+                    units = o.units,
+                    rateCents = o.rateCents,
+                    amountCents = o.amountCents,
+                )
+            }
+        }
     }
 
     private fun notFound(message: String): Nothing = throw ResponseStatusException(HttpStatus.NOT_FOUND, message)

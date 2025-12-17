@@ -18,8 +18,11 @@ COPY gradle.lockfile gradle.lockfile
 
 COPY shared-kernel shared-kernel
 COPY payroll-domain payroll-domain
+COPY payroll-jackson payroll-jackson
+COPY persistence-core persistence-core
 COPY messaging-core messaging-core
 COPY web-core web-core
+COPY tenancy-core tenancy-core
 COPY hr-api hr-api
 COPY hr-client hr-client
 COPY tax-api tax-api

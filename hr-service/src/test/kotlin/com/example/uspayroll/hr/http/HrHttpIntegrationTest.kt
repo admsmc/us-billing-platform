@@ -13,7 +13,12 @@ import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
 import java.time.LocalDate
 
-@SpringBootTest
+@SpringBootTest(
+    properties = [
+        // This test suite asserts legacy fallback behavior for employer-scoped rule config.
+        "hr.garnishments.fallback-enabled=true",
+    ],
+)
 @AutoConfigureMockMvc
 class HrHttpIntegrationTest {
 

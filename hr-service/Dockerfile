@@ -20,7 +20,9 @@ COPY gradle.lockfile gradle.lockfile
 # Copy project sources (include all subprojects required by :hr-service).
 COPY shared-kernel shared-kernel
 COPY payroll-domain payroll-domain
+COPY persistence-core persistence-core
 COPY web-core web-core
+COPY tenancy-core tenancy-core
 COPY hr-api hr-api
 COPY hr-service hr-service
 

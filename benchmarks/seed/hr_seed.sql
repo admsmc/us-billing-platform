@@ -42,6 +42,7 @@ DELETE FROM garnishment_withholding_event WHERE employer_id = :'employer_id';
 DELETE FROM garnishment_ledger WHERE employer_id = :'employer_id';
 DELETE FROM garnishment_order WHERE employer_id = :'employer_id';
 DELETE FROM employment_compensation WHERE employer_id = :'employer_id';
+DELETE FROM employee_profile_effective WHERE employer_id = :'employer_id';
 DELETE FROM employee WHERE employer_id = :'employer_id';
 DELETE FROM pay_period WHERE employer_id = :'employer_id';
 
@@ -56,7 +57,7 @@ INSERT INTO pay_period (
   'BIWEEKLY', 1
 );
 
--- Generate N employees + matching compensation.
+-- Generate N employees + matching effective-dated profiles + compensation.
 -- Employee IDs will be: EE-BENCH-000001 .. EE-BENCH-<N>
 WITH seed AS (
   SELECT
@@ -80,6 +81,65 @@ INSERT INTO employee (
   format('EE-BENCH-%s', lpad(n::text, 6, '0')),
   'Bench',
   format('Employee%s', lpad(n::text, 6, '0')),
+  CASE
+    WHEN (n % mi_every) = 0 THEN 'MI'
+    ELSE COALESCE(NULLIF(:'home_state', ''), 'CA')
+  END,
+  CASE
+    WHEN (n % mi_every) = 0 THEN 'MI'
+    ELSE COALESCE(NULLIF(:'work_state', ''), 'CA')
+  END,
+  CASE
+    WHEN (n % mi_every) = 0 THEN
+      CASE (n % (mi_every * 3))
+        WHEN 0 THEN 'Detroit'
+        WHEN mi_every THEN 'Grand Rapids'
+        ELSE 'Lansing'
+      END
+    ELSE COALESCE(NULLIF(:'work_city', ''), 'San Francisco')
+  END,
+  'SINGLE',
+  'REGULAR',
+  :'start_date'::date,
+  NULL,
+  0,
+  FALSE,
+  FALSE,
+  NULL,
+  NULL,
+  NULL,
+  FALSE,
+  NULL,
+  FALSE,
+  TRUE,
+  'NON_EXEMPT',
+  FALSE
+FROM seed;
+
+-- IMPORTANT: the HR snapshot endpoint uses employee_profile_effective.
+-- effective_to is treated as exclusive (effective_to > asOf), so use a far-future date.
+WITH seed AS (
+  SELECT
+    generate_series(1, :'employee_count'::int) AS n,
+    (:'mi_every'::int) AS mi_every
+)
+INSERT INTO employee_profile_effective (
+  employer_id, employee_id,
+  effective_from, effective_to,
+  home_state, work_state, work_city,
+  filing_status, employment_type,
+  hire_date, termination_date,
+  dependents,
+  federal_withholding_exempt, is_nonresident_alien,
+  w4_annual_credit_cents, w4_other_income_cents, w4_deductions_cents,
+  w4_step2_multiple_jobs,
+  additional_withholding_cents,
+  fica_exempt, flsa_enterprise_covered, flsa_exempt_status, is_tipped_employee
+) SELECT
+  :'employer_id',
+  format('EE-BENCH-%s', lpad(n::text, 6, '0')),
+  :'start_date'::date,
+  '9999-12-31'::date,
   CASE
     WHEN (n % mi_every) = 0 THEN 'MI'
     ELSE COALESCE(NULLIF(:'home_state', ''), 'CA')

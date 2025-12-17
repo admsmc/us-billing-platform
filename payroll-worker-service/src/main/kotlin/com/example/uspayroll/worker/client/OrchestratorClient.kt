@@ -1,5 +1,7 @@
 package com.example.uspayroll.worker.client
 
+import com.example.uspayroll.payroll.model.PaycheckResult
+import com.example.uspayroll.payroll.model.audit.PaycheckAudit
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.web.security.InternalJwtHs256
 import org.springframework.boot.context.properties.ConfigurationProperties
@@ -26,7 +28,7 @@ interface OrchestratorClient {
         parallelism: Int = 4,
     ): Map<String, Any?>
 
-    fun finalizeEmployeeItem(employerId: EmployerId, payRunId: String, employeeId: String): FinalizeEmployeeItemResponse
+    fun completeEmployeeItem(employerId: EmployerId, payRunId: String, employeeId: String, request: CompleteEmployeeItemRequest): CompleteEmployeeItemResponse
 
     fun getStatus(employerId: EmployerId, payRunId: String, failureLimit: Int = 25): PayRunStatusResponse
 }
@@ -130,18 +132,18 @@ class HttpOrchestratorClient(
             ?: error("Orchestrator execute returned null body")
     }
 
-    override fun finalizeEmployeeItem(employerId: EmployerId, payRunId: String, employeeId: String): FinalizeEmployeeItemResponse {
-        val url = "${props.baseUrl}/employers/${employerId.value}/payruns/internal/$payRunId/items/$employeeId/finalize"
+    override fun completeEmployeeItem(employerId: EmployerId, payRunId: String, employeeId: String, request: CompleteEmployeeItemRequest): CompleteEmployeeItemResponse {
+        val url = "${props.baseUrl}/employers/${employerId.value}/payruns/internal/$payRunId/items/$employeeId/complete"
 
         val headers = internalAuthHeaders()
 
-        val response = restTemplate.exchange<FinalizeEmployeeItemResponse>(
+        val response = restTemplate.exchange<CompleteEmployeeItemResponse>(
             RequestEntity.post(URI.create(url))
                 .headers(headers)
-                .build(),
+                .body(request),
         )
 
-        return response.body ?: error("Orchestrator finalizeEmployeeItem returned null body")
+        return response.body ?: error("Orchestrator completeEmployeeItem returned null body")
     }
 
     override fun getStatus(employerId: EmployerId, payRunId: String, failureLimit: Int): PayRunStatusResponse {
@@ -166,7 +168,14 @@ data class StartFinalizeResponse(
     val created: Boolean,
 )
 
-data class FinalizeEmployeeItemResponse(
+data class CompleteEmployeeItemRequest(
+    val paycheckId: String,
+    val paycheck: PaycheckResult? = null,
+    val audit: PaycheckAudit? = null,
+    val error: String? = null,
+)
+
+data class CompleteEmployeeItemResponse(
     val employerId: String,
     val payRunId: String,
     val employeeId: String,

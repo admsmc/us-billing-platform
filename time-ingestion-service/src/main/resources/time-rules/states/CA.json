@@ -1,0 +1,15 @@
+{
+  "type": "SIMPLE",
+  "id": "CA",
+  "daily": {
+    "regularLimitHours": 8.0,
+    "doubleTimeAfterHours": 12.0
+  },
+  "weekly": {
+    "overtimeAfterHours": 40.0
+  },
+  "seventhDay": {
+    "enabled": true,
+    "firstEightAsOvertime": true
+  }
+}

@@ -19,8 +19,9 @@ ALTER TABLE employee_profile_effective
     ADD CONSTRAINT pk_employee_profile_effective_bt PRIMARY KEY (employer_id, employee_id, effective_from, system_from);
 
 -- System-time invariants.
+-- Postgres does not support `ADD CONSTRAINT IF NOT EXISTS`.
 ALTER TABLE employee_profile_effective
-    ADD CONSTRAINT IF NOT EXISTS chk_employee_profile_effective_system_range CHECK (system_to > system_from);
+    ADD CONSTRAINT chk_employee_profile_effective_system_range CHECK (system_to > system_from);
 
 -- Rebuild index to include system-time columns for "current row" queries.
 DROP INDEX IF EXISTS idx_employee_profile_effective_asof;

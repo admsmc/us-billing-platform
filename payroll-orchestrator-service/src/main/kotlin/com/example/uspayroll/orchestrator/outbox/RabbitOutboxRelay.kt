@@ -64,6 +64,9 @@ class RabbitOutboxRelay(
 
         if (claimed.isEmpty()) return
 
+        val sent: MutableList<OutboxEventRow> = mutableListOf()
+        val failures: MutableList<OutboxFailureUpdate> = mutableListOf()
+
         claimed.forEach { row ->
             @Suppress("TooGenericExceptionCaught")
             try {
@@ -85,13 +88,7 @@ class RabbitOutboxRelay(
                 val msg = Message(row.payloadJson.toByteArray(StandardCharsets.UTF_8), msgProps)
                 rabbitTemplate.send(row.topic, row.eventKey, msg)
 
-                outboxRepository.markSent(
-                    destinationType = OutboxDestinationType.RABBIT,
-                    outboxId = row.outboxId,
-                    lockOwner = props.lockOwner,
-                    lockedAt = row.lockedAt,
-                    now = now,
-                )
+                sent.add(row)
             } catch (t: Exception) {
                 val next = computeNextAttempt(row.attempts)
                 logger.warn(
@@ -103,17 +100,36 @@ class RabbitOutboxRelay(
                     next.toMillis(),
                     t.message,
                 )
-                outboxRepository.markFailed(
-                    destinationType = OutboxDestinationType.RABBIT,
-                    outboxId = row.outboxId,
-                    lockOwner = props.lockOwner,
-                    lockedAt = row.lockedAt,
-                    error = t.message ?: t::class.java.name,
-                    nextAttemptAt = now.plus(next),
-                    now = now,
+
+                failures.add(
+                    OutboxFailureUpdate(
+                        outboxId = row.outboxId,
+                        lockedAt = row.lockedAt,
+                        error = t.message ?: t::class.java.name,
+                        nextAttemptAt = now.plus(next),
+                    ),
                 )
             }
         }
+
+        // Reduce commit/WAL overhead: bulk-update outbox rows after publish.
+        sent
+            .groupBy { it.lockedAt }
+            .forEach { (lockedAt, rows) ->
+                outboxRepository.markSentBatch(
+                    destinationType = OutboxDestinationType.RABBIT,
+                    outboxIds = rows.map { it.outboxId },
+                    lockOwner = props.lockOwner,
+                    lockedAt = lockedAt,
+                    now = now,
+                )
+            }
+
+        outboxRepository.markFailedBatch(
+            destinationType = OutboxDestinationType.RABBIT,
+            failures = failures,
+            lockOwner = props.lockOwner,
+        )
     }
 
     private fun computeNextAttempt(attempts: Int): Duration {

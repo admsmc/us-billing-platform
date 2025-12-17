@@ -31,6 +31,7 @@ import java.net.URI
 class PayRunPaymentsInitiateIdempotencyIT(
     private val rest: TestRestTemplate,
     private val jdbcTemplate: JdbcTemplate,
+    private val paycheckComputationService: com.example.uspayroll.orchestrator.payrun.PaycheckComputationService,
 ) {
 
     @Test
@@ -50,20 +51,48 @@ class PayRunPaymentsInitiateIdempotencyIT(
             PayRunController.StartFinalizeResponse::class.java,
         )
 
-        // Finalize both items (internal endpoint).
+        // Complete both items (internal endpoint).
         val internalHeaders = HttpHeaders().apply { set("X-Internal-Token", "dev-internal-token") }
-        rest.exchange(
-            RequestEntity.post(URI.create("/employers/$employerId/payruns/internal/$payRunId/items/e-1/finalize"))
-                .headers(internalHeaders)
-                .build(),
-            Map::class.java,
-        )
-        rest.exchange(
-            RequestEntity.post(URI.create("/employers/$employerId/payruns/internal/$payRunId/items/e-2/finalize"))
-                .headers(internalHeaders)
-                .build(),
-            Map::class.java,
-        )
+
+        fun complete(employeeId: String) {
+            val paycheckId = jdbcTemplate.queryForObject(
+                """
+                SELECT paycheck_id
+                FROM pay_run_item
+                WHERE employer_id = ? AND pay_run_id = ? AND employee_id = ?
+                """.trimIndent(),
+                String::class.java,
+                employerId,
+                payRunId,
+                employeeId,
+            )!!
+
+            val computation = paycheckComputationService.computePaycheckComputationForEmployee(
+                employerId = com.example.uspayroll.shared.EmployerId(employerId),
+                payRunId = payRunId,
+                payPeriodId = "pp-1",
+                runType = com.example.uspayroll.orchestrator.payrun.model.PayRunType.REGULAR,
+                paycheckId = paycheckId,
+                employeeId = com.example.uspayroll.shared.EmployeeId(employeeId),
+            )
+
+            rest.exchange(
+                RequestEntity.post(URI.create("/employers/$employerId/payruns/internal/$payRunId/items/$employeeId/complete"))
+                    .headers(internalHeaders)
+                    .body(
+                        PayRunController.CompleteEmployeeItemRequest(
+                            paycheckId = paycheckId,
+                            paycheck = computation.paycheck,
+                            audit = computation.audit,
+                            error = null,
+                        ),
+                    ),
+                Map::class.java,
+            )
+        }
+
+        complete("e-1")
+        complete("e-2")
 
         // Approve.
         rest.exchange(
@@ -126,10 +155,39 @@ class PayRunPaymentsInitiateIdempotencyIT(
             )
 
             val internalHeaders = HttpHeaders().apply { set("X-Internal-Token", "dev-internal-token") }
+
+            val paycheckId = jdbcTemplate.queryForObject(
+                """
+                SELECT paycheck_id
+                FROM pay_run_item
+                WHERE employer_id = ? AND pay_run_id = ? AND employee_id = ?
+                """.trimIndent(),
+                String::class.java,
+                employerId,
+                payRunId,
+                employeeId,
+            )!!
+
+            val computation = paycheckComputationService.computePaycheckComputationForEmployee(
+                employerId = com.example.uspayroll.shared.EmployerId(employerId),
+                payRunId = payRunId,
+                payPeriodId = "pp-1",
+                runType = com.example.uspayroll.orchestrator.payrun.model.PayRunType.REGULAR,
+                paycheckId = paycheckId,
+                employeeId = com.example.uspayroll.shared.EmployeeId(employeeId),
+            )
+
             rest.exchange(
-                RequestEntity.post(URI.create("/employers/$employerId/payruns/internal/$payRunId/items/$employeeId/finalize"))
+                RequestEntity.post(URI.create("/employers/$employerId/payruns/internal/$payRunId/items/$employeeId/complete"))
                     .headers(internalHeaders)
-                    .build(),
+                    .body(
+                        PayRunController.CompleteEmployeeItemRequest(
+                            paycheckId = paycheckId,
+                            paycheck = computation.paycheck,
+                            audit = computation.audit,
+                            error = null,
+                        ),
+                    ),
                 Map::class.java,
             )
 

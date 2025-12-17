@@ -26,9 +26,13 @@ class PayRunEarningOverridesCodec(
 
     fun encode(overrides: List<PayRunEarningOverride>): String = objectMapper.writeValueAsString(overrides)
 
-    fun decodeToEarningInputs(json: String): List<EarningInput> {
+    fun decodeToOverrides(json: String): List<PayRunEarningOverride> {
         val stored: Array<PayRunEarningOverride> = objectMapper.readValue(json, Array<PayRunEarningOverride>::class.java)
-        return stored.map { it.toEarningInput() }
+        return stored.toList()
+    }
+
+    fun decodeToEarningInputs(json: String): List<EarningInput> {
+        return decodeToOverrides(json).map { it.toEarningInput() }
     }
 
     private fun PayRunEarningOverride.toEarningInput(): EarningInput {

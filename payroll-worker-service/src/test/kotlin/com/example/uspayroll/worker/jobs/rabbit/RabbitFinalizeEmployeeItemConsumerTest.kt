@@ -3,8 +3,9 @@ package com.example.uspayroll.worker.jobs.rabbit
 import com.example.uspayroll.messaging.jobs.FinalizePayRunEmployeeJob
 import com.example.uspayroll.messaging.jobs.FinalizePayRunJobRouting
 import com.example.uspayroll.shared.EmployerId
-import com.example.uspayroll.worker.client.FinalizeEmployeeItemResponse
+import com.example.uspayroll.worker.client.CompleteEmployeeItemResponse
 import com.example.uspayroll.worker.client.OrchestratorClient
+import com.example.uspayroll.worker.payrun.WorkerPaycheckComputationService
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -22,16 +23,42 @@ class RabbitFinalizeEmployeeItemConsumerTest {
         val props = FinalizeEmployeeJobsProperties(enabled = true, maxAttempts = 3)
         val orchestrator = Mockito.mock(OrchestratorClient::class.java)
         val rabbit = Mockito.mock(RabbitTemplate::class.java)
+        val computationService = Mockito.mock(WorkerPaycheckComputationService::class.java)
         val meters = SimpleMeterRegistry()
 
+        val job = FinalizePayRunEmployeeJob(
+            messageId = "msg-1",
+            employerId = "EMP",
+            payRunId = "PR",
+            payPeriodId = "PP",
+            runType = "REGULAR",
+            runSequence = 1,
+            employeeId = "EE",
+            paycheckId = "CHK-1",
+            earningOverrides = emptyList(),
+            attempt = 1,
+        )
+
+        Mockito.doThrow(RuntimeException("boom"))
+            .`when`(computationService)
+            .computeForFinalizeJob(job)
+
+        val expectedReq = com.example.uspayroll.worker.client.CompleteEmployeeItemRequest(
+            paycheckId = "CHK-1",
+            paycheck = null,
+            audit = null,
+            error = "boom",
+        )
+
         Mockito.`when`(
-            orchestrator.finalizeEmployeeItem(
+            orchestrator.completeEmployeeItem(
                 EmployerId("EMP"),
                 "PR",
                 "EE",
+                expectedReq,
             ),
         ).thenReturn(
-            FinalizeEmployeeItemResponse(
+            CompleteEmployeeItemResponse(
                 employerId = "EMP",
                 payRunId = "PR",
                 employeeId = "EE",
@@ -43,16 +70,8 @@ class RabbitFinalizeEmployeeItemConsumerTest {
             ),
         )
 
-        val consumer = RabbitFinalizeEmployeeItemConsumer(props, orchestrator, rabbit, meters)
-        consumer.onJob(
-            FinalizePayRunEmployeeJob(
-                messageId = "msg-1",
-                employerId = "EMP",
-                payRunId = "PR",
-                employeeId = "EE",
-                attempt = 1,
-            ),
-        )
+        val consumer = RabbitFinalizeEmployeeItemConsumer(props, orchestrator, computationService, rabbit, meters)
+        consumer.onJob(job)
 
         Mockito.verify(rabbit, Mockito.never()).convertAndSend(anyString(), anyString(), any(Any::class.java))
 
@@ -69,16 +88,42 @@ class RabbitFinalizeEmployeeItemConsumerTest {
         val props = FinalizeEmployeeJobsProperties(enabled = true, maxAttempts = 5)
         val orchestrator = Mockito.mock(OrchestratorClient::class.java)
         val rabbit = Mockito.mock(RabbitTemplate::class.java)
+        val computationService = Mockito.mock(WorkerPaycheckComputationService::class.java)
         val meters = SimpleMeterRegistry()
 
+        val job = FinalizePayRunEmployeeJob(
+            messageId = "msg-1",
+            employerId = "EMP",
+            payRunId = "PR",
+            payPeriodId = "PP",
+            runType = "REGULAR",
+            runSequence = 1,
+            employeeId = "EE",
+            paycheckId = "CHK-1",
+            earningOverrides = emptyList(),
+            attempt = 1,
+        )
+
+        Mockito.doThrow(RuntimeException("boom"))
+            .`when`(computationService)
+            .computeForFinalizeJob(job)
+
+        val expectedReq = com.example.uspayroll.worker.client.CompleteEmployeeItemRequest(
+            paycheckId = "CHK-1",
+            paycheck = null,
+            audit = null,
+            error = "boom",
+        )
+
         Mockito.`when`(
-            orchestrator.finalizeEmployeeItem(
+            orchestrator.completeEmployeeItem(
                 EmployerId("EMP"),
                 "PR",
                 "EE",
+                expectedReq,
             ),
         ).thenReturn(
-            FinalizeEmployeeItemResponse(
+            CompleteEmployeeItemResponse(
                 employerId = "EMP",
                 payRunId = "PR",
                 employeeId = "EE",
@@ -90,15 +135,8 @@ class RabbitFinalizeEmployeeItemConsumerTest {
             ),
         )
 
-        val consumer = RabbitFinalizeEmployeeItemConsumer(props, orchestrator, rabbit, meters)
+        val consumer = RabbitFinalizeEmployeeItemConsumer(props, orchestrator, computationService, rabbit, meters)
 
-        val job = FinalizePayRunEmployeeJob(
-            messageId = "msg-1",
-            employerId = "EMP",
-            payRunId = "PR",
-            employeeId = "EE",
-            attempt = 1,
-        )
 
         consumer.onJob(job)
 
@@ -119,16 +157,42 @@ class RabbitFinalizeEmployeeItemConsumerTest {
         val props = FinalizeEmployeeJobsProperties(enabled = true, maxAttempts = 2)
         val orchestrator = Mockito.mock(OrchestratorClient::class.java)
         val rabbit = Mockito.mock(RabbitTemplate::class.java)
+        val computationService = Mockito.mock(WorkerPaycheckComputationService::class.java)
         val meters = SimpleMeterRegistry()
 
+        val job = FinalizePayRunEmployeeJob(
+            messageId = "msg-1",
+            employerId = "EMP",
+            payRunId = "PR",
+            payPeriodId = "PP",
+            runType = "REGULAR",
+            runSequence = 1,
+            employeeId = "EE",
+            paycheckId = "CHK-1",
+            earningOverrides = emptyList(),
+            attempt = 2,
+        )
+
+        Mockito.doThrow(RuntimeException("boom"))
+            .`when`(computationService)
+            .computeForFinalizeJob(job)
+
+        val expectedReq = com.example.uspayroll.worker.client.CompleteEmployeeItemRequest(
+            paycheckId = "CHK-1",
+            paycheck = null,
+            audit = null,
+            error = "boom",
+        )
+
         Mockito.`when`(
-            orchestrator.finalizeEmployeeItem(
+            orchestrator.completeEmployeeItem(
                 EmployerId("EMP"),
                 "PR",
                 "EE",
+                expectedReq,
             ),
         ).thenReturn(
-            FinalizeEmployeeItemResponse(
+            CompleteEmployeeItemResponse(
                 employerId = "EMP",
                 payRunId = "PR",
                 employeeId = "EE",
@@ -140,15 +204,8 @@ class RabbitFinalizeEmployeeItemConsumerTest {
             ),
         )
 
-        val consumer = RabbitFinalizeEmployeeItemConsumer(props, orchestrator, rabbit, meters)
+        val consumer = RabbitFinalizeEmployeeItemConsumer(props, orchestrator, computationService, rabbit, meters)
 
-        val job = FinalizePayRunEmployeeJob(
-            messageId = "msg-1",
-            employerId = "EMP",
-            payRunId = "PR",
-            employeeId = "EE",
-            attempt = 2,
-        )
 
         consumer.onJob(job)
 

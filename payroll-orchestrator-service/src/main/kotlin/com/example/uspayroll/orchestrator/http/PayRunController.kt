@@ -499,18 +499,37 @@ class PayRunController(
         }
     }
 
+    data class CompleteEmployeeItemRequest(
+        val paycheckId: String,
+        val paycheck: com.example.uspayroll.payroll.model.PaycheckResult? = null,
+        val audit: com.example.uspayroll.payroll.model.audit.PaycheckAudit? = null,
+        val error: String? = null,
+    )
+
     /**
-     * Internal endpoint: finalize a single employee item.
+     * Internal endpoint: complete a single employee item.
      *
-     * Intended for queue-driven execution (RabbitMQ) where many worker replicas
-     * call into orchestrator to perform the DB-backed finalize step idempotently.
+     * Intended for queue-driven execution (RabbitMQ) where workers perform the
+     * paycheck computation and submit the result for durable persistence +
+     * idempotent item state transition.
      */
-    @PostMapping("/internal/{payRunId}/items/{employeeId}/finalize")
-    fun finalizeEmployeeItem(@PathVariable employerId: String, @PathVariable payRunId: String, @PathVariable employeeId: String): ResponseEntity<Map<String, Any?>> {
-        val result = itemFinalizationService.finalizeOneEmployeeItem(
+    @PostMapping("/internal/{payRunId}/items/{employeeId}/complete")
+    fun completeEmployeeItem(
+        @PathVariable employerId: String,
+        @PathVariable payRunId: String,
+        @PathVariable employeeId: String,
+        @org.springframework.web.bind.annotation.RequestBody request: CompleteEmployeeItemRequest,
+    ): ResponseEntity<Map<String, Any?>> {
+        val result = itemFinalizationService.completeOneEmployeeItem(
             employerId = EmployerId(employerId).value,
             payRunId = payRunId,
             employeeId = employeeId,
+            request = com.example.uspayroll.orchestrator.payrun.PayRunItemFinalizationService.CompleteItemRequest(
+                paycheckId = request.paycheckId,
+                paycheck = request.paycheck,
+                audit = request.audit,
+                error = request.error,
+            ),
         ) ?: return ResponseEntity.notFound().build()
 
         return ResponseEntity.ok(

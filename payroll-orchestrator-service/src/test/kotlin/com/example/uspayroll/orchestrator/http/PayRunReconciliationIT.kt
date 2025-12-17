@@ -36,9 +36,47 @@ import java.time.Instant
 class PayRunReconciliationIT(
     private val rest: TestRestTemplate,
     private val jdbcTemplate: JdbcTemplate,
+    private val paycheckComputationService: com.example.uspayroll.orchestrator.payrun.PaycheckComputationService,
 ) {
 
     private fun internalHeaders(): HttpHeaders = HttpHeaders().apply { set("X-Internal-Token", "dev-internal-token") }
+
+    private fun completeItem(employerId: String, payRunId: String, employeeId: String, payPeriodId: String = "pp-1") {
+        val paycheckId = jdbcTemplate.queryForObject(
+            """
+            SELECT paycheck_id
+            FROM pay_run_item
+            WHERE employer_id = ? AND pay_run_id = ? AND employee_id = ?
+            """.trimIndent(),
+            String::class.java,
+            employerId,
+            payRunId,
+            employeeId,
+        )!!
+
+        val computation = paycheckComputationService.computePaycheckComputationForEmployee(
+            employerId = com.example.uspayroll.shared.EmployerId(employerId),
+            payRunId = payRunId,
+            payPeriodId = payPeriodId,
+            runType = com.example.uspayroll.orchestrator.payrun.model.PayRunType.REGULAR,
+            paycheckId = paycheckId,
+            employeeId = com.example.uspayroll.shared.EmployeeId(employeeId),
+        )
+
+        rest.exchange(
+            RequestEntity.post(URI.create("/employers/$employerId/payruns/internal/$payRunId/items/$employeeId/complete"))
+                .headers(internalHeaders())
+                .body(
+                    PayRunController.CompleteEmployeeItemRequest(
+                        paycheckId = paycheckId,
+                        paycheck = computation.paycheck,
+                        audit = computation.audit,
+                        error = null,
+                    ),
+                ),
+            Map::class.java,
+        )
+    }
 
     @Test
     fun `requeue queued is idempotent and does not duplicate outbox jobs`() {
@@ -195,11 +233,39 @@ class PayRunReconciliationIT(
             PayRunController.StartFinalizeResponse::class.java,
         )
 
+        val paycheckId = jdbcTemplate.queryForObject(
+            """
+            SELECT paycheck_id
+            FROM pay_run_item
+            WHERE employer_id = ? AND pay_run_id = ? AND employee_id = ?
+            """.trimIndent(),
+            String::class.java,
+            employerId,
+            payRunId,
+            "e-1",
+        )
+
+        val computation = paycheckComputationService.computePaycheckComputationForEmployee(
+            employerId = com.example.uspayroll.shared.EmployerId(employerId),
+            payRunId = payRunId,
+            payPeriodId = "pp-1",
+            runType = com.example.uspayroll.orchestrator.payrun.model.PayRunType.REGULAR,
+            paycheckId = paycheckId!!,
+            employeeId = com.example.uspayroll.shared.EmployeeId("e-1"),
+        )
+
         val headers = internalHeaders()
         rest.exchange(
-            RequestEntity.post(URI.create("/employers/$employerId/payruns/internal/$payRunId/items/e-1/finalize"))
+            RequestEntity.post(URI.create("/employers/$employerId/payruns/internal/$payRunId/items/e-1/complete"))
                 .headers(headers)
-                .build(),
+                .body(
+                    PayRunController.CompleteEmployeeItemRequest(
+                        paycheckId = paycheckId,
+                        paycheck = computation.paycheck,
+                        audit = computation.audit,
+                        error = null,
+                    ),
+                ),
             Map::class.java,
         )
 
@@ -271,18 +337,8 @@ class PayRunReconciliationIT(
         )
 
         val headers = internalHeaders()
-        rest.exchange(
-            RequestEntity.post(URI.create("/employers/$employerId/payruns/internal/$payRunId/items/e-1/finalize"))
-                .headers(headers)
-                .build(),
-            Map::class.java,
-        )
-        rest.exchange(
-            RequestEntity.post(URI.create("/employers/$employerId/payruns/internal/$payRunId/items/e-2/finalize"))
-                .headers(headers)
-                .build(),
-            Map::class.java,
-        )
+        completeItem(employerId, payRunId, "e-1")
+        completeItem(employerId, payRunId, "e-2")
 
         // Force drift: mark pay_run as RUNNING.
         jdbcTemplate.update(
@@ -337,12 +393,7 @@ class PayRunReconciliationIT(
         )
 
         val headers = internalHeaders()
-        rest.exchange(
-            RequestEntity.post(URI.create("/employers/$employerId/payruns/internal/$payRunId/items/e-1/finalize"))
-                .headers(headers)
-                .build(),
-            Map::class.java,
-        )
+        completeItem(employerId, payRunId, "e-1")
 
         // Force drift: leave pay_run as RUNNING.
         jdbcTemplate.update(
@@ -391,18 +442,8 @@ class PayRunReconciliationIT(
         )
 
         val headers = internalHeaders()
-        rest.exchange(
-            RequestEntity.post(URI.create("/employers/$employerId/payruns/internal/$payRunId/items/e-1/finalize"))
-                .headers(headers)
-                .build(),
-            Map::class.java,
-        )
-        rest.exchange(
-            RequestEntity.post(URI.create("/employers/$employerId/payruns/internal/$payRunId/items/e-2/finalize"))
-                .headers(headers)
-                .build(),
-            Map::class.java,
-        )
+        completeItem(employerId, payRunId, "e-1")
+        completeItem(employerId, payRunId, "e-2")
 
         val r1 = rest.exchange(
             RequestEntity.post(URI.create("/employers/$employerId/payruns/internal/$payRunId/reconcile/finalize-and-enqueue-events"))
@@ -480,18 +521,8 @@ class PayRunReconciliationIT(
         )
 
         val headers = internalHeaders()
-        rest.exchange(
-            RequestEntity.post(URI.create("/employers/$employerId/payruns/internal/$payRunId/items/e-1/finalize"))
-                .headers(headers)
-                .build(),
-            Map::class.java,
-        )
-        rest.exchange(
-            RequestEntity.post(URI.create("/employers/$employerId/payruns/internal/$payRunId/items/e-2/finalize"))
-                .headers(headers)
-                .build(),
-            Map::class.java,
-        )
+        completeItem(employerId, payRunId, "e-1")
+        completeItem(employerId, payRunId, "e-2")
 
         val ids = jdbcTemplate.query(
             """

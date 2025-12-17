@@ -164,6 +164,8 @@ export default function () {
   if (startRes.status !== 202) return;
 
   const payRunId = startRes.json().payRunId;
+  // Emit payRunId so the bench harness can export per-run paycheck artifacts.
+  console.log(`PAYRUN_ID=${payRunId}`);
 
   // 2) Poll until terminal
   const deadlineMs = startedAt + maxWaitSeconds * 1000;

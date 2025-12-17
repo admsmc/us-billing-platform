@@ -48,6 +48,7 @@ class PayrollRunService(
     private val hrClient: com.example.uspayroll.hr.client.HrClient? = null,
     private val taxClient: com.example.uspayroll.worker.client.TaxClient? = null,
     private val laborClient: com.example.uspayroll.worker.client.LaborStandardsClient? = null,
+    private val timeClient: com.example.uspayroll.worker.client.TimeClient? = null,
     private val meterRegistry: MeterRegistry,
     private val garnishmentEngineProperties: GarnishmentEngineProperties,
     private val payrollProperties: WorkerPayrollProperties,
@@ -248,6 +249,34 @@ class PayrollRunService(
                 PayRunId("run-${payPeriod.id}-$runId")
             }
 
+            val baseComp = snapshot.baseCompensation
+
+            val timeSummary = if (baseComp is BaseCompensation.Hourly && timeClient != null) {
+                timeClient.getTimeSummary(
+                    employerId = employerId,
+                    employeeId = eid,
+                    start = payPeriod.dateRange.startInclusive,
+                    end = payPeriod.dateRange.endInclusive,
+                    workState = snapshot.workState,
+                )
+            } else {
+                null
+            }
+
+            val otherEarnings: List<EarningInput> = if (baseComp is BaseCompensation.Hourly && timeSummary != null && timeSummary.doubleTimeHours > 0.0) {
+                val dtRateCents = (baseComp.hourlyRate.amount * 2.0).toLong()
+                listOf(
+                    EarningInput(
+                        code = EarningCode("HOURLY_DT"),
+                        units = timeSummary.doubleTimeHours,
+                        rate = Money(dtRateCents),
+                        amount = null,
+                    ),
+                )
+            } else {
+                emptyList()
+            }
+
             val input = PaycheckInput(
                 paycheckId = paycheckId,
                 payRunId = payRunId,
@@ -257,8 +286,9 @@ class PayrollRunService(
                 employeeSnapshot = snapshot,
                 timeSlice = TimeSlice(
                     period = payPeriod,
-                    regularHours = 0.0,
-                    overtimeHours = 0.0,
+                    regularHours = timeSummary?.regularHours ?: 0.0,
+                    overtimeHours = timeSummary?.overtimeHours ?: 0.0,
+                    otherEarnings = otherEarnings,
                 ),
                 taxContext = taxContext,
                 priorYtd = YtdSnapshot(year = payPeriod.checkDate.year),

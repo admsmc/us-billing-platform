@@ -33,6 +33,13 @@ data class OutboxEventRow(
     val lockedAt: Instant,
 )
 
+data class OutboxFailureUpdate(
+    val outboxId: String,
+    val lockedAt: Instant,
+    val error: String,
+    val nextAttemptAt: Instant,
+)
+
 @Repository
 class OutboxRepository(
     private val jdbcTemplate: JdbcTemplate,
@@ -255,6 +262,51 @@ class OutboxRepository(
         )
     }
 
+    /**
+     * Marks a batch of outbox rows as SENT in a single transaction.
+     *
+     * This dramatically reduces commit/WAL sync overhead vs per-row updates.
+     */
+    @Transactional
+    fun markSentBatch(
+        destinationType: OutboxDestinationType,
+        outboxIds: List<String>,
+        lockOwner: String,
+        lockedAt: Instant,
+        now: Instant = Instant.now(),
+    ): Int {
+        val distinct = outboxIds.distinct()
+        if (distinct.isEmpty()) return 0
+
+        val placeholders = distinct.joinToString(",") { "?" }
+        val args: MutableList<Any> = mutableListOf(
+            OutboxStatus.SENT.name,
+            Timestamp.from(now),
+            destinationType.name,
+            OutboxStatus.SENDING.name,
+            lockOwner,
+            Timestamp.from(lockedAt),
+        )
+        args.addAll(distinct)
+
+        return jdbcTemplate.update(
+            """
+            UPDATE outbox_event
+            SET status = ?,
+                published_at = ?,
+                locked_by = NULL,
+                locked_at = NULL,
+                last_error = NULL
+            WHERE destination_type = ?
+              AND status = ?
+              AND locked_by = ?
+              AND locked_at = ?
+              AND outbox_id IN ($placeholders)
+            """.trimIndent(),
+            *args.toTypedArray(),
+        )
+    }
+
     fun markFailed(destinationType: OutboxDestinationType, outboxId: String, lockOwner: String, lockedAt: Instant, error: String, nextAttemptAt: Instant, now: Instant = Instant.now()): Int {
         val truncated = if (error.length <= 2000) error else error.take(2000)
 
@@ -282,5 +334,50 @@ class OutboxRepository(
             lockOwner,
             Timestamp.from(lockedAt),
         )
+    }
+
+    /**
+     * Marks a batch of outbox rows as failed (status=PENDING, attempts++, next_attempt_at set)
+     * in a single transaction.
+     */
+    @Transactional
+    fun markFailedBatch(
+        destinationType: OutboxDestinationType,
+        failures: List<OutboxFailureUpdate>,
+        lockOwner: String,
+    ): Int {
+        if (failures.isEmpty()) return 0
+
+        val updated = jdbcTemplate.batchUpdate(
+            """
+            UPDATE outbox_event
+            SET status = ?,
+                attempts = attempts + 1,
+                next_attempt_at = ?,
+                last_error = ?,
+                locked_by = NULL,
+                locked_at = NULL
+            WHERE destination_type = ?
+              AND outbox_id = ?
+              AND status = ?
+              AND locked_by = ?
+              AND locked_at = ?
+            """.trimIndent(),
+            failures.map { f ->
+                val truncated = if (f.error.length <= 2000) f.error else f.error.take(2000)
+                arrayOf(
+                    OutboxStatus.PENDING.name,
+                    Timestamp.from(f.nextAttemptAt),
+                    truncated,
+                    destinationType.name,
+                    f.outboxId,
+                    OutboxStatus.SENDING.name,
+                    lockOwner,
+                    Timestamp.from(f.lockedAt),
+                )
+            },
+        )
+
+        return updated.sum()
     }
 }

@@ -4,6 +4,15 @@ server:
 spring:
   application:
     name: edge-service
+  cloud:
+    gateway:
+      default-filters:
+        - PreserveHostHeader
+      routes:
+        - id: worker
+          uri: ${WORKER_BASE_URL:http://localhost:8088}
+          predicates:
+            - Path=/**
 
 edge:
   auth:
@@ -17,17 +26,6 @@ edge:
     hs256-secret: ${EDGE_AUTH_HS256_SECRET:}
     issuer-uri: ${EDGE_AUTH_ISSUER_URI:}
     jwk-set-uri: ${EDGE_AUTH_JWK_SET_URI:}
-
-spring:
-  cloud:
-    gateway:
-      default-filters:
-        - PreserveHostHeader
-      routes:
-        - id: worker
-          uri: ${WORKER_BASE_URL:http://localhost:8088}
-          predicates:
-            - Path=/**
 
 management:
   endpoint:

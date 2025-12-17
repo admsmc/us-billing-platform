@@ -28,6 +28,12 @@ class InMemoryEarningConfigRepository : EarningConfigRepository {
                 category = EarningCategory.REGULAR,
                 defaultRate = Money(50_00L),
             ),
+            EarningDefinition(
+                code = EarningCode("HOURLY_DT"),
+                displayName = "Double-time wages",
+                category = EarningCategory.OVERTIME,
+                defaultRate = null,
+            ),
         ),
     )
 

@@ -33,6 +33,7 @@ class PaycheckComputationService(
     private val hrClient: HrClient,
     private val taxClient: TaxClient,
     private val laborStandardsClient: LaborStandardsClient,
+    private val timeClient: com.example.uspayroll.orchestrator.client.TimeClient,
     private val localityResolver: LocalityResolver,
     private val earningConfigRepository: EarningConfigRepository,
     private val deductionConfigRepository: DeductionConfigRepository,
@@ -145,6 +146,40 @@ class PaycheckComputationService(
 
         val includeBaseEarnings = runType != com.example.uspayroll.orchestrator.payrun.model.PayRunType.OFF_CYCLE
 
+        val baseComp = snapshot.baseCompensation
+        val timeSummary = if (includeBaseEarnings && baseComp is com.example.uspayroll.payroll.model.BaseCompensation.Hourly) {
+            timeClient.getTimeSummary(
+                employerId = employerId,
+                employeeId = employeeId,
+                start = payPeriod.dateRange.startInclusive,
+                end = payPeriod.dateRange.endInclusive,
+                workState = snapshot.workState,
+            )
+        } else {
+            null
+        }
+
+        val doubleTimeEarnings: List<EarningInput> = if (
+            includeBaseEarnings &&
+                baseComp is com.example.uspayroll.payroll.model.BaseCompensation.Hourly &&
+                timeSummary != null &&
+                timeSummary.doubleTimeHours > 0.0
+        ) {
+            val dtRateCents = (baseComp.hourlyRate.amount * 2.0).toLong()
+            listOf(
+                EarningInput(
+                    code = com.example.uspayroll.payroll.model.EarningCode("HOURLY_DT"),
+                    units = timeSummary.doubleTimeHours,
+                    rate = com.example.uspayroll.shared.Money(dtRateCents),
+                    amount = null,
+                ),
+            )
+        } else {
+            emptyList()
+        }
+
+        val otherEarnings = earningOverrides + doubleTimeEarnings
+
         val input = PaycheckInput(
             paycheckId = PaycheckId(paycheckId),
             payRunId = PayRunId(payRunId),
@@ -154,9 +189,9 @@ class PaycheckComputationService(
             employeeSnapshot = snapshot,
             timeSlice = TimeSlice(
                 period = payPeriod,
-                regularHours = 0.0,
-                overtimeHours = 0.0,
-                otherEarnings = earningOverrides,
+                regularHours = timeSummary?.regularHours ?: 0.0,
+                overtimeHours = timeSummary?.overtimeHours ?: 0.0,
+                otherEarnings = otherEarnings,
                 includeBaseEarnings = includeBaseEarnings,
             ),
             taxContext = taxContext,

@@ -16,7 +16,6 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.client.SimpleClientHttpRequestFactory
 import org.springframework.web.client.RestTemplate
-import org.springframework.web.client.getForObject
 import java.time.LocalDate
 
 @Configuration
@@ -47,22 +46,24 @@ class HttpHrClient(
 
     override fun getEmployeeSnapshot(employerId: EmployerId, employeeId: EmployeeId, asOfDate: LocalDate): EmployeeSnapshot? {
         val url = "${props.baseUrl}/employers/${employerId.value}/employees/${employeeId.value}/snapshot?asOf=$asOfDate"
-        return restTemplate.getForObject<EmployeeSnapshot>(url)
+        // Avoid Kotlin RestTemplate.getForObject<T>() which throws when the body is empty (null).
+        return restTemplate.getForObject(url, EmployeeSnapshot::class.java)
     }
 
     override fun getPayPeriod(employerId: EmployerId, payPeriodId: String): PayPeriod? {
         val url = "${props.baseUrl}/employers/${employerId.value}/pay-periods/$payPeriodId"
-        return restTemplate.getForObject<PayPeriod>(url)
+        // hr-service returns `null` when not found (200 + empty body). Use the Java overload to allow null.
+        return restTemplate.getForObject(url, PayPeriod::class.java)
     }
 
     override fun findPayPeriodByCheckDate(employerId: EmployerId, checkDate: LocalDate): PayPeriod? {
         val url = "${props.baseUrl}/employers/${employerId.value}/pay-periods/by-check-date?checkDate=$checkDate"
-        return restTemplate.getForObject<PayPeriod>(url)
+        return restTemplate.getForObject(url, PayPeriod::class.java)
     }
 
     override fun getGarnishmentOrders(employerId: EmployerId, employeeId: EmployeeId, asOfDate: LocalDate): List<com.example.uspayroll.payroll.model.garnishment.GarnishmentOrder> {
         val url = "${props.baseUrl}/employers/${employerId.value}/employees/${employeeId.value}/garnishments?asOf=$asOfDate"
-        val dtoArray = restTemplate.getForObject<Array<GarnishmentOrderDto>>(url)
+        val dtoArray = restTemplate.getForObject(url, Array<GarnishmentOrderDto>::class.java)
             ?: return emptyList()
         return dtoArray.toList().map { it.toDomain() }
     }

@@ -20,7 +20,6 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
 import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestTemplate
-import org.springframework.web.client.getForObject
 import java.time.LocalDate
 
 @Configuration
@@ -64,21 +63,23 @@ class HttpHrClient(
     override fun getEmployeeSnapshot(employerId: EmployerId, employeeId: EmployeeId, asOfDate: LocalDate): EmployeeSnapshot? {
         val url = "${props.baseUrl}/employers/${employerId.value}/employees/${employeeId.value}/snapshot?asOf=$asOfDate"
         return executeWithRetry("GET employee snapshot", url) {
-            restTemplate.getForObject<EmployeeSnapshot>(url)
+            // Avoid Kotlin RestTemplate.getForObject<T>() which throws when the body is empty (null).
+            restTemplate.getForObject(url, EmployeeSnapshot::class.java)
         }
     }
 
     override fun getPayPeriod(employerId: EmployerId, payPeriodId: String): PayPeriod? {
         val url = "${props.baseUrl}/employers/${employerId.value}/pay-periods/$payPeriodId"
         return executeWithRetry("GET pay period", url) {
-            restTemplate.getForObject<PayPeriod>(url)
+            // hr-service returns `null` when not found (200 + empty body). Use the Java overload to allow null.
+            restTemplate.getForObject(url, PayPeriod::class.java)
         }
     }
 
     override fun findPayPeriodByCheckDate(employerId: EmployerId, checkDate: LocalDate): PayPeriod? {
         val url = "${props.baseUrl}/employers/${employerId.value}/pay-periods/by-check-date?checkDate=$checkDate"
         return executeWithRetry("GET pay period by check date", url) {
-            restTemplate.getForObject<PayPeriod>(url)
+            restTemplate.getForObject(url, PayPeriod::class.java)
         }
     }
 
@@ -90,7 +91,7 @@ class HttpHrClient(
         // repeated failures we log a warning and return an empty list.
         val dtoArray: Array<GarnishmentOrderDto>? =
             executeWithRetry("GET garnishments", url, failOnExhaustion = false) {
-                restTemplate.getForObject<Array<GarnishmentOrderDto>>(url)
+                restTemplate.getForObject(url, Array<GarnishmentOrderDto>::class.java)
             }
 
         return dtoArray?.toList()?.map { it.toDomain() } ?: emptyList()

@@ -31,6 +31,7 @@ import java.net.URI
 class PayRunQueueDrivenIT(
     private val rest: TestRestTemplate,
     private val jdbcTemplate: JdbcTemplate,
+    private val paycheckComputationService: com.example.uspayroll.orchestrator.payrun.PaycheckComputationService,
 ) {
 
     @Test
@@ -140,7 +141,7 @@ class PayRunQueueDrivenIT(
     }
 
     @Test
-    fun `internal finalize item endpoint computes paycheck idempotently`() {
+    fun `internal completion endpoint persists paycheck idempotently`() {
         val employerId = "emp-1"
 
         rest.exchange(
@@ -155,25 +156,52 @@ class PayRunQueueDrivenIT(
             PayRunController.StartFinalizeResponse::class.java,
         )
 
+        val paycheckId = jdbcTemplate.queryForObject(
+            """
+            SELECT paycheck_id
+            FROM pay_run_item
+            WHERE employer_id = ? AND pay_run_id = ? AND employee_id = ?
+            """.trimIndent(),
+            String::class.java,
+            employerId,
+            "run-queue-2",
+            "e-1",
+        )
+        assertNotNull(paycheckId)
+
+        val computation = paycheckComputationService.computePaycheckComputationForEmployee(
+            employerId = com.example.uspayroll.shared.EmployerId(employerId),
+            payRunId = "run-queue-2",
+            payPeriodId = "pp-1",
+            runType = com.example.uspayroll.orchestrator.payrun.model.PayRunType.REGULAR,
+            paycheckId = paycheckId!!,
+            employeeId = com.example.uspayroll.shared.EmployeeId("e-1"),
+        )
+
         val headers = HttpHeaders().apply { set("X-Internal-Token", "dev-internal-token") }
+        val req = PayRunController.CompleteEmployeeItemRequest(
+            paycheckId = paycheckId,
+            paycheck = computation.paycheck,
+            audit = computation.audit,
+            error = null,
+        )
+
         val r1 = rest.exchange(
-            RequestEntity.post(URI.create("/employers/$employerId/payruns/internal/run-queue-2/items/e-1/finalize"))
+            RequestEntity.post(URI.create("/employers/$employerId/payruns/internal/run-queue-2/items/e-1/complete"))
                 .headers(headers)
-                .build(),
+                .body(req),
             Map::class.java,
         )
 
         assertEquals(HttpStatus.OK, r1.statusCode)
         assertEquals("SUCCEEDED", r1.body!!["itemStatus"])
         assertEquals(false, r1.body!!["retryable"])
-        val paycheckId = r1.body!!["paycheckId"] as String?
-        assertNotNull(paycheckId)
 
         // Call again - should be a no-op (still succeeded).
         val r2 = rest.exchange(
-            RequestEntity.post(URI.create("/employers/$employerId/payruns/internal/run-queue-2/items/e-1/finalize"))
+            RequestEntity.post(URI.create("/employers/$employerId/payruns/internal/run-queue-2/items/e-1/complete"))
                 .headers(headers)
-                .build(),
+                .body(req),
             Map::class.java,
         )
 
@@ -211,11 +239,30 @@ class PayRunQueueDrivenIT(
             PayRunController.StartFinalizeResponse::class.java,
         )
 
+        val paycheckId = jdbcTemplate.queryForObject(
+            """
+            SELECT paycheck_id
+            FROM pay_run_item
+            WHERE employer_id = ? AND pay_run_id = ? AND employee_id = ?
+            """.trimIndent(),
+            String::class.java,
+            employerId,
+            "run-queue-3",
+            "e-bad",
+        ) ?: "chk-test"
+
         val headers = HttpHeaders().apply { set("X-Internal-Token", "dev-internal-token") }
         val r1 = rest.exchange(
-            RequestEntity.post(URI.create("/employers/$employerId/payruns/internal/run-queue-3/items/e-bad/finalize"))
+            RequestEntity.post(URI.create("/employers/$employerId/payruns/internal/run-queue-3/items/e-bad/complete"))
                 .headers(headers)
-                .build(),
+                .body(
+                    PayRunController.CompleteEmployeeItemRequest(
+                        paycheckId = paycheckId,
+                        paycheck = null,
+                        audit = null,
+                        error = "bad employee",
+                    ),
+                ),
             Map::class.java,
         )
 
