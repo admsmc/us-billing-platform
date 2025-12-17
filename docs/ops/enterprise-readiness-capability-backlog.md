@@ -1,21 +1,56 @@
-# Enterprise readiness capability backlog (Step 8)
+# Enterprise readiness capability register
 
-This backlog is the prioritized set of capabilities required to move the platform from “payroll engine prototype” to “enterprise payroll system”.
+This register tracks enterprise-readiness capabilities and their delivery status.
 
-Priorities:
+Status:
+- **Done**: implemented and operating end-to-end (may still have small follow-ups)
+- **Partial**: meaningful implementation exists but coverage is incomplete (scope, tests, docs, or integrations)
+- **Not Started**: no meaningful implementation yet
+
+Target priority (deployment criticality):
 - **P0**: required for first enterprise production deployment
 - **P1**: required shortly after go-live or for larger customers
 - **P2**: roadmap / scale features
 
-Each item includes acceptance criteria that are intended to be testable (often by golden tests).
+Each capability includes acceptance criteria intended to be testable (often by golden tests).
+
+## Summary (as of 2025-12-16)
+
+### Done
+- A0 HR write API + persistence for employee profile
+- A1 Effective-dated employee attributes (beyond compensation)
+- A2 Pay period management as a first-class workflow
+- A3 Bitemporal HR (valid time + system time) OR explicitly-defined audit semantics
+- B0 Content metadata + traceability standard
+- B1 Formal approval workflow for content changes
+- B2 Yearly update playbooks expanded to state tax + labor
+- B3 Coverage expansion plan (state/local)
+- C0 Off-cycle pay runs
+- C1 Corrections: void / reissue
+- C2 Retro pay driven by effective-dated HR changes
+- D0 Payment reconciliation contract
+- D1 Bank file / payment provider integration seam (sandbox provider)
+- E0 Reporting/filings event contract
+- E1 Quarterly/annual filing “shape” (initial shape APIs)
+
+### Partial
+- C3 Multi-jurisdiction employment scenarios
+- X0 Golden tests coverage
+
+### Not Started
+- (none currently listed)
 
 ## Epic A — HR system of record: persistence, auditability, and effective dating
 
-### A0 (P0) HR write API + persistence for employee profile
+### A0 HR write API + persistence for employee profile
+Target priority: P0
 Owner: `hr-service`
 
-Problem:
-- HR reads exist (snapshots and pay periods), but enterprise readiness requires authoritative writes and an audit trail.
+Status (as of 2025-12-16): Done (verify remaining minor gaps)
+Evidence:
+- Write endpoints: `hr-service/src/main/kotlin/com/example/uspayroll/hr/http/HrWriteController.kt`
+- Audit log: `hr-service/src/main/kotlin/com/example/uspayroll/hr/audit/HrAuditService.kt` + `hr-service/src/main/resources/db/migration/hr/V009__create_hr_audit_event.sql`
+- Idempotency: `hr-service/src/main/kotlin/com/example/uspayroll/hr/idempotency/HrIdempotencyService.kt`
 
 Acceptance criteria:
 - Provide endpoints to create/update employee profile data (at minimum: home/work location, filing status/W-4 inputs, employment type flags).
@@ -28,8 +63,17 @@ Acceptance criteria:
   - before/after payload (or patch) that is safe for audit (PII handling policy applies)
 - As-of reads are deterministic: querying the same asOfDate against the same DB state returns the same snapshot.
 
-### A1 (P0) Effective-dated employee attributes (beyond compensation)
+### A1 Effective-dated employee attributes (beyond compensation)
+Target priority: P0
 Owner: `hr-service`
+
+Status (as of 2025-12-16): Done
+Evidence:
+- Effective-dated profile store and bitemporal support:
+  - `hr-service/src/main/resources/db/migration/hr/V008__create_employee_profile_effective.sql`
+  - `hr-service/src/main/resources/db/migration/hr/V012__bitemporal_employee_profile_effective.sql`
+- Effective-dated update logic (segment split + system-time supersede):
+  - `hr-service/src/main/kotlin/com/example/uspayroll/hr/employee/HrEmployeeRepository.kt`
 
 Acceptance criteria:
 - Support effective-dated updates for attributes that drive payroll correctness:
@@ -41,8 +85,18 @@ Acceptance criteria:
   - effective_from <= asOfDate < effective_to
 - Backfill/migration strategy is documented.
 
-### A2 (P0) Pay period management as a first-class workflow
+### A2 Pay period management as a first-class workflow
+Target priority: P0
 Owner: `hr-service`
+
+Status (as of 2025-12-16): Done
+Evidence:
+- Manual pay period creation with validation + idempotency:
+  - `hr-service/src/main/kotlin/com/example/uspayroll/hr/http/HrWriteController.kt` (`PUT /pay-periods/{payPeriodId}`)
+- Pay schedule upsert + deterministic pay period generation with validation + idempotency:
+  - `hr-service/src/main/kotlin/com/example/uspayroll/hr/http/HrPayScheduleWriteController.kt` (`POST /pay-schedules/{scheduleId}/generate-pay-periods`)
+- Validation rules documented:
+  - `docs/ops/hr-pay-period-management.md`
 
 Acceptance criteria:
 - Ability to create/update pay schedules and generate pay periods.
@@ -50,8 +104,17 @@ Acceptance criteria:
 - Provide idempotent creation (idempotency key) for period generation.
 - Worker/orchestrator can find pay period by check date reliably.
 
-### A3 (P1) Bitemporal HR (valid time + system time) OR explicitly-defined audit semantics
+### A3 Bitemporal HR (valid time + system time) OR explicitly-defined audit semantics
+Target priority: P1
 Owner: `hr-service`
+
+Status (as of 2025-12-16): Done
+Evidence:
+- Design doc:
+  - `docs/ops/hr-bitemporal-and-audit-semantics.md`
+- Migrations:
+  - `hr-service/src/main/resources/db/migration/hr/V012__bitemporal_employee_profile_effective.sql`
+  - `hr-service/src/main/resources/db/migration/hr/V013__bitemporal_employment_compensation.sql`
 
 Acceptance criteria:
 - Either:
@@ -61,8 +124,20 @@ Acceptance criteria:
 
 ## Epic B — Tax & labor content governance and approvals
 
-### B0 (P0) Content metadata + traceability standard
+### B0 Content metadata + traceability standard
+Target priority: P0
 Owner: `tax-content`, `tax-service`, `labor-service`
+
+Status (as of 2025-12-16): Done
+Evidence:
+- Standard:
+  - `docs/ops/content-metadata-traceability-standard.md`
+- Sidecar metadata files (examples):
+  - `tax-content/src/main/resources/state-income-tax-2025-rules.csv.metadata.json`
+  - `tax-content/src/main/resources/tax-config/federal-2025-pub15t.json.metadata.json`
+  - `labor-service/src/main/resources/labor-standards-2025.csv.metadata.json`
+- Validators:
+  - `tax-service/src/main/kotlin/com/example/uspayroll/tax/tools/GeneratedTaxArtifactsValidatorCli.kt`
 
 Acceptance criteria:
 - Every curated content artifact (CSV/JSON) includes or references metadata:
@@ -73,8 +148,21 @@ Acceptance criteria:
   - internal approval references (SME sign-off)
 - Metadata is versioned in Git and traceable to a commit SHA.
 
-### B1 (P0) Formal approval workflow for content changes
+### B1 Formal approval workflow for content changes
+Target priority: P0
 Owner: repo process + CI
+
+Status (as of 2025-12-16): Done
+Evidence:
+- CODEOWNERS:
+  - `.github/CODEOWNERS`
+- PR template:
+  - `.github/pull_request_template.md`
+- CI check entrypoint:
+  - `.github/workflows/ci.yml`
+- Playbooks reference the process:
+  - `docs/ops/yearly-update-playbook-state-income-tax.md`
+  - `docs/ops/yearly-update-playbook-labor-standards.md`
 
 Acceptance criteria:
 - Changes under `tax-content/src/main/resources` and labor standards inputs require:
@@ -84,8 +172,14 @@ Acceptance criteria:
   - generated artifacts are up to date (CSV -> JSON -> SQL)
   - validators and golden tests pass
 
-### B2 (P0) Yearly update playbooks expanded to state tax + labor
+### B2 Yearly update playbooks expanded to state tax + labor
+Target priority: P0
 Owner: `tax-service`, `labor-service`
+
+Status (as of 2025-12-16): Done
+Evidence:
+- `docs/ops/yearly-update-playbook-state-income-tax.md`
+- `docs/ops/yearly-update-playbook-labor-standards.md`
 
 Acceptance criteria:
 - Maintain and extend ops playbooks to cover:
@@ -101,8 +195,13 @@ Playbooks:
 - `docs/ops/yearly-update-playbook-state-income-tax.md`
 - `docs/ops/yearly-update-playbook-labor-standards.md`
 
-### B3 (P1) Coverage expansion plan (state/local)
+### B3 Coverage expansion plan (state/local)
+Target priority: P1
 Owner: `tax-service`, `labor-service`
+
+Status (as of 2025-12-16): Done
+Evidence:
+- `docs/ops/coverage-expansion-plan-state-local.md`
 
 Acceptance criteria:
 - Produce a state/local coverage matrix and identify:
@@ -116,8 +215,16 @@ Plan:
 
 ## Epic C — Enterprise payroll workflows
 
-### C0 (P0) Off-cycle pay runs
+### C0 Off-cycle pay runs
+Target priority: P0
 Owner: `payroll-orchestrator-service`, `payroll-worker-service`
+
+Status (as of 2025-12-16): Done
+Evidence:
+- Payrun types include `OFF_CYCLE`:
+  - `payroll-orchestrator-service/src/main/kotlin/com/example/uspayroll/orchestrator/payrun/model/PayRunModels.kt`
+- Workflow test:
+  - `payroll-orchestrator-service/src/test/kotlin/com/example/uspayroll/orchestrator/http/OffCyclePayRunWorkflowIT.kt`
 
 Acceptance criteria:
 - Support `PayRunType.OFF_CYCLE` end-to-end:
@@ -126,8 +233,18 @@ Acceptance criteria:
 - Clear rules for tax treatment (supplemental vs regular) and traceability in paycheck audit.
 - Golden tests exist for representative off-cycle scenarios.
 
-### C1 (P0) Corrections: void / reissue
+### C1 Corrections: void / reissue
+Target priority: P0
 Owner: orchestrator + payments + reporting
+
+Status (as of 2025-12-16): Done
+Evidence:
+- Run types include `VOID` and `REISSUE`:
+  - `payroll-orchestrator-service/src/main/kotlin/com/example/uspayroll/orchestrator/payrun/model/PayRunModels.kt`
+- Accounting model doc:
+  - `docs/ops/payrun-corrections-void-reissue.md`
+- Workflow test:
+  - `payroll-orchestrator-service/src/test/kotlin/com/example/uspayroll/orchestrator/http/PayRunVoidReissueWorkflowIT.kt`
 
 Acceptance criteria:
 - Support `PayRunType.VOID` and `PayRunType.REISSUE` semantics:
@@ -136,8 +253,17 @@ Acceptance criteria:
 - Idempotent APIs and invariants documented.
 - Golden workflow test covers create -> pay -> void -> reissue.
 
-### C2 (P0) Retro pay driven by effective-dated HR changes
+### C2 Retro pay driven by effective-dated HR changes
+Target priority: P0
 Owner: HR + worker + orchestrator
+
+Status (as of 2025-12-16): Done (verify remaining scenario coverage)
+Evidence:
+- Retro adjustment service:
+  - `payroll-orchestrator-service/src/main/kotlin/com/example/uspayroll/orchestrator/payrun/PayRunRetroAdjustmentsService.kt`
+- Workflow test:
+  - `payroll-orchestrator-service/src/test/kotlin/com/example/uspayroll/orchestrator/http/PayRunRetroAdjustmentWorkflowIT.kt`
+- HR effective-dated + bitemporal facts exist (Epic A).
 
 Acceptance criteria:
 - When effective-dated compensation or tax-affecting attributes change in the past:
@@ -148,8 +274,19 @@ Acceptance criteria:
   - replay yields identical deltas
 - Golden tests include retro scenarios (rate change mid-quarter; location change; W-4 change).
 
-### C3 (P1) Multi-jurisdiction employment scenarios
+### C3 Multi-jurisdiction employment scenarios
+Target priority: P1
 Owner: HR + tax + labor + worker
+
+Status (as of 2025-12-16): Partial
+Evidence:
+- Domain-level multi-jurisdiction test:
+  - `payroll-domain/src/test/kotlin/com/example/uspayroll/payroll/engine/MultiJurisdictionTaxTest.kt`
+- Worker locality resolver and tests:
+  - `payroll-worker-service/src/main/kotlin/com/example/uspayroll/worker/LocalityResolver.kt`
+  - `payroll-worker-service/src/test/kotlin/com/example/uspayroll/worker/MichiganLocalityResolverTest.kt`
+Notes:
+- Multi-locality within-period allocation is modeled (`TimeSlice.localityAllocations`), but broad statutory coverage and HR modeling for multi-locality time distribution are ongoing.
 
 Acceptance criteria:
 - Support employees who:
@@ -159,8 +296,16 @@ Acceptance criteria:
 
 ## Epic D — Payments reconciliation and downstream integration points
 
-### D0 (P0) Payment reconciliation contract
+### D0 Payment reconciliation contract
+Target priority: P0
 Owner: `payments-service`, `payroll-orchestrator-service`
+
+Status (as of 2025-12-16): Done
+Evidence:
+- Orchestrator internal reconciliation endpoints:
+  - `payroll-orchestrator-service/src/main/kotlin/com/example/uspayroll/orchestrator/http/PayRunReconciliationController.kt`
+- Projection rebuild workflow test:
+  - `payroll-orchestrator-service/src/test/kotlin/com/example/uspayroll/orchestrator/http/PayRunPaymentsProjectionRebuildIT.kt`
 
 Acceptance criteria:
 - Define a stable reconciliation model:
@@ -171,8 +316,18 @@ Acceptance criteria:
   - reconcile mismatches
   - rebuild projections from source of truth (already exists for some flows)
 
-### D1 (P1) Bank file / payment provider integration seam
+### D1 Bank file / payment provider integration seam
+Target priority: P1
 Owner: `payments-service`
+
+Status (as of 2025-12-16): Done (sandbox provider)
+Evidence:
+- Provider port:
+  - `payments-service/src/main/kotlin/com/example/uspayroll/payments/provider/PaymentProvider.kt`
+- Sandbox provider:
+  - `payments-service/src/main/kotlin/com/example/uspayroll/payments/provider/SandboxPaymentProvider.kt`
+- Documentation:
+  - `docs/ops/payments-provider-integration-seam.md`
 
 Acceptance criteria:
 - Define a port interface for payment providers (ACH/wire) and a sandbox implementation.
@@ -180,8 +335,18 @@ Acceptance criteria:
 
 ## Epic E — Filings and reporting integration points
 
-### E0 (P0) Reporting/filings event contract
+### E0 Reporting/filings event contract
+Target priority: P0
 Owner: `reporting-service`, `filings-service`, domain
+
+Status (as of 2025-12-16): Done
+Evidence:
+- Contract doc:
+  - `docs/ops/reporting-filings-paycheck-ledger-events.md`
+- Messaging types:
+  - `messaging-core/src/main/kotlin/com/example/uspayroll/messaging/events/reporting/PaycheckLedgerEvents.kt`
+- Workflow tests:
+  - `payroll-orchestrator-service/src/test/kotlin/com/example/uspayroll/orchestrator/events/PaycheckLedgerEventsIT.kt`
 
 Acceptance criteria:
 - Define events or exports that represent:
@@ -190,8 +355,18 @@ Acceptance criteria:
   - adjusted paycheck
 - Include sufficient fields for filing preparation without coupling to internal tables.
 
-### E1 (P1) Quarterly/annual filing “shape”
+### E1 Quarterly/annual filing “shape”
+Target priority: P1
 Owner: `filings-service`
+
+Status (as of 2025-12-16): Done (initial shape APIs)
+Evidence:
+- Filings endpoints:
+  - `filings-service/src/main/kotlin/com/example/uspayroll/filings/http/FilingsController.kt`
+- Integration test:
+  - `filings-service/src/test/kotlin/com/example/uspayroll/filings/service/FilingsComputationServiceIT.kt`
+Notes:
+- Production-grade filing coverage/validations will typically expand significantly by jurisdiction and customer requirements.
 
 Acceptance criteria:
 - Define the initial filing artifacts and APIs:
@@ -200,9 +375,17 @@ Acceptance criteria:
   - state withholding summaries
 - Include validation hooks and reconciliation with payments.
 
-## Golden tests (cross-epic requirement)
+## Cross-cutting capabilities
 
-P0 items must be backed by golden tests in the appropriate layer(s):
+### X0 Golden tests coverage
+Target priority: P0
+Owner: cross-cutting
+
+Status (as of 2025-12-16): Partial
+Notes:
+- Golden tests exist in multiple layers (domain/catalog/workflow), but full P0 coverage has not been exhaustively audited.
+
+Acceptance criteria:
 - Domain golden tests for pure calculation invariants.
 - Catalog golden tests for tax/labor rule interpretation.
 - Workflow golden tests for off-cycle/correction/retro + reconciliation.

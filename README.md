@@ -2,7 +2,7 @@
 
 Enterprise-focused, Kotlin-based US payroll platform with a functional-core architecture (pure calculation domain) surrounded by service modules.
 
-Status: **active development**. This README reflects repo capabilities as of **2025-12-15**.
+Status: **active development**. This README reflects repo capabilities as of **2025-12-16**.
 
 ## High-level architecture
 
@@ -31,7 +31,7 @@ Core services:
 Shared infrastructure:
 - `persistence-core`, `messaging-core`, `web-core`, `tenancy-core`: shared building blocks for JDBC, outbox/inbox, HTTP, and multi-tenant patterns.
 
-## Current limitations (as of 2025-12-15)
+## Current limitations (as of 2025-12-16)
 
 This repository has working end-to-end workflows and production-minded infrastructure, but it is not yet a complete enterprise production system. Key limitations:
 
@@ -46,7 +46,7 @@ This repository has working end-to-end workflows and production-minded infrastru
 - Kubernetes manifests (Kustomize) live under `deploy/k8s/`.
 - Operational runbooks, SLO guidance, and golden test strategy live under `docs/ops/`.
 
-For the current enterprise-readiness checklist and rationale, see:
+For the current enterprise-readiness capability register (Done/Partial/Not Started) and rationale, see:
 - `docs/ops/enterprise-readiness-capability-backlog.md`
 - `docs/ops/golden-tests-enterprise-readiness.md`
 - `docs/ops/production-deployment-hardening.md`

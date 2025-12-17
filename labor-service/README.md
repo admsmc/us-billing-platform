@@ -74,21 +74,14 @@ When policy/ops have updated the sheet:
 
 ### Database schema note (locality columns)
 
-The generated `labor-standard-2025.sql` assumes the `labor_standard` table has the following additional nullable columns:
+As of the current labor-service schema, locality columns are already part of the baseline table definition:
+- `labor-service/src/main/resources/db/migration/labor/V1__init_labor_standard.sql`
 
-- `locality_code VARCHAR` – e.g. `NYC`, `SEA`, `PORTLAND_METRO`, `LA_CITY`, `SF`, `CHI`.
-- `locality_kind VARCHAR` – e.g. `CITY`, `COUNTY`, `METRO`.
+If you are integrating into an existing database schema, ensure `labor_standard` includes nullable:
+- `locality_code` (e.g. `NYC`, `SEA`, `PORTLAND_METRO`, `LA_CITY`, `SF`, `CHI`)
+- `locality_kind` (e.g. `CITY`, `COUNTY`, `METRO`)
 
-If your database does not yet include these columns, add them via a migration similar to:
-
-```sql
-ALTER TABLE labor_standard
-    ADD COLUMN locality_code VARCHAR(64) NULL,
-    ADD COLUMN locality_kind VARCHAR(32) NULL;
-```
-
-Statewide rows from the baseline CSV will have these fields null; locality-specific
-rows from `labor-standards-2025-local.csv` will populate them accordingly.
+Statewide rows from the baseline CSV will have these fields null; locality-specific rows from `labor-standards-2025-local.csv` will populate them accordingly.
 
 4. Review and commit the updated CSV + JSON + SQL files together as a single change.
 

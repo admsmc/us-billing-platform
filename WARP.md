@@ -4,6 +4,12 @@ This file provides guidance to WARP (warp.dev) when working with code in this re
 
 ## Build, test, and run commands
 
+## Documentation / repo hygiene
+
+Generated artifacts
+- Anything under `**/build/**` (including `**/build/reports/**`) is generated output (e.g., Detekt reports).
+- These files are already ignored by `.gitignore` (`**/build/`) and should not be treated as source docs during documentation reviews/sweeps.
+
 The project is a Kotlin/JVM Gradle multi-module build targeting Java 21.
 
 IMPORTANT: Ensure Gradle is run with a Java 21 runtime. If your system `java` is newer (and Kotlin tooling fails), use:
@@ -44,8 +50,10 @@ Each deployable service applies the Spring Boot Gradle plugin and is runnable vi
   - `./gradlew :tax-service:bootRun`
 - Labor service HTTP API:
   - `./gradlew :labor-service:bootRun`
-- Payroll worker/orchestrator service:
+- Payroll worker service:
   - `./gradlew :payroll-worker-service:bootRun`
+- Payroll orchestrator service:
+  - `./gradlew :payroll-orchestrator-service:bootRun`
 
 Services are standard Spring Boot applications with `*ApplicationKt` main classes under `com.example.uspayroll.*`.
 
@@ -125,12 +133,17 @@ The runtime topology is a multi-service Spring Boot deployment, with each bounde
 - **Labor service (`labor-service`)**
   - Owns labor standards data (minimum wage, tipped wage, overtime thresholds, etc.).
   - Implements a `LaborStandardsContextProvider` abstraction and HTTP endpoints to return effective labor standards for an employer/date/state.
+- **Payroll orchestrator service (`payroll-orchestrator-service`)**
+  - Owns payrun lifecycle APIs and orchestration (off-cycle, void/reissue, retro).
+  - Representative endpoints:
+    - `POST /employers/{employerId}/payruns/finalize`
+    - `GET /employers/{employerId}/payruns/{payRunId}`
 - **Payroll worker service (`payroll-worker-service`)**
-  - Orchestrates pay runs by coordinating HR, Tax, and Labor services and calling into `PayrollEngine`.
-  - Defines HTTP endpoints such as:
-    - `POST /employers/{employerId}/payruns` – run payroll for multiple employees/periods.
-    - `POST /employers/{employerId}/paychecks/preview` – preview a single paycheck.
-  - Uses typed clients (`HrClient`, `TaxClient`, `LaborStandardsClient`) that in turn call the service HTTP APIs.
+  - Performs queue-driven per-employee paycheck computation for orchestrator-driven payruns.
+  - Exposes a demo endpoint and (optional) benchmark/dev endpoints:
+    - `GET /dry-run-paychecks`
+    - `POST /benchmarks/employers/{employerId}/hr-backed-pay-period` (feature-flagged)
+  - Uses typed clients (`HrClient`, `TaxClient`, `LaborStandardsClient`) to call service HTTP APIs.
 
 Other modules such as `persistence-core`, `messaging-core`, and `web-core` exist to factor out shared infrastructure concerns; when adding new cross-cutting integration code, prefer extending these modules over duplicating plumbing in individual services.
 

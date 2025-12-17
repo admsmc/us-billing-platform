@@ -77,7 +77,7 @@ If you want to hit internal services directly for debugging, use the included `d
    - Set `EDGE_AUTH_HS256_SECRET` to your dev secret
 2. Mint a token:
    - `EDGE_AUTH_HS256_SECRET=... ./scripts/mint-dev-jwt.sh`
-3. Call through the gateway:
+3. Call through the gateway (demo endpoint routed by edge to worker):
    - `curl -H "Authorization: Bearer <token>" http://localhost:8080/dry-run-paychecks`
 
 ## Implementation notes in this repo

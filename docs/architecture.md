@@ -46,7 +46,7 @@ The domain does not depend on HTTP, databases, or specific frameworks. It only d
 
 ## HR service boundary (`hr-service`)
 
-The HR service is responsible for employee and pay period data. It defines service-side ports in `hr-service/src/main/kotlin/HrPorts.kt`:
+The HR service is responsible for employee and pay period data. The service-side ports live in `hr-api`, e.g. `hr-api/src/main/kotlin/com/example/uspayroll/hr/api/HrPorts.kt`:
 
 - `EmployeeSnapshotProvider`:
   - `getEmployeeSnapshot(employerId, employeeId, asOfDate): EmployeeSnapshot?`
@@ -54,22 +54,28 @@ The HR service is responsible for employee and pay period data. It defines servi
   - `getPayPeriod(employerId, payPeriodId): PayPeriod?`
   - `findPayPeriodByCheckDate(employerId, checkDate): PayPeriod?`
 
-These interfaces will be implemented by `hr-service` using its own persistence layer (e.g., a database). Other components (orchestrator/worker) will consume these via client abstractions.
+These interfaces are implemented by `hr-service` using its persistence layer and are exposed via HTTP.
 
-The `hr.http` package currently only contains a placeholder noting the intended REST route shapes.
+Representative HTTP surfaces (implemented under `com.example.uspayroll.hr.http`):
+- Read routes: `hr-service/src/main/kotlin/com/example/uspayroll/hr/http/HrRoutes.kt`
+- Write + effective-dated routes: `hr-service/src/main/kotlin/com/example/uspayroll/hr/http/HrWriteController.kt`
+- Pay schedule upsert + pay period generation: `hr-service/src/main/kotlin/com/example/uspayroll/hr/http/HrPayScheduleWriteController.kt`
+
+The worker/orchestrator primarily consume HR via typed HTTP clients (e.g., `hr-client` / `HrClient`). For tests, in-memory implementations can call the underlying ports directly.
 
 ## Tax service boundary (`tax-service`)
 
-The tax service is responsible for assembling `TaxContext` from statutory rules and employer-specific tax configuration. It defines a port in `tax-service/src/main/kotlin/TaxPorts.kt`:
+The tax service is responsible for assembling `TaxContext` from statutory rules and employer-specific tax configuration. The primary port lives in `tax-api`, e.g. `tax-api/src/main/kotlin/com/example/uspayroll/tax/api/TaxContextProvider.kt`:
 
 - `TaxContextProvider`:
   - `getTaxContext(employerId, asOfDate): TaxContext`
 
-This interface will be implemented by `tax-service` using tax tables, effective-dated rules, and employer-level settings. The worker/orchestrator will call it via a client abstraction.
+This interface is implemented by `tax-service` using tax tables, effective-dated rules, and employer-level settings. The worker/orchestrator call it via a client abstraction.
 
-The `tax.http` package currently documents the intended REST endpoint:
+The tax service exposes HTTP routes (implemented) under `com.example.uspayroll.tax.http`, e.g.:
 
-- `GET /employers/{employerId}/tax-context?asOf=YYYY-MM-DD`
+- `tax-service/src/main/kotlin/com/example/uspayroll/tax/http/TaxRoutes.kt`
+  - `GET /employers/{employerId}/tax-context?asOf=YYYY-MM-DD`
 
 ## Worker-side clients (`payroll-worker-service`)
 
@@ -93,6 +99,6 @@ The worker service uses client interfaces to talk to HR and Tax services, and co
 - **HR service**: owns employee and pay period data. Exposes `EmployeeSnapshotProvider` and `PayPeriodProvider`.
 - **Tax service**: owns tax rules and statutory logic. Exposes `TaxContextProvider`.
 - **Config boundary**: earnings and deductions are configured via `EarningDefinition`/`DeductionPlan` and accessed through `EarningConfigRepository`/`DeductionConfigRepository`.
-- **Worker service**: wires everything together at runtime by providing config repositories and, in the future, HR/Tax clients that call external services.
+- **Worker service**: wires everything together at runtime by providing config repositories and HR/Tax clients that call external services.
 
 This structure is intended to keep payroll logic deterministic and testable while allowing HR, tax, and config concerns to evolve independently in their own services.

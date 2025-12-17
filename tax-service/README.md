@@ -28,7 +28,7 @@ Each row describes a high-level state income tax rule, typically one per `(state
 - `state_code` – 2-letter postal code (e.g. `CA`, `TX`).
 - `tax_year` – e.g. `2025`.
 - `filing_status` – `SINGLE`, `MARRIED`, `HEAD_OF_HOUSEHOLD`, etc., or blank.
-- `rule_type` – `FLAT` or `BRACKETED`. Blank rows are treated as **not yet configured** and skipped.
+- `rule_type` – `FLAT` or `BRACKETED`.
 - `basis` – usually `StateTaxable`. Blank defaults to `StateTaxable`.
 - `flat_rate` – decimal rate (e.g. `0.050` for 5%) for flat states.
 - `standard_deduction` – standard deduction in **dollars** (optional).
@@ -102,9 +102,10 @@ Typical usage (from a migration or admin tool):
 - Point `TaxRuleConfigImporter` at the `tax-config` directory for the relevant year (including `state-income-YYYY.json` and federal/local configs).
 - Let the importer append rows to `tax_rule`.
 
-### 4. Expanding to all 50 states
+### 4. Maintaining coverage across all 50 states
 
-The `state-income-tax-2025-rules.csv` file already contains **skeleton rows for all 50 states** (AL through WY). To fully populate state income tax content:
+The `state-income-tax-2025-rules.csv` file contains rules for all 50 states (AL through WY) for tax year 2025.
+Typical yearly work is updating rates/deductions/brackets and effective dates as statutes change, not creating new "skeleton" rows.
 
 1. Use a spreadsheet (e.g. Google Sheets) to edit the CSV, restricting edits to:
    - `flat_rate`

@@ -60,13 +60,17 @@ This topology trades some deployment complexity for clear service boundaries and
 - **Module**: `payroll-worker-service`
 - **Deployable**: Spring Boot app (e.g., `WorkerApplication`)
 - **Primary responsibilities**:
-  - Accept external requests to calculate paychecks or pay runs.
+  - Consume per-employee finalization jobs and compute paychecks.
   - Compose data from HR, Tax, and Labor services.
   - Invoke `PayrollEngine.calculatePaycheck` from `payroll-domain`.
-  - Surface detailed `CalculationTrace` (or a summarized view) to callers.
+  - Surface detailed `CalculationTrace` (or a summarized view) to callers when used in demo/benchmark/testing flows.
 - **Key HTTP endpoints** (representative):
-  - `POST /employers/{employerId}/payruns` – run payroll for a set of employees and periods.
-  - `POST /employers/{employerId}/paychecks/preview` – preview a single paycheck.
+  - Demo (always enabled):
+    - `GET /dry-run-paychecks`
+  - Benchmark HR-backed computation (feature-flagged):
+    - `POST /benchmarks/employers/{employerId}/hr-backed-pay-period`
+  - Legacy/dev-only finalize job API (feature-flagged):
+    - `POST /jobs/employers/{employerId}/payruns/finalize`
 - **Dependencies**:
   - `HrClient` – HTTP client for HR service.
   - `TaxClient` – HTTP client for tax service.
@@ -118,15 +122,15 @@ For integration tests and local experimentation, the same functional boundaries 
   - Use SLF4J with a JSON-capable backend (e.g., logstash-logback encoder) in production profiles.
   - For local development, a human-readable pattern layout can be used.
 
-## Error handling and resilience
+## Error handling and resilience (guidance)
 
-- Replace generic `error("...")` and unchecked exceptions at HTTP boundaries with:
+- Prefer typed exceptions and structured errors at HTTP boundaries (avoid unchecked exceptions leaking through), using:
   - Typed exceptions in each service layer.
   - Global `@ControllerAdvice` handlers that map exceptions to structured error responses with:
     - `errorCode` (stable, machine-readable).
     - `message` (human-readable, non-sensitive).
     - `correlationId`.
-- Worker-service behavior on dependency failures:
+- Suggested worker-service behavior on dependency failures:
   - For HR/Tax/Labor timeouts or 5xx errors, respond with `503 Service Unavailable` and a structured body.
   - For 4xx errors (e.g., unknown employee or pay period), respond with `404 Not Found` or `400 Bad Request` as appropriate.
 
@@ -134,7 +138,8 @@ For integration tests and local experimentation, the same functional boundaries 
 
 ### Local development
 
-- All four services can be run locally on different ports (e.g., HR 8081, Tax 8082, Labor 8083, Worker 8080).
+- The core paycheck-computation services (HR, Tax, Labor, Worker) can be run locally on different ports (e.g., HR 8081, Tax 8082, Labor 8083, Worker 8080).
+- Orchestrator/Payments/Reporting/Filings can also be run locally when exercising full payrun workflows, but are not required for basic paycheck computation experiments.
 - Alternatively, tests and experiments can run in a single JVM using in-memory clients and H2 databases.
 
 ### Staging/production
