@@ -1,4 +1,19 @@
 #!/usr/bin/env bash
+# Parallel payrun benchmark harness.
+#
+# This script runs k6 benchmarks against the orchestrator + worker services with varying worker replica counts.
+# It collects Postgres statistics and service metrics to diagnose performance bottlenecks.
+#
+# Verbosity controls (to prevent terminal buffer issues):
+# - BENCH_MINIMAL_OUTPUT=true : Disable all Postgres statistics collection (columns will be 'nan')
+# - PG_DIAG_SAMPLE_EVERY=N    : Sample Postgres diagnostics every Nth sample (default: 3, 0=disabled)
+# - PG_STAT_SAMPLE_EVERY=N    : Sample Postgres stats every Nth sample (default: same as PG_DIAG_SAMPLE_EVERY)
+#
+# Example:
+#   BENCH_MINIMAL_OUTPUT=true ./benchmarks/run-parallel-payrun-bench.sh
+#   PG_DIAG_SAMPLE_EVERY=10 ./benchmarks/run-parallel-payrun-bench.sh
+#   ./benchmarks/run-parallel-payrun-bench.sh > /tmp/bench.log 2>&1 &
+
 set -euo pipefail
 
 ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
@@ -10,6 +25,18 @@ PAY_PERIOD_ID=${PAY_PERIOD_ID:-2025-01-BW1}
 CHECK_DATE=${CHECK_DATE:-2025-01-15}
 START_DATE=${START_DATE:-2025-01-01}
 END_DATE=${END_DATE:-2025-01-14}
+
+# Optional Phase B (orchestrator): render statements / export artifacts after finalize
+# These map to benchmarks/k6/orchestrator-rabbit-finalize.js env vars.
+RENDER_AFTER_FINALIZE=${RENDER_AFTER_FINALIZE:-false}
+BENCH_HEADER=${BENCH_HEADER:-X-Benchmark-Token}
+BENCH_TOKEN=${BENCH_TOKEN:-${WORKER_BENCHMARKS_TOKEN:-dev-secret}}
+RENDER_SERIALIZE_JSON=${RENDER_SERIALIZE_JSON:-true}
+RENDER_GENERATE_CSV=${RENDER_GENERATE_CSV:-false}
+RENDER_LIMIT=${RENDER_LIMIT:-}
+
+# Verbosity controls
+BENCH_MINIMAL_OUTPUT=${BENCH_MINIMAL_OUTPUT:-false}
 
 EMPLOYEE_COUNT=${EMPLOYEE_COUNT:-1000}
 EMPLOYEE_ID_PREFIX=${EMPLOYEE_ID_PREFIX:-EE-BENCH-}
@@ -83,6 +110,9 @@ require_cmd sed
 require_cmd python3
 
 echo "[bench] out_dir=$OUT_DIR"
+if [[ "$BENCH_MINIMAL_OUTPUT" == "true" ]]; then
+  echo "[bench] minimal output mode enabled (Postgres stats disabled)"
+fi
 
 # ---- Bring up stack (idempotent) ----
 # Export the secret so compose picks it up.
@@ -176,11 +206,13 @@ for workers in "${WORKER_REPLICAS[@]}"; do
     exit 1
   fi
 
-  # Control how often we run heavier Postgres diagnostic queries.
+# Control how often we run heavier Postgres diagnostic queries.
   # The sampler loop sleeps 5s; default 3 => run diagnostics every ~15s.
+  # Set to 0 to disable diagnostics (reduces output verbosity).
   PG_DIAG_SAMPLE_EVERY=${PG_DIAG_SAMPLE_EVERY:-3}
 
   # Additional sampling for DB internal counters can be slightly more expensive; default to same cadence as diagnostics.
+  # Set to 0 to disable stats sampling (reduces output verbosity).
   PG_STAT_SAMPLE_EVERY=${PG_STAT_SAMPLE_EVERY:-$PG_DIAG_SAMPLE_EVERY}
 
   # Identify current worker replicas' published host ports for container port 8088.
@@ -329,11 +361,14 @@ PY
       i=$((i + 1))
       diag_ok=false
       stat_ok=false
-      if [[ "$PG_DIAG_SAMPLE_EVERY" =~ ^[0-9]+$ ]] && [[ "$PG_DIAG_SAMPLE_EVERY" -gt 0 ]] && (( i % PG_DIAG_SAMPLE_EVERY == 0 )); then
-        diag_ok=true
-      fi
-      if [[ "$PG_STAT_SAMPLE_EVERY" =~ ^[0-9]+$ ]] && [[ "$PG_STAT_SAMPLE_EVERY" -gt 0 ]] && (( i % PG_STAT_SAMPLE_EVERY == 0 )); then
-        stat_ok=true
+      # Skip all Postgres stats in minimal mode
+      if [[ "$BENCH_MINIMAL_OUTPUT" != "true" ]]; then
+        if [[ "$PG_DIAG_SAMPLE_EVERY" =~ ^[0-9]+$ ]] && [[ "$PG_DIAG_SAMPLE_EVERY" -gt 0 ]] && (( i % PG_DIAG_SAMPLE_EVERY == 0 )); then
+          diag_ok=true
+        fi
+        if [[ "$PG_STAT_SAMPLE_EVERY" =~ ^[0-9]+$ ]] && [[ "$PG_STAT_SAMPLE_EVERY" -gt 0 ]] && (( i % PG_STAT_SAMPLE_EVERY == 0 )); then
+          stat_ok=true
+        fi
       fi
 
       if [[ "$diag_ok" == "true" ]]; then
@@ -439,6 +474,8 @@ PY
           pss_top_query_snippet=$(printf '%s' "$pss_line" | cut -d'|' -f5)
           # Keep CSV stable: strip commas/quotes/pipes from the snippet.
           pss_top_query_snippet=$(printf '%s' "$pss_top_query_snippet" | sed 's/,/;/g; s/"/\x27/g; s/|/ /g')
+          # Truncate to 80 chars to prevent terminal buffer issues
+          pss_top_query_snippet=$(printf '%s' "$pss_top_query_snippet" | cut -c1-80)
         fi
       fi
 
@@ -468,6 +505,12 @@ PY
     -e RUNS="$TRIALS" \
     -e MAX_WAIT_SECONDS="${MAX_WAIT_SECONDS:-3600}" \
     -e POLL_STRATEGY="${POLL_STRATEGY:-fixed}" \
+    -e RENDER_AFTER_FINALIZE="$RENDER_AFTER_FINALIZE" \
+    -e BENCH_HEADER="$BENCH_HEADER" \
+    -e BENCH_TOKEN="$BENCH_TOKEN" \
+    -e RENDER_SERIALIZE_JSON="$RENDER_SERIALIZE_JSON" \
+    -e RENDER_GENERATE_CSV="$RENDER_GENERATE_CSV" \
+    -e RENDER_LIMIT="$RENDER_LIMIT" \
     --summary-export "$json_out" \
     "$ROOT_DIR/benchmarks/k6/orchestrator-rabbit-finalize.js" \
     >"$txt_out" 2>&1
@@ -600,8 +643,36 @@ PY
   db_connections_max=$(awk -F',' 'NR>1 && $3 != "" { if ($3+0 > m) m=$3+0 } END { if (m=="") print "nan"; else printf("%d", m) }' "$metrics_csv")
 
   # ---- Per-run deltas for cumulative Postgres counters (end-start) ----
+  # Initialize all delta variables to nan (overwritten below if stats are collected)
   # These are sampled into metrics_csv periodically; we compute deltas so attribution is visible in summary.csv.
-  read -r \
+  bg_checkpoints_timed_delta="nan"
+  bg_checkpoints_req_delta="nan"
+  bg_checkpoint_write_time_ms_delta="nan"
+  bg_checkpoint_sync_time_ms_delta="nan"
+  bg_buffers_checkpoint_delta="nan"
+  bg_buffers_clean_delta="nan"
+  bg_maxwritten_clean_delta="nan"
+  bg_buffers_backend_delta="nan"
+  bg_buffers_backend_fsync_delta="nan"
+  bg_buffers_alloc_delta="nan"
+  wal_records_delta="nan"
+  wal_fpi_delta="nan"
+  wal_bytes_delta="nan"
+  wal_buffers_full_delta="nan"
+  wal_write_delta="nan"
+  wal_sync_delta="nan"
+  wal_write_time_ms_delta="nan"
+  wal_sync_time_ms_delta="nan"
+  pss_end_queryid=""
+  pss_end_query_snippet=""
+  pss_queryid_stable="false"
+  pss_calls_delta="nan"
+  pss_total_exec_time_ms_delta="nan"
+  pss_end_mean_exec_time_ms="nan"
+
+  # Only compute deltas if not in minimal mode
+  if [[ "$BENCH_MINIMAL_OUTPUT" != "true" ]]; then
+    read -r \
     bg_checkpoints_timed_delta \
     bg_checkpoints_req_delta \
     bg_checkpoint_write_time_ms_delta \
@@ -744,6 +815,7 @@ out.append(pss_end_mean_exec_time)
 print(' '.join(out))
 PY
     )
+  fi
 
   # Parse end-to-end p50/p95 from the exported JSON.
   elapsed_ms_p50=$(python3 - <<PY

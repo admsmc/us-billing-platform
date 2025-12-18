@@ -172,6 +172,23 @@ Or use the helper script to sweep worker replica counts and write a report:
 - `EMPLOYEE_COUNT=1000 WORKER_REPLICAS_CSV=1,2,4,8 ./benchmarks/run-parallel-payrun-bench.sh`
 - Output directory (default): `/tmp/us-payroll-parallel-bench/`
 
+Include Phase B (render artifacts after finalize):
+- `EMPLOYEE_COUNT=1000 WORKER_REPLICAS_CSV=1,2,4,8 RENDER_AFTER_FINALIZE=true BENCH_TOKEN=dev-secret ./benchmarks/run-parallel-payrun-bench.sh`
+- Optional toggles:
+  - `RENDER_SERIALIZE_JSON=true|false`
+  - `RENDER_GENERATE_CSV=true|false`
+  - `RENDER_LIMIT=1000` (cap renders; default is orchestrator.benchmarks.maxPaychecksPerRequest)
+
+Verbosity controls (to prevent terminal buffer issues):
+- Minimal output mode (disables Postgres statistics collection):
+  - `BENCH_MINIMAL_OUTPUT=true ./benchmarks/run-parallel-payrun-bench.sh`
+- Reduce Postgres diagnostics sampling (default: every 3rd sample):
+  - `PG_DIAG_SAMPLE_EVERY=10 ./benchmarks/run-parallel-payrun-bench.sh`
+  - Set to 0 to disable diagnostics entirely
+- Redirect output to file (recommended for long runs):
+  - `./benchmarks/run-parallel-payrun-bench.sh > /tmp/bench.log 2>&1 &`
+  - `tail -f /tmp/bench.log`
+
 Run:
 - `k6 run -e ORCH_URL=http://localhost:8086 -e INTERNAL_TOKEN=dev-secret -e EMPLOYER_ID=emp-1 -e PAY_PERIOD_ID=2025-01-BW1 -e EMPLOYEE_IDS=ee-1,ee-2 benchmarks/k6/orchestrator-finalize-execute.js`
 
