@@ -99,6 +99,27 @@ tasks.register<JavaExec>("runStateIncomeTaxImporter") {
     args(yearProp)
 }
 
+// Convenience task to import curated tax-config JSON files into the tax_rule table.
+tasks.register<JavaExec>("importTaxConfigToDb") {
+    group = "application"
+    description = "Import curated tax-config JSON into Postgres tax_rule. Requires TAX_DB_URL/TAX_DB_USERNAME/TAX_DB_PASSWORD. Use -PtaxYear=YYYY and -Ptruncate=true for idempotent local seeding."
+
+    workingDir = rootProject.projectDir
+
+    classpath = sourceSets.getByName("main").runtimeClasspath
+    mainClass.set("com.example.uspayroll.tax.tools.TaxConfigDbImporterCli")
+
+    val yearProp = project.findProperty("taxYear") as? String
+        ?: System.getenv("TAX_YEAR")
+        ?: "2025"
+
+    val truncateProp = project.findProperty("truncate") as? String
+        ?: System.getenv("TAX_IMPORT_TRUNCATE")
+        ?: "false"
+
+    args(yearProp, truncateProp)
+}
+
 // Validate all TaxRuleFile JSON documents under src/main/resources/tax-config.
 tasks.register<JavaExec>("validateTaxConfig") {
     group = "verification"

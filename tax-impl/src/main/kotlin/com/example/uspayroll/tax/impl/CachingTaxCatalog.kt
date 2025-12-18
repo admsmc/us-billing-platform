@@ -66,7 +66,9 @@ class CachingTaxCatalog(
 
         cacheMisses.incrementAndGet()
         val loaded = delegate.loadRules(query)
-        cache[key] = loaded
+        if (loaded.isNotEmpty()) {
+            cache[key] = loaded
+        }
         logger.debug("TaxCatalog cache MISS for key={} (loaded {} rules)", key, loaded.size)
         return loaded
     }

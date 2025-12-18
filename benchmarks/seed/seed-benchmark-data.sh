@@ -331,9 +331,14 @@ PY
 # Optional 1b) Time seed (in-memory time-ingestion-service)
 seed_time_for_hourly_employees
 
-# 2) Tax import (real pipeline)
-# This runs the importer directly against Postgres so tax-service can answer requests.
-# Uses the same tasks as the repo's tax content pipeline.
+# 2) Tax import
+#
+# This is a two-step process:
+#  - CSV -> JSON: generate state-income-$YEAR.json into tax-content/src/main/resources/tax-config
+#  - JSON -> DB: import a curated set of tax-config JSON into the tax_rule table
+#
+# The runtime tax-service reads from the DB-backed tax catalog (tax_rule), so
+# without the JSON->DB step, workers will see an empty TaxContext.
 
 export TAX_DB_URL="jdbc:postgresql://${PGHOST}:${PGPORT}/${TAX_DB}"
 export TAX_DB_USERNAME
@@ -341,8 +346,11 @@ export TAX_DB_PASSWORD
 
 TAX_YEAR=${TAX_YEAR:-2025}
 
-echo "[seed] Importing tax rules into ${TAX_DB} (taxYear=${TAX_YEAR})"
+echo "[seed] Generating state income tax JSON (taxYear=${TAX_YEAR})"
 "${ROOT_DIR}/scripts/gradlew-java21.sh" :tax-service:runStateIncomeTaxImporter --no-daemon -PtaxYear="${TAX_YEAR}" >/dev/null
+
+echo "[seed] Importing tax-config JSON into ${TAX_DB}.tax_rule (taxYear=${TAX_YEAR})"
+"${ROOT_DIR}/scripts/gradlew-java21.sh" :tax-service:importTaxConfigToDb --no-daemon -PtaxYear="${TAX_YEAR}" -Ptruncate=true >/dev/null
 
 # 3) Labor import (real pipeline)
 export LABOR_DB_URL="jdbc:postgresql://${PGHOST}:${PGPORT}/${LABOR_DB}"

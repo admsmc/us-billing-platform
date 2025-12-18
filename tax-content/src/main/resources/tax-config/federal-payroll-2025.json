@@ -1,0 +1,97 @@
+{
+  "rules": [
+    {
+      "id": "US_FICA_SS_2025",
+      "jurisdictionType": "FEDERAL",
+      "jurisdictionCode": "US_FICA_SS",
+      "basis": "SocialSecurityWages",
+      "ruleType": "FLAT",
+      "rate": 0.062,
+      "annualWageCapCents": 20000000,
+      "standardDeductionCents": null,
+      "additionalWithholdingCents": null,
+      "employerId": null,
+      "effectiveFrom": "2025-01-01",
+      "effectiveTo": "9999-12-31",
+      "filingStatus": null,
+      "residentStateFilter": null,
+      "workStateFilter": null,
+      "localityFilter": null
+    },
+    {
+      "id": "US_FICA_MED_EMP_2025",
+      "jurisdictionType": "FEDERAL",
+      "jurisdictionCode": "US_FICA_MED",
+      "basis": "MedicareWages",
+      "ruleType": "FLAT",
+      "rate": 0.0145,
+      "annualWageCapCents": null,
+      "standardDeductionCents": null,
+      "additionalWithholdingCents": null,
+      "employerId": null,
+      "effectiveFrom": "2025-01-01",
+      "effectiveTo": "9999-12-31",
+      "filingStatus": null,
+      "residentStateFilter": null,
+      "workStateFilter": null,
+      "localityFilter": null
+    },
+    {
+      "id": "US_FED_ADDITIONAL_MEDICARE_2025",
+      "jurisdictionType": "FEDERAL",
+      "jurisdictionCode": "US_ADDITIONAL_MEDICARE",
+      "basis": "MedicareWages",
+      "ruleType": "BRACKETED",
+      "brackets": [
+        { "upToCents": 20000000, "rate": 0.0 },
+        { "upToCents": null, "rate": 0.009 }
+      ],
+      "standardDeductionCents": null,
+      "additionalWithholdingCents": null,
+      "employerId": null,
+      "effectiveFrom": "2025-01-01",
+      "effectiveTo": "9999-12-31",
+      "filingStatus": null,
+      "residentStateFilter": null,
+      "workStateFilter": null,
+      "localityFilter": null
+    },
+
+    {
+      "id": "US_FICA_SS_EMPLOYER_2025",
+      "jurisdictionType": "OTHER",
+      "jurisdictionCode": "US_FICA_SS_EMPLOYER",
+      "basis": "SocialSecurityWages",
+      "ruleType": "FLAT",
+      "rate": 0.062,
+      "annualWageCapCents": 20000000,
+      "standardDeductionCents": null,
+      "additionalWithholdingCents": null,
+      "employerId": null,
+      "effectiveFrom": "2025-01-01",
+      "effectiveTo": "9999-12-31",
+      "filingStatus": null,
+      "residentStateFilter": null,
+      "workStateFilter": null,
+      "localityFilter": null
+    },
+    {
+      "id": "US_FICA_MED_EMPLOYER_2025",
+      "jurisdictionType": "OTHER",
+      "jurisdictionCode": "US_FICA_MED_EMPLOYER",
+      "basis": "MedicareWages",
+      "ruleType": "FLAT",
+      "rate": 0.0145,
+      "annualWageCapCents": null,
+      "standardDeductionCents": null,
+      "additionalWithholdingCents": null,
+      "employerId": null,
+      "effectiveFrom": "2025-01-01",
+      "effectiveTo": "9999-12-31",
+      "filingStatus": null,
+      "residentStateFilter": null,
+      "workStateFilter": null,
+      "localityFilter": null
+    }
+  ]
+}

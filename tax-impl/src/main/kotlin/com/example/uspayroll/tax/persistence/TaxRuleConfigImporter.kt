@@ -41,11 +41,17 @@ class TaxRuleConfigImporter(
     }
 
     /**
-     * Import all JSON config files from the given directory (non-recursive).
+     * Import all TaxRuleFile JSON config files from the given directory (non-recursive).
+     *
+     * Note: this intentionally ignores "*.metadata.json" sidecar files.
      */
     fun importDirectory(dir: Path) {
         Files.list(dir)
-            .filter { Files.isRegularFile(it) && it.toString().endsWith(".json") }
+            .filter { path ->
+                Files.isRegularFile(path) &&
+                    path.toString().endsWith(".json") &&
+                    !path.toString().endsWith(".metadata.json")
+            }
             .forEach { importFile(it) }
     }
 
