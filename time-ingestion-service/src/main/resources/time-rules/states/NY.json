@@ -1,0 +1,7 @@
+{
+  "type": "SIMPLE",
+  "id": "NY",
+  "weekly": {
+    "overtimeAfterHours": 40.0
+  }
+}

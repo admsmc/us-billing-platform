@@ -147,7 +147,9 @@ class PaycheckComputationService(
         val includeBaseEarnings = runType != com.example.uspayroll.orchestrator.payrun.model.PayRunType.OFF_CYCLE
 
         val baseComp = snapshot.baseCompensation
-        val timeSummary = if (includeBaseEarnings && baseComp is com.example.uspayroll.payroll.model.BaseCompensation.Hourly) {
+        val hourlyBaseComp = baseComp as? com.example.uspayroll.payroll.model.BaseCompensation.Hourly
+
+        val timeSummary = if (includeBaseEarnings && hourlyBaseComp != null) {
             timeClient.getTimeSummary(
                 employerId = employerId,
                 employeeId = employeeId,
@@ -159,17 +161,16 @@ class PaycheckComputationService(
             null
         }
 
-        val doubleTimeEarnings: List<EarningInput> = if (
-            includeBaseEarnings &&
-                baseComp is com.example.uspayroll.payroll.model.BaseCompensation.Hourly &&
-                timeSummary != null &&
-                timeSummary.doubleTimeHours > 0.0
-        ) {
-            val dtRateCents = (baseComp.hourlyRate.amount * 2.0).toLong()
+        val shouldIncludeDoubleTime = includeBaseEarnings &&
+            hourlyBaseComp != null &&
+            (timeSummary?.doubleTimeHours ?: 0.0) > 0.0
+
+        val doubleTimeEarnings: List<EarningInput> = if (shouldIncludeDoubleTime) {
+            val dtRateCents = (hourlyBaseComp.hourlyRate.amount * 2.0).toLong()
             listOf(
                 EarningInput(
                     code = com.example.uspayroll.payroll.model.EarningCode("HOURLY_DT"),
-                    units = timeSummary.doubleTimeHours,
+                    units = timeSummary!!.doubleTimeHours,
                     rate = com.example.uspayroll.shared.Money(dtRateCents),
                     amount = null,
                 ),

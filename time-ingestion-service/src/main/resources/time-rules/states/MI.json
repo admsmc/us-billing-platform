@@ -1,0 +1,7 @@
+{
+  "type": "SIMPLE",
+  "id": "MI",
+  "weekly": {
+    "overtimeAfterHours": 40.0
+  }
+}

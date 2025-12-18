@@ -1,0 +1,5 @@
+{
+  "type": "SIMPLE_POOL",
+  "id": "EMP_BENCH_SIMPLE_POOL",
+  "poolPercentOfCharged": 0.10
+}

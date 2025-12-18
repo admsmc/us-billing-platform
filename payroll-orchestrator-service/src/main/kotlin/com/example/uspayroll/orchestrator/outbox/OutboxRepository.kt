@@ -268,26 +268,20 @@ class OutboxRepository(
      * This dramatically reduces commit/WAL sync overhead vs per-row updates.
      */
     @Transactional
-    fun markSentBatch(
-        destinationType: OutboxDestinationType,
-        outboxIds: List<String>,
-        lockOwner: String,
-        lockedAt: Instant,
-        now: Instant = Instant.now(),
-    ): Int {
+    fun markSentBatch(destinationType: OutboxDestinationType, outboxIds: List<String>, lockOwner: String, lockedAt: Instant, now: Instant = Instant.now()): Int {
         val distinct = outboxIds.distinct()
         if (distinct.isEmpty()) return 0
 
         val placeholders = distinct.joinToString(",") { "?" }
-        val args: MutableList<Any> = mutableListOf(
-            OutboxStatus.SENT.name,
-            Timestamp.from(now),
-            destinationType.name,
-            OutboxStatus.SENDING.name,
-            lockOwner,
-            Timestamp.from(lockedAt),
-        )
-        args.addAll(distinct)
+        val args: List<Any> = buildList {
+            add(OutboxStatus.SENT.name)
+            add(Timestamp.from(now))
+            add(destinationType.name)
+            add(OutboxStatus.SENDING.name)
+            add(lockOwner)
+            add(Timestamp.from(lockedAt))
+            addAll(distinct)
+        }
 
         return jdbcTemplate.update(
             """
@@ -303,8 +297,11 @@ class OutboxRepository(
               AND locked_at = ?
               AND outbox_id IN ($placeholders)
             """.trimIndent(),
-            *args.toTypedArray(),
-        )
+        ) { ps ->
+            args.forEachIndexed { i, arg ->
+                ps.setObject(i + 1, arg)
+            }
+        }
     }
 
     fun markFailed(destinationType: OutboxDestinationType, outboxId: String, lockOwner: String, lockedAt: Instant, error: String, nextAttemptAt: Instant, now: Instant = Instant.now()): Int {
@@ -341,11 +338,7 @@ class OutboxRepository(
      * in a single transaction.
      */
     @Transactional
-    fun markFailedBatch(
-        destinationType: OutboxDestinationType,
-        failures: List<OutboxFailureUpdate>,
-        lockOwner: String,
-    ): Int {
+    fun markFailedBatch(destinationType: OutboxDestinationType, failures: List<OutboxFailureUpdate>, lockOwner: String): Int {
         if (failures.isEmpty()) return 0
 
         val updated = jdbcTemplate.batchUpdate(

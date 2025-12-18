@@ -17,22 +17,68 @@ Goal: measure service-level latency/throughput including Spring/JSON.
 ### Worker dry-run endpoint
 This is a lightweight baseline that does not require HR/Tax/Labor services.
 
-### Worker HR-backed benchmark endpoint (includes HR callbacks + tax + labor)
+### Worker HR-backed benchmark endpoint (includes HR callbacks + tax + labor + time-derived overtime)
 This is the recommended macrobench when you want to include:
 - HR reads (pay period + employee snapshots + garnishment orders)
-- tax-service calls
+- tax-service calls (federal + state rules)
 - labor-service calls
+- time-derived overtime (via time-ingestion-service)
 - HR withholding callbacks (`/garnishments/withholdings`)
+
+Phase A / Phase B recommended flow (production-like)
+- Phase A (compute): compute paychecks and store them (benchmark in-memory store)
+- Phase B (render): render pay statements/check artifacts from stored paychecks
+
+This mirrors typical payroll pipelines and avoids benchmarking huge HTTP responses.
 
 Enable the endpoint (disabled by default):
 - `WORKER_BENCHMARKS_ENABLED=true`
 - `WORKER_BENCHMARKS_TOKEN=dev-secret`
 
+Enable time-derived overtime (recommended default macrobench path):
+- set `TIME_ENABLED=true` for worker/orchestrator (in docker compose or your `bootRun` env)
+- seed time entries with `SEED_TIME=true` when running `./benchmarks/seed/seed-benchmark-data.sh`
+
+Tip pooling (worksite-level) for benchmarks:
+- When `SEED_TIME=true`, the seed script assigns hourly employees to worksites (e.g. `BAR`, `DINING`) and seeds cash/charged tips.
+- time-ingestion-service computes `allocatedTipsCents` using a tip allocation rule.
+- For `EMP-BENCH`, the default rule pools 10% of charged tips per worksite and allocates it by hours.
+
+Additional earnings scenarios (seeded via time-ingestion-service):
+- When `SEED_TIME=true`, the seed script also seeds deterministic per-period amounts for a subset of employees:
+  - `commissionCents` (maps to earning code `COMMISSION`)
+  - `bonusCents` (maps to earning code `BONUS`)
+  - `reimbursementNonTaxableCents` (maps to earning code `EXP_REIMB`)
+
+Cohort knobs (HR seed):
+- `MI_EVERY` (default 5): every Nth employee is MI hourly (with MI city localities)
+- `NY_EVERY` (default 7): every Nth employee is NY hourly
+- `CA_HOURLY_EVERY` (default 9): every Nth employee is CA hourly (intended to hit CA daily OT/DT + 7th-day rules)
+- `TIPPED_EVERY` (default 11): every Nth employee is marked as a tipped employee (tip-credit logic only applies to hourly employees). Tip amounts are sourced from time-ingestion-service when `SEED_TIME=true`.
+- `GARNISHMENT_EVERY` (default 3): every Nth employee receives one+ active garnishment order
+
 Run (after seeding) (range-based):
 - You can omit `EMPLOYEE_ID_END`; k6 will call the worker endpoint which queries hr-service and returns both:
   - the full inferred end from HR
   - a "safe" end capped to `worker.benchmarks.maxEmployeeIdsPerRequest`
+
+Single-phase (compute-only, small response):
 - `k6 run -e WORKER_URL=http://localhost:8088 -e BENCH_TOKEN=dev-secret -e EMPLOYER_ID=EMP-BENCH -e PAY_PERIOD_ID=2025-01-BW1 -e EMPLOYEE_ID_PREFIX=EE-BENCH- -e EMPLOYEE_ID_START=1 -e VERIFY_SEED=true benchmarks/k6/worker-hr-backed-pay-period.js`
+
+Two-phase (recommended):
+1) Phase A: compute + store
+- Use a stable `RUN_ID` so Phase B can reference it.
+- `k6 run -e WORKER_URL=http://localhost:8088 -e BENCH_TOKEN=dev-secret -e EMPLOYER_ID=EMP-BENCH -e PAY_PERIOD_ID=2025-01-BW1 -e EMPLOYEE_ID_PREFIX=EE-BENCH- -e EMPLOYEE_ID_START=1 -e EMPLOYEE_ID_END=200 -e RUN_ID=bench-run-2025-01-BW1 benchmarks/k6/worker-hr-backed-pay-period-store.js`
+2) Phase B: render statements (optionally include JSON serialization cost)
+- `k6 run -e WORKER_URL=http://localhost:8088 -e BENCH_TOKEN=dev-secret -e EMPLOYER_ID=EMP-BENCH -e RUN_ID=bench-run-2025-01-BW1 -e SERIALIZE_JSON=true benchmarks/k6/worker-render-pay-statements.js`
+- Optionally also generate a wide CSV (one paycheck per row, pay elements as columns) and include its byte size in the response:
+  - `k6 run -e WORKER_URL=http://localhost:8088 -e BENCH_TOKEN=dev-secret -e EMPLOYER_ID=EMP-BENCH -e RUN_ID=bench-run-2025-01-BW1 -e SERIALIZE_JSON=true -e GENERATE_CSV=true benchmarks/k6/worker-render-pay-statements.js`
+
+CSV export (download)
+- `curl -H 'X-Benchmark-Token: dev-secret' -H 'Content-Type: application/json' \
+    -d '{"runId":"bench-run-2025-01-BW1"}' \
+    'http://localhost:8088/benchmarks/employers/EMP-BENCH/render-paychecks.csv' \
+    -o paychecks.csv`
 
 Optional: lightweight correctness check (digest + aggregates)
 - The HR-backed benchmark endpoint can optionally compute a deterministic correctness summary (no full paycheck payload).
@@ -58,7 +104,10 @@ Note:
   - `HR_BENCHMARKS_TOKEN=dev-secret` (optional but recommended)
 
 Seed verification (read-only):
-- `curl -H 'X-Benchmark-Token: dev-secret' 'http://localhost:8088/benchmarks/employers/EMP-BENCH/seed-verification?payPeriodId=2025-01-BW1&employeeId=EE-BENCH-000001'`
+- Basic connectivity:
+  - `curl -H 'X-Benchmark-Token: dev-secret' 'http://localhost:8088/benchmarks/employers/EMP-BENCH/seed-verification?payPeriodId=2025-01-BW1&employeeId=EE-BENCH-000001'`
+- Include a full computed paycheck payload (single employee) for inspection:
+  - `curl -H 'X-Benchmark-Token: dev-secret' 'http://localhost:8088/benchmarks/employers/EMP-BENCH/seed-verification?payPeriodId=2025-01-BW1&employeeId=EE-BENCH-000001&includePaycheck=true'`
 
 1. Start worker-service:
    - `./scripts/gradlew-java21.sh :payroll-worker-service:bootRun`
@@ -95,9 +144,9 @@ Enterprise-grade seeding approach (recommended)
 
 Local dev flow (legacy execute-loop):
 1. Start the full stack (Postgres + services) so Flyway migrations run:
-   - `docker compose up -d`
-2. Seed HR + import tax + import labor:
-   - `EMPLOYER_ID=EMP-BENCH PAY_PERIOD_ID=2025-01-BW1 CHECK_DATE=2025-01-15 EMPLOYEE_COUNT=200 MI_EVERY=5 GARNISHMENT_EVERY=3 ./benchmarks/seed/seed-benchmark-data.sh`
+   - `TIME_ENABLED=true docker compose up -d`
+2. Seed HR + import tax + import labor + (recommended) seed time entries:
+- `EMPLOYER_ID=EMP-BENCH PAY_PERIOD_ID=2025-01-BW1 CHECK_DATE=2025-01-15 EMPLOYEE_COUNT=200 MI_EVERY=5 NY_EVERY=7 CA_HOURLY_EVERY=9 TIPPED_EVERY=11 GARNISHMENT_EVERY=3 SEED_TIME=true TIME_BASE_URL=http://localhost:8084 ./benchmarks/seed/seed-benchmark-data.sh`
 3. Enable legacy execute endpoint on orchestrator (bench/dev only):
    - set `orchestrator.payrun.execute.enabled=true`
 4. Run the k6 macrobench:
@@ -110,12 +159,12 @@ This is the enterprise-style path and the recommended way to benchmark paralleli
 - Orchestrator finalizer transitions the payrun to terminal when all items complete
 
 Run (compose + N worker replicas):
-1. Start the stack with RabbitMQ enabled:
-   - `ORCHESTRATOR_INTERNAL_AUTH_SHARED_SECRET=dev-internal-token docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.bench-parallel.yml up -d --build`
+1. Start the stack with RabbitMQ enabled (time-derived overtime enabled):
+   - `TIME_ENABLED=true ORCHESTRATOR_INTERNAL_AUTH_SHARED_SECRET=dev-internal-token docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.bench-parallel.yml up -d --build`
 2. Scale workers:
    - `docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.bench-parallel.yml up -d --scale payroll-worker-service=4`
-3. Seed HR + import tax + import labor:
-   - `EMPLOYER_ID=EMP-BENCH PAY_PERIOD_ID=2025-01-BW1 CHECK_DATE=2025-01-15 EMPLOYEE_COUNT=1000 MI_EVERY=5 GARNISHMENT_EVERY=3 ./benchmarks/seed/seed-benchmark-data.sh`
+3. Seed HR + import tax + import labor + (recommended) seed time entries:
+- `EMPLOYER_ID=EMP-BENCH PAY_PERIOD_ID=2025-01-BW1 CHECK_DATE=2025-01-15 EMPLOYEE_COUNT=1000 MI_EVERY=5 NY_EVERY=7 CA_HOURLY_EVERY=9 TIPPED_EVERY=11 GARNISHMENT_EVERY=3 SEED_TIME=true TIME_BASE_URL=http://localhost:8084 ./benchmarks/seed/seed-benchmark-data.sh`
 4. Run k6 (single payrun wall-clock):
    - `k6 run -e ORCH_URL=http://localhost:8085 -e EMPLOYER_ID=EMP-BENCH -e PAY_PERIOD_ID=2025-01-BW1 -e EMPLOYEE_ID_PREFIX=EE-BENCH- -e EMPLOYEE_ID_START=1 -e EMPLOYEE_COUNT=1000 benchmarks/k6/orchestrator-rabbit-finalize.js`
 

@@ -103,11 +103,9 @@ class WorkerPaycheckComputationService(
         }
 
         val baseComp = snapshot.baseCompensation
-        val timeSummary: TimeClient.TimeSummary? = if (
-            includeBaseEarnings &&
-                baseComp is BaseCompensation.Hourly &&
-                timeClient != null
-        ) {
+        val hourlyBaseComp = baseComp as? BaseCompensation.Hourly
+
+        val timeSummary: TimeClient.TimeSummary? = if (includeBaseEarnings && hourlyBaseComp != null && timeClient != null) {
             timeClient.getTimeSummary(
                 employerId = employerId,
                 employeeId = employeeId,
@@ -119,17 +117,16 @@ class WorkerPaycheckComputationService(
             null
         }
 
-        val doubleTimeEarnings: List<EarningInput> = if (
-            includeBaseEarnings &&
-                baseComp is BaseCompensation.Hourly &&
-                timeSummary != null &&
-                timeSummary.doubleTimeHours > 0.0
-        ) {
-            val dtRateCents = (baseComp.hourlyRate.amount * 2.0).toLong()
+        val shouldIncludeDoubleTime = includeBaseEarnings &&
+            hourlyBaseComp != null &&
+            (timeSummary?.doubleTimeHours ?: 0.0) > 0.0
+
+        val doubleTimeEarnings: List<EarningInput> = if (shouldIncludeDoubleTime) {
+            val dtRateCents = (hourlyBaseComp.hourlyRate.amount * 2.0).toLong()
             listOf(
                 EarningInput(
                     code = EarningCode("HOURLY_DT"),
-                    units = timeSummary.doubleTimeHours,
+                    units = timeSummary!!.doubleTimeHours,
                     rate = Money(dtRateCents),
                     amount = null,
                 ),

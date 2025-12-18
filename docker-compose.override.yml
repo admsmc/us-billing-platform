@@ -11,6 +11,10 @@ services:
     ports:
       - "8083:8083"
 
+  time-ingestion-service:
+    ports:
+      - "8084:8084"
+
   payroll-orchestrator-service:
     ports:
       - "8085:8085"

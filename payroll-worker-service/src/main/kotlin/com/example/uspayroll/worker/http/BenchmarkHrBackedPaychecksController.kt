@@ -8,14 +8,17 @@ import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.shared.toLocalityCodeStrings
 import com.example.uspayroll.worker.LocalityResolver
 import com.example.uspayroll.worker.PayrollRunService
+import com.example.uspayroll.worker.benchmarks.PaycheckRunStore
 import com.example.uspayroll.worker.client.LaborStandardsClient
 import com.example.uspayroll.worker.client.TaxClient
+import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpHeaders
+import org.springframework.http.MediaType
 import org.springframework.http.RequestEntity
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -28,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.client.exchange
 import java.net.URI
+import java.time.Instant
 import java.util.UUID
 
 @ConfigurationProperties(prefix = "worker.benchmarks")
@@ -38,6 +42,12 @@ data class WorkerBenchmarksProperties(
     var headerName: String = "X-Benchmark-Token",
     /** Guardrail to avoid accidental huge in-process runs. */
     var maxEmployeeIdsPerRequest: Int = 2_000,
+
+    // Phase A/Phase B: in-memory paycheck storage (benchmark-only)
+    var paycheckStoreEnabled: Boolean = true,
+    var paycheckStoreMaxRuns: Int = 8,
+    var paycheckStoreMaxPaychecksPerRun: Int = 5_000,
+    var paycheckStoreTtlSeconds: Long = 30 * 60,
 )
 
 @Configuration
@@ -55,8 +65,20 @@ class BenchmarkHrBackedPaychecksController(
     private val laborClient: LaborStandardsClient?,
     private val hrClientProperties: HrClientProperties,
     private val restTemplate: RestTemplate,
+    private val objectMapper: ObjectMapper,
+    private val paycheckRunStore: PaycheckRunStore,
     private val props: WorkerBenchmarksProperties,
 ) {
+
+    init {
+        // Keep the store config driven by benchmark properties.
+        paycheckRunStore.config = PaycheckRunStore.Config(
+            enabled = props.paycheckStoreEnabled,
+            maxRuns = props.paycheckStoreMaxRuns,
+            maxPaychecksPerRun = props.paycheckStoreMaxPaychecksPerRun,
+            ttlSeconds = props.paycheckStoreTtlSeconds,
+        )
+    }
 
     data class HrBackedPayPeriodRequest(
         val payPeriodId: String,
@@ -115,6 +137,36 @@ class BenchmarkHrBackedPaychecksController(
         val correctness: CorrectnessSummary? = null,
     )
 
+    data class HrBackedPayPeriodStoreResponse(
+        val employerId: String,
+        val payPeriodId: String,
+        val runId: String,
+        val paychecks: Int,
+        val elapsedMillisCompute: Long,
+        val stored: Boolean,
+        val store: List<PaycheckRunStore.StoredRunSummary>,
+        val correctness: CorrectnessSummary? = null,
+    )
+
+    data class RenderPayStatementsRequest(
+        val runId: String,
+        /** Optional explicit list of employee IDs to render; default renders all stored paychecks. */
+        val employeeIds: List<String> = emptyList(),
+        /** If true, serialize each rendered statement to JSON bytes (simulates payload building). */
+        val serializeJson: Boolean = true,
+        /** If true, also generate a wide CSV (one paycheck per row, pay elements as columns). */
+        val generateCsv: Boolean = false,
+    )
+
+    data class RenderPayStatementsResponse(
+        val employerId: String,
+        val runId: String,
+        val paychecksRendered: Int,
+        val elapsedMillisRender: Long,
+        val serializedBytesTotal: Long,
+        val csvBytesTotal: Long,
+    )
+
     @PostMapping("/hr-backed-pay-period")
     fun runHrBackedPayPeriod(@PathVariable employerId: String, @RequestBody request: HrBackedPayPeriodRequest, servletRequest: HttpServletRequest): ResponseEntity<Any> {
         // Simple shared-secret guardrail.
@@ -170,6 +222,165 @@ class BenchmarkHrBackedPaychecksController(
                 correctness = correctness,
             ),
         )
+    }
+
+    /**
+     * Phase A: compute paychecks and store them in-memory for later Phase B rendering benchmarks.
+     *
+     * Note: requires callers to provide a stable runId (or accept the generated one) and re-use it for rendering.
+     */
+    @PostMapping("/hr-backed-pay-period-store")
+    fun runHrBackedPayPeriodStore(@PathVariable employerId: String, @RequestBody request: HrBackedPayPeriodRequest, servletRequest: HttpServletRequest): ResponseEntity<Any> {
+        val tokenHeader = servletRequest.getHeader(props.headerName)
+        if (props.token.isNotBlank() && props.token != tokenHeader) {
+            return ResponseEntity.status(401).body(mapOf("error" to "unauthorized"))
+        }
+
+        val employeeIds = buildEmployeeIds(request)
+        if (employeeIds.isEmpty()) {
+            return ResponseEntity.badRequest().body(mapOf("error" to "employeeIds is required (either explicit list or prefix+range)"))
+        }
+        if (employeeIds.size > props.maxEmployeeIdsPerRequest) {
+            return ResponseEntity.badRequest().body(
+                mapOf(
+                    "error" to "employeeIds size ${employeeIds.size} exceeds maxEmployeeIdsPerRequest=${props.maxEmployeeIdsPerRequest}",
+                ),
+            )
+        }
+
+        val runId = request.runId?.takeIf { it.isNotBlank() } ?: UUID.randomUUID().toString()
+
+        val start = System.nanoTime()
+        val paychecks = payrollRunService.runHrBackedPayForPeriod(
+            employerId = EmployerId(employerId),
+            payPeriodId = request.payPeriodId,
+            employeeIds = employeeIds,
+            runId = runId,
+        )
+        val elapsedMillis = (System.nanoTime() - start) / 1_000_000
+
+        val correctness = when (request.correctnessMode?.trim()?.lowercase()) {
+            null, "", "off" -> null
+            "digest" -> computeCorrectnessSummary(paychecks)
+            else -> return ResponseEntity.badRequest().body(mapOf("error" to "unknown correctnessMode: ${request.correctnessMode}"))
+        }
+
+        val stored = try {
+            paycheckRunStore.put(
+                PaycheckRunStore.StoredRun(
+                    employerId = EmployerId(employerId),
+                    payPeriodId = request.payPeriodId,
+                    runId = runId,
+                    createdAt = Instant.now(),
+                    paychecks = paychecks,
+                ),
+            )
+            true
+        } catch (e: Exception) {
+            return ResponseEntity.badRequest().body(mapOf("error" to (e.message ?: "store failed")))
+        }
+
+        return ResponseEntity.ok(
+            HrBackedPayPeriodStoreResponse(
+                employerId = employerId,
+                payPeriodId = request.payPeriodId,
+                runId = runId,
+                paychecks = paychecks.size,
+                elapsedMillisCompute = elapsedMillis,
+                stored = stored,
+                store = paycheckRunStore.list(EmployerId(employerId)),
+                correctness = correctness,
+            ),
+        )
+    }
+
+    /**
+     * Phase B: render pay statements/checks from the stored paychecks.
+     *
+     * This intentionally returns a small response so callers can measure rendering and (optional) serialization.
+     */
+    @PostMapping("/render-pay-statements")
+    fun renderPayStatements(@PathVariable employerId: String, @RequestBody request: RenderPayStatementsRequest, servletRequest: HttpServletRequest): ResponseEntity<Any> {
+        val tokenHeader = servletRequest.getHeader(props.headerName)
+        if (props.token.isNotBlank() && props.token != tokenHeader) {
+            return ResponseEntity.status(401).body(mapOf("error" to "unauthorized"))
+        }
+
+        val employer = EmployerId(employerId)
+        val run = paycheckRunStore.get(employer, request.runId)
+            ?: return ResponseEntity.status(404).body(mapOf("error" to "runId not found", "runId" to request.runId))
+
+        val selected = if (request.employeeIds.isEmpty()) {
+            run.paychecks
+        } else {
+            val set = request.employeeIds.map { it.trim() }.filter { it.isNotBlank() }.toSet()
+            run.paychecks.filter { it.employeeId.value in set }
+        }
+
+        val start = System.nanoTime()
+        var bytesTotal = 0L
+
+        for (p in selected) {
+            val statement = PayStatementRenderer.render(p)
+            if (request.serializeJson) {
+                val bytes = objectMapper.writeValueAsBytes(statement)
+                bytesTotal += bytes.size.toLong()
+            }
+        }
+
+        val csvBytesTotal = if (request.generateCsv) {
+            val csv = PaycheckCsvRenderer.renderWideCsv(selected)
+            csv.size.toLong()
+        } else {
+            0L
+        }
+
+        val elapsedMillis = (System.nanoTime() - start) / 1_000_000
+
+        return ResponseEntity.ok(
+            RenderPayStatementsResponse(
+                employerId = employerId,
+                runId = request.runId,
+                paychecksRendered = selected.size,
+                elapsedMillisRender = elapsedMillis,
+                serializedBytesTotal = bytesTotal,
+                csvBytesTotal = csvBytesTotal,
+            ),
+        )
+    }
+
+    /**
+     * Download a wide CSV for a stored run.
+     *
+     * This is intended for inspection/export (not as the default perf endpoint).
+     */
+    @PostMapping(value = ["/render-paychecks.csv"], produces = ["text/csv"])
+    fun renderPaychecksCsv(@PathVariable employerId: String, @RequestBody request: RenderPayStatementsRequest, servletRequest: HttpServletRequest): ResponseEntity<Any> {
+        val tokenHeader = servletRequest.getHeader(props.headerName)
+        if (props.token.isNotBlank() && props.token != tokenHeader) {
+            return ResponseEntity.status(401).body("unauthorized")
+        }
+
+        val employer = EmployerId(employerId)
+        val run = paycheckRunStore.get(employer, request.runId)
+            ?: return ResponseEntity.status(404).body("runId not found")
+
+        val selected = if (request.employeeIds.isEmpty()) {
+            run.paychecks
+        } else {
+            val set = request.employeeIds.map { it.trim() }.filter { it.isNotBlank() }.toSet()
+            run.paychecks.filter { it.employeeId.value in set }
+        }
+
+        val csvBytes = PaycheckCsvRenderer.renderWideCsv(selected)
+        val filename = "paychecks-${employerId}-${request.runId}.csv"
+
+        val headers = HttpHeaders().apply {
+            contentType = MediaType("text", "csv")
+            set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"$filename\"")
+        }
+
+        return ResponseEntity.ok().headers(headers).body(csvBytes)
     }
 
     private fun computeCorrectnessSummary(paychecks: List<PaycheckResult>): CorrectnessSummary {
@@ -356,11 +567,19 @@ class BenchmarkHrBackedPaychecksController(
         val tax: Map<String, Any?>,
         val labor: Map<String, Any?>,
         val localityCodes: List<String>,
+        /** Optional full computed paycheck (single employee) for inspection/debug. */
+        val paycheck: PaycheckResult? = null,
         val ok: Boolean,
     )
 
     @GetMapping("/seed-verification")
-    fun verifySeed(@PathVariable employerId: String, @RequestParam payPeriodId: String, @RequestParam employeeId: String, servletRequest: HttpServletRequest): ResponseEntity<Any> {
+    fun verifySeed(
+        @PathVariable employerId: String,
+        @RequestParam payPeriodId: String,
+        @RequestParam employeeId: String,
+        @RequestParam(required = false, defaultValue = "false") includePaycheck: Boolean,
+        servletRequest: HttpServletRequest,
+    ): ResponseEntity<Any> {
         val tokenHeader = servletRequest.getHeader(props.headerName)
         if (props.token.isNotBlank() && props.token != tokenHeader) {
             return ResponseEntity.status(401).body(mapOf("error" to "unauthorized"))
@@ -404,6 +623,16 @@ class BenchmarkHrBackedPaychecksController(
             localityCodes = localityCodes,
         )
 
+        val paycheck: PaycheckResult? = if (includePaycheck) {
+            payrollRunService.previewHrBackedPaycheck(
+                employerId = employer,
+                payPeriodId = payPeriodId,
+                employeeId = EmployeeId(employeeId),
+            )
+        } else {
+            null
+        }
+
         val ok = true
         return ResponseEntity.ok(
             SeedVerificationResponse(
@@ -426,6 +655,7 @@ class BenchmarkHrBackedPaychecksController(
                 labor = mapOf(
                     "laborStandardsLoaded" to (laborContext != null),
                 ),
+                paycheck = paycheck,
                 ok = ok,
             ),
         )

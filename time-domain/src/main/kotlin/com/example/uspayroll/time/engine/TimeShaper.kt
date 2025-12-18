@@ -1,6 +1,11 @@
 package com.example.uspayroll.time.engine
 
-import com.example.uspayroll.time.model.*
+import com.example.uspayroll.time.model.DailyOvertimeRule
+import com.example.uspayroll.time.model.OvertimeRuleSet
+import com.example.uspayroll.time.model.ShapedTime
+import com.example.uspayroll.time.model.TimeBuckets
+import com.example.uspayroll.time.model.TimeEntry
+import com.example.uspayroll.time.model.WorkweekDefinition
 import java.time.DayOfWeek
 import java.time.LocalDate
 
@@ -12,11 +17,7 @@ import java.time.LocalDate
  */
 object TimeShaper {
 
-    fun shape(
-        entries: List<TimeEntry>,
-        ruleSet: OvertimeRuleSet,
-        workweek: WorkweekDefinition = WorkweekDefinition(),
-    ): ShapedTime {
+    fun shape(entries: List<TimeEntry>, ruleSet: OvertimeRuleSet, workweek: WorkweekDefinition = WorkweekDefinition()): ShapedTime {
         val byKey = entries.groupBy { it.worksiteKey ?: "__default__" }
 
         val shapedByKey = byKey.mapValues { (_, es) ->
@@ -37,11 +38,7 @@ object TimeShaper {
         return ShapedTime(totals = totals, byWorksite = byWorksite)
     }
 
-    private fun shapeOne(
-        entries: List<TimeEntry>,
-        ruleSet: OvertimeRuleSet,
-        workweek: WorkweekDefinition,
-    ): TimeBuckets {
+    private fun shapeOne(entries: List<TimeEntry>, ruleSet: OvertimeRuleSet, workweek: WorkweekDefinition): TimeBuckets {
         val byDate: Map<LocalDate, Double> = entries
             .groupBy { it.date }
             .mapValues { (_, es) -> es.sumOf { it.hours } }
@@ -58,11 +55,7 @@ object TimeShaper {
         }
     }
 
-    private fun shapeSimple(
-        hoursByDate: Map<LocalDate, Double>,
-        rules: OvertimeRuleSet.Simple,
-        workweek: WorkweekDefinition,
-    ): TimeBuckets {
+    private fun shapeSimple(hoursByDate: Map<LocalDate, Double>, rules: OvertimeRuleSet.Simple, workweek: WorkweekDefinition): TimeBuckets {
         val orderedDates = hoursByDate.keys.sorted()
 
         // First pass: daily rules (including optional 7th day).
@@ -79,25 +72,25 @@ object TimeShaper {
 
         for (d in orderedDates) {
             val hours = hoursByDate[d] ?: 0.0
-            if (hours <= 0.0) continue
+            if (hours <= 0.0) {
+                continue
+            }
 
-            val isSeventhDay = d in seventhDayDates
-            if (isSeventhDay) {
+            if (d in seventhDayDates) {
                 val (r, ot, dt) = allocateSeventhDay(hours)
                 regular += r
                 overtime += ot
                 doubleTime += dt
-                continue
-            }
-
-            val dailyRule = rules.daily
-            if (dailyRule == null) {
-                regular += hours
             } else {
-                val (r, ot, dt) = allocateDaily(hours, dailyRule)
-                regular += r
-                overtime += ot
-                doubleTime += dt
+                val dailyRule = rules.daily
+                if (dailyRule == null) {
+                    regular += hours
+                } else {
+                    val (r, ot, dt) = allocateDaily(hours, dailyRule)
+                    regular += r
+                    overtime += ot
+                    doubleTime += dt
+                }
             }
         }
 

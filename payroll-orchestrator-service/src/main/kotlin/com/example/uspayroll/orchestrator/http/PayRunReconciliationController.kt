@@ -346,11 +346,7 @@ class PayRunReconciliationController(
         return paycheckIds
     }
 
-    private fun loadEarningOverridesAsJobs(
-        employerId: String,
-        payRunId: String,
-        employeeIds: List<String>,
-    ): Map<String, List<PayRunEarningOverrideJob>> {
+    private fun loadEarningOverridesAsJobs(employerId: String, payRunId: String, employeeIds: List<String>): Map<String, List<PayRunEarningOverrideJob>> {
         if (employeeIds.isEmpty()) return emptyMap()
 
         val jsonByEmployee = payRunItemRepository.findEarningOverridesJson(

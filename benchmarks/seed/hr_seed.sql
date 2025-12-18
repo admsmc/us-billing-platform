@@ -29,9 +29,32 @@
 \else
 \set work_city ''
 \endif
+\if :{?mi_every}
+\else
+\set mi_every 5
+\endif
+\if :{?ny_every}
+\else
+\set ny_every 7
+\endif
+\if :{?ca_hourly_every}
+\else
+\set ca_hourly_every 9
+\endif
+\if :{?garnishment_every}
+\else
+\set garnishment_every 3
+\endif
+\if :{?tipped_every}
+\else
+\set tipped_every 11
+\endif
 --
 -- Mixed population controls:
 --   :mi_every (default 5)           - every Nth employee is seeded as MI (hourly + MI city)
+--   :ny_every (default 7)           - every Nth employee is seeded as NY (hourly)
+--   :ca_hourly_every (default 9)    - every Nth employee is seeded as CA (hourly)
+--   :tipped_every (default 11)      - every Nth employee is marked as a tipped employee (tip-credit logic only applies to hourly)
 --   :garnishment_every (default 3)  - every Nth employee receives at least one ACTIVE garnishment order
 
 BEGIN;
@@ -62,7 +85,10 @@ INSERT INTO pay_period (
 WITH seed AS (
   SELECT
     generate_series(1, :'employee_count'::int) AS n,
-    (:'mi_every'::int) AS mi_every
+    (:'mi_every'::int) AS mi_every,
+    (:'ny_every'::int) AS ny_every,
+    (:'ca_hourly_every'::int) AS ca_hourly_every,
+    (:'tipped_every'::int) AS tipped_every
 )
 INSERT INTO employee (
   employer_id, employee_id,
@@ -82,20 +108,26 @@ INSERT INTO employee (
   'Bench',
   format('Employee%s', lpad(n::text, 6, '0')),
   CASE
+    WHEN (n % ny_every) = 0 THEN 'NY'
     WHEN (n % mi_every) = 0 THEN 'MI'
+    WHEN (n % ca_hourly_every) = 0 THEN 'CA'
     ELSE COALESCE(NULLIF(:'home_state', ''), 'CA')
   END,
   CASE
+    WHEN (n % ny_every) = 0 THEN 'NY'
     WHEN (n % mi_every) = 0 THEN 'MI'
+    WHEN (n % ca_hourly_every) = 0 THEN 'CA'
     ELSE COALESCE(NULLIF(:'work_state', ''), 'CA')
   END,
   CASE
+    WHEN (n % ny_every) = 0 THEN 'New York'
     WHEN (n % mi_every) = 0 THEN
       CASE (n % (mi_every * 3))
         WHEN 0 THEN 'Detroit'
         WHEN mi_every THEN 'Grand Rapids'
         ELSE 'Lansing'
       END
+    WHEN (n % ca_hourly_every) = 0 THEN 'Los Angeles'
     ELSE COALESCE(NULLIF(:'work_city', ''), 'San Francisco')
   END,
   'SINGLE',
@@ -113,7 +145,7 @@ INSERT INTO employee (
   FALSE,
   TRUE,
   'NON_EXEMPT',
-  FALSE
+  CASE WHEN (tipped_every > 0 AND (n % tipped_every) = 0) THEN TRUE ELSE FALSE END
 FROM seed;
 
 -- IMPORTANT: the HR snapshot endpoint uses employee_profile_effective.
@@ -121,7 +153,10 @@ FROM seed;
 WITH seed AS (
   SELECT
     generate_series(1, :'employee_count'::int) AS n,
-    (:'mi_every'::int) AS mi_every
+    (:'mi_every'::int) AS mi_every,
+    (:'ny_every'::int) AS ny_every,
+    (:'ca_hourly_every'::int) AS ca_hourly_every,
+    (:'tipped_every'::int) AS tipped_every
 )
 INSERT INTO employee_profile_effective (
   employer_id, employee_id,
@@ -141,20 +176,26 @@ INSERT INTO employee_profile_effective (
   :'start_date'::date,
   '9999-12-31'::date,
   CASE
+    WHEN (n % ny_every) = 0 THEN 'NY'
     WHEN (n % mi_every) = 0 THEN 'MI'
+    WHEN (n % ca_hourly_every) = 0 THEN 'CA'
     ELSE COALESCE(NULLIF(:'home_state', ''), 'CA')
   END,
   CASE
+    WHEN (n % ny_every) = 0 THEN 'NY'
     WHEN (n % mi_every) = 0 THEN 'MI'
+    WHEN (n % ca_hourly_every) = 0 THEN 'CA'
     ELSE COALESCE(NULLIF(:'work_state', ''), 'CA')
   END,
   CASE
+    WHEN (n % ny_every) = 0 THEN 'New York'
     WHEN (n % mi_every) = 0 THEN
       CASE (n % (mi_every * 3))
         WHEN 0 THEN 'Detroit'
         WHEN mi_every THEN 'Grand Rapids'
         ELSE 'Lansing'
       END
+    WHEN (n % ca_hourly_every) = 0 THEN 'Los Angeles'
     ELSE COALESCE(NULLIF(:'work_city', ''), 'San Francisco')
   END,
   'SINGLE',
@@ -172,13 +213,15 @@ INSERT INTO employee_profile_effective (
   FALSE,
   TRUE,
   'NON_EXEMPT',
-  FALSE
+  CASE WHEN (tipped_every > 0 AND (n % tipped_every) = 0) THEN TRUE ELSE FALSE END
 FROM seed;
 
 WITH seed AS (
   SELECT
     generate_series(1, :'employee_count'::int) AS n,
-    (:'mi_every'::int) AS mi_every
+    (:'mi_every'::int) AS mi_every,
+    (:'ny_every'::int) AS ny_every,
+    (:'ca_hourly_every'::int) AS ca_hourly_every
 )
 INSERT INTO employment_compensation (
   employer_id, employee_id,
@@ -191,15 +234,45 @@ INSERT INTO employment_compensation (
   :'start_date'::date,
   '9999-12-31'::date,
   CASE
+    WHEN (n % ny_every) = 0 THEN 'HOURLY'
     WHEN (n % mi_every) = 0 THEN 'HOURLY'
+    WHEN (n % ca_hourly_every) = 0 THEN 'HOURLY'
     ELSE 'SALARIED'
   END,
   CASE
+    WHEN (n % ny_every) = 0 THEN NULL
     WHEN (n % mi_every) = 0 THEN NULL
-    ELSE 5200000
+    WHEN (n % ca_hourly_every) = 0 THEN NULL
+    ELSE CASE (n % 8)
+      WHEN 0 THEN 4500000   -- $45,000
+      WHEN 1 THEN 6000000   -- $60,000
+      WHEN 2 THEN 8000000   -- $80,000
+      WHEN 3 THEN 10000000  -- $100,000
+      WHEN 4 THEN 13000000  -- $130,000
+      WHEN 5 THEN 16000000  -- $160,000
+      WHEN 6 THEN 20000000  -- $200,000
+      ELSE 5200000          -- $52,000
+    END
   END,
   CASE
-    WHEN (n % mi_every) = 0 THEN 2500
+    WHEN (n % ny_every) = 0 THEN CASE (n % 4)
+      WHEN 0 THEN 2800 -- $28/hr
+      WHEN 1 THEN 3200 -- $32/hr
+      WHEN 2 THEN 3800 -- $38/hr
+      ELSE 4500        -- $45/hr
+    END
+    WHEN (n % mi_every) = 0 THEN CASE (n % 4)
+      WHEN 0 THEN 2000 -- $20/hr
+      WHEN 1 THEN 2400 -- $24/hr
+      WHEN 2 THEN 2800 -- $28/hr
+      ELSE 3200        -- $32/hr
+    END
+    WHEN (n % ca_hourly_every) = 0 THEN CASE (n % 4)
+      WHEN 0 THEN 3000 -- $30/hr
+      WHEN 1 THEN 3600 -- $36/hr
+      WHEN 2 THEN 4200 -- $42/hr
+      ELSE 5200        -- $52/hr
+    END
     ELSE NULL
   END,
   'BIWEEKLY'

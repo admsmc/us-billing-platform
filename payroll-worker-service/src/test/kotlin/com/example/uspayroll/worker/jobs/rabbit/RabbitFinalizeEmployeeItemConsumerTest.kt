@@ -137,7 +137,6 @@ class RabbitFinalizeEmployeeItemConsumerTest {
 
         val consumer = RabbitFinalizeEmployeeItemConsumer(props, orchestrator, computationService, rabbit, meters)
 
-
         consumer.onJob(job)
 
         val captor = ArgumentCaptor.forClass(FinalizePayRunEmployeeJob::class.java)
@@ -205,7 +204,6 @@ class RabbitFinalizeEmployeeItemConsumerTest {
         )
 
         val consumer = RabbitFinalizeEmployeeItemConsumer(props, orchestrator, computationService, rabbit, meters)
-
 
         consumer.onJob(job)
 

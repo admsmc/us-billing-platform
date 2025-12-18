@@ -157,6 +157,40 @@ class PayrollRunService(
         /** Optional unique suffix for paycheck IDs so repeated runs don't collide in HR withholding events. */
         runId: String? = null,
     ): List<PaycheckResult> {
+        return employeeIds.map { eid ->
+            computeHrBackedPaycheck(
+                employerId = employerId,
+                payPeriodId = payPeriodId,
+                employeeId = eid,
+                runId = runId,
+                recordHrWithholdings = true,
+            )
+        }
+    }
+
+    /**
+     * Benchmark/debug helper: compute a single HR-backed paycheck but do NOT record
+     * garnishment withholding events back to HR.
+     */
+    fun previewHrBackedPaycheck(
+        employerId: EmployerId,
+        payPeriodId: String,
+        employeeId: EmployeeId,
+    ): PaycheckResult = computeHrBackedPaycheck(
+        employerId = employerId,
+        payPeriodId = payPeriodId,
+        employeeId = employeeId,
+        runId = "preview",
+        recordHrWithholdings = false,
+    )
+
+    private fun computeHrBackedPaycheck(
+        employerId: EmployerId,
+        payPeriodId: String,
+        employeeId: EmployeeId,
+        runId: String?,
+        recordHrWithholdings: Boolean,
+    ): PaycheckResult {
         val client = requireNotNull(hrClient) { "HrClient is required for HR-backed flows" }
 
         val payPeriod = client.getPayPeriod(employerId, payPeriodId)
@@ -167,12 +201,12 @@ class PayrollRunService(
         // resolve per employee below and do not reuse a single TaxContext
         // across employees when localities may differ.
 
-        return employeeIds.map { eid ->
-            val snapshot = client.getEmployeeSnapshot(
-                employerId = employerId,
-                employeeId = eid,
-                asOfDate = payPeriod.checkDate,
-            ) ?: error("No employee snapshot for ${eid.value} as of ${payPeriod.checkDate}")
+        val eid = employeeId
+        val snapshot = client.getEmployeeSnapshot(
+            employerId = employerId,
+            employeeId = eid,
+            asOfDate = payPeriod.checkDate,
+        ) ?: error("No employee snapshot for ${eid.value} as of ${payPeriod.checkDate}")
 
             val localityCodes = localityResolver.resolve(
                 workState = snapshot.workState,
@@ -263,7 +297,7 @@ class PayrollRunService(
                 null
             }
 
-            val otherEarnings: List<EarningInput> = if (baseComp is BaseCompensation.Hourly && timeSummary != null && timeSummary.doubleTimeHours > 0.0) {
+            val dtEarnings: List<EarningInput> = if (baseComp is BaseCompensation.Hourly && timeSummary != null && timeSummary.doubleTimeHours > 0.0) {
                 val dtRateCents = (baseComp.hourlyRate.amount * 2.0).toLong()
                 listOf(
                     EarningInput(
@@ -275,6 +309,87 @@ class PayrollRunService(
                 )
             } else {
                 emptyList()
+            }
+
+            // Tip earnings (time-derived): for tipped hourly employees, include explicit tips
+            // as additional earnings using totals returned by time-ingestion-service.
+            //
+            // We keep separate codes for cash/charged/allocated so the output looks more like real payroll,
+            // but all are categorized as EarningCategory.TIPS by earning config.
+            val tipEarnings: List<EarningInput> = if (baseComp is BaseCompensation.Hourly && snapshot.isTippedEmployee && timeSummary != null) {
+                buildList {
+                    if (timeSummary.cashTipsCents > 0L) {
+                        add(
+                            EarningInput(
+                                code = EarningCode("TIPS_CASH"),
+                                units = 1.0,
+                                rate = null,
+                                amount = Money(timeSummary.cashTipsCents),
+                            ),
+                        )
+                    }
+                    if (timeSummary.chargedTipsCents > 0L) {
+                        add(
+                            EarningInput(
+                                code = EarningCode("TIPS_CHARGED"),
+                                units = 1.0,
+                                rate = null,
+                                amount = Money(timeSummary.chargedTipsCents),
+                            ),
+                        )
+                    }
+                    if (timeSummary.allocatedTipsCents > 0L) {
+                        add(
+                            EarningInput(
+                                code = EarningCode("TIPS_ALLOCATED"),
+                                units = 1.0,
+                                rate = null,
+                                amount = Money(timeSummary.allocatedTipsCents),
+                            ),
+                        )
+                    }
+                }
+            } else {
+                emptyList()
+            }
+
+            val otherEarnings: List<EarningInput> = dtEarnings + tipEarnings + run {
+                if (baseComp is BaseCompensation.Hourly && timeSummary != null) {
+                    buildList {
+                        if (timeSummary.commissionCents > 0L) {
+                            add(
+                                EarningInput(
+                                    code = EarningCode("COMMISSION"),
+                                    units = 1.0,
+                                    rate = null,
+                                    amount = Money(timeSummary.commissionCents),
+                                ),
+                            )
+                        }
+                        if (timeSummary.bonusCents > 0L) {
+                            add(
+                                EarningInput(
+                                    code = EarningCode("BONUS"),
+                                    units = 1.0,
+                                    rate = null,
+                                    amount = Money(timeSummary.bonusCents),
+                                ),
+                            )
+                        }
+                        if (timeSummary.reimbursementNonTaxableCents > 0L) {
+                            add(
+                                EarningInput(
+                                    code = EarningCode("EXP_REIMB"),
+                                    units = 1.0,
+                                    rate = null,
+                                    amount = Money(timeSummary.reimbursementNonTaxableCents),
+                                ),
+                            )
+                        }
+                    }
+                } else {
+                    emptyList()
+                }
             }
 
             val input = PaycheckInput(
@@ -318,7 +433,7 @@ class PayrollRunService(
             }
 
             // Record garnishment withholdings back to HR for this paycheck.
-            if (effectiveOrders.isNotEmpty()) {
+            if (recordHrWithholdings && effectiveOrders.isNotEmpty()) {
                 val deductionsByCode = paycheck.deductions.associateBy { it.code.value }
                 val events = effectiveOrders.map { order ->
                     val line = deductionsByCode[order.orderId.value]
@@ -351,8 +466,7 @@ class PayrollRunService(
                 )
             }
 
-            paycheck
-        }
+            return paycheck
     }
 }
 

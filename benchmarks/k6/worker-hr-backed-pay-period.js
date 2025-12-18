@@ -3,6 +3,10 @@ import { check, sleep } from 'k6';
 import { Trend } from 'k6/metrics';
 
 // Run example (range-based):
+// NOTE: for realistic overtime, enable time-derived shaping and seed time entries:
+//   - TIME_ENABLED=true (worker/orchestrator)
+//   - SEED_TIME=true (when running ./benchmarks/seed/seed-benchmark-data.sh)
+//
 //   k6 run \
 //     -e WORKER_URL=http://localhost:8088 \
 //     -e BENCH_TOKEN=dev-secret \

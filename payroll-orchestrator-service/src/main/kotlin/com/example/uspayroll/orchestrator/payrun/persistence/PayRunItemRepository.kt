@@ -294,9 +294,10 @@ class PayRunItemRepository(
             WHERE employer_id = ? AND pay_run_id = ?
               AND employee_id IN ($placeholders)
             """.trimIndent(),
-            { rs, _ -> rs.getString("employee_id") to rs.getString("paycheck_id") },
-            *args.toTypedArray(),
-        )
+            args.toTypedArray(),
+        ) { rs, _ ->
+            rs.getString("employee_id") to rs.getString("paycheck_id")
+        }
 
         return rows
             .filter { (_, paycheckId) -> !paycheckId.isNullOrBlank() }
@@ -318,9 +319,10 @@ class PayRunItemRepository(
             WHERE employer_id = ? AND pay_run_id = ?
               AND employee_id IN ($placeholders)
             """.trimIndent(),
-            { rs, _ -> rs.getString("employee_id") to rs.getString("earning_overrides_json") },
-            *args.toTypedArray(),
-        )
+            args.toTypedArray(),
+        ) { rs, _ ->
+            rs.getString("employee_id") to rs.getString("earning_overrides_json")
+        }
 
         return rows
             .filter { (_, json) -> !json.isNullOrBlank() }

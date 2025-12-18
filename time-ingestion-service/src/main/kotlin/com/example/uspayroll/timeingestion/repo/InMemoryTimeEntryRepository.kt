@@ -13,6 +13,12 @@ class InMemoryTimeEntryRepository {
         val entryId: String,
         val date: LocalDate,
         val hours: Double,
+        val cashTipsCents: Long = 0L,
+        val chargedTipsCents: Long = 0L,
+        val allocatedTipsCents: Long = 0L,
+        val commissionCents: Long = 0L,
+        val bonusCents: Long = 0L,
+        val reimbursementNonTaxableCents: Long = 0L,
         val worksiteKey: String? = null,
     )
 
@@ -45,5 +51,24 @@ class InMemoryTimeEntryRepository {
             .filter { !it.date.isBefore(start) && !it.date.isAfter(end) }
             .sortedBy { it.date }
             .toList()
+    }
+
+    data class StoredTimeEntryWithEmployee(
+        val employeeId: EmployeeId,
+        val entry: StoredTimeEntry,
+    )
+
+    fun findAllInRange(employerId: EmployerId, start: LocalDate, end: LocalDate): List<StoredTimeEntryWithEmployee> {
+        val out = ArrayList<StoredTimeEntryWithEmployee>()
+        for ((k, m) in byEmployee) {
+            if (k.employerId != employerId.value) continue
+            val employee = EmployeeId(k.employeeId)
+            for (e in m.values) {
+                if (e.date.isBefore(start) || e.date.isAfter(end)) continue
+                out.add(StoredTimeEntryWithEmployee(employeeId = employee, entry = e))
+            }
+        }
+        out.sortBy { it.entry.date }
+        return out
     }
 }

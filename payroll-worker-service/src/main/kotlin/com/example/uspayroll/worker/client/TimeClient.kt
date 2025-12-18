@@ -12,20 +12,22 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 
 interface TimeClient {
-    fun getTimeSummary(
-        employerId: EmployerId,
-        employeeId: EmployeeId,
-        start: LocalDate,
-        end: LocalDate,
-        workState: String? = null,
-        weekStartsOn: DayOfWeek = DayOfWeek.MONDAY,
-    ): TimeSummary
+    fun getTimeSummary(employerId: EmployerId, employeeId: EmployeeId, start: LocalDate, end: LocalDate, workState: String? = null, weekStartsOn: DayOfWeek = DayOfWeek.MONDAY): TimeSummary
 
     data class TimeSummary(
         val regularHours: Double,
         val overtimeHours: Double,
         val doubleTimeHours: Double,
-    )
+        val cashTipsCents: Long,
+        val chargedTipsCents: Long,
+        val allocatedTipsCents: Long,
+        val commissionCents: Long,
+        val bonusCents: Long,
+        val reimbursementNonTaxableCents: Long,
+    ) {
+        val totalTipsCents: Long get() = cashTipsCents + chargedTipsCents + allocatedTipsCents
+        val totalOtherEarningsCents: Long get() = commissionCents + bonusCents + reimbursementNonTaxableCents
+    }
 }
 
 @ConfigurationProperties(prefix = "time")
@@ -48,6 +50,12 @@ private data class TimeSummaryResponse(
         val regularHours: Double,
         val overtimeHours: Double,
         val doubleTimeHours: Double,
+        val cashTipsCents: Long = 0L,
+        val chargedTipsCents: Long = 0L,
+        val allocatedTipsCents: Long = 0L,
+        val commissionCents: Long = 0L,
+        val bonusCents: Long = 0L,
+        val reimbursementNonTaxableCents: Long = 0L,
     )
 }
 
@@ -56,16 +64,19 @@ class HttpTimeClient(
     private val restTemplate: RestTemplate,
 ) : TimeClient {
 
-    override fun getTimeSummary(
-        employerId: EmployerId,
-        employeeId: EmployeeId,
-        start: LocalDate,
-        end: LocalDate,
-        workState: String?,
-        weekStartsOn: DayOfWeek,
-    ): TimeClient.TimeSummary {
+    override fun getTimeSummary(employerId: EmployerId, employeeId: EmployeeId, start: LocalDate, end: LocalDate, workState: String?, weekStartsOn: DayOfWeek): TimeClient.TimeSummary {
         if (!props.enabled) {
-            return TimeClient.TimeSummary(regularHours = 0.0, overtimeHours = 0.0, doubleTimeHours = 0.0)
+            return TimeClient.TimeSummary(
+                regularHours = 0.0,
+                overtimeHours = 0.0,
+                doubleTimeHours = 0.0,
+                cashTipsCents = 0L,
+                chargedTipsCents = 0L,
+                allocatedTipsCents = 0L,
+                commissionCents = 0L,
+                bonusCents = 0L,
+                reimbursementNonTaxableCents = 0L,
+            )
         }
 
         val params = ArrayList<String>(4)
@@ -77,12 +88,28 @@ class HttpTimeClient(
         val url = "${props.baseUrl}/employers/${employerId.value}/employees/${employeeId.value}/time-summary?" + params.joinToString("&")
 
         val dto = restTemplate.getForObject<TimeSummaryResponse>(url)
-            ?: return TimeClient.TimeSummary(regularHours = 0.0, overtimeHours = 0.0, doubleTimeHours = 0.0)
+            ?: return TimeClient.TimeSummary(
+                regularHours = 0.0,
+                overtimeHours = 0.0,
+                doubleTimeHours = 0.0,
+                cashTipsCents = 0L,
+                chargedTipsCents = 0L,
+                allocatedTipsCents = 0L,
+                commissionCents = 0L,
+                bonusCents = 0L,
+                reimbursementNonTaxableCents = 0L,
+            )
 
         return TimeClient.TimeSummary(
             regularHours = dto.totals.regularHours,
             overtimeHours = dto.totals.overtimeHours,
             doubleTimeHours = dto.totals.doubleTimeHours,
+            cashTipsCents = dto.totals.cashTipsCents,
+            chargedTipsCents = dto.totals.chargedTipsCents,
+            allocatedTipsCents = dto.totals.allocatedTipsCents,
+            commissionCents = dto.totals.commissionCents,
+            bonusCents = dto.totals.bonusCents,
+            reimbursementNonTaxableCents = dto.totals.reimbursementNonTaxableCents,
         )
     }
 }
