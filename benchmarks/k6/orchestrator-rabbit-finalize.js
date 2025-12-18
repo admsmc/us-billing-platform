@@ -45,6 +45,11 @@ const serverE2eMs = new Trend('payrun_finalize_rabbit_server_e2e_ms');
 const serverE2eMsPerEmployee = new Trend('payrun_finalize_rabbit_server_e2e_ms_per_employee');
 const serverEmployeesPerSec = new Trend('payrun_finalize_rabbit_server_employees_per_sec');
 
+// Optional Phase B: render statement JSON and/or generate CSV from DB-stored paychecks.
+const renderMs = new Trend('payrun_finalize_rabbit_render_ms');
+const renderStatementsBytes = new Trend('payrun_finalize_rabbit_render_statement_bytes_total');
+const renderCsvBytes = new Trend('payrun_finalize_rabbit_render_csv_bytes_total');
+
 export const options = {
   scenarios: {
     once: {
@@ -65,6 +70,11 @@ export const options = {
 
 function env(name, def) {
   return __ENV[name] && __ENV[name].length > 0 ? __ENV[name] : def;
+}
+
+function truthy(v) {
+  if (!v) return false;
+  return String(v).toLowerCase() === 'true' || String(v) === '1';
 }
 
 function nowMs() {
@@ -125,6 +135,14 @@ export default function () {
   const pollIntervalMs = Number(env('POLL_INTERVAL_MS', '250'));
   const pollStrategy = env('POLL_STRATEGY', 'fixed'); // fixed|adaptive
   const maxWaitSeconds = Number(env('MAX_WAIT_SECONDS', '1800')); // 30m default
+
+  // Phase B (optional): benchmark rendering/export from DB-stored paychecks for this payrun.
+  const renderAfterFinalize = truthy(env('RENDER_AFTER_FINALIZE', 'false'));
+  const benchHeader = env('BENCH_HEADER', 'X-Benchmark-Token');
+  const benchToken = env('BENCH_TOKEN', '');
+  const renderSerializeJson = truthy(env('RENDER_SERIALIZE_JSON', 'true'));
+  const renderGenerateCsv = truthy(env('RENDER_GENERATE_CSV', 'false'));
+  const renderLimit = env('RENDER_LIMIT', '');
 
   const startedAt = nowMs();
 
@@ -239,4 +257,42 @@ export default function () {
   check(null, {
     'payrun reached terminal status before timeout': () => isTerminal(finalStatus),
   });
+
+  // 3) Phase B: render/export artifacts from DB-stored paychecks (optional)
+  if (renderAfterFinalize && isTerminal(finalStatus)) {
+    const renderUrl = `${orchUrl}/benchmarks/employers/${employerId}/payruns/${payRunId}/render-pay-statements`;
+
+    const renderPayload = {
+      serializeJson: renderSerializeJson,
+      generateCsv: renderGenerateCsv,
+    };
+
+    if (renderLimit && String(renderLimit).length > 0) {
+      renderPayload.limit = Number(renderLimit);
+    }
+
+    const renderStartedAt = nowMs();
+    const renderRes = http.post(renderUrl, JSON.stringify(renderPayload), {
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        [benchHeader]: benchToken,
+      },
+    });
+
+    check(renderRes, {
+      'render status is 200': (r) => r.status === 200,
+    });
+
+    if (renderRes.status === 200) {
+      renderMs.add(nowMs() - renderStartedAt);
+      const body = renderRes.json();
+      if (body && body.serializedBytesTotal !== undefined) {
+        renderStatementsBytes.add(Number(body.serializedBytesTotal));
+      }
+      if (body && body.csvBytesTotal !== undefined) {
+        renderCsvBytes.add(Number(body.csvBytesTotal));
+      }
+    }
+  }
 }

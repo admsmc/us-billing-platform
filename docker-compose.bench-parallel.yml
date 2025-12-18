@@ -17,6 +17,10 @@ services:
       ORCHESTRATOR_OUTBOX_RABBIT_RELAY_ENABLED: "true"
       ORCHESTRATOR_PAYRUN_FINALIZER_ENABLED: "true"
 
+      # Enable benchmark-only Phase B endpoints (render/export)
+      ORCHESTRATOR_BENCHMARKS_ENABLED: ${ORCHESTRATOR_BENCHMARKS_ENABLED:-true}
+      ORCHESTRATOR_BENCHMARKS_TOKEN: ${WORKER_BENCHMARKS_TOKEN:-dev-secret}
+
       # RabbitMQ connection
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_PORT: 5672
