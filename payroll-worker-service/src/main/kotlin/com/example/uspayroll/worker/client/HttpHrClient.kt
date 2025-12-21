@@ -10,14 +10,14 @@ import com.example.uspayroll.payroll.model.PayPeriod
 import com.example.uspayroll.payroll.model.garnishment.GarnishmentOrder
 import com.example.uspayroll.shared.EmployeeId
 import com.example.uspayroll.shared.EmployerId
-import com.example.uspayroll.web.RestTemplateMdcPropagationInterceptor
+import com.example.uspayroll.web.client.CircuitBreakerOpenException
+import com.example.uspayroll.web.client.HttpClientGuardrails
+import com.example.uspayroll.web.client.RestTemplateRetryClassifier
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.context.properties.EnableConfigurationProperties
-import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.http.client.SimpleClientHttpRequestFactory
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
 import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestTemplate
 import java.time.LocalDate
@@ -26,30 +26,9 @@ import java.time.LocalDate
 @EnableConfigurationProperties(HrClientProperties::class)
 class HrClientConfig {
 
-    /**
-     * Shared RestTemplate for all HTTP-based clients in worker-service.
-     *
-     * For now we use a SimpleClientHttpRequestFactory with configurable
-     * connect/read timeouts, which are injected via [HrClientProperties].
-     */
     @Bean
-    fun restTemplate(messageConverter: MappingJackson2HttpMessageConverter, props: HrClientProperties, builder: RestTemplateBuilder): RestTemplate {
-        val requestFactory = SimpleClientHttpRequestFactory().apply {
-            setConnectTimeout(props.connectTimeout)
-            setReadTimeout(props.readTimeout)
-        }
-
-        val restTemplate = builder
-            .messageConverters(messageConverter)
-            .build()
-
-        restTemplate.setRequestFactory(requestFactory)
-        restTemplate.interceptors = restTemplate.interceptors + RestTemplateMdcPropagationInterceptor()
-        return restTemplate
-    }
-
-    @Bean
-    fun httpHrClient(props: HrClientProperties, restTemplate: RestTemplate, meterRegistry: io.micrometer.core.instrument.MeterRegistry): HrClient = HttpHrClient(props, restTemplate, meterRegistry)
+    fun httpHrClient(props: HrClientProperties, @Qualifier("hrRestTemplate") hrRestTemplate: RestTemplate, meterRegistry: io.micrometer.core.instrument.MeterRegistry): HrClient =
+        HttpHrClient(props, hrRestTemplate, meterRegistry)
 }
 
 class HttpHrClient(
@@ -60,9 +39,17 @@ class HttpHrClient(
 
     private val logger = LoggerFactory.getLogger(HttpHrClient::class.java)
 
+    private val guardrails = HttpClientGuardrails.with(
+        maxRetries = props.maxRetries,
+        initialBackoff = props.retryInitialBackoff,
+        maxBackoff = props.retryMaxBackoff,
+        backoffMultiplier = props.retryBackoffMultiplier,
+        circuitBreakerPolicy = if (props.circuitBreakerEnabled) props.circuitBreaker else null,
+    )
+
     override fun getEmployeeSnapshot(employerId: EmployerId, employeeId: EmployeeId, asOfDate: LocalDate): EmployeeSnapshot? {
         val url = "${props.baseUrl}/employers/${employerId.value}/employees/${employeeId.value}/snapshot?asOf=$asOfDate"
-        return executeWithRetry("GET employee snapshot", url) {
+        return executeWithGuardrails("GET employee snapshot", url) {
             // Avoid Kotlin RestTemplate.getForObject<T>() which throws when the body is empty (null).
             restTemplate.getForObject(url, EmployeeSnapshot::class.java)
         }
@@ -70,7 +57,7 @@ class HttpHrClient(
 
     override fun getPayPeriod(employerId: EmployerId, payPeriodId: String): PayPeriod? {
         val url = "${props.baseUrl}/employers/${employerId.value}/pay-periods/$payPeriodId"
-        return executeWithRetry("GET pay period", url) {
+        return executeWithGuardrails("GET pay period", url) {
             // hr-service returns `null` when not found (200 + empty body). Use the Java overload to allow null.
             restTemplate.getForObject(url, PayPeriod::class.java)
         }
@@ -78,7 +65,7 @@ class HttpHrClient(
 
     override fun findPayPeriodByCheckDate(employerId: EmployerId, checkDate: LocalDate): PayPeriod? {
         val url = "${props.baseUrl}/employers/${employerId.value}/pay-periods/by-check-date?checkDate=$checkDate"
-        return executeWithRetry("GET pay period by check date", url) {
+        return executeWithGuardrails("GET pay period by check date", url) {
             restTemplate.getForObject(url, PayPeriod::class.java)
         }
     }
@@ -90,7 +77,7 @@ class HttpHrClient(
         // entire payroll run if HR is briefly unavailable. In case of
         // repeated failures we log a warning and return an empty list.
         val dtoArray: Array<GarnishmentOrderDto>? =
-            executeWithRetry("GET garnishments", url, failOnExhaustion = false) {
+            executeWithGuardrails("GET garnishments", url, failOnExhaustion = false) {
                 restTemplate.getForObject(url, Array<GarnishmentOrderDto>::class.java)
             }
 
@@ -103,53 +90,75 @@ class HttpHrClient(
         // Withholding callbacks must be fire-and-forget from the payroll
         // worker perspective. If HR is unavailable after a few retries,
         // we log an error and continue without failing the paycheck.
-        executeWithRetry("POST garnishment withholdings", url, failOnExhaustion = false) {
+        executeWithGuardrails("POST garnishment withholdings", url, failOnExhaustion = false) {
             restTemplate.postForLocation(url, request)
         }
     }
 
-    private fun <T> executeWithRetry(operation: String, url: String, failOnExhaustion: Boolean = true, block: () -> T?): T? {
-        var attempt = 0
-        val maxAttempts = (props.maxRetries + 1).coerceAtLeast(1)
-        var lastError: Exception? = null
-
-        while (attempt < maxAttempts) {
-            try {
-                return block()
-            } catch (ex: RestClientException) {
-                lastError = ex
-                attempt += 1
-                if (attempt >= maxAttempts) {
-                    val message = "$operation failed after $attempt attempt(s) to $url: ${ex.message}"
-                    // Final failure: record an error metric and either throw
-                    // or degrade gracefully based on failOnExhaustion.
+    private fun <T> executeWithGuardrails(operation: String, url: String, failOnExhaustion: Boolean = true, block: () -> T?): T? {
+        return try {
+            guardrails.execute(
+                isRetryable = RestTemplateRetryClassifier::isRetryable,
+                onRetry = { attempt ->
                     meterRegistry
                         ?.counter(
-                            "payroll.garnishments.hr_errors",
-                            "endpoint",
+                            "uspayroll.http.client.retries",
+                            "client",
+                            "hr",
+                            "operation",
                             operation,
                         )
                         ?.increment()
 
-                    if (failOnExhaustion) {
-                        logger.error(message, ex)
-                        throw ex
-                    } else {
-                        logger.warn(message, ex)
-                        return null
-                    }
-                } else {
                     logger.warn(
-                        "$operation attempt $attempt/$maxAttempts failed for $url: ${ex.message}; will retry",
-                        ex,
+                        "http.client.retry client=hr op={} attempt={}/{} delayMs={} url={} error={}",
+                        operation,
+                        attempt.attempt,
+                        attempt.maxAttempts,
+                        attempt.nextDelay.toMillis(),
+                        url,
+                        attempt.throwable.message,
                     )
-                }
+                },
+                block = block,
+            )
+        } catch (ex: RestClientException) {
+            val message = "$operation failed to $url: ${ex.message}"
+
+            // Keep existing garnishments failure metric shape for dashboards.
+            meterRegistry
+                ?.counter(
+                    "payroll.garnishments.hr_errors",
+                    "endpoint",
+                    operation,
+                )
+                ?.increment()
+
+            if (failOnExhaustion) {
+                logger.error(message, ex)
+                throw ex
+            } else {
+                logger.warn(message, ex)
+                return null
+            }
+        } catch (ex: CircuitBreakerOpenException) {
+            val message = "$operation failed fast (circuit open) to $url: ${ex.message}"
+
+            meterRegistry
+                ?.counter(
+                    "payroll.garnishments.hr_errors",
+                    "endpoint",
+                    operation,
+                )
+                ?.increment()
+
+            if (failOnExhaustion) {
+                logger.error(message, ex)
+                throw ex
+            } else {
+                logger.warn(message, ex)
+                return null
             }
         }
-
-        if (failOnExhaustion && lastError != null) {
-            throw lastError
-        }
-        return null
     }
 }

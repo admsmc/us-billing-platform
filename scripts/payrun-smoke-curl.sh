@@ -8,7 +8,7 @@ set -euo pipefail
 # - Print only small, human-readable summaries (HTTP status, bytes, key ids).
 # - Work with both:
 #   - direct orchestrator access (default ORCH_URL=http://localhost:8085)
-#   - internal endpoints (execute/reconcile/complete) when ORCH_INTERNAL_TOKEN is provided.
+#   - internal endpoints (execute/reconcile/complete) when ORCH_INTERNAL_JWT (or ORCH_INTERNAL_JWT_SECRET) is provided.
 #
 # Usage examples:
 #   ORCH_URL=http://localhost:8085 \
@@ -21,8 +21,9 @@ set -euo pipefail
 #   IDEMPOTENCY_KEY=idem-1 REQUESTED_PAY_RUN_ID=run-idem-1 TEST_IDEMPOTENCY=true \
 #   ./scripts/payrun-smoke-curl.sh
 #
-#   # If orchestrator internal auth is enabled (shared-secret header):
-#   ORCH_INTERNAL_TOKEN=dev-internal-token \
+#   # If orchestrator internal auth is enabled (internal JWT):
+#   ORCH_INTERNAL_JWT_SECRET=dev-internal-token \
+#   ORCH_INTERNAL_JWT_KID=k1 \
 #   EXECUTE_LOOP=true \
 #   ./scripts/payrun-smoke-curl.sh
 
@@ -63,9 +64,17 @@ EXECUTE_PARALLELISM=${EXECUTE_PARALLELISM:-4}
 EXECUTE_POLL_SLEEP_SECS=${EXECUTE_POLL_SLEEP_SECS:-1}
 EXECUTE_MAX_LOOPS=${EXECUTE_MAX_LOOPS:-120}
 
-# Internal auth (shared secret header). Leave blank if internal auth disabled.
-ORCH_INTERNAL_TOKEN=${ORCH_INTERNAL_TOKEN:-}
-ORCH_INTERNAL_TOKEN_HEADER=${ORCH_INTERNAL_TOKEN_HEADER:-X-Internal-Token}
+# Internal auth (internal JWT). Leave blank if internal auth disabled.
+# Provide either:
+# - ORCH_INTERNAL_JWT (pre-minted), or
+# - ORCH_INTERNAL_JWT_SECRET (+ optional claim/kid env vars) to mint a short-lived token.
+ORCH_INTERNAL_JWT=${ORCH_INTERNAL_JWT:-}
+ORCH_INTERNAL_JWT_SECRET=${ORCH_INTERNAL_JWT_SECRET:-}
+ORCH_INTERNAL_JWT_KID=${ORCH_INTERNAL_JWT_KID:-k1}
+ORCH_INTERNAL_JWT_ISSUER=${ORCH_INTERNAL_JWT_ISSUER:-us-payroll-platform}
+ORCH_INTERNAL_JWT_AUDIENCE=${ORCH_INTERNAL_JWT_AUDIENCE:-payroll-orchestrator-service}
+ORCH_INTERNAL_JWT_SUBJECT=${ORCH_INTERNAL_JWT_SUBJECT:-curl-smoke}
+ORCH_INTERNAL_JWT_TTL_SECONDS=${ORCH_INTERNAL_JWT_TTL_SECONDS:-60}
 
 # Where to write artifacts.
 OUT_DIR=${OUT_DIR:-"/tmp/us-payroll-curl-smoke/$(date +%s)"}
@@ -88,6 +97,53 @@ require_cmd() {
 
 require_cmd curl
 require_cmd python3
+
+mint_orch_internal_jwt() {
+  if [[ -n "${ORCH_INTERNAL_JWT}" ]]; then
+    return
+  fi
+  if [[ -z "${ORCH_INTERNAL_JWT_SECRET}" ]]; then
+    return
+  fi
+
+  ORCH_INTERNAL_JWT=$(python3 - <<'PY'
+import os, time, json, uuid, hmac, hashlib, base64
+
+def b64url(data: bytes) -> str:
+  return base64.urlsafe_b64encode(data).rstrip(b'=').decode('ascii')
+
+secret = os.environ.get('ORCH_INTERNAL_JWT_SECRET', '')
+if not secret:
+  raise SystemExit(2)
+
+issuer = os.environ.get('ORCH_INTERNAL_JWT_ISSUER', 'us-payroll-platform')
+audience = os.environ.get('ORCH_INTERNAL_JWT_AUDIENCE', 'payroll-orchestrator-service')
+subject = os.environ.get('ORCH_INTERNAL_JWT_SUBJECT', 'curl-smoke')
+kid = os.environ.get('ORCH_INTERNAL_JWT_KID', 'k1')
+try:
+  ttl = int(os.environ.get('ORCH_INTERNAL_JWT_TTL_SECONDS', '60'))
+except Exception:
+  ttl = 60
+
+now = int(time.time())
+header = {'alg': 'HS256', 'typ': 'JWT', 'kid': kid}
+payload = {
+  'iss': issuer,
+  'sub': subject,
+  'aud': audience,
+  'iat': now,
+  'exp': now + max(ttl, 1),
+  'jti': str(uuid.uuid4()),
+}
+
+h64 = b64url(json.dumps(header, separators=(',', ':'), ensure_ascii=False).encode('utf-8'))
+p64 = b64url(json.dumps(payload, separators=(',', ':'), ensure_ascii=False).encode('utf-8'))
+msg = f"{h64}.{p64}".encode('ascii')
+sig = hmac.new(secret.encode('utf-8'), msg, hashlib.sha256).digest()
+print(f"{h64}.{p64}.{b64url(sig)}")
+PY
+  )
+}
 
 # json_get FILE KEY (top-level key only; keeps this script dependency-free)
 json_get() {
@@ -188,8 +244,11 @@ http_json() {
     args+=(--header "Idempotency-Key: ${IDEMPOTENCY_KEY}")
   fi
 
-  if [[ -n "$ORCH_INTERNAL_TOKEN" && "$path" == *"/payruns/internal/"* ]]; then
-    args+=(--header "${ORCH_INTERNAL_TOKEN_HEADER}: ${ORCH_INTERNAL_TOKEN}")
+  if [[ "$path" == *"/payruns/internal/"* || "$path" == *"/paychecks/internal/"* ]]; then
+    mint_orch_internal_jwt
+    if [[ -n "$ORCH_INTERNAL_JWT" ]]; then
+      args+=(--header "Authorization: Bearer ${ORCH_INTERNAL_JWT}")
+    fi
   fi
 
   if [[ -n "$body_file_in" ]]; then
@@ -312,8 +371,8 @@ fi
 
 # ---- 3) Optional: internal execute loop (bench/dev-only) ----
 if [[ "$EXECUTE_LOOP" == "true" ]]; then
-  if [[ -z "$ORCH_INTERNAL_TOKEN" ]]; then
-    log "EXECUTE_LOOP=true but ORCH_INTERNAL_TOKEN is empty; internal auth may fail if enabled."
+  if [[ -z "${ORCH_INTERNAL_JWT:-}" && -z "${ORCH_INTERNAL_JWT_SECRET:-}" ]]; then
+    log "EXECUTE_LOOP=true but ORCH_INTERNAL_JWT/ORCH_INTERNAL_JWT_SECRET is empty; internal auth may fail if enabled."
   fi
 
   final_status=""

@@ -1,9 +1,20 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        maven { url = uri("https://repo.maven.apache.org/maven2/") }
+        google()
+    }
+}
+
+rootProject.name = "us-payroll-platform"
+
 rootProject.name = "us-payroll-platform"
 
 include(
     "shared-kernel",
     "payroll-domain",
     "payroll-jackson",
+    "payroll-jackson-spring",
     "hr-domain",
     "time-domain",
     "tax-domain",
@@ -12,7 +23,6 @@ include(
     "web-core",
     "tenancy-core",
     "edge-service",
-    "identity-service",
     "hr-api",
     "hr-client",
     "hr-service",
@@ -31,6 +41,4 @@ include(
     "payments-service",
     "filings-service",
     "reporting-service",
-    "integrations-service",
-    "notification-service",
 )

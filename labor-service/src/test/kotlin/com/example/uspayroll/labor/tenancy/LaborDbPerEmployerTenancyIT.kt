@@ -87,13 +87,12 @@ class LaborDbPerEmployerTenancyIT {
             jsonPath("$.federalMinimumWageCents") { value(999) }
         }
 
-        // EMP2 has no rows -> fallback to $7.25.
+        // EMP2 has no rows -> 404
         mockMvc.get("/employers/EMP2/labor-standards") {
             param("asOf", "2025-06-30")
             param("state", "CA")
         }.andExpect {
-            status { isOk() }
-            jsonPath("$.federalMinimumWageCents") { value(725) }
+            status { isNotFound() }
         }
     }
 

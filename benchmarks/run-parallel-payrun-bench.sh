@@ -79,8 +79,9 @@ mkdir -p "$OUT_DIR"
 SUMMARY_CSV="$OUT_DIR/summary.csv"
 SUMMARY_MD="$OUT_DIR/summary.md"
 
-# Internal token shared between worker/orchestrator for internal endpoints
-ORCHESTRATOR_INTERNAL_AUTH_SHARED_SECRET=${ORCHESTRATOR_INTERNAL_AUTH_SHARED_SECRET:-dev-internal-token}
+# Internal JWT secret shared between worker/orchestrator for internal endpoints
+DOWNSTREAMS_ORCHESTRATOR_INTERNAL_JWT_SECRET=${DOWNSTREAMS_ORCHESTRATOR_INTERNAL_JWT_SECRET:-dev-internal-token}
+DOWNSTREAMS_ORCHESTRATOR_INTERNAL_JWT_KID=${DOWNSTREAMS_ORCHESTRATOR_INTERNAL_JWT_KID:-k1}
 
 # ---- Helpers ----
 require_cmd() {
@@ -116,7 +117,8 @@ fi
 
 # ---- Bring up stack (idempotent) ----
 # Export the secret so compose picks it up.
-export ORCHESTRATOR_INTERNAL_AUTH_SHARED_SECRET
+export DOWNSTREAMS_ORCHESTRATOR_INTERNAL_JWT_SECRET
+export DOWNSTREAMS_ORCHESTRATOR_INTERNAL_JWT_KID
 
 echo "[bench] starting stack (compose)"
 

@@ -172,25 +172,17 @@ class PayrollRunService(
      * Benchmark/debug helper: compute a single HR-backed paycheck but do NOT record
      * garnishment withholding events back to HR.
      */
-    fun previewHrBackedPaycheck(
-        employerId: EmployerId,
-        payPeriodId: String,
-        employeeId: EmployeeId,
-    ): PaycheckResult = computeHrBackedPaycheck(
-        employerId = employerId,
-        payPeriodId = payPeriodId,
-        employeeId = employeeId,
-        runId = "preview",
-        recordHrWithholdings = false,
-    )
+    fun previewHrBackedPaycheck(employerId: EmployerId, payPeriodId: String, employeeId: EmployeeId): PaycheckResult {
+        return computeHrBackedPaycheck(
+            employerId = employerId,
+            payPeriodId = payPeriodId,
+            employeeId = employeeId,
+            runId = "preview",
+            recordHrWithholdings = false,
+        )
+    }
 
-    private fun computeHrBackedPaycheck(
-        employerId: EmployerId,
-        payPeriodId: String,
-        employeeId: EmployeeId,
-        runId: String?,
-        recordHrWithholdings: Boolean,
-    ): PaycheckResult {
+    private fun computeHrBackedPaycheck(employerId: EmployerId, payPeriodId: String, employeeId: EmployeeId, runId: String?, recordHrWithholdings: Boolean): PaycheckResult {
         val client = requireNotNull(hrClient) { "HrClient is required for HR-backed flows" }
 
         val payPeriod = client.getPayPeriod(employerId, payPeriodId)
@@ -208,96 +200,97 @@ class PayrollRunService(
             asOfDate = payPeriod.checkDate,
         ) ?: error("No employee snapshot for ${eid.value} as of ${payPeriod.checkDate}")
 
-            val localityCodes = localityResolver.resolve(
-                workState = snapshot.workState,
-                workCity = snapshot.workCity,
-            )
+        val localityCodes = localityResolver.resolve(
+            workState = snapshot.workState,
+            workCity = snapshot.workCity,
+        )
 
-            val taxContext = taxClient?.getTaxContext(
-                employerId = employerId,
-                asOfDate = payPeriod.checkDate,
-                residentState = snapshot.homeState,
-                workState = snapshot.workState,
-                localityCodes = localityCodes.toLocalityCodeStrings(),
-            ) ?: taxContextProvider.getTaxContext(
-                employerId = employerId,
-                asOfDate = payPeriod.checkDate,
-                // In-process provider will need an overload in a later step if
-                // we want it to honor locality codes directly.
-            )
+        val taxContext = taxClient?.getTaxContext(
+            employerId = employerId,
+            asOfDate = payPeriod.checkDate,
+            residentState = snapshot.homeState,
+            workState = snapshot.workState,
+            localityCodes = localityCodes.toLocalityCodeStrings(),
+        ) ?: taxContextProvider.getTaxContext(
+            employerId = employerId,
+            asOfDate = payPeriod.checkDate,
+            // In-process provider will need an overload in a later step if
+            // we want it to honor locality codes directly.
+        )
 
-            val laborStandards = laborClient?.getLaborStandards(
-                employerId = employerId,
-                asOfDate = payPeriod.checkDate,
-                workState = snapshot.workState,
-                homeState = snapshot.homeState,
-                localityCodes = localityCodes.toLocalityCodeStrings(),
-            ) ?: laborStandardsContextProvider.getLaborStandards(
-                employerId = employerId,
-                asOfDate = payPeriod.checkDate,
-                workState = snapshot.workState,
-                homeState = snapshot.homeState,
-            )
+        val laborStandards = laborClient?.getLaborStandards(
+            employerId = employerId,
+            asOfDate = payPeriod.checkDate,
+            workState = snapshot.workState,
+            homeState = snapshot.homeState,
+            localityCodes = localityCodes.toLocalityCodeStrings(),
+        ) ?: laborStandardsContextProvider.getLaborStandards(
+            employerId = employerId,
+            asOfDate = payPeriod.checkDate,
+            workState = snapshot.workState,
+            homeState = snapshot.homeState,
+        )
 
-            val garnishmentOrders = client.getGarnishmentOrders(
+        val garnishmentOrders = client.getGarnishmentOrders(
+            employerId = employerId,
+            employeeId = eid,
+            asOfDate = payPeriod.checkDate,
+        )
+        if (garnishmentOrders.isNotEmpty()) {
+            logger.info(
+                "payroll_run.garnishments.fetched orders={} employer={} employee={} pay_period={} check_date={}",
+                garnishmentOrders.size,
+                employerId.value,
+                eid.value,
+                payPeriod.id,
+                payPeriod.checkDate,
+            )
+            meterRegistry.counter(
+                "payroll.garnishments.employees_with_orders",
+                "employer_id",
+                employerId.value,
+            ).increment()
+        }
+
+        val engineEnabled = garnishmentEngineProperties.isEnabledFor(employerId)
+        val effectiveOrders = if (engineEnabled) garnishmentOrders else emptyList()
+        val garnishmentContext = GarnishmentContext(orders = effectiveOrders)
+
+        // Construct a SupportCapContext for employees with support orders,
+        // using support-specific metadata surfaced from HR where present.
+        val supportCapContext = SupportProfiles.forEmployee(
+            homeState = snapshot.homeState,
+            orders = effectiveOrders,
+        )
+
+        val paycheckId = if (runId.isNullOrBlank()) {
+            com.example.uspayroll.shared.PaycheckId("chk-${payPeriod.id}-${eid.value}")
+        } else {
+            com.example.uspayroll.shared.PaycheckId("chk-${payPeriod.id}-${eid.value}-$runId")
+        }
+
+        val payRunId = if (runId.isNullOrBlank()) {
+            PayRunId("run-${payPeriod.id}")
+        } else {
+            PayRunId("run-${payPeriod.id}-$runId")
+        }
+
+        val baseComp = snapshot.baseCompensation
+
+        val timeSummary = if (baseComp is BaseCompensation.Hourly && timeClient != null) {
+            timeClient.getTimeSummary(
                 employerId = employerId,
                 employeeId = eid,
-                asOfDate = payPeriod.checkDate,
+                start = payPeriod.dateRange.startInclusive,
+                end = payPeriod.dateRange.endInclusive,
+                workState = snapshot.workState,
             )
-            if (garnishmentOrders.isNotEmpty()) {
-                logger.info(
-                    "payroll_run.garnishments.fetched orders={} employer={} employee={} pay_period={} check_date={}",
-                    garnishmentOrders.size,
-                    employerId.value,
-                    eid.value,
-                    payPeriod.id,
-                    payPeriod.checkDate,
-                )
-                meterRegistry.counter(
-                    "payroll.garnishments.employees_with_orders",
-                    "employer_id",
-                    employerId.value,
-                ).increment()
-            }
+        } else {
+            null
+        }
 
-            val engineEnabled = garnishmentEngineProperties.isEnabledFor(employerId)
-            val effectiveOrders = if (engineEnabled) garnishmentOrders else emptyList()
-            val garnishmentContext = GarnishmentContext(orders = effectiveOrders)
-
-            // Construct a SupportCapContext for employees with support orders,
-            // using support-specific metadata surfaced from HR where present.
-            val supportCapContext = SupportProfiles.forEmployee(
-                homeState = snapshot.homeState,
-                orders = effectiveOrders,
-            )
-
-            val paycheckId = if (runId.isNullOrBlank()) {
-                com.example.uspayroll.shared.PaycheckId("chk-${payPeriod.id}-${eid.value}")
-            } else {
-                com.example.uspayroll.shared.PaycheckId("chk-${payPeriod.id}-${eid.value}-$runId")
-            }
-
-            val payRunId = if (runId.isNullOrBlank()) {
-                PayRunId("run-${payPeriod.id}")
-            } else {
-                PayRunId("run-${payPeriod.id}-$runId")
-            }
-
-            val baseComp = snapshot.baseCompensation
-
-            val timeSummary = if (baseComp is BaseCompensation.Hourly && timeClient != null) {
-                timeClient.getTimeSummary(
-                    employerId = employerId,
-                    employeeId = eid,
-                    start = payPeriod.dateRange.startInclusive,
-                    end = payPeriod.dateRange.endInclusive,
-                    workState = snapshot.workState,
-                )
-            } else {
-                null
-            }
-
-            val dtEarnings: List<EarningInput> = if (baseComp is BaseCompensation.Hourly && timeSummary != null && timeSummary.doubleTimeHours > 0.0) {
+        val dtEarnings: List<EarningInput> =
+            if (baseComp is BaseCompensation.Hourly && timeSummary != null && timeSummary.doubleTimeHours > 0.0) {
                 val dtRateCents = (baseComp.hourlyRate.amount * 2.0).toLong()
                 listOf(
                     EarningInput(
@@ -311,12 +304,13 @@ class PayrollRunService(
                 emptyList()
             }
 
-            // Tip earnings (time-derived): for tipped hourly employees, include explicit tips
-            // as additional earnings using totals returned by time-ingestion-service.
-            //
-            // We keep separate codes for cash/charged/allocated so the output looks more like real payroll,
-            // but all are categorized as EarningCategory.TIPS by earning config.
-            val tipEarnings: List<EarningInput> = if (baseComp is BaseCompensation.Hourly && snapshot.isTippedEmployee && timeSummary != null) {
+        // Tip earnings (time-derived): for tipped hourly employees, include explicit tips
+        // as additional earnings using totals returned by time-ingestion-service.
+        //
+        // We keep separate codes for cash/charged/allocated so the output looks more like real payroll,
+        // but all are categorized as EarningCategory.TIPS by earning config.
+        val tipEarnings: List<EarningInput> =
+            if (baseComp is BaseCompensation.Hourly && snapshot.isTippedEmployee && timeSummary != null) {
                 buildList {
                     if (timeSummary.cashTipsCents > 0L) {
                         add(
@@ -353,120 +347,120 @@ class PayrollRunService(
                 emptyList()
             }
 
-            val otherEarnings: List<EarningInput> = dtEarnings + tipEarnings + run {
-                if (baseComp is BaseCompensation.Hourly && timeSummary != null) {
-                    buildList {
-                        if (timeSummary.commissionCents > 0L) {
-                            add(
-                                EarningInput(
-                                    code = EarningCode("COMMISSION"),
-                                    units = 1.0,
-                                    rate = null,
-                                    amount = Money(timeSummary.commissionCents),
-                                ),
-                            )
-                        }
-                        if (timeSummary.bonusCents > 0L) {
-                            add(
-                                EarningInput(
-                                    code = EarningCode("BONUS"),
-                                    units = 1.0,
-                                    rate = null,
-                                    amount = Money(timeSummary.bonusCents),
-                                ),
-                            )
-                        }
-                        if (timeSummary.reimbursementNonTaxableCents > 0L) {
-                            add(
-                                EarningInput(
-                                    code = EarningCode("EXP_REIMB"),
-                                    units = 1.0,
-                                    rate = null,
-                                    amount = Money(timeSummary.reimbursementNonTaxableCents),
-                                ),
-                            )
-                        }
+        val otherEarnings: List<EarningInput> = dtEarnings + tipEarnings + run {
+            if (baseComp is BaseCompensation.Hourly && timeSummary != null) {
+                buildList {
+                    if (timeSummary.commissionCents > 0L) {
+                        add(
+                            EarningInput(
+                                code = EarningCode("COMMISSION"),
+                                units = 1.0,
+                                rate = null,
+                                amount = Money(timeSummary.commissionCents),
+                            ),
+                        )
                     }
-                } else {
-                    emptyList()
+                    if (timeSummary.bonusCents > 0L) {
+                        add(
+                            EarningInput(
+                                code = EarningCode("BONUS"),
+                                units = 1.0,
+                                rate = null,
+                                amount = Money(timeSummary.bonusCents),
+                            ),
+                        )
+                    }
+                    if (timeSummary.reimbursementNonTaxableCents > 0L) {
+                        add(
+                            EarningInput(
+                                code = EarningCode("EXP_REIMB"),
+                                units = 1.0,
+                                rate = null,
+                                amount = Money(timeSummary.reimbursementNonTaxableCents),
+                            ),
+                        )
+                    }
                 }
+            } else {
+                emptyList()
+            }
+        }
+
+        val input = PaycheckInput(
+            paycheckId = paycheckId,
+            payRunId = payRunId,
+            employerId = employerId,
+            employeeId = snapshot.employeeId,
+            period = payPeriod,
+            employeeSnapshot = snapshot,
+            timeSlice = TimeSlice(
+                period = payPeriod,
+                regularHours = timeSummary?.regularHours ?: 0.0,
+                overtimeHours = timeSummary?.overtimeHours ?: 0.0,
+                otherEarnings = otherEarnings,
+            ),
+            taxContext = taxContext,
+            priorYtd = YtdSnapshot(year = payPeriod.checkDate.year),
+            laborStandards = laborStandards,
+            garnishments = garnishmentContext,
+        )
+
+        val paycheck = PayrollEngine.calculatePaycheckComputation(
+            input = input,
+            computedAt = Instant.now(),
+            traceLevel = payrollProperties.traceLevel,
+            earningConfig = earningConfigRepository,
+            deductionConfig = deductionConfigRepository,
+            supportCapContext = supportCapContext,
+        ).paycheck
+
+        // Emit metrics for protected-earnings adjustments, if any.
+        if (payrollProperties.traceLevel == TraceLevel.DEBUG) {
+            val protectedSteps = paycheck.trace.steps.filterIsInstance<TraceStep.ProtectedEarningsApplied>()
+            if (protectedSteps.isNotEmpty()) {
+                meterRegistry.counter(
+                    "payroll.garnishments.protected_floor_applied",
+                    "employer_id",
+                    employerId.value,
+                ).increment(protectedSteps.size.toDouble())
+            }
+        }
+
+        // Record garnishment withholdings back to HR for this paycheck.
+        if (recordHrWithholdings && effectiveOrders.isNotEmpty()) {
+            val deductionsByCode = paycheck.deductions.associateBy { it.code.value }
+            val events = effectiveOrders.map { order ->
+                val line = deductionsByCode[order.orderId.value]
+                val withheld = line?.amount ?: Money(0L)
+                com.example.uspayroll.hr.http.GarnishmentWithholdingEvent(
+                    orderId = order.orderId.value,
+                    paycheckId = input.paycheckId.value,
+                    payRunId = input.payRunId?.value,
+                    checkDate = payPeriod.checkDate,
+                    withheld = withheld,
+                    netPay = paycheck.net,
+                )
             }
 
-            val input = PaycheckInput(
-                paycheckId = paycheckId,
-                payRunId = payRunId,
-                employerId = employerId,
-                employeeId = snapshot.employeeId,
-                period = payPeriod,
-                employeeSnapshot = snapshot,
-                timeSlice = TimeSlice(
-                    period = payPeriod,
-                    regularHours = timeSummary?.regularHours ?: 0.0,
-                    overtimeHours = timeSummary?.overtimeHours ?: 0.0,
-                    otherEarnings = otherEarnings,
-                ),
-                taxContext = taxContext,
-                priorYtd = YtdSnapshot(year = payPeriod.checkDate.year),
-                laborStandards = laborStandards,
-                garnishments = garnishmentContext,
+            logger.info(
+                "payroll_run.garnishments.withholdings_sent events={} employer={} employee={} pay_period={} check_date={} total_withheld_cents={} orders_with_positive_withholding={}",
+                events.size,
+                employerId.value,
+                eid.value,
+                payPeriod.id,
+                payPeriod.checkDate,
+                events.sumOf { it.withheld.amount },
+                events.count { it.withheld.amount > 0L },
             )
 
-            val paycheck = PayrollEngine.calculatePaycheckComputation(
-                input = input,
-                computedAt = Instant.now(),
-                traceLevel = payrollProperties.traceLevel,
-                earningConfig = earningConfigRepository,
-                deductionConfig = deductionConfigRepository,
-                supportCapContext = supportCapContext,
-            ).paycheck
+            client.recordGarnishmentWithholding(
+                employerId = employerId,
+                employeeId = eid,
+                request = com.example.uspayroll.hr.http.GarnishmentWithholdingRequest(events = events),
+            )
+        }
 
-            // Emit metrics for protected-earnings adjustments, if any.
-            if (payrollProperties.traceLevel == TraceLevel.DEBUG) {
-                val protectedSteps = paycheck.trace.steps.filterIsInstance<TraceStep.ProtectedEarningsApplied>()
-                if (protectedSteps.isNotEmpty()) {
-                    meterRegistry.counter(
-                        "payroll.garnishments.protected_floor_applied",
-                        "employer_id",
-                        employerId.value,
-                    ).increment(protectedSteps.size.toDouble())
-                }
-            }
-
-            // Record garnishment withholdings back to HR for this paycheck.
-            if (recordHrWithholdings && effectiveOrders.isNotEmpty()) {
-                val deductionsByCode = paycheck.deductions.associateBy { it.code.value }
-                val events = effectiveOrders.map { order ->
-                    val line = deductionsByCode[order.orderId.value]
-                    val withheld = line?.amount ?: Money(0L)
-                    com.example.uspayroll.hr.http.GarnishmentWithholdingEvent(
-                        orderId = order.orderId.value,
-                        paycheckId = input.paycheckId.value,
-                        payRunId = input.payRunId?.value,
-                        checkDate = payPeriod.checkDate,
-                        withheld = withheld,
-                        netPay = paycheck.net,
-                    )
-                }
-
-                logger.info(
-                    "payroll_run.garnishments.withholdings_sent events={} employer={} employee={} pay_period={} check_date={} total_withheld_cents={} orders_with_positive_withholding={}",
-                    events.size,
-                    employerId.value,
-                    eid.value,
-                    payPeriod.id,
-                    payPeriod.checkDate,
-                    events.sumOf { it.withheld.amount },
-                    events.count { it.withheld.amount > 0L },
-                )
-
-                client.recordGarnishmentWithholding(
-                    employerId = employerId,
-                    employeeId = eid,
-                    request = com.example.uspayroll.hr.http.GarnishmentWithholdingRequest(events = events),
-                )
-            }
-
-            return paycheck
+        return paycheck
     }
 }
 

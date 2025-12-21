@@ -14,11 +14,16 @@ class InternalAuthDiagnostics(
 
     @PostConstruct
     fun log() {
+        val configured = props.jwtSharedSecret.isNotBlank() || props.jwtKeys.isNotEmpty()
+        val keyCount = (if (props.jwtSharedSecret.isNotBlank()) 1 else 0) + props.jwtKeys.size
+
         logger.info(
-            "diag.internal_auth configured={} headerName={} secretLength={}",
-            props.sharedSecret.isNotBlank(),
-            props.headerName,
-            props.sharedSecret.length,
+            "diag.internal_auth configured={} keyCount={} issuer={} audience={} defaultKidPresent={}",
+            configured,
+            keyCount,
+            props.jwtIssuer,
+            props.jwtAudience,
+            props.jwtDefaultKid.isNotBlank(),
         )
     }
 }

@@ -47,7 +47,7 @@ class GarnishmentFeatureFlagIntegrationTest {
                 server.start()
                 val baseUrl = server.url("/").toString().trimEnd('/')
                 TestPropertyValues.of(
-                    "hr.base-url=$baseUrl",
+                    "downstreams.hr.base-url=$baseUrl",
                     // Only this employer is opted into the new garnishment
                     // engine for this test context.
                     "worker.garnishments.enabled-employers=EMP-GARN-FLAGGED",

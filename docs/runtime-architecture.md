@@ -82,7 +82,7 @@ This topology trades some deployment complexity for clear service boundaries and
 
 - Worker-service uses synchronous HTTP calls to HR, Tax, and Labor services for each pay run step.
 - Clients are thin wrappers over Spring WebClient or RestTemplate, with:
-  - Service base URL configured via external configuration (e.g., `hr.base-url`, `tax.base-url`, `labor.base-url`).
+  - Service base URL configured via external configuration (e.g., `downstreams.hr.base-url`, `downstreams.tax.base-url`, `downstreams.labor.base-url`).
   - Correlation IDs propagated via an `X-Correlation-ID` header.
 - Error handling:
   - Non-2xx responses are wrapped into typed exceptions (e.g., `HrServiceException`, `TaxServiceException`, `LaborServiceException`).

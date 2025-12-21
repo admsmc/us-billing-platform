@@ -43,7 +43,7 @@ class HrClientIntegrationTest {
             override fun initialize(context: ConfigurableApplicationContext) {
                 server.start()
                 val baseUrl = server.url("/").toString().trimEnd('/')
-                TestPropertyValues.of("hr.base-url=$baseUrl").applyTo(context.environment)
+                TestPropertyValues.of("downstreams.hr.base-url=$baseUrl").applyTo(context.environment)
             }
         }
     }

@@ -32,7 +32,8 @@ class OrchestratorDbPerEmployerTenancyIT {
                     "EMP2" to "orch_emp2",
                 ),
             )
-            registry.add("orchestrator.internal-auth.shared-secret") { "dev-internal-token" }
+            registry.add("orchestrator.internal-auth.jwt-keys.k1") { "dev-internal-token" }
+            registry.add("orchestrator.internal-auth.jwt-default-kid") { "k1" }
         }
     }
 

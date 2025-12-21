@@ -9,6 +9,7 @@ resources:
   - hr-service.yaml
   - tax-service.yaml
   - labor-service.yaml
+  - payroll-orchestrator-service.yaml
   - payroll-worker-service.yaml
 
 labels:

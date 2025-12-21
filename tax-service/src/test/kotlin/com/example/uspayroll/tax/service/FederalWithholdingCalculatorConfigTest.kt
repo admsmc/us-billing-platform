@@ -1,7 +1,7 @@
 package com.example.uspayroll.tax.service
 
 import kotlin.test.Test
-import kotlin.test.assertTrue
+import kotlin.test.assertNotNull
 
 class FederalWithholdingCalculatorConfigTest {
 
@@ -10,12 +10,12 @@ class FederalWithholdingCalculatorConfigTest {
         val calc = DefaultFederalWithholdingCalculator()
         // We don't assert amounts here, just that construction with defaults works.
         // Detailed behavior is covered in FederalWithholdingCalculatorTest.
-        assertTrue(calc is FederalWithholdingCalculator)
+        assertNotNull(calc)
     }
 
     @Test
     fun `calculator can be constructed to use wage-bracket method`() {
         val calc = DefaultFederalWithholdingCalculator(method = "WAGE_BRACKET")
-        assertTrue(calc is FederalWithholdingCalculator)
+        assertNotNull(calc)
     }
 }

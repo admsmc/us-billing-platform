@@ -2,7 +2,6 @@ package com.example.uspayroll.worker.jobs.rabbit
 
 import com.example.uspayroll.messaging.jobs.FinalizePayRunEmployeeJob
 import com.example.uspayroll.messaging.jobs.FinalizePayRunJobRouting
-import com.example.uspayroll.worker.security.WorkerInternalAuthProperties
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import jakarta.servlet.http.HttpServletRequest
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -15,41 +14,12 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate
 class DlqReplayControllerTest {
 
     @Test
-    fun `replay returns 401 when shared secret is blank`() {
-        val props = FinalizeEmployeeJobsProperties(dlqName = "dlq")
-        val rabbit = Mockito.mock(RabbitTemplate::class.java)
-        val auth = WorkerInternalAuthProperties(sharedSecret = "", headerName = "X-Internal-Token")
-        val controller = DlqReplayController(props, rabbit, auth, SimpleMeterRegistry())
-
-        val request = Mockito.mock(HttpServletRequest::class.java)
-        val resp = controller.replay(request, maxMessages = 10, resetAttempt = true)
-
-        assertEquals(401, resp.statusCode.value())
-    }
-
-    @Test
-    fun `replay returns 401 when token is incorrect`() {
-        val props = FinalizeEmployeeJobsProperties(dlqName = "dlq")
-        val rabbit = Mockito.mock(RabbitTemplate::class.java)
-        val auth = WorkerInternalAuthProperties(sharedSecret = "secret", headerName = "X-Internal-Token")
-        val controller = DlqReplayController(props, rabbit, auth, SimpleMeterRegistry())
-
-        val request = Mockito.mock(HttpServletRequest::class.java)
-        Mockito.`when`(request.getHeader("X-Internal-Token")).thenReturn("wrong")
-
-        val resp = controller.replay(request, maxMessages = 10, resetAttempt = true)
-        assertEquals(401, resp.statusCode.value())
-    }
-
-    @Test
     fun `replay moves messages from dlq to main queue`() {
         val props = FinalizeEmployeeJobsProperties(dlqName = "dlq")
         val rabbit = Mockito.mock(RabbitTemplate::class.java)
-        val auth = WorkerInternalAuthProperties(sharedSecret = "secret", headerName = "X-Internal-Token")
-        val controller = DlqReplayController(props, rabbit, auth, SimpleMeterRegistry())
+        val controller = DlqReplayController(props, rabbit, SimpleMeterRegistry())
 
         val request = Mockito.mock(HttpServletRequest::class.java)
-        Mockito.`when`(request.getHeader("X-Internal-Token")).thenReturn("secret")
 
         val msg = FinalizePayRunEmployeeJob(
             messageId = "old",

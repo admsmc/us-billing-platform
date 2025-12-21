@@ -11,15 +11,15 @@ import com.example.uspayroll.payroll.model.config.DeductionPlan
 import com.example.uspayroll.payroll.model.config.EarningConfigRepository
 import com.example.uspayroll.payroll.model.config.EarningDefinition
 import com.example.uspayroll.shared.EmployerId
-import com.fasterxml.jackson.databind.MapperFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
+import org.springframework.stereotype.Component
 import java.security.MessageDigest
 
+@Component
 class InputFingerprinter(objectMapper: ObjectMapper) {
 
     private val canonicalObjectMapper: ObjectMapper = objectMapper.copy()
-        .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
         .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
 
     data class EarningDefinitionFingerprint(

@@ -26,7 +26,6 @@ import com.example.uspayroll.worker.audit.InputFingerprinter
 import com.example.uspayroll.worker.client.LaborStandardsClient
 import com.example.uspayroll.worker.client.TaxClient
 import com.example.uspayroll.worker.client.TimeClient
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.stereotype.Service
 import java.time.Instant
 
@@ -39,10 +38,8 @@ class WorkerPaycheckComputationService(
     private val localityResolver: LocalityResolver,
     private val earningConfigRepository: EarningConfigRepository,
     private val deductionConfigRepository: DeductionConfigRepository,
-    objectMapper: ObjectMapper,
+    private val inputFingerprinter: InputFingerprinter,
 ) {
-
-    private val inputFingerprinter: InputFingerprinter = InputFingerprinter(objectMapper)
 
     fun computeForFinalizeJob(job: FinalizePayRunEmployeeJob): PaycheckComputation {
         val employerId = EmployerId(job.employerId)

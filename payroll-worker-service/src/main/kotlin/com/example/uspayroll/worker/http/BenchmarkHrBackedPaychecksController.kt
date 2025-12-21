@@ -13,6 +13,7 @@ import com.example.uspayroll.worker.client.LaborStandardsClient
 import com.example.uspayroll.worker.client.TaxClient
 import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.servlet.http.HttpServletRequest
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
@@ -64,7 +65,7 @@ class BenchmarkHrBackedPaychecksController(
     private val taxClient: TaxClient?,
     private val laborClient: LaborStandardsClient?,
     private val hrClientProperties: HrClientProperties,
-    private val restTemplate: RestTemplate,
+    @Qualifier("hrRestTemplate") private val restTemplate: RestTemplate,
     private val objectMapper: ObjectMapper,
     private val paycheckRunStore: PaycheckRunStore,
     private val props: WorkerBenchmarksProperties,
@@ -276,7 +277,7 @@ class BenchmarkHrBackedPaychecksController(
                 ),
             )
             true
-        } catch (e: Exception) {
+        } catch (e: IllegalStateException) {
             return ResponseEntity.badRequest().body(mapOf("error" to (e.message ?: "store failed")))
         }
 
@@ -373,7 +374,7 @@ class BenchmarkHrBackedPaychecksController(
         }
 
         val csvBytes = PaycheckCsvRenderer.renderWideCsv(selected)
-        val filename = "paychecks-${employerId}-${request.runId}.csv"
+        val filename = "paychecks-$employerId-${request.runId}.csv"
 
         val headers = HttpHeaders().apply {
             contentType = MediaType("text", "csv")

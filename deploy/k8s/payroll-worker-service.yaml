@@ -32,11 +32,11 @@ spec:
           env:
             - name: SERVER_PORT
               value: "8088"
-            - name: HR_BASE_URL
+            - name: DOWNSTREAMS_HR_BASE_URL
               value: http://hr-service:8081
-            - name: TAX_BASE_URL
+            - name: DOWNSTREAMS_TAX_BASE_URL
               value: http://tax-service:8082
-            - name: LABOR_BASE_URL
+            - name: DOWNSTREAMS_LABOR_BASE_URL
               value: http://labor-service:8083
           ports:
             - containerPort: 8088

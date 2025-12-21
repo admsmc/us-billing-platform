@@ -29,8 +29,9 @@ import java.net.URI
 @Order(Ordered.HIGHEST_PRECEDENCE + 10)
 class EdgeAuthorizationFilter(
     private val objectMapper: ObjectMapper,
-    private val policy: EdgeAuthorizationPolicy = EdgeAuthorizationPolicy.default(),
 ) : GlobalFilter {
+
+    private val policy: EdgeAuthorizationPolicy = EdgeAuthorizationPolicy.default()
 
     private val employerPathRegex = Regex("^/employers/([^/]+)(/.*)?$")
 

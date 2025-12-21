@@ -55,11 +55,15 @@ import java.time.LocalDate
  */
 object LaborStandardsCsvParser {
 
-    private val csvFormat: CSVFormat = CSVFormat.DEFAULT
-        .withFirstRecordAsHeader()
-        .withTrim()
-        .withIgnoreEmptyLines()
-        .withIgnoreSurroundingSpaces()
+    private val csvFormat: CSVFormat =
+        CSVFormat.DEFAULT
+            .builder()
+            .setHeader()
+            .setSkipHeaderRecord(true)
+            .setTrim(true)
+            .setIgnoreEmptyLines(true)
+            .setIgnoreSurroundingSpaces(true)
+            .build()
 
     fun parse(reader: Reader): List<StateLaborStandard> {
         val parser = csvFormat.parse(reader)

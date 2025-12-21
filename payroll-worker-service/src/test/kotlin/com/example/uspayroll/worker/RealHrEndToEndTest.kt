@@ -160,7 +160,7 @@ class RealHrEndToEndTest {
                 // Disable garnishment application for this E2E so that HR's
                 // demo rule synthesis doesn't zero out net pay.
                 TestPropertyValues.of(
-                    "hr.base-url=http://localhost:$hrPort",
+                    "downstreams.hr.base-url=http://localhost:$hrPort",
                     "worker.garnishments.enabled-employers=EMP-NOT-HR-E2E",
                 ).applyTo(context.environment)
             }

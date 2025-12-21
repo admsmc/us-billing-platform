@@ -74,15 +74,16 @@ services:
       SPRING_DATASOURCE_USERNAME: orchestrator_service
       SPRING_DATASOURCE_PASSWORD: ${ORCHESTRATOR_DB_PASSWORD:-orchestrator_service}
 
-      # Service-to-service base URLs (default HR client config is localhost, which is wrong in Docker)
-      HR_BASE_URL: http://hr-service:8081
-      TAX_BASE_URL: http://tax-service:8082
-      LABOR_BASE_URL: http://labor-service:8083
-      TIME_BASE_URL: http://time-ingestion-service:8084
-      TIME_ENABLED: ${TIME_ENABLED:-false}
+      # Service-to-service base URLs (default client config is localhost, which is wrong in Docker)
+      DOWNSTREAMS_HR_BASE_URL: http://hr-service:8081
+      DOWNSTREAMS_TAX_BASE_URL: http://tax-service:8082
+      DOWNSTREAMS_LABOR_BASE_URL: http://labor-service:8083
+      DOWNSTREAMS_TIME_BASE_URL: http://time-ingestion-service:8084
+      DOWNSTREAMS_TIME_ENABLED: ${DOWNSTREAMS_TIME_ENABLED:-false}
 
-      # For now we keep orchestrator internal auth enabled only when explicitly set.
-      ORCHESTRATOR_INTERNAL_AUTH_SHARED_SECRET: ${ORCHESTRATOR_INTERNAL_AUTH_SHARED_SECRET:-}
+      # Orchestrator internal auth (JWT keyring). Leave blank to disable internal endpoints.
+      ORCHESTRATOR_INTERNAL_AUTH_JWT_KEYS_K1: ${DOWNSTREAMS_ORCHESTRATOR_INTERNAL_JWT_SECRET:-}
+      ORCHESTRATOR_INTERNAL_AUTH_JWT_DEFAULT_KID: ${DOWNSTREAMS_ORCHESTRATOR_INTERNAL_JWT_KID:-k1}
 
   payroll-worker-service:
     build:
@@ -96,13 +97,14 @@ services:
     environment:
       # Keep worker internal; gateway will expose 8080.
       SERVER_PORT: 8088
-      HR_BASE_URL: http://hr-service:8081
-      TAX_BASE_URL: http://tax-service:8082
-      LABOR_BASE_URL: http://labor-service:8083
-      TIME_BASE_URL: http://time-ingestion-service:8084
-      TIME_ENABLED: ${TIME_ENABLED:-false}
-      ORCHESTRATOR_BASE_URL: http://payroll-orchestrator-service:8085
-      ORCHESTRATOR_INTERNAL_TOKEN: ${ORCHESTRATOR_INTERNAL_AUTH_SHARED_SECRET:-}
+      DOWNSTREAMS_HR_BASE_URL: http://hr-service:8081
+      DOWNSTREAMS_TAX_BASE_URL: http://tax-service:8082
+      DOWNSTREAMS_LABOR_BASE_URL: http://labor-service:8083
+      DOWNSTREAMS_TIME_BASE_URL: http://time-ingestion-service:8084
+      DOWNSTREAMS_TIME_ENABLED: ${DOWNSTREAMS_TIME_ENABLED:-false}
+      DOWNSTREAMS_ORCHESTRATOR_BASE_URL: http://payroll-orchestrator-service:8085
+      DOWNSTREAMS_ORCHESTRATOR_INTERNAL_JWT_SECRET: ${DOWNSTREAMS_ORCHESTRATOR_INTERNAL_JWT_SECRET:-}
+      DOWNSTREAMS_ORCHESTRATOR_INTERNAL_JWT_KID: ${DOWNSTREAMS_ORCHESTRATOR_INTERNAL_JWT_KID:-k1}
       # Benchmark-only endpoint (disabled by default).
       WORKER_BENCHMARKS_ENABLED: ${WORKER_BENCHMARKS_ENABLED:-false}
       WORKER_BENCHMARKS_TOKEN: ${WORKER_BENCHMARKS_TOKEN:-}

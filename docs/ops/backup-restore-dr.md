@@ -21,6 +21,13 @@ For each service database (HR, Orchestrator, Tax, Labor, Payments, Reporting/Fil
    - payment status projections consistent
    - ledger/event streams can be replayed safely
 
+Executable drill artifact (compose-first):
+- `scripts/ops/drills/single-tenant-restore-validate-compose.sh`
+
+Notes:
+- This is a dev/staging drill helper that uses `pg_dump`/`pg_restore` inside the compose Postgres container.
+- Production restores are platform-specific (snapshots/PITR), but the invariant checks and reporting format are reusable.
+
 ## DR drills
 Suggested cadence:
 - Quarterly: restore one randomly selected tenant into a test environment and validate invariants.

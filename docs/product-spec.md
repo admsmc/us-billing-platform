@@ -854,8 +854,8 @@ Key patterns:
 
 Examples:
 - Edge auth modes: DISABLED (guarded), HS256 (dev), OIDC (production target).
-- Worker internal replay endpoints require `worker.internal-auth.shared-secret`.
-- Orchestrator internal endpoints can use internal JWT keyrings or shared secret headers.
+- Worker internal replay endpoints require `worker.internal-auth.jwt-keys.<kid>`.
+- Orchestrator internal endpoints require internal JWT keyrings (`orchestrator.internal-auth.jwt-keys.<kid>`).
 
 Primary reference:
 - `docs/security-boundary.md`

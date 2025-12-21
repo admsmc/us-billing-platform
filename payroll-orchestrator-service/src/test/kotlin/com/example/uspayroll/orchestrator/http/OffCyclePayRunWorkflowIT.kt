@@ -1,6 +1,7 @@
 package com.example.uspayroll.orchestrator.http
 
 import com.example.uspayroll.orchestrator.payrun.model.PayRunStatus
+import com.example.uspayroll.orchestrator.support.InternalAuthTestSupport
 import com.example.uspayroll.orchestrator.support.StubClientsTestConfig
 import com.example.uspayroll.payroll.model.PaycheckResult
 import com.example.uspayroll.payroll.model.audit.PaycheckAudit
@@ -10,7 +11,6 @@ import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.context.annotation.Import
-import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.RequestEntity
 import org.springframework.jdbc.core.JdbcTemplate
@@ -24,7 +24,8 @@ import java.net.URI
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 @TestPropertySource(
     properties = [
-        "orchestrator.internal-auth.shared-secret=dev-internal-token",
+        "orchestrator.internal-auth.jwt-keys.k1=dev-internal-token",
+        "orchestrator.internal-auth.jwt-default-kid=k1",
         "orchestrator.payrun.execute.enabled=true",
     ],
 )
@@ -63,7 +64,7 @@ class OffCyclePayRunWorkflowIT(
         assertEquals(HttpStatus.ACCEPTED, start.statusCode)
         assertEquals("run-offcycle-1", start.body!!.payRunId)
 
-        val execHeaders = HttpHeaders().apply { set("X-Internal-Token", "dev-internal-token") }
+        val execHeaders = InternalAuthTestSupport.internalAuthHeaders()
         val exec = rest.exchange(
             RequestEntity.post(URI.create("/employers/$employerId/payruns/internal/run-offcycle-1/execute?batchSize=10"))
                 .headers(execHeaders)

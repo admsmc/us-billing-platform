@@ -3,12 +3,10 @@ package com.example.uspayroll.worker.jobs.rabbit
 import com.example.uspayroll.messaging.jobs.FinalizePayRunEmployeeJob
 import com.example.uspayroll.messaging.jobs.FinalizePayRunJobRouting
 import com.example.uspayroll.web.security.SecurityAuditLogger
-import com.example.uspayroll.worker.security.WorkerInternalAuthProperties
 import io.micrometer.core.instrument.MeterRegistry
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression
-import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
@@ -19,12 +17,10 @@ import java.util.UUID
 
 @RestController
 @RequestMapping("/internal/jobs/finalize-employee/dlq")
-@EnableConfigurationProperties(WorkerInternalAuthProperties::class)
 @ConditionalOnExpression("\${worker.jobs.dlq-replayer.enabled:false} and \${worker.jobs.rabbit.enabled:false}")
 class DlqReplayController(
     private val finalizeEmployeeProps: FinalizeEmployeeJobsProperties,
     private val rabbitTemplate: RabbitTemplate,
-    private val auth: WorkerInternalAuthProperties,
     meterRegistry: MeterRegistry,
 ) {
 
@@ -36,49 +32,8 @@ class DlqReplayController(
         @RequestParam(name = "maxMessages", defaultValue = "100") maxMessages: Int,
         @RequestParam(name = "resetAttempt", defaultValue = "true") resetAttempt: Boolean,
     ): ResponseEntity<Map<String, Any?>> {
-        val expected = auth.sharedSecret
-        val headerName = auth.headerName
-
         val method = request.method ?: "POST"
         val path = request.requestURI ?: "/internal/jobs/finalize-employee/dlq/replay"
-
-        if (expected.isBlank()) {
-            SecurityAuditLogger.privilegedOperationFailed(
-                component = "worker",
-                method = method,
-                path = path,
-                operation = "payroll_replay",
-                status = HttpStatus.UNAUTHORIZED.value(),
-                reason = "internal_auth_not_configured",
-            )
-
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
-                mapOf(
-                    "error" to "unauthorized",
-                    "detail" to "worker.internal-auth.shared-secret must be set to use DLQ replay",
-                    "headerName" to headerName,
-                ),
-            )
-        }
-
-        val token = request.getHeader(headerName)
-        if (token != expected) {
-            SecurityAuditLogger.privilegedOperationFailed(
-                component = "worker",
-                method = method,
-                path = path,
-                operation = "payroll_replay",
-                status = HttpStatus.UNAUTHORIZED.value(),
-                reason = "internal_auth_invalid",
-            )
-
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
-                mapOf(
-                    "error" to "unauthorized",
-                    "headerName" to headerName,
-                ),
-            )
-        }
 
         val limit = maxMessages.coerceIn(1, 10_000)
         var moved = 0

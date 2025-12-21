@@ -53,6 +53,15 @@ If any of these are not true, do not replay automatically; use reconciliation in
 
 4) If DLQ refills quickly, stop and re-diagnose.
 
+Executable drill (compose-first):
+- `scripts/ops/drills/dlq-replay-drill.sh`
+
+This script produces a JSON drill artifact and demonstrates a full loop:
+- induce a controlled failure
+- observe DLQ growth
+- fix the root cause
+- replay DLQ and confirm recovery
+
 ## Kafka consumer replay rules (inbox-backed)
 Kafka replay can happen due to:
 - consumer restarts
@@ -77,7 +86,7 @@ Suggested checks:
 - Compare expected employee set vs `pay_run_item` statuses.
 - For missing or stuck items, requeue per-employee jobs (prefer queue-driven paths).
 
-This repo includes internal endpoints (guarded by `X-Internal-Token`) under:
+This repo includes internal endpoints (guarded by an internal JWT via `Authorization: Bearer <token>`) under:
 - `/employers/{employerId}/payruns/internal/...`
 
 Common actions:

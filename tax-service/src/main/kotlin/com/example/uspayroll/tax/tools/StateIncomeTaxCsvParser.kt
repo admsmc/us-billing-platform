@@ -41,11 +41,15 @@ import java.time.LocalDate
  */
 object StateIncomeTaxCsvParser {
 
-    private val csvFormat: CSVFormat = CSVFormat.DEFAULT
-        .withFirstRecordAsHeader()
-        .withTrim()
-        .withIgnoreEmptyLines()
-        .withIgnoreSurroundingSpaces()
+    private val csvFormat: CSVFormat =
+        CSVFormat.DEFAULT
+            .builder()
+            .setHeader()
+            .setSkipHeaderRecord(true)
+            .setTrim(true)
+            .setIgnoreEmptyLines(true)
+            .setIgnoreSurroundingSpaces(true)
+            .build()
 
     data class RuleRow(
         val stateCode: String,

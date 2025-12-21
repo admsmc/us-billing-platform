@@ -24,7 +24,6 @@ import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.shared.PayRunId
 import com.example.uspayroll.shared.PaycheckId
 import com.example.uspayroll.shared.toLocalityCodeStrings
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.stereotype.Service
 import java.time.Instant
 
@@ -39,10 +38,8 @@ class PaycheckComputationService(
     private val deductionConfigRepository: DeductionConfigRepository,
     private val paycheckStoreRepository: PaycheckStoreRepository,
     private val paycheckAuditStoreRepository: PaycheckAuditStoreRepository,
-    objectMapper: ObjectMapper,
+    private val inputFingerprinter: InputFingerprinter,
 ) {
-
-    private val inputFingerprinter: InputFingerprinter = InputFingerprinter(objectMapper)
 
     /**
      * HR-backed paycheck computation used by orchestrator finalization flows.

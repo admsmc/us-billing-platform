@@ -15,7 +15,7 @@ import org.springframework.web.filter.OncePerRequestFilter
  */
 open class RequestLoggingFilter : OncePerRequestFilter() {
 
-    private val logger = LoggerFactory.getLogger(RequestLoggingFilter::class.java)
+    private val log = LoggerFactory.getLogger(RequestLoggingFilter::class.java)
 
     override fun shouldNotFilter(request: HttpServletRequest): Boolean {
         val path = request.requestURI ?: ""
@@ -39,7 +39,7 @@ open class RequestLoggingFilter : OncePerRequestFilter() {
             val elapsedMs = (System.nanoTime() - startNanos) / 1_000_000
 
             if (status >= 500) {
-                logger.warn(
+                log.warn(
                     "http_request method={} path={} status={} elapsedMs={} correlationId={} employerId={} principalSub={}",
                     method,
                     path,
@@ -50,7 +50,7 @@ open class RequestLoggingFilter : OncePerRequestFilter() {
                     principalSub,
                 )
             } else {
-                logger.info(
+                log.info(
                     "http_request method={} path={} status={} elapsedMs={} correlationId={} employerId={} principalSub={}",
                     method,
                     path,

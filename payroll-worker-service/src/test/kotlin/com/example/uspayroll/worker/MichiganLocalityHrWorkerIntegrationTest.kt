@@ -168,7 +168,7 @@ class MichiganLocalityHrWorkerIntegrationTest {
                 }
 
                 TestPropertyValues.of(
-                    "hr.base-url=http://localhost:$hrPort",
+                    "downstreams.hr.base-url=http://localhost:$hrPort",
                     // Avoid incidental garnishment application from HR demo rules.
                     "worker.garnishments.enabled-employers=EMP-NOT-MI-LOCAL",
                 ).applyTo(context.environment)

@@ -34,21 +34,57 @@ class IdentityPropagationFilter : GlobalFilter {
                 if (jwt == null) {
                     chain.filter(exchangeWithCorrelation).thenReturn(Unit)
                 } else {
-                    val mutated = exchangeWithCorrelation.mutate()
-                        .request(
-                            exchangeWithCorrelation.request
-                                .mutate()
-                                .header(WebHeaders.PRINCIPAL_SUB, jwt.subject ?: "")
-                                .header(WebHeaders.PRINCIPAL_SCOPE, jwt.getClaimAsString("scope") ?: "")
-                                .header(WebHeaders.EMPLOYER_ID, jwt.getClaimAsString("employer_id") ?: "")
-                                .build(),
-                        )
+                    val pathEmployerId = employerIdFromPath(exchangeWithCorrelation.request.uri.path)
+                    val employerId = pathEmployerId
+                        ?: jwt.getClaimAsString("employer_id")?.trim()?.takeIf { it.isNotBlank() }
+
+                    val principalSub = jwt.subject?.trim().orEmpty()
+                    val principalScope = normalizeScopes(jwt)
+
+                    val mutatedRequest: ServerHttpRequest = exchangeWithCorrelation.request
+                        .mutate()
+                        .headers { headers ->
+                            // These headers are an edge-owned contract; prevent client injection.
+                            headers.remove(WebHeaders.PRINCIPAL_SUB)
+                            headers.remove(WebHeaders.PRINCIPAL_SCOPE)
+                            headers.remove(WebHeaders.EMPLOYER_ID)
+                        }
+                        .apply {
+                            if (principalSub.isNotBlank()) header(WebHeaders.PRINCIPAL_SUB, principalSub)
+                            if (principalScope.isNotBlank()) header(WebHeaders.PRINCIPAL_SCOPE, principalScope)
+                            if (!employerId.isNullOrBlank()) header(WebHeaders.EMPLOYER_ID, employerId)
+                        }
                         .build()
+
+                    val mutated = exchangeWithCorrelation.mutate().request(mutatedRequest).build()
                     chain.filter(mutated).thenReturn(Unit)
                 }
             }
             .switchIfEmpty(chain.filter(exchangeWithCorrelation).thenReturn(Unit))
             .then()
+    }
+
+    private fun normalizeScopes(jwt: Jwt): String {
+        val out = mutableSetOf<String>()
+
+        jwt.getClaimAsString("scope")
+            ?.split(" ")
+            ?.map { it.trim() }
+            ?.filter { it.isNotBlank() }
+            ?.forEach { out += it }
+
+        jwt.getClaimAsStringList("scp")
+            ?.map { it.trim() }
+            ?.filter { it.isNotBlank() }
+            ?.forEach { out += it }
+
+        return out.sorted().joinToString(" ")
+    }
+
+    private fun employerIdFromPath(path: String): String? {
+        val regex = Regex("^/employers/([^/]+)(/.*)?$")
+        val m = regex.matchEntire(path) ?: return null
+        return m.groupValues[1].trim().takeIf { it.isNotBlank() }
     }
 
     private fun ensureCorrelationId(exchange: ServerWebExchange): Pair<ServerWebExchange, String> {

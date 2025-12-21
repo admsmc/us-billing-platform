@@ -284,8 +284,6 @@ class PayRunItemRepository(
         if (distinct.isEmpty()) return emptyMap()
 
         val placeholders = distinct.joinToString(",") { "?" }
-        val args: MutableList<Any> = mutableListOf(employerId, payRunId)
-        args.addAll(distinct)
 
         val rows = jdbcTemplate.query(
             """
@@ -294,7 +292,12 @@ class PayRunItemRepository(
             WHERE employer_id = ? AND pay_run_id = ?
               AND employee_id IN ($placeholders)
             """.trimIndent(),
-            args.toTypedArray(),
+            { ps ->
+                var i = 1
+                ps.setString(i++, employerId)
+                ps.setString(i++, payRunId)
+                distinct.forEach { id -> ps.setString(i++, id) }
+            },
         ) { rs, _ ->
             rs.getString("employee_id") to rs.getString("paycheck_id")
         }
@@ -309,8 +312,6 @@ class PayRunItemRepository(
         if (distinct.isEmpty()) return emptyMap()
 
         val placeholders = distinct.joinToString(",") { "?" }
-        val args: MutableList<Any> = mutableListOf(employerId, payRunId)
-        args.addAll(distinct)
 
         val rows = jdbcTemplate.query(
             """
@@ -319,7 +320,12 @@ class PayRunItemRepository(
             WHERE employer_id = ? AND pay_run_id = ?
               AND employee_id IN ($placeholders)
             """.trimIndent(),
-            args.toTypedArray(),
+            { ps ->
+                var i = 1
+                ps.setString(i++, employerId)
+                ps.setString(i++, payRunId)
+                distinct.forEach { id -> ps.setString(i++, id) }
+            },
         ) { rs, _ ->
             rs.getString("employee_id") to rs.getString("earning_overrides_json")
         }

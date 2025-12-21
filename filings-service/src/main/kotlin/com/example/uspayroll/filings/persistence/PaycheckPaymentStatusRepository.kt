@@ -66,21 +66,23 @@ class PaycheckPaymentStatusRepository(
         if (paycheckIds.isEmpty()) return emptyMap()
 
         val placeholders = paycheckIds.joinToString(",") { "?" }
-        val args = ArrayList<Any>(paycheckIds.size + 1)
-        args.add(employerId)
-        args.addAll(paycheckIds)
 
-        return jdbcTemplate.query(
+        val rows = jdbcTemplate.query(
             """
             SELECT paycheck_id, status
             FROM paycheck_payment_status
             WHERE employer_id = ?
               AND paycheck_id IN ($placeholders)
             """.trimIndent(),
-            args.toTypedArray(),
-            { rs, _ ->
-                rs.getString("paycheck_id") to PaycheckPaymentLifecycleStatus.valueOf(rs.getString("status"))
+            { ps ->
+                var i = 1
+                ps.setString(i++, employerId)
+                paycheckIds.forEach { id -> ps.setString(i++, id) }
             },
-        ).toMap()
+        ) { rs, _ ->
+            rs.getString("paycheck_id") to PaycheckPaymentLifecycleStatus.valueOf(rs.getString("status"))
+        }
+
+        return rows.toMap()
     }
 }

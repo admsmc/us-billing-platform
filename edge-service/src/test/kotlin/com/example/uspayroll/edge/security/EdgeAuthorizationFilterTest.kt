@@ -22,7 +22,7 @@ class EdgeAuthorizationFilterTest {
 
     @Test
     fun `blocks write when payroll write scope is missing`() {
-        val filter = EdgeAuthorizationFilter(mapper, EdgeAuthorizationPolicy.default())
+        val filter = EdgeAuthorizationFilter(mapper)
 
         val jwt = Jwt.withTokenValue("t")
             .header("alg", "none")
@@ -54,7 +54,7 @@ class EdgeAuthorizationFilterTest {
 
     @Test
     fun `blocks employer mismatch`() {
-        val filter = EdgeAuthorizationFilter(mapper, EdgeAuthorizationPolicy.default())
+        val filter = EdgeAuthorizationFilter(mapper)
 
         val jwt = Jwt.withTokenValue("t")
             .header("alg", "none")
@@ -79,7 +79,7 @@ class EdgeAuthorizationFilterTest {
 
     @Test
     fun `allows when employer_ids contains employer`() {
-        val filter = EdgeAuthorizationFilter(mapper, EdgeAuthorizationPolicy.default())
+        val filter = EdgeAuthorizationFilter(mapper)
 
         val jwt = Jwt.withTokenValue("t")
             .header("alg", "none")
@@ -110,7 +110,7 @@ class EdgeAuthorizationFilterTest {
 
     @Test
     fun `blocks benchmarks when payroll bench scope is missing`() {
-        val filter = EdgeAuthorizationFilter(mapper, EdgeAuthorizationPolicy.default())
+        val filter = EdgeAuthorizationFilter(mapper)
 
         val jwt = Jwt.withTokenValue("t")
             .header("alg", "none")
@@ -139,7 +139,7 @@ class EdgeAuthorizationFilterTest {
 
     @Test
     fun `allows benchmarks when payroll bench scope is present`() {
-        val filter = EdgeAuthorizationFilter(mapper, EdgeAuthorizationPolicy.default())
+        val filter = EdgeAuthorizationFilter(mapper)
 
         val jwt = Jwt.withTokenValue("t")
             .header("alg", "none")
@@ -169,7 +169,7 @@ class EdgeAuthorizationFilterTest {
 
     @Test
     fun `blocks internal replay when payroll replay scope is missing`() {
-        val filter = EdgeAuthorizationFilter(mapper, EdgeAuthorizationPolicy.default())
+        val filter = EdgeAuthorizationFilter(mapper)
 
         val jwt = Jwt.withTokenValue("t")
             .header("alg", "none")

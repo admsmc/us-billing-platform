@@ -22,11 +22,19 @@ The Kubernetes manifests assume `readOnlyRootFilesystem: true`.
 Applications should only need a writable `/tmp` directory. The manifests mount an `emptyDir` volume at `/tmp` and the Dockerfiles set `JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=/tmp`.
 
 ## Kubernetes baseline (Kustomize)
-
 Kubernetes manifests live under `deploy/k8s/` and are organized as:
 - `deploy/k8s/base`: core resources with secure-by-default pod security settings
 - `deploy/k8s/overlays/dev`: dev-friendly overlay (dev-only Postgres, example Secrets, edge exposed via LoadBalancer)
 - `deploy/k8s/overlays/prod`: production overlay (Ingress, PDB/HPA, default-deny network policies)
+
+### Baseline topology (production slice)
+The intended baseline production slice (initial) is:
+- `edge-service` (only public entrypoint)
+- `payroll-worker-service`
+- `payroll-orchestrator-service`
+- `hr-service`, `tax-service`, `labor-service`
+
+This slice is intentionally minimal: it captures the core payrun workflow control plane and its required bounded contexts. Additional services (payments/reporting/filings/time ingestion) can be layered in once their deployment requirements are fully specified.
 
 ### Apply (dev)
 ```sh
@@ -87,6 +95,7 @@ Prod overlay enables:
   - ingress to edge
   - edge -> worker
   - worker -> HR/Tax/Labor
+  - worker -> orchestrator (internal workflow calls)
   - DNS egress
   - (placeholder) DB egress rules
 
@@ -112,8 +121,16 @@ In production, supply these secrets via a secret manager and inject them into th
   - `jdbc-url`
   - `username`
   - `password`
+- `orch-db`:
+  - `jdbc-url`
+  - `username`
+  - `password`
 - `orchestrator-internal-auth`:
-  - `shared-token`
+  - `jwt-secret`
+
+Notes:
+- `orchestrator-internal-auth.jwt-secret` is used for application-level internal JWT auth when a service mesh is not available.
+- For rotation, prefer a keyring-style configuration (multiple keys + `kid`) and follow the internal JWT rotation guidance in `docs/ops/secrets-and-configuration.md`.
 
 ### Postgres / database provisioning
 The dev overlay includes a Postgres StatefulSet for convenience.

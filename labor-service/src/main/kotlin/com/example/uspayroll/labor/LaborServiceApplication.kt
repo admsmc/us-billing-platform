@@ -7,6 +7,7 @@ import com.example.uspayroll.shared.EmployerId
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.format.annotation.DateTimeFormat
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
@@ -27,6 +28,13 @@ class LaborHttpController(
     private val laborStandardsContextProvider: LaborStandardsContextProvider,
 ) {
 
+    /**
+     * Resolve the effective labor standards context for an employer/date/location.
+     *
+     * REST semantics:
+     * - 200 when a matching standard exists
+     * - 404 when no standard exists
+     */
     @GetMapping("/labor-standards")
     fun getLaborStandards(
         @PathVariable employerId: String,
@@ -34,19 +42,15 @@ class LaborHttpController(
         @RequestParam("state") workState: String,
         @RequestParam("homeState", required = false) homeState: String?,
         @RequestParam("locality", required = false) localityCodes: List<String>?,
-    ): LaborStandardsContextDto {
+    ): ResponseEntity<LaborStandardsContextDto> {
         val context = laborStandardsContextProvider.getLaborStandards(
             employerId = EmployerId(employerId),
             asOfDate = asOf,
             workState = workState,
             homeState = homeState,
             localityCodes = localityCodes ?: emptyList(),
-        )
+        ) ?: return ResponseEntity.notFound().build()
 
-        // Returning null here produces a 200 with an empty body, which causes some RestTemplate clients
-        // (especially Kotlin-typed ones) to throw at the call site. Provide a safe baseline instead.
-        return context?.toDto() ?: LaborStandardsContextDto(
-            federalMinimumWageCents = 725, // $7.25
-        )
+        return ResponseEntity.ok(context.toDto())
     }
 }

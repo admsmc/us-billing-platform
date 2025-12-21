@@ -87,7 +87,7 @@ spec:
         - protocol: TCP
           port: 8088
 ---
-# Allow worker -> HR/Tax/Labor.
+# Allow worker -> HR/Tax/Labor + orchestrator.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -120,8 +120,76 @@ spec:
       ports:
         - protocol: TCP
           port: 8083
+    - to:
+        - podSelector:
+            matchLabels:
+              app: payroll-orchestrator-service
+      ports:
+        - protocol: TCP
+          port: 8085
 ---
-# Allow HR/Tax/Labor ingress from worker.
+# Allow orchestrator ingress from worker (internal workflow calls).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-orchestrator-ingress-from-worker
+spec:
+  podSelector:
+    matchLabels:
+      app: payroll-orchestrator-service
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: payroll-worker-service
+      ports:
+        - protocol: TCP
+          port: 8085
+---
+# Allow orchestrator -> HR/Tax/Labor (and optional time).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-orchestrator-egress-to-core-apis
+spec:
+  podSelector:
+    matchLabels:
+      app: payroll-orchestrator-service
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: hr-service
+      ports:
+        - protocol: TCP
+          port: 8081
+    - to:
+        - podSelector:
+            matchLabels:
+              app: tax-service
+      ports:
+        - protocol: TCP
+          port: 8082
+    - to:
+        - podSelector:
+            matchLabels:
+              app: labor-service
+      ports:
+        - protocol: TCP
+          port: 8083
+    - to:
+        - podSelector:
+            matchLabels:
+              app: time-ingestion-service
+      ports:
+        - protocol: TCP
+          port: 8084
+---
+# Allow HR/Tax/Labor ingress from worker and orchestrator.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -142,6 +210,9 @@ spec:
         - podSelector:
             matchLabels:
               app: payroll-worker-service
+        - podSelector:
+            matchLabels:
+              app: payroll-orchestrator-service
       ports:
         - protocol: TCP
           port: 8081
@@ -150,7 +221,7 @@ spec:
         - protocol: TCP
           port: 8083
 ---
-# Allow HR/Tax/Labor egress to Postgres (assumes Postgres is reachable as 'postgres' Service in-namespace).
+# Allow HR/Tax/Labor/orchestrator egress to Postgres (assumes Postgres is reachable as 'postgres' Service in-namespace).
 # If using managed Postgres outside the cluster, replace this with your platform-specific egress controls.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -165,6 +236,7 @@ spec:
           - hr-service
           - tax-service
           - labor-service
+          - payroll-orchestrator-service
   policyTypes:
     - Egress
   egress:

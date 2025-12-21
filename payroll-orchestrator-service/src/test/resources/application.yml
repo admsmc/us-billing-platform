@@ -13,8 +13,9 @@ spring:
 
 orchestrator:
   internal-auth:
-    shared-secret: dev-internal-token
-    header-name: X-Internal-Token
+    jwt-keys:
+      k1: dev-internal-token
+    jwt-default-kid: k1
   events:
     kafka:
       enabled: false

@@ -48,18 +48,30 @@ spec:
           env:
             - name: SERVER_PORT
               value: "8088"
-            - name: HR_BASE_URL
+            - name: DOWNSTREAMS_HR_BASE_URL
               value: http://hr-service:8081
-            - name: TAX_BASE_URL
+            - name: DOWNSTREAMS_TAX_BASE_URL
               value: http://tax-service:8082
-            - name: LABOR_BASE_URL
+            - name: DOWNSTREAMS_LABOR_BASE_URL
               value: http://labor-service:8083
-            # Internal token for orchestrator internal endpoints (if enabled)
-            - name: ORCHESTRATOR_INTERNAL_TOKEN
+
+            # Optional time ingestion integration (disabled by default)
+            - name: DOWNSTREAMS_TIME_BASE_URL
+              value: http://time-ingestion-service:8084
+            - name: DOWNSTREAMS_TIME_ENABLED
+              value: "false"
+
+            - name: DOWNSTREAMS_ORCHESTRATOR_BASE_URL
+              value: http://payroll-orchestrator-service:8085
+
+            # Internal JWT signing secret for orchestrator internal endpoints
+            - name: DOWNSTREAMS_ORCHESTRATOR_INTERNAL_JWT_SECRET
               valueFrom:
                 secretKeyRef:
                   name: orchestrator-internal-auth
-                  key: shared-token
+                  key: jwt-secret
+            - name: DOWNSTREAMS_ORCHESTRATOR_INTERNAL_JWT_KID
+              value: "k1"
           ports:
             - containerPort: 8088
           securityContext:

@@ -33,6 +33,12 @@ done
 
 : "${EDGE_AUTH_HS256_SECRET:?EDGE_AUTH_HS256_SECRET must be set}"
 
+JWT_SUB="$SUB" \
+JWT_EMPLOYER_ID="$EMPLOYER_ID" \
+JWT_SCOPE="$SCOPE" \
+JWT_MINUTES="$MINUTES" \
+JWT_ISS="$ISSUER" \
+JWT_AUD="$AUDIENCE" \
 python3 - <<'PY'
 import os, json, time, hmac, hashlib, base64
 

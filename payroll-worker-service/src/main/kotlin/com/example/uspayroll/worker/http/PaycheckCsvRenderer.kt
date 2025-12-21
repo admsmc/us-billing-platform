@@ -53,17 +53,17 @@ object PaycheckCsvRenderer {
                 add("ytdEmployerContributionsCents")
 
                 // YTD tax bases
-                for (b in cols.ytdWageBases) add("ytdWages.${b}.cents")
+                for (b in cols.ytdWageBases) add("ytdWages.$b.cents")
 
                 // Earnings: amount + units + derived rate
-                for (c in cols.earningCodes) add("earning.${c}.cents")
-                for (c in cols.earningCodes) add("earning.${c}.units")
-                for (c in cols.earningCodes) add("earning.${c}.rateCents")
+                for (c in cols.earningCodes) add("earning.$c.cents")
+                for (c in cols.earningCodes) add("earning.$c.units")
+                for (c in cols.earningCodes) add("earning.$c.rateCents")
 
-                for (k in cols.employeeTaxKeys) add("employeeTax.${k}.cents")
-                for (k in cols.employerTaxKeys) add("employerTax.${k}.cents")
-                for (c in cols.deductionCodes) add("deduction.${c}.cents")
-                for (c in cols.employerContribCodes) add("employerContrib.${c}.cents")
+                for (k in cols.employeeTaxKeys) add("employeeTax.$k.cents")
+                for (k in cols.employerTaxKeys) add("employerTax.$k.cents")
+                for (c in cols.deductionCodes) add("deduction.$c.cents")
+                for (c in cols.employerContribCodes) add("employerContrib.$c.cents")
             }
 
             sb.append(header.joinToString(",") { csvEscape(it) })

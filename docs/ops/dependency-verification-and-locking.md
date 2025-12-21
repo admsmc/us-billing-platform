@@ -44,7 +44,23 @@ CI includes a guard that fails pull requests that appear to change dependencies/
 
 This is intentionally conservative so dependency-affecting changes don’t silently land without updating these supply-chain control files.
 
-## Troubleshooting
+## OWASP Dependency-Check and suppression governance
+This repo also runs OWASP Dependency-Check (see root `build.gradle.kts` and `.github/workflows/security-scan.yml`).
 
+Suppressions live at:
+- `config/dependency-check/suppressions.xml`
+
+Rules (enterprise baseline):
+- Suppressions are allowed only for:
+  - validated false positives, or
+  - explicitly accepted risk with a mitigation plan.
+- Every suppression must include:
+  - why it is safe/acceptable
+  - a link to upstream evidence (CVE advisory, vendor bulletin, issue tracker)
+  - an owner and a review date/expiry (so suppressions are routinely revalidated)
+- Treat suppression edits as security-sensitive changes:
+  - require review by the designated security owner(s) for your org (or repo owners until that team exists)
+
+## Troubleshooting
 - **Checksum verification failure**: regenerate verification metadata using the standard command above.
 - **Lock state missing / out of date**: regenerate lockfiles with `--write-locks` using the standard command above.

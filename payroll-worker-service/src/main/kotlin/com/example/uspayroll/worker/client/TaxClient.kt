@@ -4,6 +4,12 @@ import com.example.uspayroll.payroll.model.TaxContext
 import com.example.uspayroll.shared.EmployerId
 import com.example.uspayroll.tax.http.TaxContextDto
 import com.example.uspayroll.tax.http.toDomain
+import com.example.uspayroll.web.client.DownstreamHttpClientProperties
+import com.example.uspayroll.web.client.HttpClientGuardrails
+import com.example.uspayroll.web.client.RestTemplateRetryClassifier
+import io.micrometer.core.instrument.MeterRegistry
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
@@ -19,23 +25,37 @@ interface TaxClient {
     fun getTaxContext(employerId: EmployerId, asOfDate: LocalDate, residentState: String? = null, workState: String? = null, localityCodes: List<String> = emptyList()): TaxContext
 }
 
-@ConfigurationProperties(prefix = "tax")
-data class TaxClientProperties(
-    var baseUrl: String = "http://localhost:8082",
-)
+@ConfigurationProperties(prefix = "downstreams.tax")
+class TaxClientProperties : DownstreamHttpClientProperties() {
+    init {
+        baseUrl = "http://localhost:8082"
+    }
+}
 
 @Configuration
 @EnableConfigurationProperties(TaxClientProperties::class)
 class TaxClientConfig {
 
     @Bean
-    fun httpTaxClient(props: TaxClientProperties, restTemplate: RestTemplate): TaxClient = HttpTaxClient(props, restTemplate)
+    fun httpTaxClient(props: TaxClientProperties, @Qualifier("taxRestTemplate") taxRestTemplate: RestTemplate, meterRegistry: MeterRegistry): TaxClient =
+        HttpTaxClient(props, taxRestTemplate, meterRegistry)
 }
 
 class HttpTaxClient(
     private val props: TaxClientProperties,
     private val restTemplate: RestTemplate,
+    private val meterRegistry: MeterRegistry? = null,
 ) : TaxClient {
+
+    private val logger = LoggerFactory.getLogger(HttpTaxClient::class.java)
+
+    private val guardrails = HttpClientGuardrails.with(
+        maxRetries = props.maxRetries,
+        initialBackoff = props.retryInitialBackoff,
+        maxBackoff = props.retryMaxBackoff,
+        backoffMultiplier = props.retryBackoffMultiplier,
+        circuitBreakerPolicy = if (props.circuitBreakerEnabled) props.circuitBreaker else null,
+    )
 
     override fun getTaxContext(employerId: EmployerId, asOfDate: LocalDate, residentState: String?, workState: String?, localityCodes: List<String>): TaxContext {
         val params = ArrayList<String>(3 + localityCodes.size)
@@ -46,7 +66,31 @@ class HttpTaxClient(
 
         val url = "${props.baseUrl}/employers/${employerId.value}/tax-context?" + params.joinToString("&")
 
-        val dto = restTemplate.getForObject<TaxContextDto>(url)
+        val dto = guardrails.execute(
+            isRetryable = RestTemplateRetryClassifier::isRetryable,
+            onRetry = { attempt ->
+                meterRegistry
+                    ?.counter(
+                        "uspayroll.http.client.retries",
+                        "client",
+                        "tax",
+                        "operation",
+                        "getTaxContext",
+                    )
+                    ?.increment()
+
+                logger.warn(
+                    "http.client.retry client=tax op=getTaxContext attempt={}/{} delayMs={} url={} error={}",
+                    attempt.attempt,
+                    attempt.maxAttempts,
+                    attempt.nextDelay.toMillis(),
+                    url,
+                    attempt.throwable.message,
+                )
+            },
+        ) {
+            restTemplate.getForObject<TaxContextDto>(url)
+        }
             ?: error("Tax service returned null TaxContext for employer=${employerId.value} asOf=$asOfDate")
 
         return dto.toDomain()

@@ -5,14 +5,14 @@ import { Trend } from 'k6/metrics';
 // Run example:
 //   k6 run \
 //     -e ORCH_URL=http://localhost:8086 \
-//     -e INTERNAL_TOKEN=dev-secret \
+//     -e INTERNAL_JWT='eyJ...' \
 //     -e EMPLOYER_ID=emp-1 \
 //     -e PAY_PERIOD_ID=2025-01-BW1 \
 //     -e EMPLOYEE_IDS=ee-1,ee-2 \
 //     benchmarks/k6/orchestrator-finalize-execute.js
 //
-// Note: orchestrator internal endpoints require a shared-secret header.
-// Set orchestrator config: orchestrator.internal-auth.shared-secret=${INTERNAL_TOKEN}
+// Note: orchestrator internal endpoints require an internal JWT:
+//   Authorization: Bearer ${INTERNAL_JWT}
 
 const finalizeE2eMs = new Trend('payrun_finalize_e2e_ms');
 
@@ -50,8 +50,7 @@ export default function () {
   const payPeriodId = env('PAY_PERIOD_ID', '2025-01-BW1');
   const employeeIds = env('EMPLOYEE_IDS', 'ee-1').split(',').map((s) => s.trim()).filter((s) => s.length > 0);
 
-  const internalHeaderName = env('INTERNAL_HEADER', 'X-Internal-Token');
-  const internalToken = env('INTERNAL_TOKEN', '');
+  const internalJwt = env('INTERNAL_JWT', '');
 
   const batchSize = Number(env('BATCH_SIZE', '25'));
   const maxItems = Number(env('MAX_ITEMS', '200'));
@@ -92,7 +91,9 @@ export default function () {
   const execHeaders = {
     'Accept': 'application/json',
   };
-  execHeaders[internalHeaderName] = internalToken;
+  if (internalJwt && internalJwt.length > 0) {
+    execHeaders['Authorization'] = `Bearer ${internalJwt}`;
+  }
 
   let iter = 0;
   let finalStatus = null;

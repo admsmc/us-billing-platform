@@ -1,5 +1,6 @@
 package com.example.uspayroll.orchestrator.http
 
+import com.example.uspayroll.orchestrator.support.InternalAuthTestSupport
 import com.example.uspayroll.orchestrator.support.StubClientsTestConfig
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -23,7 +24,8 @@ import java.time.Instant
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 @TestPropertySource(
     properties = [
-        "orchestrator.internal-auth.shared-secret=dev-internal-token",
+        "orchestrator.internal-auth.jwt-keys.k1=dev-internal-token",
+        "orchestrator.internal-auth.jwt-default-kid=k1",
         "orchestrator.jobs.rabbit.enabled=true",
         // Keep the scheduled finalizer off for these tests.
         "orchestrator.payrun.finalizer.enabled=false",
@@ -39,7 +41,7 @@ class PayRunReconciliationIT(
     private val paycheckComputationService: com.example.uspayroll.orchestrator.payrun.PaycheckComputationService,
 ) {
 
-    private fun internalHeaders(): HttpHeaders = HttpHeaders().apply { set("X-Internal-Token", "dev-internal-token") }
+    private fun internalHeaders(): HttpHeaders = InternalAuthTestSupport.internalAuthHeaders()
 
     private fun completeItem(employerId: String, payRunId: String, employeeId: String, payPeriodId: String = "pp-1") {
         val paycheckId = jdbcTemplate.queryForObject(

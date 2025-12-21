@@ -37,9 +37,11 @@ This repository has working end-to-end workflows and production-minded infrastru
 
 - **Year coverage**: primary focus is **2025** tax and labor rules. Prior/future years and multi-year backtesting are limited.
 - **Coverage breadth**: federal + selected state/local scenarios are covered via curated artifacts and golden tests, but nationwide/local edge-case completeness is still in progress.
-- **Security**: service-to-service and external authentication/authorization are not yet fully wired for production (see `identity-service`/`edge-service`).
+- **Security**: service-to-service and external authentication/authorization are not yet fully wired for production (see `edge-service`).
 - **Tenancy/isolation**: a full production multi-tenant isolation strategy (and automated enforcement) is not finalized.
 - **Compliance & data protection**: additional work is needed for enterprise-grade PII policies, retention, key management/rotation, and DR/restore procedures.
+
+Note: `identity-service`, `integrations-service`, and `notification-service` directories exist as placeholders but are intentionally not included as Gradle modules until there is a concrete feature to implement.
 
 ## Ops & deployment notes
 

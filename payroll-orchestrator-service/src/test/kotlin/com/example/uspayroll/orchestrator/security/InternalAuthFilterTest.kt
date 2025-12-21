@@ -18,8 +18,6 @@ class InternalAuthFilterTest {
     @Test
     fun `allows internal endpoint when Authorization bearer internal JWT is valid (keyring + kid)`() {
         val props = InternalAuthProperties(
-            sharedSecret = "",
-            headerName = "X-Internal-Token",
             jwtKeys = mapOf(
                 "k1" to "jwt-secret-1",
                 "k2" to "jwt-secret-2",
@@ -54,33 +52,8 @@ class InternalAuthFilterTest {
     }
 
     @Test
-    fun `allows internal endpoint when shared secret header matches`() {
-        val props = InternalAuthProperties(
-            sharedSecret = "legacy-secret",
-            headerName = "X-Internal-Token",
-            jwtSharedSecret = "",
-        )
-
-        val filter = InternalAuthFilter(props, objectMapper)
-
-        val request = MockHttpServletRequest("POST", "/employers/EMP1/payruns/internal/PR1/execute")
-        request.addHeader(props.headerName, props.sharedSecret)
-        val response = MockHttpServletResponse()
-
-        val called = AtomicBoolean(false)
-        val chain = FilterChain { _, _ -> called.set(true) }
-
-        filter.doFilter(request, response, chain)
-
-        assertTrue(called.get())
-        assertEquals(200, response.status)
-    }
-
-    @Test
     fun `rejects internal endpoint when bearer token is invalid and shared secret is absent`() {
         val props = InternalAuthProperties(
-            sharedSecret = "",
-            headerName = "X-Internal-Token",
             jwtKeys = mapOf(
                 "k1" to "jwt-secret-1",
             ),
@@ -106,8 +79,6 @@ class InternalAuthFilterTest {
     @Test
     fun `allows internal endpoint during key rotation (old and new kid accepted)`() {
         val props = InternalAuthProperties(
-            sharedSecret = "",
-            headerName = "X-Internal-Token",
             jwtKeys = mapOf(
                 "old" to "old-secret",
                 "new" to "new-secret",

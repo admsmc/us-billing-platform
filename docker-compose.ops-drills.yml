@@ -1,0 +1,23 @@
+services:
+  payroll-worker-service:
+    environment:
+      # Enable DLQ replay endpoint
+      WORKER_JOBS_DLQ_REPLAYER_ENABLED: "true"
+
+      # Make DLQ drills complete quickly by skipping long retry queues.
+      # With maxAttempts=1, the first retryable failure moves directly to DLQ.
+      WORKER_JOBS_FINALIZE_EMPLOYEE_MAX_ATTEMPTS: "1"
+
+      # Protect worker internal operational endpoints under /internal/**.
+      # This is separate from edge-service auth.
+      WORKER_INTERNAL_AUTH_JWT_KEYS_K1: ${WORKER_INTERNAL_AUTH_JWT_KEYS_K1:-dev-worker-internal-token}
+      WORKER_INTERNAL_AUTH_JWT_DEFAULT_KID: ${WORKER_INTERNAL_AUTH_JWT_DEFAULT_KID:-k1}
+      WORKER_INTERNAL_AUTH_JWT_ISSUER: ${WORKER_INTERNAL_AUTH_JWT_ISSUER:-us-payroll-platform}
+      WORKER_INTERNAL_AUTH_JWT_AUDIENCE: ${WORKER_INTERNAL_AUTH_JWT_AUDIENCE:-payroll-worker-service}
+
+  payroll-orchestrator-service:
+    environment:
+      # Orchestrator internal auth verifier key (used by worker -> orchestrator internal calls).
+      # Keep this stable for drills; the worker's signing key can be changed to simulate auth failures.
+      ORCHESTRATOR_INTERNAL_AUTH_JWT_KEYS_K1: ${ORCHESTRATOR_INTERNAL_AUTH_JWT_KEYS_K1:-dev-internal-token}
+      ORCHESTRATOR_INTERNAL_AUTH_JWT_DEFAULT_KID: ${ORCHESTRATOR_INTERNAL_AUTH_JWT_DEFAULT_KID:-k1}

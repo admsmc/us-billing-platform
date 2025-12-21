@@ -29,10 +29,8 @@ Local dev options:
 Production target:
 - OIDC/JWT validation using an IdP (issuer URI + rotating JWK set).
 
-### Internal auth (internal JWT or shared secret)
-For internal-only endpoints (e.g., orchestrator "internal execution" routes), require one of:
-- **Preferred**: short-lived internal JWTs (HS256) using `Authorization: Bearer <token>`.
-- **Fallback**: a shared-secret header (e.g. `X-Internal-Token`).
+### Internal auth (internal JWT)
+For internal-only endpoints (e.g., orchestrator "internal execution" routes), require short-lived internal JWTs (HS256) using `Authorization: Bearer <token>`.
 
 Operational expectations:
 - Store secrets in a secret manager and inject via environment.

@@ -8,7 +8,7 @@ import com.example.uspayroll.time.model.TimeBuckets
 import com.example.uspayroll.time.model.TimeEntry
 import com.example.uspayroll.time.model.TipAllocationRuleSet
 import com.example.uspayroll.time.model.WorkweekDefinition
-import com.example.uspayroll.timeingestion.repo.InMemoryTimeEntryRepository
+import com.example.uspayroll.timeingestion.repo.TimeEntryRepository
 import com.example.uspayroll.timeingestion.rules.TimeRuleSetResolver
 import com.example.uspayroll.timeingestion.rules.TipAllocationRuleSetResolver
 import com.example.uspayroll.web.WebHeaders
@@ -30,7 +30,7 @@ import java.time.LocalDate
 @RestController
 @RequestMapping("/employers/{employerId}/employees/{employeeId}")
 class TimeIngestionController(
-    private val repo: InMemoryTimeEntryRepository,
+    private val repo: TimeEntryRepository,
     private val ruleSetResolver: TimeRuleSetResolver,
     private val tipRuleSetResolver: TipAllocationRuleSetResolver,
 ) {
@@ -151,7 +151,7 @@ class TimeIngestionController(
         val existed = repo.upsert(
             employerId = EmployerId(employerId),
             employeeId = EmployeeId(employeeId),
-            entry = InMemoryTimeEntryRepository.StoredTimeEntry(
+            entry = TimeEntryRepository.StoredTimeEntry(
                 entryId = entryId,
                 date = req.date,
                 hours = req.hours,
@@ -192,7 +192,7 @@ class TimeIngestionController(
             employerId = EmployerId(employerId),
             employeeId = EmployeeId(employeeId),
             entries = req.entries.map { e ->
-                InMemoryTimeEntryRepository.StoredTimeEntry(
+                TimeEntryRepository.StoredTimeEntry(
                     entryId = e.entryId,
                     date = e.date,
                     hours = e.hours,
@@ -361,7 +361,7 @@ class TimeIngestionController(
             val eligibleHoursByEmployee: MutableMap<EmployeeId, Double> = HashMap(),
         )
 
-        fun isTipEligible(e: InMemoryTimeEntryRepository.StoredTimeEntry): Boolean {
+        fun isTipEligible(e: TimeEntryRepository.StoredTimeEntry): Boolean {
             // Approximation: employees with any recorded tips participate in pool allocation.
             val hasTips = (e.cashTipsCents + e.chargedTipsCents) > 0L
             return hasTips && e.hours > 0.0
@@ -385,20 +385,17 @@ class TimeIngestionController(
         val out = HashMap<String, Long>()
 
         for ((worksite, acc) in accByWorksite) {
-            if (worksite == "__default__") {
-                // default key represents un-keyed work; allow it but it usually won't appear when worksiteKey is provided.
-            }
-
             val denom = acc.eligibleHoursTotal
-            if (denom <= 0.0) continue
-
             val poolCents = kotlin.math.floor(acc.chargedTipsTotalCents.toDouble() * poolPercent).toLong()
-            if (poolCents <= 0L) continue
-
             val empHours = acc.eligibleHoursByEmployee[employee] ?: 0.0
-            if (empHours <= 0.0) continue
 
-            val alloc = kotlin.math.floor(poolCents.toDouble() * (empHours / denom)).toLong()
+            val alloc =
+                if (denom > 0.0 && poolCents > 0L && empHours > 0.0) {
+                    kotlin.math.floor(poolCents.toDouble() * (empHours / denom)).toLong()
+                } else {
+                    0L
+                }
+
             if (alloc > 0L) {
                 out[worksite] = alloc
             }

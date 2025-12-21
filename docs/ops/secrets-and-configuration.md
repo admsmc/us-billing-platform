@@ -41,36 +41,24 @@ Internal operational endpoints are protected and should never be exposed publicl
 mTLS remains an infrastructure concern (service mesh / SPIFFE), but this repo supports an application-level internal JWT (HS256) option so service-to-service auth can be production-grade even without a mesh.
 
 ### Orchestrator internal endpoints
-Orchestrator internal endpoints (e.g. `/payruns/internal/**`) accept either:
-
-1) **Preferred**: short-lived internal JWT (HS256)
-- Keyring (recommended for rotation):
-  - `orchestrator.internal-auth.jwt-keys.<kid>=<random>` (e.g. `orchestrator.internal-auth.jwt-keys.v1=...`)
-  - `orchestrator.internal-auth.jwt-default-kid=v1` (optional; used only when a token has no `kid` header)
-- Legacy single-key verifier (supported, but not rotatable):
-  - `orchestrator.internal-auth.jwt-shared-secret=<random>`
+Orchestrator internal endpoints (e.g. `/payruns/internal/**`) require a short-lived internal JWT (HS256):
+- Verifier keyring (recommended for rotation):
+  - `orchestrator.internal-auth.jwt-keys.<kid>=<random>` (e.g. `orchestrator.internal-auth.jwt-keys.k1=...`)
+  - `orchestrator.internal-auth.jwt-default-kid=k1` (optional; used only when a token has no `kid` header)
 - Token claims constraints:
   - `orchestrator.internal-auth.jwt-issuer=us-payroll-platform` (default)
   - `orchestrator.internal-auth.jwt-audience=payroll-orchestrator-service` (default)
 - Request header:
   - `Authorization: Bearer <internal-jwt>`
 
-2) **Fallback**: shared secret header
-- `orchestrator.internal-auth.shared-secret=<random>`
-- `orchestrator.internal-auth.header-name=X-Internal-Token` (default)
-
 ### Worker → orchestrator internal client auth
-The worker client prefers internal JWT when configured:
-- `orchestrator.internal-jwt-secret=<random>`
-- `orchestrator.internal-jwt-issuer=us-payroll-platform` (default)
-- `orchestrator.internal-jwt-audience=payroll-orchestrator-service` (default)
-- `orchestrator.internal-jwt-subject=payroll-worker-service` (default)
-- `orchestrator.internal-jwt-kid=v1` (default)
-- `orchestrator.internal-jwt-ttl-seconds=60` (default)
-
-If the internal JWT secret is not set, it falls back to the shared secret:
-- `orchestrator.internal-token=<random>`
-- `orchestrator.internal-token-header=X-Internal-Token` (default)
+The worker issues internal JWTs when calling orchestrator internal endpoints:
+- `downstreams.orchestrator.internal-jwt-secret=<random>`
+- `downstreams.orchestrator.internal-jwt-kid=k1` (must match orchestrator’s configured keyring kid)
+- `downstreams.orchestrator.internal-jwt-issuer=us-payroll-platform` (default)
+- `downstreams.orchestrator.internal-jwt-audience=payroll-orchestrator-service` (default)
+- `downstreams.orchestrator.internal-jwt-subject=payroll-worker-service` (default)
+- `downstreams.orchestrator.internal-jwt-ttl-seconds=60` (default)
 
 ### Internal JWT key rotation runbook (HS256)
 This runbook assumes you are using the orchestrator verifier keyring (`orchestrator.internal-auth.jwt-keys.*`) and the worker internal JWT client.
@@ -81,15 +69,19 @@ This runbook assumes you are using the orchestrator verifier keyring (`orchestra
    - `orchestrator.internal-auth.jwt-keys.v2=<new>`
    - (Optional) keep `orchestrator.internal-auth.jwt-default-kid=v1`.
 3) Deploy the worker configured to issue tokens with the new `kid`:
-   - `orchestrator.internal-jwt-kid=v2`
-   - `orchestrator.internal-jwt-secret=<new>`
+   - `downstreams.orchestrator.internal-jwt-kid=v2`
+   - `downstreams.orchestrator.internal-jwt-secret=<new>`
 4) Observe for a full rollout window (longer than the token TTL). The default TTL is 60 seconds.
 5) Retire the old key by removing it from the orchestrator keyring (remove `jwt-keys.v1`).
 
 ### Worker internal endpoints
-Worker internal endpoints (e.g. DLQ replay) require:
-- `worker.internal-auth.shared-secret=<random>`
-- `worker.internal-auth.header-name=X-Internal-Token` (default)
+Worker internal endpoints (e.g. DLQ replay) require a short-lived internal JWT (HS256):
+- `worker.internal-auth.jwt-keys.<kid>=<random>` (e.g. `worker.internal-auth.jwt-keys.k1=...`)
+- `worker.internal-auth.jwt-default-kid=k1` (optional)
+- `worker.internal-auth.jwt-issuer=us-payroll-platform` (default)
+- `worker.internal-auth.jwt-audience=payroll-worker-service` (default)
+- Request header:
+  - `Authorization: Bearer <internal-jwt>`
 
 ## Databases (per service)
 In production, supply DB credentials via secrets.

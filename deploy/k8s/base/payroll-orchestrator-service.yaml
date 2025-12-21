@@ -1,0 +1,131 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: payroll-orchestrator-service
+automountServiceAccountToken: false
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payroll-orchestrator-service
+spec:
+  selector:
+    app: payroll-orchestrator-service
+  ports:
+    - name: http
+      port: 8085
+      targetPort: 8085
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payroll-orchestrator-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: payroll-orchestrator-service
+  template:
+    metadata:
+      labels:
+        app: payroll-orchestrator-service
+    spec:
+      serviceAccountName: payroll-orchestrator-service
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: payroll-orchestrator-service
+          image: ghcr.io/REPLACE_ME/us-payroll-platform/payroll-orchestrator-service:REPLACE_TAG
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: SERVER_PORT
+              value: "8085"
+
+            # DB
+            - name: SPRING_DATASOURCE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: orch-db
+                  key: jdbc-url
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: orch-db
+                  key: username
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: orch-db
+                  key: password
+
+            # Downstream base URLs
+            - name: DOWNSTREAMS_HR_BASE_URL
+              value: http://hr-service:8081
+            - name: DOWNSTREAMS_TAX_BASE_URL
+              value: http://tax-service:8082
+            - name: DOWNSTREAMS_LABOR_BASE_URL
+              value: http://labor-service:8083
+
+            # Optional time ingestion integration (disabled by default)
+            - name: DOWNSTREAMS_TIME_BASE_URL
+              value: http://time-ingestion-service:8084
+            - name: DOWNSTREAMS_TIME_ENABLED
+              value: "false"
+
+            # Orchestrator internal auth (JWT keyring). Leave blank to disable internal endpoints.
+            - name: ORCHESTRATOR_INTERNAL_AUTH_JWT_KEYS_K1
+              valueFrom:
+                secretKeyRef:
+                  name: orchestrator-internal-auth
+                  key: jwt-secret
+            - name: ORCHESTRATOR_INTERNAL_AUTH_JWT_DEFAULT_KID
+              value: "k1"
+          ports:
+            - containerPort: 8085
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8085
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8085
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 12
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8085
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+      volumes:
+        - name: tmp
+          emptyDir: {}

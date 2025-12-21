@@ -43,6 +43,14 @@ class LaborHttpControllerIntegrationTest {
             jsonPath("$.federalMinimumWageCents") { value(1_650) }
             header { string("X-Correlation-ID", correlationId) }
         }
+
+        // Unknown state -> 404
+        mockMvc.get("/employers/$employerId/labor-standards") {
+            param("asOf", asOf.toString())
+            param("state", "ZZ")
+        }.andExpect {
+            status { isNotFound() }
+        }
     }
 
     @Test
@@ -60,7 +68,7 @@ class LaborHttpControllerIntegrationTest {
             jsonPath("$.federalTippedCashMinimumCents") { doesNotExist() }
         }
 
-        // TX: federal baseline with tip credit.
+        // TX: baseline minimum with tip credit.
         mockMvc.get("/employers/$employerId/labor-standards") {
             param("asOf", asOf.toString())
             param("state", "TX")
@@ -88,11 +96,7 @@ class LaborHttpControllerIntegrationTest {
                         federalTippedCashMinimum = Money(2_13L),
                         tippedMonthlyThreshold = null,
                     )
-                    else -> LaborStandardsContext(
-                        federalMinimumWage = Money(7_25L),
-                        federalTippedCashMinimum = null,
-                        tippedMonthlyThreshold = null,
-                    )
+                    else -> null
                 }
             }
         }

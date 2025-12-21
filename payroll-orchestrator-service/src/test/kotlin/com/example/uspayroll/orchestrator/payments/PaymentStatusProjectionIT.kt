@@ -4,13 +4,13 @@ import com.example.uspayroll.messaging.events.payments.PaycheckPaymentLifecycleS
 import com.example.uspayroll.messaging.events.payments.PaycheckPaymentStatusChangedEvent
 import com.example.uspayroll.orchestrator.http.PayRunController
 import com.example.uspayroll.orchestrator.payrun.model.PaymentStatus
+import com.example.uspayroll.orchestrator.support.InternalAuthTestSupport
 import com.example.uspayroll.orchestrator.support.StubClientsTestConfig
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.context.annotation.Import
-import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.RequestEntity
 import org.springframework.jdbc.core.JdbcTemplate
@@ -26,7 +26,8 @@ import java.util.UUID
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 @TestPropertySource(
     properties = [
-        "orchestrator.internal-auth.shared-secret=dev-internal-token",
+        "orchestrator.internal-auth.jwt-keys.k1=dev-internal-token",
+        "orchestrator.internal-auth.jwt-default-kid=k1",
         "orchestrator.payrun.execute.enabled=true",
     ],
 )
@@ -56,7 +57,7 @@ class PaymentStatusProjectionIT(
             PayRunController.StartFinalizeResponse::class.java,
         )
 
-        val execHeaders = HttpHeaders().apply { set("X-Internal-Token", "dev-internal-token") }
+        val execHeaders = InternalAuthTestSupport.internalAuthHeaders()
         rest.exchange(
             RequestEntity.post(URI.create("/employers/$employerId/payruns/internal/$payRunId/execute?batchSize=10"))
                 .headers(execHeaders)
@@ -150,7 +151,7 @@ class PaymentStatusProjectionIT(
             PayRunController.StartFinalizeResponse::class.java,
         )
 
-        val execHeaders = HttpHeaders().apply { set("X-Internal-Token", "dev-internal-token") }
+        val execHeaders = InternalAuthTestSupport.internalAuthHeaders()
         rest.exchange(
             RequestEntity.post(URI.create("/employers/$employerId/payruns/internal/$payRunId/execute?batchSize=10"))
                 .headers(execHeaders)

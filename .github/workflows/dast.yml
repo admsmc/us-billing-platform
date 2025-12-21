@@ -39,7 +39,7 @@ jobs:
           docker compose logs edge-service --no-color || true
           exit 1
 
-      - name: OWASP ZAP baseline
+      - name: OWASP ZAP baseline (unauthenticated)
         run: |
           set -euo pipefail
           mkdir -p zap-reports
@@ -52,6 +52,74 @@ jobs:
         with:
           name: zap-baseline
           path: zap-reports/*
+
+      - name: Teardown
+        if: always()
+        run: docker compose down -v
+
+  zap-authenticated-hs256:
+    # Secrets are not available to forked PRs; skip gracefully.
+    if: ${{ secrets.EDGE_AUTH_HS256_SECRET != '' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Boot stack (HS256 auth enabled)
+        env:
+          EDGE_AUTH_MODE: HS256
+          EDGE_AUTH_HS256_SECRET: ${{ secrets.EDGE_AUTH_HS256_SECRET }}
+        run: |
+          set -euo pipefail
+          docker compose up -d --build
+
+      - name: Wait for edge-service health
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:8080/actuator/health >/dev/null; then
+              echo "edge-service is healthy"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "edge-service did not become healthy" >&2
+          docker compose ps
+          docker compose logs edge-service --no-color || true
+          exit 1
+
+      - name: Mint short-lived JWT for scan
+        env:
+          EDGE_AUTH_HS256_SECRET: ${{ secrets.EDGE_AUTH_HS256_SECRET }}
+        run: |
+          set -euo pipefail
+          token=$(./scripts/mint-dev-jwt.sh --sub zap-ci --scope 'payroll:admin' --minutes 10)
+          # Do not print the token to logs.
+          echo "ZAP_AUTH_JWT=$token" >> "$GITHUB_ENV"
+
+      - name: OWASP ZAP baseline (authenticated)
+        run: |
+          set -euo pipefail
+          mkdir -p zap-reports-auth
+
+          # Inject Authorization header for all requests.
+          # Note: we use ZAP's replacer to set a fixed request header.
+          docker run --rm --network host -v "${PWD}/zap-reports-auth:/zap/wrk" ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py -t http://localhost:8080 -a -m 5 -r zap-report.html -J zap-report.json \
+            -z "-config replacer.full_list(0).description=auth-header" \
+            -z "-config replacer.full_list(0).enabled=true" \
+            -z "-config replacer.full_list(0).matchtype=REQ_HEADER" \
+            -z "-config replacer.full_list(0).matchstr=Authorization" \
+            -z "-config replacer.full_list(0).regex=false" \
+            -z "-config replacer.full_list(0).replacement=Bearer%20${ZAP_AUTH_JWT}"
+
+      - name: Upload ZAP reports (authenticated)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-authenticated-hs256
+          path: zap-reports-auth/*
 
       - name: Teardown
         if: always()

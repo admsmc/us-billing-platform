@@ -131,8 +131,8 @@ class TaxLaborHttpClientsIntegrationTest {
                 val laborBase = laborServer.url("").toString().removeSuffix("/")
 
                 TestPropertyValues.of(
-                    "tax.base-url=$taxBase",
-                    "labor.base-url=$laborBase",
+                    "downstreams.tax.base-url=$taxBase",
+                    "downstreams.labor.base-url=$laborBase",
                 ).applyTo(context.environment)
             }
         }

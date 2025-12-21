@@ -15,14 +15,6 @@ class LogRedactorTest {
     }
 
     @Test
-    fun `redacts X-Internal-Token header value`() {
-        val input = "X-Internal-Token=supersecret"
-        val out = LogRedactor.redact(input)
-        assertTrue(out.contains("X-Internal-Token=<redacted>"))
-        assertFalse(out.contains("supersecret"))
-    }
-
-    @Test
     fun `redacts bare bearer token occurrences`() {
         val input = "sending bearer abc123"
         val out = LogRedactor.redact(input)

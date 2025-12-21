@@ -1,5 +1,6 @@
 package com.example.uspayroll.orchestrator.http
 
+import com.example.uspayroll.orchestrator.support.InternalAuthTestSupport
 import com.example.uspayroll.orchestrator.support.StubClientsTestConfig
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -7,7 +8,6 @@ import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.context.annotation.Import
-import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.RequestEntity
 import org.springframework.jdbc.core.JdbcTemplate
@@ -21,7 +21,8 @@ import java.net.URI
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 @TestPropertySource(
     properties = [
-        "orchestrator.internal-auth.shared-secret=dev-internal-token",
+        "orchestrator.internal-auth.jwt-keys.k1=dev-internal-token",
+        "orchestrator.internal-auth.jwt-default-kid=k1",
         "orchestrator.jobs.rabbit.enabled=true",
         // Keep the finalizer off for these tests (we test per-item behavior + enqueueing here).
         "orchestrator.payrun.finalizer.enabled=false",
@@ -178,7 +179,7 @@ class PayRunQueueDrivenIT(
             employeeId = com.example.uspayroll.shared.EmployeeId("e-1"),
         )
 
-        val headers = HttpHeaders().apply { set("X-Internal-Token", "dev-internal-token") }
+        val headers = InternalAuthTestSupport.internalAuthHeaders()
         val req = PayRunController.CompleteEmployeeItemRequest(
             paycheckId = paycheckId,
             paycheck = computation.paycheck,
@@ -251,7 +252,7 @@ class PayRunQueueDrivenIT(
             "e-bad",
         ) ?: "chk-test"
 
-        val headers = HttpHeaders().apply { set("X-Internal-Token", "dev-internal-token") }
+        val headers = InternalAuthTestSupport.internalAuthHeaders()
         val r1 = rest.exchange(
             RequestEntity.post(URI.create("/employers/$employerId/payruns/internal/run-queue-3/items/e-bad/complete"))
                 .headers(headers)

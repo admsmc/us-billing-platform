@@ -4,6 +4,16 @@ server:
 spring:
   application:
     name: time-ingestion-service
+  # Disable Boot's auto-Flyway; we run Flyway explicitly so we can control locations.
+  flyway:
+    enabled: false
+
+# Default SINGLE-db configuration (override via env in deploy)
+time:
+  db:
+    url: ${TIME_DB_URL:jdbc:h2:mem:time_ingestion;DB_CLOSE_DELAY=-1;MODE=PostgreSQL}
+    username: ${TIME_DB_USERNAME:sa}
+    password: ${TIME_DB_PASSWORD:}
 
 management:
   endpoint:

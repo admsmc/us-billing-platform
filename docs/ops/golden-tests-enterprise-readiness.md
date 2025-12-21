@@ -106,6 +106,30 @@ Acceptance criteria:
   - generated JSON
   - golden tests updated to that year’s values
 
+## Release gates (minimum)
+For tagged releases and production promotion candidates, require (at minimum):
+
+1) Full repo checks:
+- `./scripts/gradlew-java21.sh --no-daemon check`
+
+2) Canary golden suites (explicit, stable, high-signal)
+Run these as explicit gates (even though `check` already runs tests) so release evidence is easy to audit:
+- Domain canaries (`payroll-domain`):
+  - `com.example.uspayroll.payroll.engine.OffCyclePaycheckGoldenTest`
+  - `com.example.uspayroll.payroll.engine.EmployerSpecificDeductionsGoldenTest`
+- Tax catalog canaries (`tax-service`):
+  - `com.example.uspayroll.tax.persistence.Pub15TFederalGoldenTest`
+  - `com.example.uspayroll.tax.persistence.FicaAndAdditionalMedicareDbGoldenTest`
+  - `com.example.uspayroll.tax.persistence.MichiganLocalTaxGoldenTest`
+- Workflow canaries (`payroll-orchestrator-service`):
+  - `com.example.uspayroll.orchestrator.http.OffCyclePayRunWorkflowIT`
+  - `com.example.uspayroll.orchestrator.http.PayRunVoidReissueWorkflowIT`
+
+Example invocation pattern:
+- `./scripts/gradlew-java21.sh --no-daemon :payroll-domain:test --tests 'com.example.uspayroll.payroll.engine.OffCyclePaycheckGoldenTest'`
+
+These canaries should expand over time, but should remain small enough to run quickly and catch regressions in the most critical statutory and workflow paths.
+
 ## When golden tests must be updated
 Golden tests should change only when:
 - statutory rules change (new year / rule revision)

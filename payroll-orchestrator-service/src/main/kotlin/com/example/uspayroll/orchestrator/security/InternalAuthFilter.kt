@@ -46,54 +46,52 @@ class InternalAuthFilter(
             else -> emptyMap()
         }
 
-        if (bearer != null && jwtKeyring.isNotEmpty()) {
-            val ok = try {
-                InternalJwtHs256.verifyWithKeyring(
-                    token = bearer,
-                    secretsByKid = jwtKeyring,
-                    defaultKid = props.jwtDefaultKid.takeIf { it.isNotBlank() },
-                    expectedIssuer = props.jwtIssuer,
-                    expectedAudience = props.jwtAudience,
-                )
-                true
-            } catch (ex: IllegalArgumentException) {
-                SecurityAuditLogger.internalAuthFailed(
-                    component = "payroll-orchestrator-service",
-                    method = request.method,
-                    path = request.requestURI ?: "",
-                    status = HttpStatus.UNAUTHORIZED.value(),
-                    reason = "invalid_bearer_jwt",
-                    mechanism = "bearer_jwt",
-                    correlationId = SecurityAuditLogger.correlationIdFromServletHeader(request::getHeader),
-                )
-                logger.warn("Invalid internal JWT bearer token", ex)
-                false
-            }
-
-            if (ok) {
-                filterChain.doFilter(request, response)
-                return
-            }
+        if (bearer == null || jwtKeyring.isEmpty()) {
+            SecurityAuditLogger.internalAuthFailed(
+                component = "payroll-orchestrator-service",
+                method = request.method,
+                path = request.requestURI ?: "",
+                status = HttpStatus.UNAUTHORIZED.value(),
+                reason = if (bearer == null) "missing_bearer_jwt" else "internal_jwt_not_configured",
+                mechanism = "bearer_jwt",
+                correlationId = SecurityAuditLogger.correlationIdFromServletHeader(request::getHeader),
+            )
+            deny(request, response)
+            return
         }
 
-        val expected = props.sharedSecret
-        val headerValue = request.getHeader(props.headerName)
+        val ok = try {
+            InternalJwtHs256.verifyWithKeyring(
+                token = bearer,
+                secretsByKid = jwtKeyring,
+                defaultKid = props.jwtDefaultKid.takeIf { it.isNotBlank() },
+                expectedIssuer = props.jwtIssuer,
+                expectedAudience = props.jwtAudience,
+            )
+            true
+        } catch (ex: IllegalArgumentException) {
+            SecurityAuditLogger.internalAuthFailed(
+                component = "payroll-orchestrator-service",
+                method = request.method,
+                path = request.requestURI ?: "",
+                status = HttpStatus.UNAUTHORIZED.value(),
+                reason = "invalid_bearer_jwt",
+                mechanism = "bearer_jwt",
+                correlationId = SecurityAuditLogger.correlationIdFromServletHeader(request::getHeader),
+            )
+            logger.warn("Invalid internal JWT bearer token", ex)
+            false
+        }
 
-        if (expected.isNotBlank() && headerValue == expected) {
+        if (ok) {
             filterChain.doFilter(request, response)
             return
         }
 
-        SecurityAuditLogger.internalAuthFailed(
-            component = "payroll-orchestrator-service",
-            method = request.method,
-            path = request.requestURI ?: "",
-            status = HttpStatus.UNAUTHORIZED.value(),
-            reason = "missing_or_mismatched_internal_auth",
-            mechanism = if (bearer != null) "bearer_jwt" else "shared_secret_header",
-            correlationId = SecurityAuditLogger.correlationIdFromServletHeader(request::getHeader),
-        )
+        deny(request, response)
+    }
 
+    private fun deny(request: HttpServletRequest, response: HttpServletResponse) {
         val instance = request.requestURI
             ?.let { raw ->
                 try {

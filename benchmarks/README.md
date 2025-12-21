@@ -36,7 +36,7 @@ Enable the endpoint (disabled by default):
 - `WORKER_BENCHMARKS_TOKEN=dev-secret`
 
 Enable time-derived overtime (recommended default macrobench path):
-- set `TIME_ENABLED=true` for worker/orchestrator (in docker compose or your `bootRun` env)
+- set `DOWNSTREAMS_TIME_ENABLED=true` for worker/orchestrator (in docker compose or your `bootRun` env)
 - seed time entries with `SEED_TIME=true` when running `./benchmarks/seed/seed-benchmark-data.sh`
 
 Tip pooling (worksite-level) for benchmarks:
@@ -132,7 +132,7 @@ Note:
 
 Prereqs:
 - Orchestrator service must be running.
-- Orchestrator internal auth must be configured (non-blank shared secret), and k6 must send the same token.
+- Orchestrator internal auth must be configured (JWT keyring), and k6 must send an internal JWT signed with the configured key.
 - HR/Tax/Labor dependencies must be reachable and have data seeded for the chosen employer/payPeriod/employeeIds.
 
 Enterprise-grade seeding approach (recommended)
@@ -144,13 +144,13 @@ Enterprise-grade seeding approach (recommended)
 
 Local dev flow (legacy execute-loop):
 1. Start the full stack (Postgres + services) so Flyway migrations run:
-   - `TIME_ENABLED=true docker compose up -d`
+   - `DOWNSTREAMS_TIME_ENABLED=true docker compose up -d`
 2. Seed HR + import tax + import labor + (recommended) seed time entries:
 - `EMPLOYER_ID=EMP-BENCH PAY_PERIOD_ID=2025-01-BW1 CHECK_DATE=2025-01-15 EMPLOYEE_COUNT=200 MI_EVERY=5 NY_EVERY=7 CA_HOURLY_EVERY=9 TIPPED_EVERY=11 GARNISHMENT_EVERY=3 SEED_TIME=true TIME_BASE_URL=http://localhost:8084 ./benchmarks/seed/seed-benchmark-data.sh`
 3. Enable legacy execute endpoint on orchestrator (bench/dev only):
    - set `orchestrator.payrun.execute.enabled=true`
 4. Run the k6 macrobench:
-   - `k6 run -e ORCH_URL=http://localhost:8085 -e INTERNAL_TOKEN=dev-secret -e EMPLOYER_ID=EMP-BENCH -e PAY_PERIOD_ID=2025-01-BW1 -e EMPLOYEE_IDS=EE-BENCH-000001,EE-BENCH-000002 benchmarks/k6/orchestrator-finalize-execute.js`
+   - `k6 run -e ORCH_URL=http://localhost:8085 -e INTERNAL_JWT='<jwt>' -e EMPLOYER_ID=EMP-BENCH -e PAY_PERIOD_ID=2025-01-BW1 -e EMPLOYEE_IDS=EE-BENCH-000001,EE-BENCH-000002 benchmarks/k6/orchestrator-finalize-execute.js`
 
 ### Orchestrator finalize via RabbitMQ (queue-driven, parallel)
 This is the enterprise-style path and the recommended way to benchmark parallelism:
@@ -160,7 +160,7 @@ This is the enterprise-style path and the recommended way to benchmark paralleli
 
 Run (compose + N worker replicas):
 1. Start the stack with RabbitMQ enabled (time-derived overtime enabled):
-   - `TIME_ENABLED=true ORCHESTRATOR_INTERNAL_AUTH_SHARED_SECRET=dev-internal-token docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.bench-parallel.yml up -d --build`
+   - `DOWNSTREAMS_TIME_ENABLED=true DOWNSTREAMS_ORCHESTRATOR_INTERNAL_JWT_SECRET=dev-internal-token docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.bench-parallel.yml up -d --build`
 2. Scale workers:
    - `docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.bench-parallel.yml up -d --scale payroll-worker-service=4`
 3. Seed HR + import tax + import labor + (recommended) seed time entries:
@@ -190,7 +190,7 @@ Verbosity controls (to prevent terminal buffer issues):
   - `tail -f /tmp/bench.log`
 
 Run:
-- `k6 run -e ORCH_URL=http://localhost:8086 -e INTERNAL_TOKEN=dev-secret -e EMPLOYER_ID=emp-1 -e PAY_PERIOD_ID=2025-01-BW1 -e EMPLOYEE_IDS=ee-1,ee-2 benchmarks/k6/orchestrator-finalize-execute.js`
+- `k6 run -e ORCH_URL=http://localhost:8086 -e INTERNAL_JWT='<jwt>' -e EMPLOYER_ID=emp-1 -e PAY_PERIOD_ID=2025-01-BW1 -e EMPLOYEE_IDS=ee-1,ee-2 benchmarks/k6/orchestrator-finalize-execute.js`
 
 Tuning:
 - `-e VUS=4` `-e DURATION=30s` (defaults)

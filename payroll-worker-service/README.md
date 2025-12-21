@@ -69,24 +69,25 @@ This counter is incremented when the worker-service exhausts its retry budget ca
 
 ## HR client configuration (timeouts and retries)
 
-The HTTP-based `HrClient` used by worker-service is configured via the `hr.*` property namespace:
+The HTTP-based `HrClient` used by worker-service is configured via the `downstreams.hr.*` property namespace:
 
-- `hr.base-url` – base URL for the HR service (default: `http://localhost:8081`).
-- `hr.connect-timeout` – connection timeout as a Java `Duration` (default: `PT2S`).
-- `hr.read-timeout` – read timeout as a Java `Duration` (default: `PT5S`).
-- `hr.max-retries` – number of retry attempts for transient failures on non-critical endpoints (default: `2`).
+- `downstreams.hr.base-url` – base URL for the HR service (default: `http://localhost:8081`).
+- `downstreams.hr.connect-timeout` – connection timeout as a Java `Duration` (default: `PT2S`).
+- `downstreams.hr.read-timeout` – read timeout as a Java `Duration` (default: `PT5S`).
+- `downstreams.hr.max-retries` – number of retry attempts for transient failures on non-critical endpoints (default: `2`).
 
 Example application configuration snippet (YAML):
 
 ```yaml
-hr:
-  base-url: "http://hr-service:8081"
-  connect-timeout: "PT1S"   # 1 second connect timeout
-  read-timeout: "PT3S"      # 3 second read timeout
-  max-retries: 3             # up to 4 total attempts (1 initial + 3 retries)
+downstreams:
+  hr:
+    base-url: "http://hr-service:8081"
+    connect-timeout: "PT1S"   # 1 second connect timeout
+    read-timeout: "PT3S"      # 3 second read timeout
+    max-retries: 3             # up to 4 total attempts (1 initial + 3 retries)
 ```
 
-Timeouts are applied via the underlying `SimpleClientHttpRequestFactory`, and the retry policy is implemented in `HttpHrClient.executeWithRetry`. Garnishment-related endpoints (`/garnishments` and `/garnishments/withholdings`) use `failOnExhaustion = false`, meaning the worker-service logs and falls back rather than failing the entire payroll run when HR is unavailable.
+Timeouts are applied via the underlying `SimpleClientHttpRequestFactory`, and bounded retry/backoff is applied via `web-core`’s `HttpClientGuardrails`. Garnishment-related endpoints (`/garnishments` and `/garnishments/withholdings`) use `failOnExhaustion = false`, meaning the worker-service logs and falls back rather than failing the entire payroll run when HR is unavailable.
 
 ### Manual replay of garnishment withholdings
 

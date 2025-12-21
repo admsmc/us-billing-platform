@@ -1,5 +1,6 @@
 package com.example.uspayroll.orchestrator.http
 
+import com.example.uspayroll.orchestrator.support.InternalAuthTestSupport
 import com.example.uspayroll.orchestrator.support.StubClientsTestConfig
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -7,7 +8,6 @@ import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.context.annotation.Import
-import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.RequestEntity
 import org.springframework.jdbc.core.JdbcTemplate
@@ -21,7 +21,8 @@ import java.net.URI
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 @TestPropertySource(
     properties = [
-        "orchestrator.internal-auth.shared-secret=dev-internal-token",
+        "orchestrator.internal-auth.jwt-keys.k1=dev-internal-token",
+        "orchestrator.internal-auth.jwt-default-kid=k1",
         "orchestrator.jobs.rabbit.enabled=true",
         // Keep the finalizer off; the test drives per-item finalization via the internal endpoint.
         "orchestrator.payrun.finalizer.enabled=false",
@@ -52,7 +53,7 @@ class PayRunPaymentsInitiateIdempotencyIT(
         )
 
         // Complete both items (internal endpoint).
-        val internalHeaders = HttpHeaders().apply { set("X-Internal-Token", "dev-internal-token") }
+        val internalHeaders = InternalAuthTestSupport.internalAuthHeaders()
 
         fun complete(employeeId: String) {
             val paycheckId = jdbcTemplate.queryForObject(
@@ -154,7 +155,7 @@ class PayRunPaymentsInitiateIdempotencyIT(
                 PayRunController.StartFinalizeResponse::class.java,
             )
 
-            val internalHeaders = HttpHeaders().apply { set("X-Internal-Token", "dev-internal-token") }
+            val internalHeaders = InternalAuthTestSupport.internalAuthHeaders()
 
             val paycheckId = jdbcTemplate.queryForObject(
                 """

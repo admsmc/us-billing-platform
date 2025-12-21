@@ -3,6 +3,7 @@ package com.example.uspayroll.orchestrator.payments.kafka
 import com.example.uspayroll.messaging.events.payments.PaycheckPaymentLifecycleStatus
 import com.example.uspayroll.messaging.events.payments.PaycheckPaymentStatusChangedEvent
 import com.example.uspayroll.orchestrator.http.PayRunController
+import com.example.uspayroll.orchestrator.support.InternalAuthTestSupport
 import com.example.uspayroll.orchestrator.support.StubClientsTestConfig
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -10,7 +11,6 @@ import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.context.annotation.Import
-import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.RequestEntity
 import org.springframework.jdbc.core.JdbcTemplate
@@ -38,7 +38,8 @@ import java.util.UUID
         "orchestrator.payments.consumer-name=payroll-orchestrator-service-it",
         "orchestrator.payments.group-id=payroll-orchestrator-payments-it",
         "orchestrator.payments.payment-status-changed-topic=paycheck.payment.status_changed",
-        "orchestrator.internal-auth.shared-secret=dev-internal-token",
+        "orchestrator.internal-auth.jwt-keys.k1=dev-internal-token",
+        "orchestrator.internal-auth.jwt-default-kid=k1",
         "orchestrator.payrun.execute.enabled=true",
         "spring.kafka.bootstrap-servers=\${spring.embedded.kafka.brokers}",
         "spring.kafka.consumer.auto-offset-reset=earliest",
@@ -74,7 +75,7 @@ class PaymentsStatusKafkaConsumerIT(
         )
         assertEquals(HttpStatus.ACCEPTED, start.statusCode)
 
-        val execHeaders = HttpHeaders().apply { set("X-Internal-Token", "dev-internal-token") }
+        val execHeaders = InternalAuthTestSupport.internalAuthHeaders()
         rest.exchange(
             RequestEntity.post(URI.create("/employers/$employerId/payruns/internal/$payRunId/execute?batchSize=10"))
                 .headers(execHeaders)

@@ -1,10 +1,9 @@
 package com.example.uspayroll.orchestrator.http
 
-import com.example.uspayroll.orchestrator.benchmarks.PaycheckCsvRenderer
 import com.example.uspayroll.orchestrator.benchmarks.PayStatementRenderer
+import com.example.uspayroll.orchestrator.benchmarks.PaycheckCsvRenderer
 import com.example.uspayroll.orchestrator.persistence.PayRunPaycheckPayloadRepository
 import com.fasterxml.jackson.databind.ObjectMapper
-import jakarta.servlet.http.HttpServletRequest
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
@@ -64,7 +63,7 @@ class BenchmarkPayRunArtifactsController(
         @PathVariable employerId: String,
         @PathVariable payRunId: String,
         @RequestBody request: RenderPayRunArtifactsRequest,
-        servletRequest: HttpServletRequest,
+        servletRequest: jakarta.servlet.http.HttpServletRequest,
     ): ResponseEntity<Any> {
         val tokenHeader = servletRequest.getHeader(props.headerName)
         if (props.token.isNotBlank() && props.token != tokenHeader) {
@@ -124,7 +123,7 @@ class BenchmarkPayRunArtifactsController(
         @PathVariable employerId: String,
         @PathVariable payRunId: String,
         @RequestBody request: RenderPayRunArtifactsRequest,
-        servletRequest: HttpServletRequest,
+        servletRequest: jakarta.servlet.http.HttpServletRequest,
     ): ResponseEntity<Any> {
         val tokenHeader = servletRequest.getHeader(props.headerName)
         if (props.token.isNotBlank() && props.token != tokenHeader) {
