@@ -5,14 +5,16 @@ import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification
 import org.gradle.testing.jacoco.tasks.JacocoReport
 
 
-// Toggle to temporarily disable detekt from the aggregate `check` task.
-val enableDetektInCheck: Boolean =
-    (project.findProperty("enableDetektInCheck") as? String)?.toBooleanStrictOrNull() ?: true
+// Toggle Detekt on/off via -PenableDetekt=true/false (default: false for now).
+val enableDetekt: Boolean =
+    (project.findProperty("enableDetekt") as? String)?.toBooleanStrictOrNull() ?: false
 
 plugins {
     kotlin("jvm") version "2.0.21" apply false
     kotlin("plugin.spring") version "2.0.21" apply false
-    id("org.jlleitschuh.gradle.ktlint") version "12.3.0" apply false
+    // Ktlint plugin aligned with current Gradle/Kotlin toolchain.
+    id("org.jlleitschuh.gradle.ktlint") version "14.0.1" apply false
+    // Detekt 1.23.8 is built against Kotlin 2.0.21 and Gradle 8.12.x.
     id("io.gitlab.arturbosch.detekt") version "1.23.8" apply false
     id("me.champeau.jmh") version "0.7.2" apply false
 
@@ -52,9 +54,9 @@ subprojects {
         lockMode.set(org.gradle.api.artifacts.dsl.LockMode.STRICT)
     }
 
-    // Temporarily disable Detekt tasks to sidestep the Kotlin version check.
+    // Wire Detekt tasks to the enableDetekt flag so we can re-enable incrementally.
     tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
-        enabled = false
+        enabled = enableDetekt
     }
 
     // Only apply linting/static analysis/coverage to Kotlin modules.
@@ -196,7 +198,9 @@ subprojects {
         // Ensure `./gradlew check` runs lint + static analysis.
         tasks.named("check") {
             dependsOn("ktlintCheck")
-            // Detekt tasks are globally disabled above while we sort out version alignment.
+            if (enableDetekt) {
+                dependsOn("detekt")
+            }
         }
     }
 
@@ -259,4 +263,21 @@ sbomProjects.forEach { p ->
 
 tasks.register("sbomAll") {
     dependsOn(sbomProjects.map { "${it.path}:cyclonedxBom" })
+}
+
+// Helper task to resolve and lock all resolvable configurations when run with --write-locks.
+tasks.register("resolveAndLockAll") {
+    notCompatibleWithConfigurationCache("Filters configurations at execution time")
+
+    doFirst {
+        require(gradle.startParameter.isWriteDependencyLocks) {
+            "${'$'}path must be run from the command line with the `--write-locks` flag"
+        }
+    }
+
+    doLast {
+        configurations
+            .filter { it.isCanBeResolved }
+            .forEach { it.resolve() }
+    }
 }

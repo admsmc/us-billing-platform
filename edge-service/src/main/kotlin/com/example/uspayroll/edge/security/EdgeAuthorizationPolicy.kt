@@ -29,8 +29,8 @@ class EdgeAuthorizationPolicy(
     }
 
     companion object {
-        fun default(): EdgeAuthorizationPolicy {
-            return EdgeAuthorizationPolicy(
+        fun default(): EdgeAuthorizationPolicy =
+            EdgeAuthorizationPolicy(
                 rules = listOf(
                     Rule(
                         id = "internal_ops",
@@ -51,4 +51,3 @@ class EdgeAuthorizationPolicy(
             )
         }
     }
-}

@@ -16,3 +16,11 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 }
+
+configurations.matching { it.name.contains("detekt", ignoreCase = true) }.configureEach {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "org.jetbrains.kotlin" && requested.name.startsWith("kotlin-")) {
+            useVersion("2.0.21")
+        }
+    }
+}
