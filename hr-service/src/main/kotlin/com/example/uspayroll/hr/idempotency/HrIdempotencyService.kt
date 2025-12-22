@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Service
+import org.springframework.web.server.ResponseStatusException
 import java.security.MessageDigest
 
 @Service
@@ -30,8 +31,7 @@ class HrIdempotencyService(
         val existing = find(employerId, operation, idempotencyKey)
         if (existing != null) {
             if (existing.requestSha256 != requestHash) {
-                return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(mapOf("error" to "IDEMPOTENCY_KEY_REUSE"))
+                throw ResponseStatusException(HttpStatus.CONFLICT, "IDEMPOTENCY_KEY_REUSE")
             }
 
             val body: JsonNode? = existing.responseJson?.let { objectMapper.readTree(it) }

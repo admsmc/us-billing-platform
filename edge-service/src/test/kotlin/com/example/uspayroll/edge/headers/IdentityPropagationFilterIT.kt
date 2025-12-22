@@ -68,7 +68,6 @@ class IdentityPropagationFilterIT {
                 }
                 .bindNow()
                 .also { backend = it }
-        }
 
         private fun toJsonString(value: String?): String =
             if (value == null) {

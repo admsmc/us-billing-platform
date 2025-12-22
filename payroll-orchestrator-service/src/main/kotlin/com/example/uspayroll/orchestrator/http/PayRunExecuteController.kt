@@ -22,6 +22,15 @@ class PayRunExecuteController(
     private val executionService: PayRunExecutionService,
 ) {
 
+    data class ExecutePayRunResponse(
+        val employerId: String,
+        val payRunId: String,
+        val acquiredLease: Boolean,
+        val processed: Int,
+        val finalStatus: String?,
+        val moreWork: Boolean,
+    )
+
     @PostMapping("/internal/{payRunId}/execute")
     fun execute(
         @PathVariable employerId: String,
@@ -32,7 +41,7 @@ class PayRunExecuteController(
         @RequestParam(name = "requeueStaleMillis", defaultValue = "600000") requeueStaleMillis: Long,
         @RequestParam(name = "leaseOwner", defaultValue = "worker") leaseOwner: String,
         @RequestParam(name = "parallelism", defaultValue = "4") parallelism: Int,
-    ): ResponseEntity<Map<String, Any?>> {
+    ): ResponseEntity<ExecutePayRunResponse> {
         val result = executionService.executePayRun(
             employerId = EmployerId(employerId).value,
             payRunId = payRunId,
@@ -45,11 +54,13 @@ class PayRunExecuteController(
         )
 
         return ResponseEntity.ok(
-            mapOf(
-                "acquiredLease" to result.acquiredLease,
-                "processed" to result.processed,
-                "finalStatus" to result.finalStatus?.name,
-                "moreWork" to result.moreWork,
+            ExecutePayRunResponse(
+                employerId = employerId,
+                payRunId = payRunId,
+                acquiredLease = result.acquiredLease,
+                processed = result.processed,
+                finalStatus = result.finalStatus?.name,
+                moreWork = result.moreWork,
             ),
         )
     }

@@ -5,9 +5,7 @@ import com.example.uspayroll.web.WebErrorCode
 import jakarta.servlet.http.HttpServletRequest
 import org.slf4j.LoggerFactory
 import org.springframework.dao.DataIntegrityViolationException
-import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
 import org.springframework.http.ProblemDetail
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Component
@@ -38,21 +36,6 @@ class ProblemDetailsAdvice : com.example.uspayroll.web.ProblemDetailsExceptionHa
             instance = request.instanceUri(),
         )
 
-        val headers = HttpHeaders().apply { contentType = MediaType.APPLICATION_PROBLEM_JSON }
-        val correlationId = problem.properties?.get("correlationId") as? String
-        if (!correlationId.isNullOrBlank()) {
-            headers.add(com.example.uspayroll.web.WebHeaders.CORRELATION_ID, correlationId)
-        }
-
-        return ResponseEntity(problem, headers, HttpStatus.CONFLICT)
-    }
-
-    private fun HttpServletRequest.instanceUri(): java.net.URI? {
-        val raw = requestURI ?: return null
-        return try {
-            java.net.URI.create(raw)
-        } catch (_: IllegalArgumentException) {
-            null
-        }
+        return respond(HttpStatus.CONFLICT, problem)
     }
 }

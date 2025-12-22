@@ -97,7 +97,13 @@ open class ProblemDetailsExceptionHandler {
         return respond(HttpStatus.INTERNAL_SERVER_ERROR, problem)
     }
 
-    private fun respond(status: HttpStatus, problem: ProblemDetail): ResponseEntity<ProblemDetail> {
+    /**
+     * Build a ResponseEntity for the given ProblemDetail and status, ensuring
+     * consistent content type and correlation header behavior across services.
+     *
+     * Subclasses may reuse this when handling service-specific exceptions.
+     */
+    protected fun respond(status: HttpStatus, problem: ProblemDetail): ResponseEntity<ProblemDetail> {
         val headers = HttpHeaders()
         headers.contentType = MediaType.APPLICATION_PROBLEM_JSON
 
@@ -110,7 +116,13 @@ open class ProblemDetailsExceptionHandler {
         return ResponseEntity(problem, headers, status)
     }
 
-    private fun HttpServletRequest.instanceUri(): URI? {
+    /**
+     * Safely derive a ProblemDetail.instance URI from the request path.
+     *
+     * Exposed to subclasses so service-specific handlers can reuse the same
+     * defensive parsing semantics.
+     */
+    protected fun HttpServletRequest.instanceUri(): URI? {
         val raw = requestURI ?: return null
         return try {
             URI.create(raw)
@@ -121,7 +133,13 @@ open class ProblemDetailsExceptionHandler {
         }
     }
 
-    private fun HttpStatus.toWebErrorCode(): WebErrorCode = when (this) {
+    /**
+     * Map HTTP status codes to coarse WebErrorCode buckets.
+     *
+     * Made protected so tests and subclasses can reuse this mapping directly
+     * without duplicating the when-expression.
+     */
+    protected fun HttpStatus.toWebErrorCode(): WebErrorCode = when (this) {
         HttpStatus.BAD_REQUEST -> WebErrorCode.BAD_REQUEST
         HttpStatus.UNAUTHORIZED -> WebErrorCode.UNAUTHORIZED
         HttpStatus.FORBIDDEN -> WebErrorCode.FORBIDDEN

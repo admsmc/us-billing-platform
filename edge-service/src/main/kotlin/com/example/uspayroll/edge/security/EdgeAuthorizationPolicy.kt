@@ -29,25 +29,24 @@ class EdgeAuthorizationPolicy(
     }
 
     companion object {
-        fun default(): EdgeAuthorizationPolicy =
-            EdgeAuthorizationPolicy(
-                rules = listOf(
-                    Rule(
-                        id = "internal_ops",
-                        pathRegex = Regex("^/internal/.*$"),
-                        requiredScope = "payroll:replay",
-                    ),
-                    Rule(
-                        id = "benchmarks",
-                        pathRegex = Regex("^/benchmarks/.*$"),
-                        requiredScope = "payroll:bench",
-                    ),
-                    Rule(
-                        id = "legacy_jobs",
-                        pathRegex = Regex("^/jobs/.*$"),
-                        requiredScope = "payroll:ops",
-                    ),
+        fun default(): EdgeAuthorizationPolicy = EdgeAuthorizationPolicy(
+            rules = listOf(
+                Rule(
+                    id = "internal_ops",
+                    pathRegex = Regex("^/internal/.*$"),
+                    requiredScope = "payroll:replay",
                 ),
-            )
-        }
+                Rule(
+                    id = "benchmarks",
+                    pathRegex = Regex("^/benchmarks/.*$"),
+                    requiredScope = "payroll:bench",
+                ),
+                Rule(
+                    id = "legacy_jobs",
+                    pathRegex = Regex("^/jobs/.*$"),
+                    requiredScope = "payroll:ops",
+                ),
+            ),
+        )
     }
+}

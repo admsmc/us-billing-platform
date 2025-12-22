@@ -1,5 +1,6 @@
 package com.example.uspayroll.worker.http
 
+import com.example.uspayroll.web.Idempotency
 import com.example.uspayroll.web.WebHeaders
 import com.example.uspayroll.worker.jobs.FinalizePayRunJob
 import com.example.uspayroll.worker.jobs.FinalizePayRunJobQueue
@@ -33,25 +34,21 @@ class WorkerPayRunJobController(
         val idempotencyKey: String? = null,
     )
 
+    data class FinalizeJobResponse(
+        val jobId: String,
+        val status: String,
+        val payRunId: String?,
+        val finalStatus: String?,
+        val error: String?,
+    )
+
     @PostMapping("/finalize")
     fun finalize(
         @PathVariable employerId: String,
         @RequestHeader(name = WebHeaders.IDEMPOTENCY_KEY, required = false) headerIdempotencyKey: String?,
         @RequestBody request: FinalizeJobRequest,
-    ): ResponseEntity<Map<String, Any?>> {
-        val bodyKey = request.idempotencyKey?.takeIf { it.isNotBlank() }
-        val headerKey = headerIdempotencyKey?.takeIf { it.isNotBlank() }
-
-        val resolvedIdempotencyKey = when {
-            headerKey == null -> bodyKey
-            bodyKey == null -> headerKey
-            headerKey == bodyKey -> headerKey
-            else -> {
-                return ResponseEntity.badRequest().body(
-                    mapOf("error" to "Idempotency-Key header does not match request body idempotencyKey"),
-                )
-            }
-        }
+    ): ResponseEntity<FinalizeJobResponse> {
+        val resolvedIdempotencyKey = Idempotency.resolveIdempotencyKey(headerIdempotencyKey, request.idempotencyKey)
 
         // Deterministic job id: idempotency key => one job per employer/key.
         // NOTE: this endpoint is legacy/dev-only; production should prefer orchestrator-driven queue semantics.
@@ -64,12 +61,12 @@ class WorkerPayRunJobController(
 
         val existing = store.get(jobId)
         if (existing != null) {
-            val body = mapOf(
-                "jobId" to existing.jobId,
-                "status" to existing.status.name,
-                "payRunId" to existing.payRunId,
-                "finalStatus" to existing.finalStatus,
-                "error" to existing.error,
+            val body = FinalizeJobResponse(
+                jobId = existing.jobId,
+                status = existing.status.name,
+                payRunId = existing.payRunId,
+                finalStatus = existing.finalStatus,
+                error = existing.error,
             )
 
             return if (resolvedIdempotencyKey == null) {
@@ -93,9 +90,12 @@ class WorkerPayRunJobController(
         store.initQueued(job)
         queue.enqueue(job)
 
-        val body = mapOf(
-            "jobId" to jobId,
-            "status" to "QUEUED",
+        val body = FinalizeJobResponse(
+            jobId = jobId,
+            status = "QUEUED",
+            payRunId = null,
+            finalStatus = null,
+            error = null,
         )
 
         return if (resolvedIdempotencyKey == null) {
@@ -108,15 +108,18 @@ class WorkerPayRunJobController(
     }
 
     @GetMapping("/finalize/{jobId}")
-    fun getFinalizeJobStatus(@PathVariable employerId: String, @PathVariable jobId: String): ResponseEntity<Map<String, Any?>> {
+    fun getFinalizeJobStatus(
+        @PathVariable employerId: String,
+        @PathVariable jobId: String,
+    ): ResponseEntity<FinalizeJobResponse> {
         val result = store.get(jobId) ?: return ResponseEntity.notFound().build()
         return ResponseEntity.ok(
-            mapOf(
-                "jobId" to result.jobId,
-                "status" to result.status.name,
-                "payRunId" to result.payRunId,
-                "finalStatus" to result.finalStatus,
-                "error" to result.error,
+            FinalizeJobResponse(
+                jobId = result.jobId,
+                status = result.status.name,
+                payRunId = result.payRunId,
+                finalStatus = result.finalStatus,
+                error = result.error,
             ),
         )
     }

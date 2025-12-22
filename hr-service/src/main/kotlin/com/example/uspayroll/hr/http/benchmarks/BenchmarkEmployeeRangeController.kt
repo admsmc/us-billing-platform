@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Configuration
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.web.bind.annotation.GetMapping
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.server.ResponseStatusException
 
 @ConfigurationProperties(prefix = "hr.benchmarks")
 data class HrBenchmarksProperties(
@@ -53,7 +55,7 @@ class BenchmarkEmployeeRangeController(
     ): ResponseEntity<Any> {
         val tokenHeader = request.getHeader(props.headerName)
         if (props.token.isNotBlank() && props.token != tokenHeader) {
-            return ResponseEntity.status(401).body(mapOf("error" to "unauthorized"))
+            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "BENCHMARK_UNAUTHORIZED")
         }
 
         val likePrefix = prefix?.takeIf { it.isNotBlank() }

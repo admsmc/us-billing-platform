@@ -19,10 +19,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.RequestEntity
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.server.ResponseStatusException
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -169,22 +171,28 @@ class BenchmarkHrBackedPaychecksController(
     )
 
     @PostMapping("/hr-backed-pay-period")
-    fun runHrBackedPayPeriod(@PathVariable employerId: String, @RequestBody request: HrBackedPayPeriodRequest, servletRequest: HttpServletRequest): ResponseEntity<Any> {
+    fun runHrBackedPayPeriod(
+        @PathVariable employerId: String,
+        @RequestBody request: HrBackedPayPeriodRequest,
+        servletRequest: HttpServletRequest,
+    ): ResponseEntity<HrBackedPayPeriodResponse> {
         // Simple shared-secret guardrail.
         val tokenHeader = servletRequest.getHeader(props.headerName)
         if (props.token.isNotBlank() && props.token != tokenHeader) {
-            return ResponseEntity.status(401).body(mapOf("error" to "unauthorized"))
+            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "BENCHMARK_UNAUTHORIZED")
         }
 
         val employeeIds = buildEmployeeIds(request)
         if (employeeIds.isEmpty()) {
-            return ResponseEntity.badRequest().body(mapOf("error" to "employeeIds is required (either explicit list or prefix+range)"))
+            throw ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "EMPLOYEE_IDS_REQUIRED",
+            )
         }
         if (employeeIds.size > props.maxEmployeeIdsPerRequest) {
-            return ResponseEntity.badRequest().body(
-                mapOf(
-                    "error" to "employeeIds size ${employeeIds.size} exceeds maxEmployeeIdsPerRequest=${props.maxEmployeeIdsPerRequest}",
-                ),
+            throw ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "EMPLOYEE_IDS_TOO_LARGE",
             )
         }
 
@@ -209,7 +217,7 @@ class BenchmarkHrBackedPaychecksController(
         val correctness = when (request.correctnessMode?.trim()?.lowercase()) {
             null, "", "off" -> null
             "digest" -> computeCorrectnessSummary(paychecks)
-            else -> return ResponseEntity.badRequest().body(mapOf("error" to "unknown correctnessMode: ${request.correctnessMode}"))
+            else -> throw ResponseStatusException(HttpStatus.BAD_REQUEST, "UNKNOWN_CORRECTNESS_MODE")
         }
 
         return ResponseEntity.ok(
@@ -231,22 +239,22 @@ class BenchmarkHrBackedPaychecksController(
      * Note: requires callers to provide a stable runId (or accept the generated one) and re-use it for rendering.
      */
     @PostMapping("/hr-backed-pay-period-store")
-    fun runHrBackedPayPeriodStore(@PathVariable employerId: String, @RequestBody request: HrBackedPayPeriodRequest, servletRequest: HttpServletRequest): ResponseEntity<Any> {
+    fun runHrBackedPayPeriodStore(
+        @PathVariable employerId: String,
+        @RequestBody request: HrBackedPayPeriodRequest,
+        servletRequest: HttpServletRequest,
+    ): ResponseEntity<HrBackedPayPeriodStoreResponse> {
         val tokenHeader = servletRequest.getHeader(props.headerName)
         if (props.token.isNotBlank() && props.token != tokenHeader) {
-            return ResponseEntity.status(401).body(mapOf("error" to "unauthorized"))
+            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "BENCHMARK_UNAUTHORIZED")
         }
 
         val employeeIds = buildEmployeeIds(request)
         if (employeeIds.isEmpty()) {
-            return ResponseEntity.badRequest().body(mapOf("error" to "employeeIds is required (either explicit list or prefix+range)"))
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "EMPLOYEE_IDS_REQUIRED")
         }
         if (employeeIds.size > props.maxEmployeeIdsPerRequest) {
-            return ResponseEntity.badRequest().body(
-                mapOf(
-                    "error" to "employeeIds size ${employeeIds.size} exceeds maxEmployeeIdsPerRequest=${props.maxEmployeeIdsPerRequest}",
-                ),
-            )
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "EMPLOYEE_IDS_TOO_LARGE")
         }
 
         val runId = request.runId?.takeIf { it.isNotBlank() } ?: UUID.randomUUID().toString()
@@ -263,7 +271,7 @@ class BenchmarkHrBackedPaychecksController(
         val correctness = when (request.correctnessMode?.trim()?.lowercase()) {
             null, "", "off" -> null
             "digest" -> computeCorrectnessSummary(paychecks)
-            else -> return ResponseEntity.badRequest().body(mapOf("error" to "unknown correctnessMode: ${request.correctnessMode}"))
+            else -> throw ResponseStatusException(HttpStatus.BAD_REQUEST, "UNKNOWN_CORRECTNESS_MODE")
         }
 
         val stored = try {
@@ -278,7 +286,10 @@ class BenchmarkHrBackedPaychecksController(
             )
             true
         } catch (e: IllegalStateException) {
-            return ResponseEntity.badRequest().body(mapOf("error" to (e.message ?: "store failed")))
+            throw ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                e.message ?: "STORE_FAILED",
+            )
         }
 
         return ResponseEntity.ok(
@@ -301,15 +312,19 @@ class BenchmarkHrBackedPaychecksController(
      * This intentionally returns a small response so callers can measure rendering and (optional) serialization.
      */
     @PostMapping("/render-pay-statements")
-    fun renderPayStatements(@PathVariable employerId: String, @RequestBody request: RenderPayStatementsRequest, servletRequest: HttpServletRequest): ResponseEntity<Any> {
+    fun renderPayStatements(
+        @PathVariable employerId: String,
+        @RequestBody request: RenderPayStatementsRequest,
+        servletRequest: HttpServletRequest,
+    ): ResponseEntity<RenderPayStatementsResponse> {
         val tokenHeader = servletRequest.getHeader(props.headerName)
         if (props.token.isNotBlank() && props.token != tokenHeader) {
-            return ResponseEntity.status(401).body(mapOf("error" to "unauthorized"))
+            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "BENCHMARK_UNAUTHORIZED")
         }
 
         val employer = EmployerId(employerId)
         val run = paycheckRunStore.get(employer, request.runId)
-            ?: return ResponseEntity.status(404).body(mapOf("error" to "runId not found", "runId" to request.runId))
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "RUN_ID_NOT_FOUND")
 
         val selected = if (request.employeeIds.isEmpty()) {
             run.paychecks
@@ -359,12 +374,12 @@ class BenchmarkHrBackedPaychecksController(
     fun renderPaychecksCsv(@PathVariable employerId: String, @RequestBody request: RenderPayStatementsRequest, servletRequest: HttpServletRequest): ResponseEntity<Any> {
         val tokenHeader = servletRequest.getHeader(props.headerName)
         if (props.token.isNotBlank() && props.token != tokenHeader) {
-            return ResponseEntity.status(401).body("unauthorized")
+            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "BENCHMARK_UNAUTHORIZED")
         }
 
         val employer = EmployerId(employerId)
         val run = paycheckRunStore.get(employer, request.runId)
-            ?: return ResponseEntity.status(404).body("runId not found")
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "RUN_ID_NOT_FOUND")
 
         val selected = if (request.employeeIds.isEmpty()) {
             run.paychecks
@@ -560,6 +575,26 @@ class BenchmarkHrBackedPaychecksController(
         )
     }
 
+    data class PaycheckSummaryDto(
+        val paycheckId: String,
+        val employeeId: String,
+        val payPeriodId: String,
+        val checkDate: java.time.LocalDate,
+        val grossCents: Long,
+        val netCents: Long,
+    ) {
+        companion object {
+            fun from(p: PaycheckResult): PaycheckSummaryDto = PaycheckSummaryDto(
+                paycheckId = p.paycheckId.value,
+                employeeId = p.employeeId.value,
+                payPeriodId = p.period.id,
+                checkDate = p.period.checkDate,
+                grossCents = p.gross.amount,
+                netCents = p.net.amount,
+            )
+        }
+    }
+
     data class SeedVerificationResponse(
         val employerId: String,
         val payPeriodId: String,
@@ -568,8 +603,8 @@ class BenchmarkHrBackedPaychecksController(
         val tax: Map<String, Any?>,
         val labor: Map<String, Any?>,
         val localityCodes: List<String>,
-        /** Optional full computed paycheck (single employee) for inspection/debug. */
-        val paycheck: PaycheckResult? = null,
+        /** Optional summarized paycheck (single employee) for inspection/debug. */
+        val paycheck: PaycheckSummaryDto? = null,
         val ok: Boolean,
     )
 
@@ -593,14 +628,10 @@ class BenchmarkHrBackedPaychecksController(
         val employer = EmployerId(employerId)
 
         val period = hr.getPayPeriod(employer, payPeriodId)
-        if (period == null) {
-            return ResponseEntity.status(503).body(mapOf("error" to "HR pay period not found", "payPeriodId" to payPeriodId))
-        }
+            ?: throw ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "HR_PAY_PERIOD_NOT_FOUND")
 
         val snapshot = hr.getEmployeeSnapshot(employer, EmployeeId(employeeId), period.checkDate)
-        if (snapshot == null) {
-            return ResponseEntity.status(503).body(mapOf("error" to "HR employee snapshot not found", "employeeId" to employeeId))
-        }
+            ?: throw ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "HR_EMPLOYEE_SNAPSHOT_NOT_FOUND")
 
         val localityCodes = localityResolver
             .resolve(workState = snapshot.workState, workCity = snapshot.workCity)
@@ -624,12 +655,13 @@ class BenchmarkHrBackedPaychecksController(
             localityCodes = localityCodes,
         )
 
-        val paycheck: PaycheckResult? = if (includePaycheck) {
-            payrollRunService.previewHrBackedPaycheck(
+        val paycheck: PaycheckSummaryDto? = if (includePaycheck) {
+            val p = payrollRunService.previewHrBackedPaycheck(
                 employerId = employer,
                 payPeriodId = payPeriodId,
                 employeeId = EmployeeId(employeeId),
             )
+            PaycheckSummaryDto.from(p)
         } else {
             null
         }

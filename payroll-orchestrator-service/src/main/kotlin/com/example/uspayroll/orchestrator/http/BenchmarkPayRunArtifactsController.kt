@@ -11,6 +11,8 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
+import org.springframework.http.HttpStatus
+import org.springframework.web.server.ResponseStatusException
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -64,10 +66,10 @@ class BenchmarkPayRunArtifactsController(
         @PathVariable payRunId: String,
         @RequestBody request: RenderPayRunArtifactsRequest,
         servletRequest: jakarta.servlet.http.HttpServletRequest,
-    ): ResponseEntity<Any> {
+    ): ResponseEntity<RenderPayRunArtifactsResponse> {
         val tokenHeader = servletRequest.getHeader(props.headerName)
         if (props.token.isNotBlank() && props.token != tokenHeader) {
-            return ResponseEntity.status(401).body(mapOf("error" to "unauthorized"))
+            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "BENCHMARK_UNAUTHORIZED")
         }
 
         val limit = (request.limit ?: props.maxPaychecksPerRequest)
@@ -124,10 +126,10 @@ class BenchmarkPayRunArtifactsController(
         @PathVariable payRunId: String,
         @RequestBody request: RenderPayRunArtifactsRequest,
         servletRequest: jakarta.servlet.http.HttpServletRequest,
-    ): ResponseEntity<Any> {
+    ): ResponseEntity<ByteArray> {
         val tokenHeader = servletRequest.getHeader(props.headerName)
         if (props.token.isNotBlank() && props.token != tokenHeader) {
-            return ResponseEntity.status(401).body(mapOf("error" to "unauthorized"))
+            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "BENCHMARK_UNAUTHORIZED")
         }
 
         val limit = (request.limit ?: props.maxPaychecksPerRequest)

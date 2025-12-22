@@ -11,6 +11,7 @@ import com.example.uspayroll.time.model.WorkweekDefinition
 import com.example.uspayroll.timeingestion.repo.TimeEntryRepository
 import com.example.uspayroll.timeingestion.rules.TimeRuleSetResolver
 import com.example.uspayroll.timeingestion.rules.TipAllocationRuleSetResolver
+import com.example.uspayroll.web.Idempotency
 import com.example.uspayroll.web.WebHeaders
 import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.http.HttpStatus
@@ -124,6 +125,19 @@ class TimeIngestionController(
         val byWorksite: Map<String, TimeBucketsDto>,
     )
 
+    data class UpsertTimeEntryResponse(
+        val status: String,
+        val entryId: String,
+        val idempotencyKey: String?,
+    )
+
+    data class BulkUpsertResponse(
+        val status: String,
+        val received: Int,
+        val updated: Int,
+        val created: Int,
+    )
+
     @PutMapping("/time-entries/{entryId}")
     fun upsert(
         @PathVariable employerId: String,
@@ -131,7 +145,7 @@ class TimeIngestionController(
         @PathVariable entryId: String,
         @RequestHeader(name = WebHeaders.IDEMPOTENCY_KEY, required = false) idempotencyKey: String?,
         @RequestBody req: UpsertTimeEntryRequest,
-    ): ResponseEntity<Any> {
+    ): ResponseEntity<UpsertTimeEntryResponse> {
         require(entryId.isNotBlank()) { "entryId must be non-blank" }
         require(req.hours >= 0.0) { "hours must be >= 0" }
 
@@ -165,17 +179,22 @@ class TimeIngestionController(
             ),
         )
 
+        val normalizedIdempotencyKey = Idempotency.normalize(idempotencyKey)
         val status = if (existed) HttpStatus.OK else HttpStatus.CREATED
-        val body = mapOf(
-            "status" to if (existed) "UPDATED" else "CREATED",
-            "entryId" to entryId,
-            "idempotencyKey" to idempotencyKey,
+        val body = UpsertTimeEntryResponse(
+            status = if (existed) "UPDATED" else "CREATED",
+            entryId = entryId,
+            idempotencyKey = normalizedIdempotencyKey,
         )
         return ResponseEntity.status(status).body(body)
     }
 
     @PostMapping("/time-entries:bulk")
-    fun bulkUpsert(@PathVariable employerId: String, @PathVariable employeeId: String, @RequestBody req: BulkUpsertRequest): ResponseEntity<Any> {
+    fun bulkUpsert(
+        @PathVariable employerId: String,
+        @PathVariable employeeId: String,
+        @RequestBody req: BulkUpsertRequest,
+    ): ResponseEntity<BulkUpsertResponse> {
         require(req.entries.isNotEmpty()) { "entries must be non-empty" }
         req.entries.forEach { e ->
             require(e.entryId.isNotBlank()) { "entryId must be non-blank" }
@@ -207,14 +226,14 @@ class TimeIngestionController(
             },
         )
 
-        return ResponseEntity.status(HttpStatus.OK).body(
-            mapOf(
-                "status" to "OK",
-                "received" to req.entries.size,
-                "updated" to existed,
-                "created" to (req.entries.size - existed),
-            ),
+        val response = BulkUpsertResponse(
+            status = "OK",
+            received = req.entries.size,
+            updated = existed,
+            created = req.entries.size - existed,
         )
+
+        return ResponseEntity.status(HttpStatus.OK).body(response)
     }
 
     @GetMapping("/time-summary")

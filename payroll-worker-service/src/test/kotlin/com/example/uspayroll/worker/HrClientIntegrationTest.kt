@@ -1,5 +1,6 @@
 package com.example.uspayroll.worker
 
+import com.example.uspayroll.hr.client.HrClient
 import com.example.uspayroll.payroll.model.*
 import com.example.uspayroll.payroll.model.garnishment.GarnishmentFormula
 import com.example.uspayroll.payroll.model.garnishment.GarnishmentType
@@ -28,6 +29,7 @@ import java.time.LocalDate
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
@@ -58,6 +60,9 @@ class HrClientIntegrationTest {
 
     @Autowired
     lateinit var meterRegistry: MeterRegistry
+
+    @Autowired
+    lateinit var hrClient: HrClient
 
     private val objectMapper = jacksonObjectMapper().findAndRegisterModules()
 
@@ -340,6 +345,38 @@ class HrClientIntegrationTest {
             afterProtected > beforeProtected,
             "Expected protected_floor_applied metric to increase for employer ${employerId.value}",
         )
+    }
+
+    @Test
+    fun `http HR client maps 404 to null for snapshot and pay periods`() {
+        val employerId = EmployerId("EMP-HR-404")
+        val employeeId = EmployeeId("EE-HR-404")
+        val payPeriodId = "2025-01-BW1"
+        val checkDate = LocalDate.of(2025, 1, 15)
+
+        // 404 for getPayPeriod
+        server.enqueue(
+            MockResponse()
+                .setResponseCode(404),
+        )
+        val payPeriod = hrClient.getPayPeriod(employerId, payPeriodId)
+        assertNull(payPeriod, "Expected getPayPeriod to return null on 404")
+
+        // 404 for getEmployeeSnapshot
+        server.enqueue(
+            MockResponse()
+                .setResponseCode(404),
+        )
+        val snapshot = hrClient.getEmployeeSnapshot(employerId, employeeId, checkDate)
+        assertNull(snapshot, "Expected getEmployeeSnapshot to return null on 404")
+
+        // 404 for findPayPeriodByCheckDate
+        server.enqueue(
+            MockResponse()
+                .setResponseCode(404),
+        )
+        val byCheckDate = hrClient.findPayPeriodByCheckDate(employerId, checkDate)
+        assertNull(byCheckDate, "Expected findPayPeriodByCheckDate to return null on 404")
     }
 
     @Test

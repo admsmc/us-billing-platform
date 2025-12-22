@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestTemplate
 import java.time.LocalDate
@@ -49,24 +50,55 @@ class HttpHrClient(
 
     override fun getEmployeeSnapshot(employerId: EmployerId, employeeId: EmployeeId, asOfDate: LocalDate): EmployeeSnapshot? {
         val url = "${props.baseUrl}/employers/${employerId.value}/employees/${employeeId.value}/snapshot?asOf=$asOfDate"
-        return executeWithGuardrails("GET employee snapshot", url) {
-            // Avoid Kotlin RestTemplate.getForObject<T>() which throws when the body is empty (null).
-            restTemplate.getForObject(url, EmployeeSnapshot::class.java)
+        return try {
+            executeWithGuardrails("GET employee snapshot", url) {
+                // Avoid Kotlin RestTemplate.getForObject<T>() which throws when the body is empty (null).
+                restTemplate.getForObject(url, EmployeeSnapshot::class.java)
+            }
+        } catch (ex: HttpClientErrorException.NotFound) {
+            logger.info(
+                "hr-client.snapshot.not_found employer={} employee={} asOf={} url={}",
+                employerId.value,
+                employeeId.value,
+                asOfDate,
+                url,
+            )
+            null
         }
     }
 
     override fun getPayPeriod(employerId: EmployerId, payPeriodId: String): PayPeriod? {
         val url = "${props.baseUrl}/employers/${employerId.value}/pay-periods/$payPeriodId"
-        return executeWithGuardrails("GET pay period", url) {
-            // hr-service returns `null` when not found (200 + empty body). Use the Java overload to allow null.
-            restTemplate.getForObject(url, PayPeriod::class.java)
+        return try {
+            executeWithGuardrails("GET pay period", url) {
+                // hr-service returns `null` when not found (200 + empty body). Use the Java overload to allow null.
+                restTemplate.getForObject(url, PayPeriod::class.java)
+            }
+        } catch (ex: HttpClientErrorException.NotFound) {
+            logger.info(
+                "hr-client.pay_period.not_found employer={} payPeriodId={} url={}",
+                employerId.value,
+                payPeriodId,
+                url,
+            )
+            null
         }
     }
 
     override fun findPayPeriodByCheckDate(employerId: EmployerId, checkDate: LocalDate): PayPeriod? {
         val url = "${props.baseUrl}/employers/${employerId.value}/pay-periods/by-check-date?checkDate=$checkDate"
-        return executeWithGuardrails("GET pay period by check date", url) {
-            restTemplate.getForObject(url, PayPeriod::class.java)
+        return try {
+            executeWithGuardrails("GET pay period by check date", url) {
+                restTemplate.getForObject(url, PayPeriod::class.java)
+            }
+        } catch (ex: HttpClientErrorException.NotFound) {
+            logger.info(
+                "hr-client.pay_period_by_check_date.not_found employer={} checkDate={} url={}",
+                employerId.value,
+                checkDate,
+                url,
+            )
+            null
         }
     }
 

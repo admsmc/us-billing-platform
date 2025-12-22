@@ -24,6 +24,13 @@ class DlqReplayController(
     meterRegistry: MeterRegistry,
 ) {
 
+    data class DlqReplayResponse(
+        val replayed: Int,
+        val fromQueue: String,
+        val toExchange: String,
+        val toRoutingKey: String,
+    )
+
     private val replayCounter = meterRegistry.counter("worker.dlq.replay.total", "queue", finalizeEmployeeProps.dlqName)
 
     @PostMapping("/replay")
@@ -67,13 +74,13 @@ class DlqReplayController(
             status = HttpStatus.OK.value(),
         )
 
-        return ResponseEntity.ok(
-            mapOf(
-                "replayed" to moved,
-                "fromQueue" to finalizeEmployeeProps.dlqName,
-                "toExchange" to FinalizePayRunJobRouting.EXCHANGE,
-                "toRoutingKey" to FinalizePayRunJobRouting.FINALIZE_EMPLOYEE,
-            ),
+        val body = DlqReplayResponse(
+            replayed = moved,
+            fromQueue = finalizeEmployeeProps.dlqName,
+            toExchange = FinalizePayRunJobRouting.EXCHANGE,
+            toRoutingKey = FinalizePayRunJobRouting.FINALIZE_EMPLOYEE,
         )
+
+        return ResponseEntity.ok(body)
     }
 }

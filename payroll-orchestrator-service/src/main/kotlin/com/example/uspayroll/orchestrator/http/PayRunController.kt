@@ -3,6 +3,7 @@ package com.example.uspayroll.orchestrator.http
 import com.example.uspayroll.orchestrator.payrun.PayRunService
 import com.example.uspayroll.orchestrator.payrun.model.PayRunStatus
 import com.example.uspayroll.shared.EmployerId
+import com.example.uspayroll.web.Idempotency
 import com.example.uspayroll.web.WebHeaders
 import com.example.uspayroll.web.security.SecurityAuditLogger
 import org.springframework.http.HttpStatus
@@ -63,15 +64,10 @@ class PayRunController(
             ?: com.example.uspayroll.orchestrator.payrun.model.PayRunType.REGULAR
         val runSequence = request.runSequence ?: 1
 
-        val bodyKey = request.idempotencyKey?.takeIf { it.isNotBlank() }
-        val headerKey = headerIdempotencyKey?.takeIf { it.isNotBlank() }
-
-        val resolvedIdempotencyKey = when {
-            headerKey == null -> bodyKey
-            bodyKey == null -> headerKey
-            headerKey == bodyKey -> headerKey
-            else -> throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Idempotency-Key header does not match request body idempotencyKey")
-        }
+        val resolvedIdempotencyKey = Idempotency.resolveIdempotencyKey(
+            headerIdempotencyKey,
+            request.idempotencyKey,
+        )
 
         val overrides = request.earningOverridesByEmployeeId ?: emptyMap()
         if (overrides.isNotEmpty()) {
@@ -301,7 +297,7 @@ class PayRunController(
         val method = "POST"
         val path = "/employers/$employerId/payruns/$payRunId/payments/initiate"
 
-        val normalizedKey = idempotencyKey?.takeIf { it.isNotBlank() }
+        val normalizedKey = Idempotency.normalize(idempotencyKey)
 
         @Suppress("TooGenericExceptionCaught")
         try {
@@ -365,15 +361,10 @@ class PayRunController(
         @RequestHeader(name = WebHeaders.IDEMPOTENCY_KEY, required = false) headerIdempotencyKey: String?,
         @RequestBody(required = false) request: StartCorrectionRequest?,
     ): ResponseEntity<StartCorrectionResponse> {
-        val bodyKey = request?.idempotencyKey?.takeIf { it.isNotBlank() }
-        val headerKey = headerIdempotencyKey?.takeIf { it.isNotBlank() }
-
-        val resolvedIdempotencyKey = when {
-            headerKey == null -> bodyKey
-            bodyKey == null -> headerKey
-            headerKey == bodyKey -> headerKey
-            else -> throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Idempotency-Key header does not match request body idempotencyKey")
-        }
+        val resolvedIdempotencyKey = Idempotency.resolveIdempotencyKey(
+            headerIdempotencyKey,
+            request?.idempotencyKey,
+        )
 
         val result = correctionsService.startVoid(
             employerId = employerId,
@@ -412,15 +403,10 @@ class PayRunController(
         @RequestHeader(name = WebHeaders.IDEMPOTENCY_KEY, required = false) headerIdempotencyKey: String?,
         @RequestBody(required = false) request: StartCorrectionRequest?,
     ): ResponseEntity<StartRetroAdjustmentResponse> {
-        val bodyKey = request?.idempotencyKey?.takeIf { it.isNotBlank() }
-        val headerKey = headerIdempotencyKey?.takeIf { it.isNotBlank() }
-
-        val resolvedIdempotencyKey = when {
-            headerKey == null -> bodyKey
-            bodyKey == null -> headerKey
-            headerKey == bodyKey -> headerKey
-            else -> throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Idempotency-Key header does not match request body idempotencyKey")
-        }
+        val resolvedIdempotencyKey = Idempotency.resolveIdempotencyKey(
+            headerIdempotencyKey,
+            request?.idempotencyKey,
+        )
 
         val result = retroAdjustmentsService.startRetroAdjustment(
             employerId = employerId,
@@ -459,15 +445,10 @@ class PayRunController(
         @RequestHeader(name = WebHeaders.IDEMPOTENCY_KEY, required = false) headerIdempotencyKey: String?,
         @RequestBody(required = false) request: StartCorrectionRequest?,
     ): ResponseEntity<StartCorrectionResponse> {
-        val bodyKey = request?.idempotencyKey?.takeIf { it.isNotBlank() }
-        val headerKey = headerIdempotencyKey?.takeIf { it.isNotBlank() }
-
-        val resolvedIdempotencyKey = when {
-            headerKey == null -> bodyKey
-            bodyKey == null -> headerKey
-            headerKey == bodyKey -> headerKey
-            else -> throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Idempotency-Key header does not match request body idempotencyKey")
-        }
+        val resolvedIdempotencyKey = Idempotency.resolveIdempotencyKey(
+            headerIdempotencyKey,
+            request?.idempotencyKey,
+        )
 
         val result = correctionsService.startReissue(
             employerId = employerId,
@@ -506,6 +487,17 @@ class PayRunController(
         val error: String? = null,
     )
 
+    data class CompleteEmployeeItemResponse(
+        val employerId: String,
+        val payRunId: String,
+        val employeeId: String,
+        val itemStatus: com.example.uspayroll.orchestrator.payrun.model.PayRunItemStatus,
+        val attemptCount: Int,
+        val paycheckId: String?,
+        val retryable: Boolean,
+        val error: String?,
+    )
+
     /**
      * Internal endpoint: complete a single employee item.
      *
@@ -519,7 +511,7 @@ class PayRunController(
         @PathVariable payRunId: String,
         @PathVariable employeeId: String,
         @org.springframework.web.bind.annotation.RequestBody request: CompleteEmployeeItemRequest,
-    ): ResponseEntity<Map<String, Any?>> {
+    ): ResponseEntity<CompleteEmployeeItemResponse> {
         val result = itemFinalizationService.completeOneEmployeeItem(
             employerId = EmployerId(employerId).value,
             payRunId = payRunId,
@@ -533,15 +525,15 @@ class PayRunController(
         ) ?: return ResponseEntity.notFound().build()
 
         return ResponseEntity.ok(
-            mapOf(
-                "employerId" to result.employerId,
-                "payRunId" to result.payRunId,
-                "employeeId" to result.employeeId,
-                "itemStatus" to result.itemStatus,
-                "attemptCount" to result.attemptCount,
-                "paycheckId" to result.paycheckId,
-                "retryable" to result.retryable,
-                "error" to result.error,
+            CompleteEmployeeItemResponse(
+                employerId = result.employerId,
+                payRunId = result.payRunId,
+                employeeId = result.employeeId,
+                itemStatus = result.itemStatus,
+                attemptCount = result.attemptCount,
+                paycheckId = result.paycheckId,
+                retryable = result.retryable,
+                error = result.error,
             ),
         )
     }

@@ -4,6 +4,37 @@ This document summarizes the high-level architecture and key boundaries in the s
 
 ## Modules
 
+## Build and analysis toolchain
+
+The repo standardizes on a single Kotlin/Gradle/static analysis stack and enforces it via
+Gradle dependency verification + strict dependency locking:
+
+- Gradle wrapper: **8.12.1** (see `gradle/wrapper/gradle-wrapper.properties`).
+- Kotlin Gradle plugins: **2.0.21** (configured in the root `build.gradle.kts`).
+- Detekt Gradle plugin: **1.23.8**.
+- ktlint Gradle plugin: **14.0.1**.
+
+Repository-wide rules:
+
+- All Kotlin modules must use the root-configured Kotlin plugin versions; do not override
+  Kotlin versions in submodules.
+- Detekt must run against the same Kotlin toolchain as the build. If you upgrade Kotlin or
+  Detekt, you must:
+  - Update versions in the root `build.gradle.kts` plugin block.
+  - Refresh dependency verification metadata and all lockfiles:
+    - `./scripts/gradlew-java21.sh --no-daemon --write-verification-metadata sha256 --write-locks check`
+    - `./scripts/gradlew-java21.sh --no-daemon -PenableDetekt=true --write-locks resolveAndLockAll`
+- Dependency locking is configured in **STRICT** mode for all modules. When Detekt or ktlint
+  dependencies change (including transitive Kotlin compiler artifacts), you must regenerate
+  lock state; otherwise builds will fail with locking errors.
+- Manual edits to `gradle.lockfile` files should be rare and surgical; they are acceptable
+  only to remove stale entries for configurations that are immediately re-locked by running
+  Gradle with `--write-locks`.
+
+These constraints are part of the architecture: they ensure static analysis runs with a
+consistent, enterprise-grade toolchain that matches the main build and is auditable via
+verification metadata and lockfiles.
+
 - `shared-kernel`: common value types such as `EmployerId`, `EmployeeId`, `Money`.
 - `payroll-domain`: pure domain logic and types for payroll calculations.
 - `payroll-worker-service`: service responsible for running payroll calculations against the domain.
