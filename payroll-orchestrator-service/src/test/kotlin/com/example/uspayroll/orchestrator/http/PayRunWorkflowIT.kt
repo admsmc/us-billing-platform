@@ -9,6 +9,7 @@ import com.example.uspayroll.payroll.model.audit.PaycheckAudit
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
@@ -37,6 +38,16 @@ class PayRunWorkflowIT(
     private val jdbcTemplate: JdbcTemplate,
     private val objectMapper: ObjectMapper,
 ) {
+
+    @BeforeEach
+    fun cleanDb() {
+        jdbcTemplate.update("DELETE FROM paycheck_audit")
+        jdbcTemplate.update("DELETE FROM paycheck_payment")
+        jdbcTemplate.update("DELETE FROM paycheck")
+        jdbcTemplate.update("DELETE FROM pay_run_item")
+        jdbcTemplate.update("DELETE FROM pay_run")
+        jdbcTemplate.update("DELETE FROM outbox_event")
+    }
 
     @Test
     fun `start finalize returns 202 and execution finalizes`() {

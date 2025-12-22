@@ -240,14 +240,12 @@ class PayRunRetroAdjustmentsService(
         )
     }
 
-    private fun computedTerminalStatus(total: Int, succeeded: Int, failed: Int): PayRunStatus {
-        return when {
-            total == 0 -> PayRunStatus.FAILED
-            failed == 0 && succeeded == total -> PayRunStatus.FINALIZED
-            succeeded > 0 && failed > 0 -> PayRunStatus.PARTIALLY_FINALIZED
-            succeeded == 0 && failed == total -> PayRunStatus.FAILED
-            else -> PayRunStatus.FAILED
-        }
+    private fun computedTerminalStatus(total: Int, succeeded: Int, failed: Int): PayRunStatus = when {
+        total == 0 -> PayRunStatus.FAILED
+        failed == 0 && succeeded == total -> PayRunStatus.FINALIZED
+        succeeded > 0 && failed > 0 -> PayRunStatus.PARTIALLY_FINALIZED
+        succeeded == 0 && failed == total -> PayRunStatus.FAILED
+        else -> PayRunStatus.FAILED
     }
 
     private fun runSequenceOrFallback(actual: Int, requested: Int): Int = if (actual > 0) actual else requested

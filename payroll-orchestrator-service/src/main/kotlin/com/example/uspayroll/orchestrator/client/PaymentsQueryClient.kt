@@ -42,8 +42,7 @@ class PaymentsQueryClientProperties : DownstreamHttpClientProperties() {
 @EnableConfigurationProperties(PaymentsQueryClientProperties::class)
 class PaymentsQueryClientConfig {
     @Bean
-    fun paymentsQueryClient(props: PaymentsQueryClientProperties, @Qualifier("paymentsRestTemplate") paymentsRestTemplate: RestTemplate, meterRegistry: MeterRegistry): PaymentsQueryClient =
-        HttpPaymentsQueryClient(props, paymentsRestTemplate, meterRegistry)
+    fun paymentsQueryClient(props: PaymentsQueryClientProperties, @Qualifier("paymentsRestTemplate") paymentsRestTemplate: RestTemplate, meterRegistry: MeterRegistry): PaymentsQueryClient = HttpPaymentsQueryClient(props, paymentsRestTemplate, meterRegistry)
 }
 
 class HttpPaymentsQueryClient(

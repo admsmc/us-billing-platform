@@ -38,7 +38,7 @@ class DlqReplayController(
         request: HttpServletRequest,
         @RequestParam(name = "maxMessages", defaultValue = "100") maxMessages: Int,
         @RequestParam(name = "resetAttempt", defaultValue = "true") resetAttempt: Boolean,
-    ): ResponseEntity<Map<String, Any?>> {
+    ): ResponseEntity<DlqReplayResponse> {
         val method = request.method ?: "POST"
         val path = request.requestURI ?: "/internal/jobs/finalize-employee/dlq/replay"
 

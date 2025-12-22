@@ -6,9 +6,11 @@ import com.example.uspayroll.orchestrator.support.RetroMutableStubClientsTestCon
 import com.example.uspayroll.payroll.model.PaycheckResult
 import com.example.uspayroll.payroll.model.audit.InputFingerprint
 import com.example.uspayroll.payroll.model.audit.PaycheckAudit
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
@@ -35,8 +37,19 @@ import java.net.URI
 class PayRunRetroAdjustmentWorkflowIT(
     private val rest: TestRestTemplate,
     private val jdbcTemplate: JdbcTemplate,
+    private val objectMapper: ObjectMapper,
     private val stubState: RetroStubState,
 ) {
+
+    @BeforeEach
+    fun cleanDb() {
+        jdbcTemplate.update("DELETE FROM paycheck_audit")
+        jdbcTemplate.update("DELETE FROM paycheck_payment")
+        jdbcTemplate.update("DELETE FROM paycheck")
+        jdbcTemplate.update("DELETE FROM pay_run_item")
+        jdbcTemplate.update("DELETE FROM pay_run")
+        jdbcTemplate.update("DELETE FROM outbox_event")
+    }
 
     @Test
     fun `retro adjustment produces delta paycheck when compensation changes retroactively`() {

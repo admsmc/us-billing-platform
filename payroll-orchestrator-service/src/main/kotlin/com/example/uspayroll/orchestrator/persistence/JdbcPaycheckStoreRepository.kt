@@ -77,18 +77,16 @@ class JdbcPaycheckStoreRepository(
         return objectMapper.readValue(json, PaycheckResult::class.java)
     }
 
-    override fun findCorrectionOfPaycheckId(employerId: EmployerId, paycheckId: String): String? {
-        return jdbcTemplate.query(
-            """
+    override fun findCorrectionOfPaycheckId(employerId: EmployerId, paycheckId: String): String? = jdbcTemplate.query(
+        """
             SELECT correction_of_paycheck_id
             FROM paycheck
             WHERE employer_id = ? AND paycheck_id = ?
-            """.trimIndent(),
-            { rs, _ -> rs.getString("correction_of_paycheck_id") },
-            employerId.value,
-            paycheckId,
-        ).firstOrNull()
-    }
+        """.trimIndent(),
+        { rs, _ -> rs.getString("correction_of_paycheck_id") },
+        employerId.value,
+        paycheckId,
+    ).firstOrNull()
 
     override fun setCorrectionOfPaycheckIdIfNull(employerId: EmployerId, paycheckId: String, correctionOfPaycheckId: String): Boolean {
         val updated = jdbcTemplate.update(

@@ -78,8 +78,7 @@ class OrchestratorClientProperties : DownstreamHttpClientProperties() {
 class OrchestratorClientConfig {
 
     @Bean
-    fun httpOrchestratorClient(props: OrchestratorClientProperties, @Qualifier("orchestratorRestTemplate") orchestratorRestTemplate: RestTemplate, meterRegistry: MeterRegistry): OrchestratorClient =
-        HttpOrchestratorClient(props, orchestratorRestTemplate, meterRegistry)
+    fun httpOrchestratorClient(props: OrchestratorClientProperties, @Qualifier("orchestratorRestTemplate") orchestratorRestTemplate: RestTemplate, meterRegistry: MeterRegistry): OrchestratorClient = HttpOrchestratorClient(props, orchestratorRestTemplate, meterRegistry)
 }
 
 class HttpOrchestratorClient(

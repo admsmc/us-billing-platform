@@ -31,9 +31,7 @@ class PayRunEarningOverridesCodec(
         return stored.toList()
     }
 
-    fun decodeToEarningInputs(json: String): List<EarningInput> {
-        return decodeToOverrides(json).map { it.toEarningInput() }
-    }
+    fun decodeToEarningInputs(json: String): List<EarningInput> = decodeToOverrides(json).map { it.toEarningInput() }
 
     private fun PayRunEarningOverride.toEarningInput(): EarningInput {
         val code = EarningCode(code)

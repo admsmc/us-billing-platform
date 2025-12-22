@@ -8,6 +8,7 @@ import com.example.uspayroll.orchestrator.support.RetroMutableStubClientsTestCon
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
@@ -38,9 +39,19 @@ class PaycheckLedgerAdjustmentEventsIT(
     private val stubState: RetroStubState,
 ) {
 
+    @BeforeEach
+    fun cleanDb() {
+        jdbcTemplate.update("DELETE FROM paycheck_audit")
+        jdbcTemplate.update("DELETE FROM paycheck_payment")
+        jdbcTemplate.update("DELETE FROM paycheck")
+        jdbcTemplate.update("DELETE FROM pay_run_item")
+        jdbcTemplate.update("DELETE FROM pay_run")
+        jdbcTemplate.update("DELETE FROM outbox_event")
+    }
+
     @Test
     fun `approving an adjustment payrun enqueues ADJUSTED paycheck ledger events with correction linkage`() {
-        val employerId = "emp-1"
+        val employerId = "emp-ledger-adj-1"
 
         val sourcePayRunId = "run-ledger-adj-src"
         startAndExecutePayRun(employerId = employerId, payRunId = sourcePayRunId)

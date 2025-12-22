@@ -24,11 +24,11 @@ class WorkerPayRunJobControllerTest {
         )
 
         assertEquals(202, resp.statusCode.value())
-        val jobId = resp.body?.get("jobId") as String
+        val jobId = resp.body?.jobId as String
 
         val statusResp = controller.getFinalizeJobStatus(employerId = "EMP", jobId = jobId)
         assertEquals(200, statusResp.statusCode.value())
-        assertEquals("QUEUED", statusResp.body?.get("status"))
+        assertEquals("QUEUED", statusResp.body?.status)
     }
 
     @Test
@@ -57,8 +57,8 @@ class WorkerPayRunJobControllerTest {
             ),
         )
 
-        val jobId1 = r1.body?.get("jobId") as String
-        val jobId2 = r2.body?.get("jobId") as String
+        val jobId1 = r1.body?.jobId as String
+        val jobId2 = r2.body?.jobId as String
         assertEquals(jobId1, jobId2)
 
         // Only one job enqueued.

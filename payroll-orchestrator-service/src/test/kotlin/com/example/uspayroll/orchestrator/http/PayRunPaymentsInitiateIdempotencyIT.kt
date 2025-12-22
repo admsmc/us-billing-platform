@@ -4,6 +4,7 @@ import com.example.uspayroll.orchestrator.support.InternalAuthTestSupport
 import com.example.uspayroll.orchestrator.support.StubClientsTestConfig
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
@@ -35,9 +36,20 @@ class PayRunPaymentsInitiateIdempotencyIT(
     private val paycheckComputationService: com.example.uspayroll.orchestrator.payrun.PaycheckComputationService,
 ) {
 
+    @BeforeEach
+    fun cleanDb() {
+        jdbcTemplate.update("DELETE FROM paycheck_audit")
+        jdbcTemplate.update("DELETE FROM paycheck_payment")
+        jdbcTemplate.update("DELETE FROM paycheck")
+        jdbcTemplate.update("DELETE FROM pay_run_item")
+        jdbcTemplate.update("DELETE FROM pay_run")
+        jdbcTemplate.update("DELETE FROM outbox_event")
+    }
+
     @Test
     fun `payments initiation is idempotent via Idempotency-Key header`() {
-        val employerId = "emp-1"
+        // Use a class-specific employerId to avoid cross-test collisions on business keys.
+        val employerId = "emp-payments-idem"
         val payRunId = "run-payments-idem-1"
 
         rest.exchange(
@@ -139,7 +151,7 @@ class PayRunPaymentsInitiateIdempotencyIT(
 
     @Test
     fun `payments initiation idempotency key cannot be reused across payruns`() {
-        val employerId = "emp-1"
+        val employerId = "emp-payments-idem"
 
         fun setupAndApprove(payRunId: String, employeeId: String, runSequence: Int) {
             rest.exchange(

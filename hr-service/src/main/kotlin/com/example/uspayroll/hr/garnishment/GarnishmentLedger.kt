@@ -306,8 +306,6 @@ class InMemoryGarnishmentLedgerRepository : GarnishmentLedgerRepository {
         }
     }
 
-    override fun findByEmployee(employerId: EmployerId, employeeId: EmployeeId): Map<String, GarnishmentLedgerEntry> {
-        return store.filterKeys { it.employerId == employerId.value && it.employeeId == employeeId.value }
-            .mapKeys { (key, _) -> key.orderId }
-    }
+    override fun findByEmployee(employerId: EmployerId, employeeId: EmployeeId): Map<String, GarnishmentLedgerEntry> = store.filterKeys { it.employerId == employerId.value && it.employeeId == employeeId.value }
+        .mapKeys { (key, _) -> key.orderId }
 }

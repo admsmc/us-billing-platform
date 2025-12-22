@@ -133,17 +133,13 @@ object SecurityAuditLogger {
     /**
      * Utility to extract correlation id from request headers in services that don't use MDC.
      */
-    fun correlationIdFromHeader(headers: Map<String, List<String>>): String? {
-        return headers[WebHeaders.CORRELATION_ID]
-            ?.firstOrNull()
-            ?.takeIf { it.isNotBlank() }
-    }
+    fun correlationIdFromHeader(headers: Map<String, List<String>>): String? = headers[WebHeaders.CORRELATION_ID]
+        ?.firstOrNull()
+        ?.takeIf { it.isNotBlank() }
 
     /**
      * Utility to extract correlation id from servlet request headers.
      */
-    fun correlationIdFromServletHeader(getHeader: (String) -> String?): String? {
-        return getHeader(WebHeaders.CORRELATION_ID)
-            ?.takeIf { it.isNotBlank() }
-    }
+    fun correlationIdFromServletHeader(getHeader: (String) -> String?): String? = getHeader(WebHeaders.CORRELATION_ID)
+        ?.takeIf { it.isNotBlank() }
 }

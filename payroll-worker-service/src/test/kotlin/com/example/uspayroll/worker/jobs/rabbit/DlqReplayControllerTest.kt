@@ -40,7 +40,7 @@ class DlqReplayControllerTest {
 
         val resp = controller.replay(request, maxMessages = 10, resetAttempt = true)
         assertEquals(200, resp.statusCode.value())
-        assertEquals(1, resp.body?.get("replayed"))
+        assertEquals(1, resp.body?.replayed)
 
         val captor = ArgumentCaptor.forClass(FinalizePayRunEmployeeJob::class.java)
         Mockito.verify(rabbit).convertAndSend(eq(FinalizePayRunJobRouting.EXCHANGE), eq(FinalizePayRunJobRouting.FINALIZE_EMPLOYEE), captor.capture())

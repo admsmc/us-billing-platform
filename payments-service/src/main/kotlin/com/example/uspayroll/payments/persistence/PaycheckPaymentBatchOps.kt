@@ -26,19 +26,17 @@ class PaycheckPaymentBatchOps(
         val batchId: String?,
     )
 
-    fun attachBatchIfMissing(employerId: String, paycheckId: String, batchId: String): Int {
-        return jdbcTemplate.update(
-            """
+    fun attachBatchIfMissing(employerId: String, paycheckId: String, batchId: String): Int = jdbcTemplate.update(
+        """
             UPDATE paycheck_payment
             SET batch_id = COALESCE(batch_id, ?),
                 updated_at = CURRENT_TIMESTAMP
             WHERE employer_id = ? AND paycheck_id = ?
-            """.trimIndent(),
-            batchId,
-            employerId,
-            paycheckId,
-        )
-    }
+        """.trimIndent(),
+        batchId,
+        employerId,
+        paycheckId,
+    )
 
     @Transactional
     fun claimCreatedByBatch(employerId: String, batchId: String, limit: Int, lockOwner: String, lockTtl: Duration, now: Instant = Instant.now()): List<PaymentRow> {

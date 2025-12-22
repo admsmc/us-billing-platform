@@ -37,8 +37,7 @@ class TaxClientProperties : DownstreamHttpClientProperties() {
 class TaxClientConfig {
 
     @Bean
-    fun httpTaxClient(props: TaxClientProperties, @Qualifier("taxRestTemplate") taxRestTemplate: RestTemplate, meterRegistry: MeterRegistry): TaxClient =
-        HttpTaxClient(props, taxRestTemplate, meterRegistry)
+    fun httpTaxClient(props: TaxClientProperties, @Qualifier("taxRestTemplate") taxRestTemplate: RestTemplate, meterRegistry: MeterRegistry): TaxClient = HttpTaxClient(props, taxRestTemplate, meterRegistry)
 }
 
 class HttpTaxClient(

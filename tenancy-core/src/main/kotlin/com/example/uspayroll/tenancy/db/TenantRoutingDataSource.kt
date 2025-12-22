@@ -9,7 +9,5 @@ import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource
  * IMPORTANT: there is intentionally no default datasource.
  */
 class TenantRoutingDataSource : AbstractRoutingDataSource() {
-    override fun determineCurrentLookupKey(): Any {
-        return TenantContext.require()
-    }
+    override fun determineCurrentLookupKey(): Any = TenantContext.require()
 }

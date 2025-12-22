@@ -50,8 +50,7 @@ class TimeClientProperties : DownstreamHttpClientProperties() {
 @EnableConfigurationProperties(TimeClientProperties::class)
 class TimeClientConfig {
     @Bean
-    fun httpTimeClient(props: TimeClientProperties, @Qualifier("timeRestTemplate") timeRestTemplate: RestTemplate, meterRegistry: MeterRegistry): TimeClient =
-        HttpTimeClient(props, timeRestTemplate, meterRegistry)
+    fun httpTimeClient(props: TimeClientProperties, @Qualifier("timeRestTemplate") timeRestTemplate: RestTemplate, meterRegistry: MeterRegistry): TimeClient = HttpTimeClient(props, timeRestTemplate, meterRegistry)
 }
 
 private data class TimeSummaryResponse(

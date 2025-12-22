@@ -225,9 +225,7 @@ object PaycheckCsvRenderer {
         )
     }
 
-    private fun taxKey(ruleId: String, jurisdictionType: String, jurisdictionCode: String): String {
-        return "$jurisdictionType.$jurisdictionCode.$ruleId"
-    }
+    private fun taxKey(ruleId: String, jurisdictionType: String, jurisdictionCode: String): String = "$jurisdictionType.$jurisdictionCode.$ruleId"
 
     private fun taxBasisKey(basis: TaxBasis): String = when (basis) {
         TaxBasis.Gross -> "Gross"
@@ -239,9 +237,7 @@ object PaycheckCsvRenderer {
         TaxBasis.FutaWages -> "FutaWages"
     }
 
-    private fun formatDouble(v: Double): String {
-        return String.format(Locale.US, "%.4f", v)
-    }
+    private fun formatDouble(v: Double): String = String.format(Locale.US, "%.4f", v)
 
     private fun csvEscape(v: String): String {
         val needsQuote = v.indexOfAny(charArrayOf(',', '"', '\n', '\r')) >= 0

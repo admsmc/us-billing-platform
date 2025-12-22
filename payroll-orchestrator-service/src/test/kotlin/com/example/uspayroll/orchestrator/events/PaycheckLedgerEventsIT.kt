@@ -10,6 +10,7 @@ import com.example.uspayroll.orchestrator.support.StubClientsTestConfig
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
@@ -42,9 +43,20 @@ class PaycheckLedgerEventsIT(
     private val paymentProjection: PaymentStatusProjectionService,
 ) {
 
+    @BeforeEach
+    fun cleanDb() {
+        jdbcTemplate.update("DELETE FROM paycheck_audit")
+        jdbcTemplate.update("DELETE FROM paycheck_payment")
+        jdbcTemplate.update("DELETE FROM paycheck")
+        jdbcTemplate.update("DELETE FROM pay_run_item")
+        jdbcTemplate.update("DELETE FROM pay_run")
+        jdbcTemplate.update("DELETE FROM outbox_event")
+    }
+
     @Test
     fun `approving a regular payrun enqueues COMMITTED paycheck ledger events`() {
-        val employerId = "emp-1"
+        // Use a class-specific employerId to avoid cross-test collisions in the shared H2 DB.
+        val employerId = "emp-ledger-1"
         val payRunId = "run-ledger-commit"
 
         startAndExecutePayRun(employerId = employerId, payRunId = payRunId, employeeIds = listOf("e-1", "e-2"))
@@ -55,14 +67,23 @@ class PaycheckLedgerEventsIT(
         )
         assertEquals(HttpStatus.OK, approve.statusCode)
 
+        // Only consider ledger events for this pay run by joining through pay_run_item.
         val rows = jdbcTemplate.query(
             """
-            SELECT payload_json
-            FROM outbox_event
-            WHERE event_type = 'PaycheckLedger' AND topic = 'paycheck.ledger'
-            ORDER BY created_at
+            SELECT oe.payload_json
+            FROM outbox_event oe
+            JOIN pay_run_item pri
+              ON oe.aggregate_id = pri.paycheck_id
+            WHERE oe.event_type = 'PaycheckLedger'
+              AND oe.topic = 'paycheck.ledger'
+              AND pri.employer_id = ?
+              AND pri.pay_run_id = ?
+            ORDER BY oe.created_at
             """.trimIndent(),
-        ) { rs, _ -> rs.getString("payload_json") }
+            { rs, _ -> rs.getString("payload_json") },
+            employerId,
+            payRunId,
+        )
 
         assertEquals(2, rows.size)
 
@@ -80,7 +101,7 @@ class PaycheckLedgerEventsIT(
 
     @Test
     fun `approving a void payrun enqueues VOIDED paycheck ledger events with correction linkage`() {
-        val employerId = "emp-1"
+        val employerId = "emp-ledger-1"
         val payRunId = "run-ledger-src-${UUID.randomUUID()}"
 
         // 1) create + finalize + approve + initiate payments

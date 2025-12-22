@@ -9,35 +9,31 @@ import org.springframework.stereotype.Repository
 class PaycheckLifecycleRepository(
     private val jdbcTemplate: JdbcTemplate,
 ) {
-    fun setApprovalStatusForPayRun(employerId: String, payRunId: String, approvalStatus: ApprovalStatus): Int {
-        return jdbcTemplate.update(
-            """
+    fun setApprovalStatusForPayRun(employerId: String, payRunId: String, approvalStatus: ApprovalStatus): Int = jdbcTemplate.update(
+        """
             UPDATE paycheck
             SET approval_status = ?,
                 approved_at = CASE WHEN ? = 'APPROVED' THEN CURRENT_TIMESTAMP ELSE approved_at END,
                 updated_at = CURRENT_TIMESTAMP
             WHERE employer_id = ? AND pay_run_id = ?
-            """.trimIndent(),
-            approvalStatus.name,
-            approvalStatus.name,
-            employerId,
-            payRunId,
-        )
-    }
+        """.trimIndent(),
+        approvalStatus.name,
+        approvalStatus.name,
+        employerId,
+        payRunId,
+    )
 
-    fun setPaymentStatusForPayRun(employerId: String, payRunId: String, paymentStatus: PaymentStatus): Int {
-        return jdbcTemplate.update(
-            """
+    fun setPaymentStatusForPayRun(employerId: String, payRunId: String, paymentStatus: PaymentStatus): Int = jdbcTemplate.update(
+        """
             UPDATE paycheck
             SET payment_status = ?,
                 paid_at = CASE WHEN ? = 'PAID' THEN CURRENT_TIMESTAMP ELSE paid_at END,
                 updated_at = CURRENT_TIMESTAMP
             WHERE employer_id = ? AND pay_run_id = ?
-            """.trimIndent(),
-            paymentStatus.name,
-            paymentStatus.name,
-            employerId,
-            payRunId,
-        )
-    }
+        """.trimIndent(),
+        paymentStatus.name,
+        paymentStatus.name,
+        employerId,
+        payRunId,
+    )
 }

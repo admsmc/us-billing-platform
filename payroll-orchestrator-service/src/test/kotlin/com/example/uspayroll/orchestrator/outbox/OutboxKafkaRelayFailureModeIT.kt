@@ -119,16 +119,14 @@ class OutboxKafkaRelayFailureModeIT(
         assertEquals(null, row["locked_at"])
     }
 
-    private fun outboxRow(eventId: String): Map<String, Any?> {
-        return jdbcTemplate.queryForMap(
-            """
+    private fun outboxRow(eventId: String): Map<String, Any?> = jdbcTemplate.queryForMap(
+        """
             SELECT status, attempts, next_attempt_at, last_error, locked_by, locked_at, published_at
             FROM outbox_event
             WHERE event_id = ? AND destination_type = 'KAFKA'
-            """.trimIndent(),
-            eventId,
-        )
-    }
+        """.trimIndent(),
+        eventId,
+    )
 
     private fun okSendFuture(): CompletableFuture<SendResult<String, String>> {
         @Suppress("UNCHECKED_CAST")

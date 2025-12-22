@@ -156,31 +156,27 @@ class PayrollRunService(
         employeeIds: List<EmployeeId>,
         /** Optional unique suffix for paycheck IDs so repeated runs don't collide in HR withholding events. */
         runId: String? = null,
-    ): List<PaycheckResult> {
-        return employeeIds.map { eid ->
-            computeHrBackedPaycheck(
-                employerId = employerId,
-                payPeriodId = payPeriodId,
-                employeeId = eid,
-                runId = runId,
-                recordHrWithholdings = true,
-            )
-        }
+    ): List<PaycheckResult> = employeeIds.map { eid ->
+        computeHrBackedPaycheck(
+            employerId = employerId,
+            payPeriodId = payPeriodId,
+            employeeId = eid,
+            runId = runId,
+            recordHrWithholdings = true,
+        )
     }
 
     /**
      * Benchmark/debug helper: compute a single HR-backed paycheck but do NOT record
      * garnishment withholding events back to HR.
      */
-    fun previewHrBackedPaycheck(employerId: EmployerId, payPeriodId: String, employeeId: EmployeeId): PaycheckResult {
-        return computeHrBackedPaycheck(
-            employerId = employerId,
-            payPeriodId = payPeriodId,
-            employeeId = employeeId,
-            runId = "preview",
-            recordHrWithholdings = false,
-        )
-    }
+    fun previewHrBackedPaycheck(employerId: EmployerId, payPeriodId: String, employeeId: EmployeeId): PaycheckResult = computeHrBackedPaycheck(
+        employerId = employerId,
+        payPeriodId = payPeriodId,
+        employeeId = employeeId,
+        runId = "preview",
+        recordHrWithholdings = false,
+    )
 
     private fun computeHrBackedPaycheck(employerId: EmployerId, payPeriodId: String, employeeId: EmployeeId, runId: String?, recordHrWithholdings: Boolean): PaycheckResult {
         val client = requireNotNull(hrClient) { "HrClient is required for HR-backed flows" }

@@ -15,10 +15,8 @@ data class PaymentProviderProperties(
 @EnableConfigurationProperties(PaymentProviderProperties::class)
 class PaymentProviderConfig {
     @Bean
-    fun paymentProvider(props: PaymentProviderProperties, sandbox: SandboxPaymentProvider): PaymentProvider {
-        return when (props.type.lowercase()) {
-            "sandbox" -> sandbox
-            else -> throw IllegalArgumentException("Unsupported payments.provider.type='${props.type}'")
-        }
+    fun paymentProvider(props: PaymentProviderProperties, sandbox: SandboxPaymentProvider): PaymentProvider = when (props.type.lowercase()) {
+        "sandbox" -> sandbox
+        else -> throw IllegalArgumentException("Unsupported payments.provider.type='${props.type}'")
     }
 }

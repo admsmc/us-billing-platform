@@ -13,24 +13,19 @@ import org.springframework.web.client.RestTemplate
 class OrchestratorRestTemplateConfig {
 
     @Bean("hrRestTemplate")
-    fun hrRestTemplate(props: HrClientProperties, builder: RestTemplateBuilder, meterRegistry: MeterRegistry): RestTemplate =
-        build(builder, props.connectTimeout, props.readTimeout, meterRegistry, "hr")
+    fun hrRestTemplate(props: HrClientProperties, builder: RestTemplateBuilder, meterRegistry: MeterRegistry): RestTemplate = build(builder, props.connectTimeout, props.readTimeout, meterRegistry, "hr")
 
     @Bean("taxRestTemplate")
-    fun taxRestTemplate(props: TaxClientProperties, builder: RestTemplateBuilder, meterRegistry: MeterRegistry): RestTemplate =
-        build(builder, props.connectTimeout, props.readTimeout, meterRegistry, "tax")
+    fun taxRestTemplate(props: TaxClientProperties, builder: RestTemplateBuilder, meterRegistry: MeterRegistry): RestTemplate = build(builder, props.connectTimeout, props.readTimeout, meterRegistry, "tax")
 
     @Bean("laborRestTemplate")
-    fun laborRestTemplate(props: LaborClientProperties, builder: RestTemplateBuilder, meterRegistry: MeterRegistry): RestTemplate =
-        build(builder, props.connectTimeout, props.readTimeout, meterRegistry, "labor")
+    fun laborRestTemplate(props: LaborClientProperties, builder: RestTemplateBuilder, meterRegistry: MeterRegistry): RestTemplate = build(builder, props.connectTimeout, props.readTimeout, meterRegistry, "labor")
 
     @Bean("timeRestTemplate")
-    fun timeRestTemplate(props: TimeClientProperties, builder: RestTemplateBuilder, meterRegistry: MeterRegistry): RestTemplate =
-        build(builder, props.connectTimeout, props.readTimeout, meterRegistry, "time")
+    fun timeRestTemplate(props: TimeClientProperties, builder: RestTemplateBuilder, meterRegistry: MeterRegistry): RestTemplate = build(builder, props.connectTimeout, props.readTimeout, meterRegistry, "time")
 
     @Bean("paymentsRestTemplate")
-    fun paymentsRestTemplate(props: PaymentsQueryClientProperties, builder: RestTemplateBuilder, meterRegistry: MeterRegistry): RestTemplate =
-        build(builder, props.connectTimeout, props.readTimeout, meterRegistry, "payments")
+    fun paymentsRestTemplate(props: PaymentsQueryClientProperties, builder: RestTemplateBuilder, meterRegistry: MeterRegistry): RestTemplate = build(builder, props.connectTimeout, props.readTimeout, meterRegistry, "payments")
 
     private fun build(builder: RestTemplateBuilder, connectTimeout: java.time.Duration, readTimeout: java.time.Duration, meterRegistry: MeterRegistry, client: String): RestTemplate {
         val requestFactory = SimpleClientHttpRequestFactory().apply {

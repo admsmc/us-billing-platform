@@ -237,9 +237,8 @@ class OutboxRepository(
         return candidates.filter { it.outboxId in claimedIds }
     }
 
-    fun markSent(destinationType: OutboxDestinationType, outboxId: String, lockOwner: String, lockedAt: Instant, now: Instant = Instant.now()): Int {
-        return jdbcTemplate.update(
-            """
+    fun markSent(destinationType: OutboxDestinationType, outboxId: String, lockOwner: String, lockedAt: Instant, now: Instant = Instant.now()): Int = jdbcTemplate.update(
+        """
             UPDATE outbox_event
             SET status = ?,
                 published_at = ?,
@@ -251,16 +250,15 @@ class OutboxRepository(
               AND status = ?
               AND locked_by = ?
               AND locked_at = ?
-            """.trimIndent(),
-            OutboxStatus.SENT.name,
-            Timestamp.from(now),
-            destinationType.name,
-            outboxId,
-            OutboxStatus.SENDING.name,
-            lockOwner,
-            Timestamp.from(lockedAt),
-        )
-    }
+        """.trimIndent(),
+        OutboxStatus.SENT.name,
+        Timestamp.from(now),
+        destinationType.name,
+        outboxId,
+        OutboxStatus.SENDING.name,
+        lockOwner,
+        Timestamp.from(lockedAt),
+    )
 
     /**
      * Marks a batch of outbox rows as SENT in a single transaction.

@@ -28,8 +28,7 @@ import java.time.LocalDate
 class HrClientConfig {
 
     @Bean
-    fun httpHrClient(props: HrClientProperties, @Qualifier("hrRestTemplate") hrRestTemplate: RestTemplate, meterRegistry: io.micrometer.core.instrument.MeterRegistry): HrClient =
-        HttpHrClient(props, hrRestTemplate, meterRegistry)
+    fun httpHrClient(props: HrClientProperties, @Qualifier("hrRestTemplate") hrRestTemplate: RestTemplate, meterRegistry: io.micrometer.core.instrument.MeterRegistry): HrClient = HttpHrClient(props, hrRestTemplate, meterRegistry)
 }
 
 class HttpHrClient(

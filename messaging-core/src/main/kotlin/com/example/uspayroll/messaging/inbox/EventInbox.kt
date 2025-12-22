@@ -58,15 +58,13 @@ class JdbcEventInbox(
      * This is primarily used to avoid "lost" processing when a consumer marks an event
      * as processed and then throws before completing business effects.
      */
-    fun unmarkProcessed(consumer: String, eventId: String): Int {
-        return dataSource.connection.use { conn ->
-            conn.prepareStatement(
-                "DELETE FROM $tableName WHERE consumer = ? AND event_id = ?",
-            ).use { ps ->
-                ps.setString(1, consumer)
-                ps.setString(2, eventId)
-                ps.executeUpdate()
-            }
+    fun unmarkProcessed(consumer: String, eventId: String): Int = dataSource.connection.use { conn ->
+        conn.prepareStatement(
+            "DELETE FROM $tableName WHERE consumer = ? AND event_id = ?",
+        ).use { ps ->
+            ps.setString(1, consumer)
+            ps.setString(2, eventId)
+            ps.executeUpdate()
         }
     }
 

@@ -59,30 +59,28 @@ class PayRunItemRepository(
     /**
      * Returns an already-assigned paycheck_id for the item, or assigns a new one.
      */
-    fun findItem(employerId: String, payRunId: String, employeeId: String): PayRunItemRecord? {
-        return jdbcTemplate.query(
-            """
+    fun findItem(employerId: String, payRunId: String, employeeId: String): PayRunItemRecord? = jdbcTemplate.query(
+        """
             SELECT employer_id, pay_run_id, employee_id, status, paycheck_id, attempt_count, last_error, earning_overrides_json
             FROM pay_run_item
             WHERE employer_id = ? AND pay_run_id = ? AND employee_id = ?
-            """.trimIndent(),
-            { rs, _ ->
-                PayRunItemRecord(
-                    employerId = rs.getString("employer_id"),
-                    payRunId = rs.getString("pay_run_id"),
-                    employeeId = rs.getString("employee_id"),
-                    status = PayRunItemStatus.valueOf(rs.getString("status")),
-                    paycheckId = rs.getString("paycheck_id"),
-                    attemptCount = rs.getInt("attempt_count"),
-                    lastError = rs.getString("last_error"),
-                    earningOverridesJson = rs.getString("earning_overrides_json"),
-                )
-            },
-            employerId,
-            payRunId,
-            employeeId,
-        ).firstOrNull()
-    }
+        """.trimIndent(),
+        { rs, _ ->
+            PayRunItemRecord(
+                employerId = rs.getString("employer_id"),
+                payRunId = rs.getString("pay_run_id"),
+                employeeId = rs.getString("employee_id"),
+                status = PayRunItemStatus.valueOf(rs.getString("status")),
+                paycheckId = rs.getString("paycheck_id"),
+                attemptCount = rs.getInt("attempt_count"),
+                lastError = rs.getString("last_error"),
+                earningOverridesJson = rs.getString("earning_overrides_json"),
+            )
+        },
+        employerId,
+        payRunId,
+        employeeId,
+    ).firstOrNull()
 
     /**
      * Claim exactly one employee item for execution.

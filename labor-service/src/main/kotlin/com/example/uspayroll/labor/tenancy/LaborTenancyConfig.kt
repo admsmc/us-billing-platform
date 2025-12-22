@@ -5,6 +5,9 @@ import com.example.uspayroll.tenancy.db.TenantDataSources
 import com.example.uspayroll.tenancy.db.TenantDbConfig
 import com.example.uspayroll.tenancy.db.TenantFlywayMigrator
 import com.example.uspayroll.tenancy.web.EmployerTenantWebMvcInterceptor
+import jakarta.validation.Valid
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Pattern
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -13,17 +16,22 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.validation.annotation.Validated
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 import javax.sql.DataSource
 
+@Validated
 @ConfigurationProperties(prefix = "tenancy")
 data class TenancyProperties(
+    @field:NotBlank
+    @field:Pattern(regexp = "(SINGLE|DB_PER_EMPLOYER)", message = "tenancy.mode must be SINGLE or DB_PER_EMPLOYER")
     var mode: String = "SINGLE",
+    @field:Valid
     var databases: Map<String, TenantDatabaseProperties> = emptyMap(),
 )
-
 data class TenantDatabaseProperties(
+    @field:NotBlank
     var url: String = "",
     var username: String = "",
     var password: String = "",
@@ -60,9 +68,7 @@ class LaborTenancyConfig : WebMvcConfigurer {
 
     @Bean
     @ConditionalOnProperty(prefix = "tenancy", name = ["mode"], havingValue = "DB_PER_EMPLOYER")
-    fun laborDataSource(tenants: TenantDataSources): DataSource {
-        return TenantDataSourceFactory.routing(tenants.byTenant)
-    }
+    fun laborDataSource(tenants: TenantDataSources): DataSource = TenantDataSourceFactory.routing(tenants.byTenant)
 
     @Bean
     @ConditionalOnProperty(prefix = "tenancy", name = ["mode"], havingValue = "DB_PER_EMPLOYER")
@@ -74,9 +80,7 @@ class LaborTenancyConfig : WebMvcConfigurer {
 
     @Bean
     @ConditionalOnProperty(prefix = "tenancy", name = ["mode"], havingValue = "DB_PER_EMPLOYER")
-    fun flywayMigrationStrategy(tenants: TenantDataSources): FlywayMigrationStrategy {
-        return FlywayMigrationStrategy {
-            TenantFlywayMigrator.migrateAll(tenants, "classpath:db/migration/labor")
-        }
+    fun flywayMigrationStrategy(tenants: TenantDataSources): FlywayMigrationStrategy = FlywayMigrationStrategy {
+        TenantFlywayMigrator.migrateAll(tenants, "classpath:db/migration/labor")
     }
 }

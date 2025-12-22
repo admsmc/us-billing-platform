@@ -36,8 +36,7 @@ class LaborClientProperties : DownstreamHttpClientProperties() {
 class LaborClientConfig {
 
     @Bean
-    fun httpLaborStandardsClient(props: LaborClientProperties, @Qualifier("laborRestTemplate") laborRestTemplate: RestTemplate, meterRegistry: MeterRegistry): LaborStandardsClient =
-        HttpLaborStandardsClient(props, laborRestTemplate, meterRegistry)
+    fun httpLaborStandardsClient(props: LaborClientProperties, @Qualifier("laborRestTemplate") laborRestTemplate: RestTemplate, meterRegistry: MeterRegistry): LaborStandardsClient = HttpLaborStandardsClient(props, laborRestTemplate, meterRegistry)
 }
 
 class HttpLaborStandardsClient(

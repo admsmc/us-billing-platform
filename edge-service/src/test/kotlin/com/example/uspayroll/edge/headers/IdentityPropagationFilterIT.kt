@@ -44,8 +44,9 @@ class IdentityPropagationFilterIT {
 
         private var backend: DisposableServer? = null
 
-        private fun requireBackend(): DisposableServer =
-            backend ?: HttpServer.create()
+        private fun requireBackend(): DisposableServer = backend
+            ?: HttpServer
+                .create()
                 .port(0)
                 .handle { req, res ->
                     val corr = req.requestHeaders().get(WebHeaders.CORRELATION_ID)
@@ -69,12 +70,11 @@ class IdentityPropagationFilterIT {
                 .bindNow()
                 .also { backend = it }
 
-        private fun toJsonString(value: String?): String =
-            if (value == null) {
-                "null"
-            } else {
-                "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"") + "\""
-            }
+        private fun toJsonString(value: String?): String = if (value == null) {
+            "null"
+        } else {
+            "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"") + "\""
+        }
 
         @JvmStatic
         @DynamicPropertySource
@@ -118,8 +118,10 @@ class IdentityPropagationFilterIT {
         }
     }
 
-    private fun client(): WebTestClient =
-        WebTestClient.bindToServer().baseUrl("http://localhost:$port").build()
+    private fun client(): WebTestClient = WebTestClient
+        .bindToServer()
+        .baseUrl("http://localhost:$port")
+        .build()
 
     @Test
     fun `propagates identity headers and generates correlation id, overwriting injected employer header`() {

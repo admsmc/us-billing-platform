@@ -12,11 +12,9 @@ internal object LaborStandardsArtifactRenderer {
         .registerModule(JavaTimeModule())
         .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
 
-    fun renderJson(standards: List<StateLaborStandard>): String {
-        return objectMapper
-            .writerWithDefaultPrettyPrinter()
-            .writeValueAsString(standards) + "\n"
-    }
+    fun renderJson(standards: List<StateLaborStandard>): String = objectMapper
+        .writerWithDefaultPrettyPrinter()
+        .writeValueAsString(standards) + "\n"
 
     fun renderSql(year: String, standards: List<StateLaborStandard>): String {
         val sb = StringBuilder()

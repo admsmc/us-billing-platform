@@ -16,6 +16,7 @@ dependencies {
     implementation("org.springframework:spring-context:6.1.8")
     implementation("org.springframework:spring-web:6.1.8")
     compileOnly("jakarta.servlet:jakarta.servlet-api:6.0.0")
+    compileOnly("jakarta.validation:jakarta.validation-api:3.1.0")
 
     implementation("org.slf4j:slf4j-api:2.0.16")
 

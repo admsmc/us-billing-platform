@@ -8,6 +8,7 @@ import com.example.uspayroll.orchestrator.support.InternalAuthTestSupport
 import com.example.uspayroll.orchestrator.support.StubClientsTestConfig
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 import org.springframework.boot.test.context.SpringBootTest
@@ -39,9 +40,20 @@ class PayRunPaymentsProjectionRebuildIT(
     private val paymentsQueryClient: PaymentsQueryClient,
 ) {
 
+    @BeforeEach
+    fun cleanDb() {
+        jdbcTemplate.update("DELETE FROM paycheck_audit")
+        jdbcTemplate.update("DELETE FROM paycheck_payment")
+        jdbcTemplate.update("DELETE FROM paycheck")
+        jdbcTemplate.update("DELETE FROM pay_run_item")
+        jdbcTemplate.update("DELETE FROM pay_run")
+        jdbcTemplate.update("DELETE FROM outbox_event")
+    }
+
     @Test
     fun `rebuild payment projection persists paycheck and payrun payment statuses`() {
-        val employerId = "emp-1"
+        // Use a class-specific employerId to avoid cross-test collisions on payrun business keys.
+        val employerId = "emp-payments-proj"
         val payRunId = "run-proj-rebuild-${UUID.randomUUID()}"
 
         // Create payrun with two succeeded paychecks.
@@ -150,7 +162,7 @@ class PayRunPaymentsProjectionRebuildIT(
 
     @Test
     fun `rebuild payment projection can be dry-run with persist=false`() {
-        val employerId = "emp-1"
+        val employerId = "emp-payments-proj"
         val payRunId = "run-proj-rebuild-${UUID.randomUUID()}"
 
         rest.exchange(
@@ -226,35 +238,29 @@ class PayRunPaymentsProjectionRebuildIT(
         assertEquals("CREATED", afterProjection)
     }
 
-    private fun paycheckId(employerId: String, payRunId: String, employeeId: String): String {
-        return jdbcTemplate.queryForObject(
-            """
+    private fun paycheckId(employerId: String, payRunId: String, employeeId: String): String = jdbcTemplate.queryForObject(
+        """
             SELECT paycheck_id
             FROM pay_run_item
             WHERE employer_id = ? AND pay_run_id = ? AND employee_id = ?
-            """.trimIndent(),
-            String::class.java,
-            employerId,
-            payRunId,
-            employeeId,
-        )!!
-    }
+        """.trimIndent(),
+        String::class.java,
+        employerId,
+        payRunId,
+        employeeId,
+    )!!
 
-    private fun paycheckPaymentStatus(employerId: String, paycheckId: String): String {
-        return jdbcTemplate.queryForObject(
-            "SELECT payment_status FROM paycheck WHERE employer_id = ? AND paycheck_id = ?",
-            String::class.java,
-            employerId,
-            paycheckId,
-        )!!
-    }
+    private fun paycheckPaymentStatus(employerId: String, paycheckId: String): String = jdbcTemplate.queryForObject(
+        "SELECT payment_status FROM paycheck WHERE employer_id = ? AND paycheck_id = ?",
+        String::class.java,
+        employerId,
+        paycheckId,
+    )!!
 
-    private fun paycheckPaymentProjectionStatus(employerId: String, paycheckId: String): String {
-        return jdbcTemplate.queryForObject(
-            "SELECT status FROM paycheck_payment WHERE employer_id = ? AND paycheck_id = ?",
-            String::class.java,
-            employerId,
-            paycheckId,
-        )!!
-    }
+    private fun paycheckPaymentProjectionStatus(employerId: String, paycheckId: String): String = jdbcTemplate.queryForObject(
+        "SELECT status FROM paycheck_payment WHERE employer_id = ? AND paycheck_id = ?",
+        String::class.java,
+        employerId,
+        paycheckId,
+    )!!
 }

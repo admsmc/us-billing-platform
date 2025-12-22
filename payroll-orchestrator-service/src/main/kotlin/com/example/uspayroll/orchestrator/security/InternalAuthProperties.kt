@@ -1,7 +1,10 @@
 package com.example.uspayroll.orchestrator.security
 
+import jakarta.validation.constraints.NotBlank
 import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.validation.annotation.Validated
 
+@Validated
 @ConfigurationProperties(prefix = "orchestrator.internal-auth")
 data class InternalAuthProperties(
     /**
@@ -22,8 +25,10 @@ data class InternalAuthProperties(
     var jwtDefaultKid: String = "",
 
     /** Expected issuer for internal JWTs. */
+    @field:NotBlank
     var jwtIssuer: String = "us-payroll-platform",
 
     /** Expected audience for internal JWTs. */
+    @field:NotBlank
     var jwtAudience: String = "payroll-orchestrator-service",
 )

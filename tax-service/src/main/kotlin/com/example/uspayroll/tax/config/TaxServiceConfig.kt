@@ -64,9 +64,7 @@ class TaxServiceConfig {
     }
 
     @Bean
-    fun taxContextProvider(catalog: TaxCatalog): TaxContextProvider {
-        return CatalogBackedTaxContextProvider(catalog)
-    }
+    fun taxContextProvider(catalog: TaxCatalog): TaxContextProvider = CatalogBackedTaxContextProvider(catalog)
 
     @Bean
     fun federalWithholdingCalculator(@Value("\${tax.federalWithholding.method:PERCENTAGE}") method: String): FederalWithholdingCalculator = DefaultFederalWithholdingCalculator(

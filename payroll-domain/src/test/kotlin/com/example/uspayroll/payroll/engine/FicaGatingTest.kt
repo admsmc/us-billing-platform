@@ -10,20 +10,18 @@ import kotlin.test.assertEquals
 
 class FicaGatingTest {
 
-    private fun baseSnapshot(employmentType: EmploymentType, grossCents: Long): EmployeeSnapshot {
-        return EmployeeSnapshot(
-            employerId = EmployerId("EMP1"),
-            employeeId = EmployeeId("EE1"),
-            homeState = "CA",
-            workState = "CA",
-            filingStatus = FilingStatus.SINGLE,
-            employmentType = employmentType,
-            baseCompensation = BaseCompensation.Salaried(
-                annualSalary = Money(grossCents * 26),
-                frequency = PayFrequency.BIWEEKLY,
-            ),
-        )
-    }
+    private fun baseSnapshot(employmentType: EmploymentType, grossCents: Long): EmployeeSnapshot = EmployeeSnapshot(
+        employerId = EmployerId("EMP1"),
+        employeeId = EmployeeId("EE1"),
+        homeState = "CA",
+        workState = "CA",
+        filingStatus = FilingStatus.SINGLE,
+        employmentType = employmentType,
+        baseCompensation = BaseCompensation.Salaried(
+            annualSalary = Money(grossCents * 26),
+            frequency = PayFrequency.BIWEEKLY,
+        ),
+    )
 
     private fun paycheckInput(snapshot: EmployeeSnapshot, grossCents: Long, priorYtdSsCents: Long, priorYtdMedCents: Long): Pair<PaycheckInput, Map<TaxBasis, Money>> {
         val employerId = snapshot.employerId

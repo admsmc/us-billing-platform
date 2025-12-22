@@ -31,6 +31,8 @@ dependencies {
 
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
+    implementation("org.springframework.boot:spring-boot-starter-validation")
+    implementation("jakarta.validation:jakarta.validation-api:3.1.0")
     runtimeOnly("org.postgresql:postgresql")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("io.micrometer:micrometer-registry-prometheus")
@@ -58,6 +60,7 @@ dependencies {
     testImplementation(testFixtures(project(":tenancy-core")))
     testImplementation("org.springframework.kafka:spring-kafka-test")
     testImplementation("com.h2database:h2:2.3.232")
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
 }
 
 tasks.withType<JavaCompile> {

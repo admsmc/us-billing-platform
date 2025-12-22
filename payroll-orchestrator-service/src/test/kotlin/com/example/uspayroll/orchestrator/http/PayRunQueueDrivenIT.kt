@@ -4,6 +4,7 @@ import com.example.uspayroll.orchestrator.support.InternalAuthTestSupport
 import com.example.uspayroll.orchestrator.support.StubClientsTestConfig
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
@@ -35,9 +36,20 @@ class PayRunQueueDrivenIT(
     private val paycheckComputationService: com.example.uspayroll.orchestrator.payrun.PaycheckComputationService,
 ) {
 
+    @BeforeEach
+    fun cleanDb() {
+        jdbcTemplate.update("DELETE FROM paycheck_audit")
+        jdbcTemplate.update("DELETE FROM paycheck_payment")
+        jdbcTemplate.update("DELETE FROM paycheck")
+        jdbcTemplate.update("DELETE FROM pay_run_item")
+        jdbcTemplate.update("DELETE FROM pay_run")
+        jdbcTemplate.update("DELETE FROM outbox_event")
+    }
+
     @Test
     fun `start finalize enqueues one Rabbit outbox job per employee`() {
-        val employerId = "emp-1"
+        // Use a class-specific employerId to avoid cross-test collisions in the shared H2 DB.
+        val employerId = "emp-queue-1"
 
         val start = rest.exchange(
             RequestEntity.post(URI.create("/employers/$employerId/payruns/finalize"))
@@ -90,7 +102,7 @@ class PayRunQueueDrivenIT(
 
     @Test
     fun `start finalize is idempotent via Idempotency-Key header`() {
-        val employerId = "emp-1"
+        val employerId = "emp-queue-1"
 
         val idempotencyKey = "idem-queue-1"
 
@@ -143,7 +155,7 @@ class PayRunQueueDrivenIT(
 
     @Test
     fun `internal completion endpoint persists paycheck idempotently`() {
-        val employerId = "emp-1"
+        val employerId = "emp-queue-1"
 
         rest.exchange(
             RequestEntity.post(URI.create("/employers/$employerId/payruns/finalize"))
@@ -226,7 +238,7 @@ class PayRunQueueDrivenIT(
 
     @Test
     fun `failed computation is requeued as retryable by default`() {
-        val employerId = "emp-1"
+        val employerId = "emp-queue-1"
 
         rest.exchange(
             RequestEntity.post(URI.create("/employers/$employerId/payruns/finalize"))

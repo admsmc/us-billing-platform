@@ -112,18 +112,16 @@ class PaycheckPaymentRepository(
         }
     }
 
-    fun updateStatusByPaycheck(employerId: String, paycheckId: String, status: PaycheckPaymentStatus): Int {
-        return jdbcTemplate.update(
-            """
+    fun updateStatusByPaycheck(employerId: String, paycheckId: String, status: PaycheckPaymentStatus): Int = jdbcTemplate.update(
+        """
             UPDATE paycheck_payment
             SET status = ?, updated_at = CURRENT_TIMESTAMP
             WHERE employer_id = ? AND paycheck_id = ?
-            """.trimIndent(),
-            status.name,
-            employerId,
-            paycheckId,
-        )
-    }
+        """.trimIndent(),
+        status.name,
+        employerId,
+        paycheckId,
+    )
 
     fun countByPayRun(employerId: String, payRunId: String): Long = jdbcTemplate.queryForObject(
         """

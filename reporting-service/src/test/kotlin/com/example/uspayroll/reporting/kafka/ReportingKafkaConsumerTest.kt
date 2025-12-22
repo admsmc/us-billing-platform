@@ -22,12 +22,10 @@ class ReportingKafkaConsumerTest {
 
     private val mapper = jacksonObjectMapper().registerModule(JavaTimeModule())
 
-    private fun newDataSource(dbName: String): JdbcDataSource {
-        return JdbcDataSource().apply {
-            setURL("jdbc:h2:mem:$dbName;MODE=PostgreSQL;DB_CLOSE_DELAY=-1")
-            user = "sa"
-            password = ""
-        }
+    private fun newDataSource(dbName: String): JdbcDataSource = JdbcDataSource().apply {
+        setURL("jdbc:h2:mem:$dbName;MODE=PostgreSQL;DB_CLOSE_DELAY=-1")
+        user = "sa"
+        password = ""
     }
 
     private fun initDb(ds: JdbcDataSource): JdbcEventInbox {

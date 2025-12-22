@@ -1,7 +1,10 @@
 package com.example.uspayroll.worker.security
 
+import jakarta.validation.constraints.NotBlank
 import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.validation.annotation.Validated
 
+@Validated
 @ConfigurationProperties(prefix = "worker.internal-auth")
 data class WorkerInternalAuthProperties(
     /**
@@ -20,8 +23,10 @@ data class WorkerInternalAuthProperties(
     var jwtDefaultKid: String = "",
 
     /** Expected issuer for internal JWTs. */
+    @field:NotBlank
     var jwtIssuer: String = "us-payroll-platform",
 
     /** Expected audience for internal JWTs. */
+    @field:NotBlank
     var jwtAudience: String = "payroll-worker-service",
 )

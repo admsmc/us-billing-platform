@@ -441,18 +441,16 @@ class PayRunRepository(
         return stored == null || stored == correctionOfPayRunId
     }
 
-    fun findCorrectionOfPayRunId(employerId: String, payRunId: String): String? {
-        return jdbcTemplate.query(
-            """
+    fun findCorrectionOfPayRunId(employerId: String, payRunId: String): String? = jdbcTemplate.query(
+        """
             SELECT correction_of_pay_run_id
             FROM pay_run
             WHERE employer_id = ? AND pay_run_id = ?
-            """.trimIndent(),
-            { rs, _ -> rs.getString("correction_of_pay_run_id") },
-            employerId,
-            payRunId,
-        ).firstOrNull()
-    }
+        """.trimIndent(),
+        { rs, _ -> rs.getString("correction_of_pay_run_id") },
+        employerId,
+        payRunId,
+    ).firstOrNull()
 
     fun markApprovedIfPending(employerId: String, payRunId: String): Boolean {
         val updated = jdbcTemplate.update(
@@ -503,32 +501,28 @@ class PayRunRepository(
         return updated == 1
     }
 
-    fun findPayRunIdByPaymentInitiateIdempotencyKey(employerId: String, idempotencyKey: String): String? {
-        return jdbcTemplate.query(
-            """
+    fun findPayRunIdByPaymentInitiateIdempotencyKey(employerId: String, idempotencyKey: String): String? = jdbcTemplate.query(
+        """
             SELECT pay_run_id
             FROM pay_run
             WHERE employer_id = ? AND payment_initiate_idempotency_key = ?
             LIMIT 1
-            """.trimIndent(),
-            { rs, _ -> rs.getString("pay_run_id") },
-            employerId,
-            idempotencyKey,
-        ).firstOrNull()
-    }
+        """.trimIndent(),
+        { rs, _ -> rs.getString("pay_run_id") },
+        employerId,
+        idempotencyKey,
+    ).firstOrNull()
 
-    fun findPaymentInitiateIdempotencyKeyForPayRun(employerId: String, payRunId: String): String? {
-        return jdbcTemplate.query(
-            """
+    fun findPaymentInitiateIdempotencyKeyForPayRun(employerId: String, payRunId: String): String? = jdbcTemplate.query(
+        """
             SELECT payment_initiate_idempotency_key
             FROM pay_run
             WHERE employer_id = ? AND pay_run_id = ?
-            """.trimIndent(),
-            { rs, _ -> rs.getString("payment_initiate_idempotency_key") },
-            employerId,
-            payRunId,
-        ).firstOrNull()
-    }
+        """.trimIndent(),
+        { rs, _ -> rs.getString("payment_initiate_idempotency_key") },
+        employerId,
+        payRunId,
+    ).firstOrNull()
 
     /**
      * Attach an idempotency key to this payrun if it is currently unset, or verify it matches if already set.

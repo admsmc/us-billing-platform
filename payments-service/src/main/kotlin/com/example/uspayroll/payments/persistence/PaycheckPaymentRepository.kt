@@ -150,19 +150,17 @@ class PaycheckPaymentRepository(
         }
     }
 
-    fun setProviderPaymentRefIfMissing(employerId: String, paymentId: String, providerPaymentRef: String): Int {
-        return jdbcTemplate.update(
-            """
+    fun setProviderPaymentRefIfMissing(employerId: String, paymentId: String, providerPaymentRef: String): Int = jdbcTemplate.update(
+        """
             UPDATE paycheck_payment
             SET provider_payment_ref = COALESCE(provider_payment_ref, ?),
                 updated_at = CURRENT_TIMESTAMP
             WHERE employer_id = ? AND payment_id = ?
-            """.trimIndent(),
-            providerPaymentRef,
-            employerId,
-            paymentId,
-        )
-    }
+        """.trimIndent(),
+        providerPaymentRef,
+        employerId,
+        paymentId,
+    )
 
     fun updateStatus(employerId: String, paymentId: String, status: PaycheckPaymentLifecycleStatus, error: String? = null, nextAttemptAt: Instant? = null, now: Instant = Instant.now()): Int {
         val truncated = error?.let { if (it.length <= 2000) it else it.take(2000) }

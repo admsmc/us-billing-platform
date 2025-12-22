@@ -1,7 +1,6 @@
 package com.example.uspayroll.orchestrator.http
 
 import com.example.uspayroll.orchestrator.support.StubClientsTestConfig
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc

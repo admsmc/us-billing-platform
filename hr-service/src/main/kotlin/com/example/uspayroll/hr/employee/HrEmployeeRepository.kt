@@ -438,34 +438,32 @@ class HrEmployeeRepository(
         )
     }
 
-    private fun merge(current: EmployeeProfileRow, patch: EmployeeProfilePatch): EmployeeProfileRow {
-        return current.copy(
-            homeState = patch.homeState ?: current.homeState,
-            workState = patch.workState ?: current.workState,
-            workCity = patch.workCity ?: current.workCity,
-            filingStatus = (patch.filingStatus ?: FilingStatus.valueOf(current.filingStatus)).name,
-            employmentType = (patch.employmentType ?: EmploymentType.valueOf(current.employmentType)).name,
-            hireDate = patch.hireDate ?: current.hireDate,
-            terminationDate = patch.terminationDate ?: current.terminationDate,
-            dependents = patch.dependents ?: current.dependents,
-            federalWithholdingExempt = patch.federalWithholdingExempt ?: current.federalWithholdingExempt,
-            isNonresidentAlien = patch.isNonresidentAlien ?: current.isNonresidentAlien,
-            w4AnnualCreditCents = patch.w4AnnualCreditCents ?: current.w4AnnualCreditCents,
-            w4OtherIncomeCents = patch.w4OtherIncomeCents ?: current.w4OtherIncomeCents,
-            w4DeductionsCents = patch.w4DeductionsCents ?: current.w4DeductionsCents,
-            w4Step2MultipleJobs = patch.w4Step2MultipleJobs ?: current.w4Step2MultipleJobs,
-            w4Version = patch.w4Version ?: current.w4Version,
-            legacyAllowances = patch.legacyAllowances ?: current.legacyAllowances,
-            legacyAdditionalWithholdingCents = patch.legacyAdditionalWithholdingCents ?: current.legacyAdditionalWithholdingCents,
-            legacyMaritalStatus = patch.legacyMaritalStatus ?: current.legacyMaritalStatus,
-            w4EffectiveDate = patch.w4EffectiveDate ?: current.w4EffectiveDate,
-            additionalWithholdingCents = patch.additionalWithholdingCents ?: current.additionalWithholdingCents,
-            ficaExempt = patch.ficaExempt ?: current.ficaExempt,
-            flsaEnterpriseCovered = patch.flsaEnterpriseCovered ?: current.flsaEnterpriseCovered,
-            flsaExemptStatus = (patch.flsaExemptStatus ?: FlsaExemptStatus.valueOf(current.flsaExemptStatus)).name,
-            isTippedEmployee = patch.isTippedEmployee ?: current.isTippedEmployee,
-        )
-    }
+    private fun merge(current: EmployeeProfileRow, patch: EmployeeProfilePatch): EmployeeProfileRow = current.copy(
+        homeState = patch.homeState ?: current.homeState,
+        workState = patch.workState ?: current.workState,
+        workCity = patch.workCity ?: current.workCity,
+        filingStatus = (patch.filingStatus ?: FilingStatus.valueOf(current.filingStatus)).name,
+        employmentType = (patch.employmentType ?: EmploymentType.valueOf(current.employmentType)).name,
+        hireDate = patch.hireDate ?: current.hireDate,
+        terminationDate = patch.terminationDate ?: current.terminationDate,
+        dependents = patch.dependents ?: current.dependents,
+        federalWithholdingExempt = patch.federalWithholdingExempt ?: current.federalWithholdingExempt,
+        isNonresidentAlien = patch.isNonresidentAlien ?: current.isNonresidentAlien,
+        w4AnnualCreditCents = patch.w4AnnualCreditCents ?: current.w4AnnualCreditCents,
+        w4OtherIncomeCents = patch.w4OtherIncomeCents ?: current.w4OtherIncomeCents,
+        w4DeductionsCents = patch.w4DeductionsCents ?: current.w4DeductionsCents,
+        w4Step2MultipleJobs = patch.w4Step2MultipleJobs ?: current.w4Step2MultipleJobs,
+        w4Version = patch.w4Version ?: current.w4Version,
+        legacyAllowances = patch.legacyAllowances ?: current.legacyAllowances,
+        legacyAdditionalWithholdingCents = patch.legacyAdditionalWithholdingCents ?: current.legacyAdditionalWithholdingCents,
+        legacyMaritalStatus = patch.legacyMaritalStatus ?: current.legacyMaritalStatus,
+        w4EffectiveDate = patch.w4EffectiveDate ?: current.w4EffectiveDate,
+        additionalWithholdingCents = patch.additionalWithholdingCents ?: current.additionalWithholdingCents,
+        ficaExempt = patch.ficaExempt ?: current.ficaExempt,
+        flsaEnterpriseCovered = patch.flsaEnterpriseCovered ?: current.flsaEnterpriseCovered,
+        flsaExemptStatus = (patch.flsaExemptStatus ?: FlsaExemptStatus.valueOf(current.flsaExemptStatus)).name,
+        isTippedEmployee = patch.isTippedEmployee ?: current.isTippedEmployee,
+    )
 
     data class CompensationCreate(
         val employerId: String,

@@ -25,8 +25,7 @@ class KafkaPayRunEventsConfig {
 
     @Bean
     @ConditionalOnProperty(prefix = "orchestrator.events.kafka", name = ["enabled"], havingValue = "true")
-    fun kafkaPayRunEventsPublisher(kafkaTemplate: KafkaTemplate<String, String>, objectMapper: ObjectMapper, props: KafkaEventsProperties): PayRunEventsPublisher =
-        KafkaPayRunEventsPublisher(kafkaTemplate, objectMapper, props)
+    fun kafkaPayRunEventsPublisher(kafkaTemplate: KafkaTemplate<String, String>, objectMapper: ObjectMapper, props: KafkaEventsProperties): PayRunEventsPublisher = KafkaPayRunEventsPublisher(kafkaTemplate, objectMapper, props)
 }
 
 class KafkaPayRunEventsPublisher(

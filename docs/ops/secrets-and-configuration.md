@@ -84,7 +84,7 @@ Worker internal endpoints (e.g. DLQ replay) require a short-lived internal JWT (
   - `Authorization: Bearer <internal-jwt>`
 
 ## Databases (per service)
-In production, supply DB credentials via secrets.
+In production, supply DB credentials via secrets sourced from your secret manager (not static YAML).
 Typical required values:
 - HR: `HR_DB_URL`, `HR_DB_USERNAME`, `HR_DB_PASSWORD`
 - Tax: `TAX_DB_URL`, `TAX_DB_USERNAME`, `TAX_DB_PASSWORD`
@@ -93,6 +93,8 @@ Typical required values:
 - Payments: `PAYMENTS_DB_URL`, `PAYMENTS_DB_USERNAME`, `PAYMENTS_DB_PASSWORD`
 
 If using `tenancy.mode=DB_PER_EMPLOYER`, each service requires a map of per-employer DB configs (see `docs/tenancy-db-per-employer.md`).
+
+In Kubernetes, production deployments should source these secrets from a secret manager (for example, via External Secrets Operator or a cloud-specific CSI driver) rather than committing any real credentials to Git. Dev overlays in `deploy/k8s/overlays/dev` use clearly-marked, non-production placeholders.
 
 ## Messaging
 If running Kafka/Rabbit in production, configure TLS and credentials via your platform’s mechanisms.

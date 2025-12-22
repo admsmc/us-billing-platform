@@ -12,7 +12,6 @@ permissions:
 jobs:
   gradle:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -34,3 +33,39 @@ jobs:
 
       - name: Run checks
         run: ./gradlew --no-daemon check
+
+  config-policy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Enforce basic config policy
+        run: |
+          # 1) Disallow EDGE_AUTH_MODE=DISABLED in prod overlays.
+          if grep -R "EDGE_AUTH_MODE" deploy/k8s/overlays/prod 2>/dev/null | grep -q "DISABLED"; then
+            echo "ERROR: EDGE_AUTH_MODE must not be DISABLED in prod overlays." >&2
+            exit 1
+          fi
+
+          # 2) Disallow enabling EDGE_AUTH_ALLOW_DISABLED in prod overlays.
+          if grep -R "EDGE_AUTH_ALLOW_DISABLED" deploy/k8s/overlays/prod 2>/dev/null | grep -qi "true"; then
+            echo "ERROR: EDGE_AUTH_ALLOW_DISABLED must not be true in prod overlays." >&2
+            exit 1
+          fi
+
+          # 3) Disallow committing Secrets with obvious passwords in prod overlays.
+          if grep -R "kind: Secret" deploy/k8s/overlays/prod 2>/dev/null | grep -q "password:"; then
+            echo "ERROR: Secrets with inline password keys found in prod overlays." >&2
+            exit 1
+          fi
+
+          # 4) Disallow referencing dev-only secrets manifests from prod overlays.
+          if grep -R "secrets-dev.yaml" deploy/k8s/overlays/prod 2>/dev/null; then
+            echo "ERROR: Prod overlays must not reference dev-only secrets-dev.yaml." >&2
+            exit 1
+          fi
+
+          echo "Config policy checks passed."

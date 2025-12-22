@@ -58,15 +58,11 @@ class OrchestratorTenancyConfig : WebMvcConfigurer {
 
     @Bean
     @ConditionalOnProperty(prefix = "tenancy", name = ["mode"], havingValue = "DB_PER_EMPLOYER")
-    fun dataSource(tenants: TenantDataSources): DataSource {
-        return TenantDataSourceFactory.routing(tenants.byTenant)
-    }
+    fun dataSource(tenants: TenantDataSources): DataSource = TenantDataSourceFactory.routing(tenants.byTenant)
 
     @Bean
     @ConditionalOnProperty(prefix = "tenancy", name = ["mode"], havingValue = "DB_PER_EMPLOYER")
-    fun flywayMigrationStrategy(tenants: TenantDataSources): FlywayMigrationStrategy {
-        return FlywayMigrationStrategy {
-            TenantFlywayMigrator.migrateAll(tenants, "classpath:db/migration/orchestrator")
-        }
+    fun flywayMigrationStrategy(tenants: TenantDataSources): FlywayMigrationStrategy = FlywayMigrationStrategy {
+        TenantFlywayMigrator.migrateAll(tenants, "classpath:db/migration/orchestrator")
     }
 }

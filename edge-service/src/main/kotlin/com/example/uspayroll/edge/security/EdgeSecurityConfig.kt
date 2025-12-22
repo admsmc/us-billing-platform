@@ -1,5 +1,7 @@
 package com.example.uspayroll.edge.security
 
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Pattern
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
@@ -10,9 +12,11 @@ import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder
 import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder
 import org.springframework.security.oauth2.jwt.ReactiveJwtDecoders
 import org.springframework.security.web.server.SecurityWebFilterChain
+import org.springframework.validation.annotation.Validated
 import java.nio.charset.StandardCharsets
 import javax.crypto.spec.SecretKeySpec
 
+@Validated
 @ConfigurationProperties(prefix = "edge.auth")
 data class EdgeAuthProperties(
     /**
@@ -21,6 +25,8 @@ data class EdgeAuthProperties(
      * - HS256: validate JWTs signed with a shared HMAC secret
      * - OIDC: validate JWTs using an issuer URI or JWK set URI
      */
+    @field:NotBlank
+    @field:Pattern(regexp = "(?i)^(DISABLED|HS256|OIDC)$", message = "edge.auth.mode must be DISABLED, HS256, or OIDC")
     var mode: String = "HS256",
 
     /**

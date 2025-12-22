@@ -44,13 +44,9 @@ object TenantRetentionRunner {
         val deletedRows: Long? = null,
     )
 
-    fun dryRun(dataSources: TenantDataSources, rules: List<SqlRetentionRule>, now: Instant = Instant.now()): List<RuleRunResult> {
-        return runInternal(dataSources, rules, now, applyDeletes = false)
-    }
+    fun dryRun(dataSources: TenantDataSources, rules: List<SqlRetentionRule>, now: Instant = Instant.now()): List<RuleRunResult> = runInternal(dataSources, rules, now, applyDeletes = false)
 
-    fun apply(dataSources: TenantDataSources, rules: List<SqlRetentionRule>, now: Instant = Instant.now()): List<RuleRunResult> {
-        return runInternal(dataSources, rules, now, applyDeletes = true)
-    }
+    fun apply(dataSources: TenantDataSources, rules: List<SqlRetentionRule>, now: Instant = Instant.now()): List<RuleRunResult> = runInternal(dataSources, rules, now, applyDeletes = true)
 
     private fun runInternal(dataSources: TenantDataSources, rules: List<SqlRetentionRule>, now: Instant, applyDeletes: Boolean): List<RuleRunResult> {
         require(rules.isNotEmpty()) { "rules must be non-empty" }

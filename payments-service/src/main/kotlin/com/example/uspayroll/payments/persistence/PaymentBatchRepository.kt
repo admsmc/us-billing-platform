@@ -211,41 +211,37 @@ class PaymentBatchRepository(
         val failed: Int,
     )
 
-    fun computeCountsForBatch(employerId: String, batchId: String): BatchCounts {
-        return jdbcTemplate.query(
-            """
+    fun computeCountsForBatch(employerId: String, batchId: String): BatchCounts = jdbcTemplate.query(
+        """
             SELECT
               COUNT(*) AS total,
               SUM(CASE WHEN status = 'SETTLED' THEN 1 ELSE 0 END) AS settled,
               SUM(CASE WHEN status = 'FAILED' THEN 1 ELSE 0 END) AS failed
             FROM paycheck_payment
             WHERE employer_id = ? AND batch_id = ?
-            """.trimIndent(),
-            { rs, _ ->
-                BatchCounts(
-                    total = rs.getInt("total"),
-                    settled = rs.getInt("settled"),
-                    failed = rs.getInt("failed"),
-                )
-            },
-            employerId,
-            batchId,
-        ).firstOrNull() ?: BatchCounts(0, 0, 0)
-    }
+        """.trimIndent(),
+        { rs, _ ->
+            BatchCounts(
+                total = rs.getInt("total"),
+                settled = rs.getInt("settled"),
+                failed = rs.getInt("failed"),
+            )
+        },
+        employerId,
+        batchId,
+    ).firstOrNull() ?: BatchCounts(0, 0, 0)
 
-    fun setProviderBatchRefIfMissing(employerId: String, batchId: String, providerBatchRef: String): Int {
-        return jdbcTemplate.update(
-            """
+    fun setProviderBatchRefIfMissing(employerId: String, batchId: String, providerBatchRef: String): Int = jdbcTemplate.update(
+        """
             UPDATE payment_batch
             SET provider_batch_ref = COALESCE(provider_batch_ref, ?),
                 updated_at = CURRENT_TIMESTAMP
             WHERE employer_id = ? AND batch_id = ?
-            """.trimIndent(),
-            providerBatchRef,
-            employerId,
-            batchId,
-        )
-    }
+        """.trimIndent(),
+        providerBatchRef,
+        employerId,
+        batchId,
+    )
 
     fun reconcileBatch(employerId: String, batchId: String): PaymentBatchRow? {
         val batch = findByBatchId(employerId, batchId) ?: return null

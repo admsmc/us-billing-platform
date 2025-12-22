@@ -1,5 +1,6 @@
 package com.example.uspayroll.web.client
 
+import jakarta.validation.constraints.NotBlank
 import java.time.Duration
 
 /**
@@ -9,6 +10,7 @@ import java.time.Duration
  * services can bind it via their own `@ConfigurationProperties(prefix = "downstreams.<name>")`.
  */
 open class DownstreamHttpClientProperties {
+    @field:NotBlank
     var baseUrl: String = "http://localhost:8081"
 
     var connectTimeout: Duration = Duration.ofSeconds(2)

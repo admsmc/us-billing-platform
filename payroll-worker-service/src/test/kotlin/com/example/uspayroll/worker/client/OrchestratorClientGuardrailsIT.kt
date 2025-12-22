@@ -108,9 +108,7 @@ class OrchestratorClientCircuitBreakerIT {
             override fun initialize(context: ConfigurableApplicationContext) {
                 server = MockWebServer().apply {
                     dispatcher = object : Dispatcher() {
-                        override fun dispatch(request: RecordedRequest): MockResponse {
-                            return MockResponse().setResponseCode(500).setBody("{\"error\":\"boom\"}")
-                        }
+                        override fun dispatch(request: RecordedRequest): MockResponse = MockResponse().setResponseCode(500).setBody("{\"error\":\"boom\"}")
                     }
                 }
                 server.start()

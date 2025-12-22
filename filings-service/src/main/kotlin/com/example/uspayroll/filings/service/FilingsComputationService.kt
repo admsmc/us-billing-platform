@@ -297,15 +297,11 @@ class FilingsComputationService(
         )
     }
 
-    private fun isFederalIncomeWithholding(line: PaycheckLedgerTaxLine): Boolean =
-        line.jurisdictionType == "FEDERAL" && line.jurisdictionCode == "US"
+    private fun isFederalIncomeWithholding(line: PaycheckLedgerTaxLine): Boolean = line.jurisdictionType == "FEDERAL" && line.jurisdictionCode == "US"
 
-    private fun isSocialSecurity(line: PaycheckLedgerTaxLine): Boolean =
-        line.jurisdictionType == "FEDERAL" && line.jurisdictionCode == "SS"
+    private fun isSocialSecurity(line: PaycheckLedgerTaxLine): Boolean = line.jurisdictionType == "FEDERAL" && line.jurisdictionCode == "SS"
 
-    private fun isMedicare(line: PaycheckLedgerTaxLine): Boolean =
-        line.jurisdictionType == "FEDERAL" && line.jurisdictionCode == "MED"
+    private fun isMedicare(line: PaycheckLedgerTaxLine): Boolean = line.jurisdictionType == "FEDERAL" && line.jurisdictionCode == "MED"
 
-    private fun isFuta(line: PaycheckLedgerTaxLine): Boolean =
-        line.jurisdictionType == "FEDERAL" && line.jurisdictionCode == "FUTA"
+    private fun isFuta(line: PaycheckLedgerTaxLine): Boolean = line.jurisdictionType == "FEDERAL" && line.jurisdictionCode == "FUTA"
 }

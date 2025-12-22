@@ -26,27 +26,21 @@ class HrHttpController(
         @PathVariable employerId: String,
         @PathVariable employeeId: String,
         @RequestParam("asOf") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) asOf: LocalDate,
-    ): EmployeeSnapshot? {
-        return employeeSnapshotProvider.getEmployeeSnapshot(
-            employerId = EmployerId(employerId),
-            employeeId = EmployeeId(employeeId),
-            asOfDate = asOf,
-        )
-    }
+    ): EmployeeSnapshot? = employeeSnapshotProvider.getEmployeeSnapshot(
+        employerId = EmployerId(employerId),
+        employeeId = EmployeeId(employeeId),
+        asOfDate = asOf,
+    )
 
     @GetMapping("/pay-periods/{payPeriodId}")
-    fun getPayPeriod(@PathVariable employerId: String, @PathVariable payPeriodId: String): PayPeriod? {
-        return payPeriodProvider.getPayPeriod(
-            employerId = EmployerId(employerId),
-            payPeriodId = payPeriodId,
-        )
-    }
+    fun getPayPeriod(@PathVariable employerId: String, @PathVariable payPeriodId: String): PayPeriod? = payPeriodProvider.getPayPeriod(
+        employerId = EmployerId(employerId),
+        payPeriodId = payPeriodId,
+    )
 
     @GetMapping("/pay-periods/by-check-date")
-    fun getPayPeriodByCheckDate(@PathVariable employerId: String, @RequestParam("checkDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) checkDate: LocalDate): PayPeriod? {
-        return payPeriodProvider.findPayPeriodByCheckDate(
-            employerId = EmployerId(employerId),
-            checkDate = checkDate,
-        )
-    }
+    fun getPayPeriodByCheckDate(@PathVariable employerId: String, @RequestParam("checkDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) checkDate: LocalDate): PayPeriod? = payPeriodProvider.findPayPeriodByCheckDate(
+        employerId = EmployerId(employerId),
+        checkDate = checkDate,
+    )
 }

@@ -37,9 +37,8 @@ class JdbcTimeEntryRepository(
         return existed
     }
 
-    override fun findInRange(employerId: EmployerId, employeeId: EmployeeId, start: LocalDate, end: LocalDate): List<TimeEntryRepository.StoredTimeEntry> {
-        return jdbcTemplate.query(
-            """
+    override fun findInRange(employerId: EmployerId, employeeId: EmployeeId, start: LocalDate, end: LocalDate): List<TimeEntryRepository.StoredTimeEntry> = jdbcTemplate.query(
+        """
             SELECT entry_id, work_date, hours,
                    cash_tips_cents, charged_tips_cents, allocated_tips_cents,
                    commission_cents, bonus_cents, reimbursement_non_taxable_cents,
@@ -50,18 +49,16 @@ class JdbcTimeEntryRepository(
               AND work_date >= ?
               AND work_date <= ?
             ORDER BY work_date, entry_id
-            """.trimIndent(),
-            { rs, _ -> rs.toStoredTimeEntry() },
-            employerId.value,
-            employeeId.value,
-            Date.valueOf(start),
-            Date.valueOf(end),
-        )
-    }
+        """.trimIndent(),
+        { rs, _ -> rs.toStoredTimeEntry() },
+        employerId.value,
+        employeeId.value,
+        Date.valueOf(start),
+        Date.valueOf(end),
+    )
 
-    override fun findAllInRange(employerId: EmployerId, start: LocalDate, end: LocalDate): List<TimeEntryRepository.StoredTimeEntryWithEmployee> {
-        return jdbcTemplate.query(
-            """
+    override fun findAllInRange(employerId: EmployerId, start: LocalDate, end: LocalDate): List<TimeEntryRepository.StoredTimeEntryWithEmployee> = jdbcTemplate.query(
+        """
             SELECT employee_id,
                    entry_id, work_date, hours,
                    cash_tips_cents, charged_tips_cents, allocated_tips_cents,
@@ -72,18 +69,17 @@ class JdbcTimeEntryRepository(
               AND work_date >= ?
               AND work_date <= ?
             ORDER BY work_date, employee_id, entry_id
-            """.trimIndent(),
-            { rs, _ ->
-                TimeEntryRepository.StoredTimeEntryWithEmployee(
-                    employeeId = EmployeeId(rs.getString("employee_id")),
-                    entry = rs.toStoredTimeEntry(),
-                )
-            },
-            employerId.value,
-            Date.valueOf(start),
-            Date.valueOf(end),
-        )
-    }
+        """.trimIndent(),
+        { rs, _ ->
+            TimeEntryRepository.StoredTimeEntryWithEmployee(
+                employeeId = EmployeeId(rs.getString("employee_id")),
+                entry = rs.toStoredTimeEntry(),
+            )
+        },
+        employerId.value,
+        Date.valueOf(start),
+        Date.valueOf(end),
+    )
 
     private fun exists(employerId: EmployerId, employeeId: EmployeeId, entryId: String): Boolean {
         val n = jdbcTemplate.queryForObject(
@@ -202,18 +198,16 @@ class JdbcTimeEntryRepository(
         )
     }
 
-    private fun ResultSet.toStoredTimeEntry(): TimeEntryRepository.StoredTimeEntry {
-        return TimeEntryRepository.StoredTimeEntry(
-            entryId = getString("entry_id"),
-            date = getDate("work_date").toLocalDate(),
-            hours = getDouble("hours"),
-            cashTipsCents = getLong("cash_tips_cents"),
-            chargedTipsCents = getLong("charged_tips_cents"),
-            allocatedTipsCents = getLong("allocated_tips_cents"),
-            commissionCents = getLong("commission_cents"),
-            bonusCents = getLong("bonus_cents"),
-            reimbursementNonTaxableCents = getLong("reimbursement_non_taxable_cents"),
-            worksiteKey = getString("worksite_key"),
-        )
-    }
+    private fun ResultSet.toStoredTimeEntry(): TimeEntryRepository.StoredTimeEntry = TimeEntryRepository.StoredTimeEntry(
+        entryId = getString("entry_id"),
+        date = getDate("work_date").toLocalDate(),
+        hours = getDouble("hours"),
+        cashTipsCents = getLong("cash_tips_cents"),
+        chargedTipsCents = getLong("charged_tips_cents"),
+        allocatedTipsCents = getLong("allocated_tips_cents"),
+        commissionCents = getLong("commission_cents"),
+        bonusCents = getLong("bonus_cents"),
+        reimbursementNonTaxableCents = getLong("reimbursement_non_taxable_cents"),
+        worksiteKey = getString("worksite_key"),
+    )
 }

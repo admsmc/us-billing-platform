@@ -98,22 +98,24 @@ class PaycheckLedgerRepository(
         )
     }
 
-    fun listEventsByEmployerAndCheckDateRange(employerId: String, startInclusive: LocalDate, endInclusive: LocalDate): List<PaycheckLedgerEvent> {
-        return jdbcTemplate.query(
-            """
+    fun listEventsByEmployerAndCheckDateRange(
+        employerId: String,
+        startInclusive: LocalDate,
+        endInclusive: LocalDate,
+    ): List<PaycheckLedgerEvent> = jdbcTemplate.query(
+        """
             SELECT payload_json
             FROM paycheck_ledger_entry
             WHERE employer_id = ?
               AND check_date >= ?
               AND check_date <= ?
             ORDER BY check_date, employee_id, paycheck_id
-            """.trimIndent(),
-            { rs, _ -> rs.getString("payload_json") },
-            employerId,
-            Date.valueOf(startInclusive),
-            Date.valueOf(endInclusive),
-        ).map { objectMapper.readValue(it, PaycheckLedgerEvent::class.java) }
-    }
+        """.trimIndent(),
+        { rs, _ -> rs.getString("payload_json") },
+        employerId,
+        Date.valueOf(startInclusive),
+        Date.valueOf(endInclusive),
+    ).map { objectMapper.readValue(it, PaycheckLedgerEvent::class.java) }
 
     data class PaycheckNetRow(
         val paycheckId: String,
@@ -122,29 +124,31 @@ class PaycheckLedgerRepository(
         val checkDate: LocalDate,
     )
 
-    fun listPaycheckNetByEmployerAndCheckDateRange(employerId: String, startInclusive: LocalDate, endInclusive: LocalDate): List<PaycheckNetRow> {
-        return jdbcTemplate.query(
-            """
+    fun listPaycheckNetByEmployerAndCheckDateRange(
+        employerId: String,
+        startInclusive: LocalDate,
+        endInclusive: LocalDate,
+    ): List<PaycheckNetRow> = jdbcTemplate.query(
+        """
             SELECT paycheck_id, employee_id, net_cents, check_date
             FROM paycheck_ledger_entry
             WHERE employer_id = ?
               AND check_date >= ?
               AND check_date <= ?
             ORDER BY check_date, employee_id, paycheck_id
-            """.trimIndent(),
-            { rs, _ ->
-                PaycheckNetRow(
-                    paycheckId = rs.getString("paycheck_id"),
-                    employeeId = rs.getString("employee_id"),
-                    netCents = rs.getLong("net_cents"),
-                    checkDate = rs.getDate("check_date").toLocalDate(),
-                )
-            },
-            employerId,
-            Date.valueOf(startInclusive),
-            Date.valueOf(endInclusive),
-        )
-    }
+        """.trimIndent(),
+        { rs, _ ->
+            PaycheckNetRow(
+                paycheckId = rs.getString("paycheck_id"),
+                employeeId = rs.getString("employee_id"),
+                netCents = rs.getLong("net_cents"),
+                checkDate = rs.getDate("check_date").toLocalDate(),
+            )
+        },
+        employerId,
+        Date.valueOf(startInclusive),
+        Date.valueOf(endInclusive),
+    )
 
     fun maxOccurredAt(employerId: String): Instant? {
         val ts = jdbcTemplate.query(

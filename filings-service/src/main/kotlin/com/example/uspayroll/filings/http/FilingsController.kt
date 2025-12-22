@@ -20,46 +20,42 @@ class FilingsController(
         @PathVariable employerId: String,
         @RequestParam year: Int,
         @RequestParam quarter: Int,
-    ): FilingsComputationService.Form941Quarterly =
-        filings.compute941(employerId, year, quarter)
+    ): FilingsComputationService.Form941Quarterly = filings.compute941(employerId, year, quarter)
 
     @GetMapping("/federal/940")
     fun form940(
         @PathVariable employerId: String,
         @RequestParam year: Int,
-    ): FilingsComputationService.Form940Annual =
-        filings.compute940(employerId, year)
+    ): FilingsComputationService.Form940Annual = filings.compute940(employerId, year)
 
     @GetMapping("/w2")
     fun w2s(
         @PathVariable employerId: String,
         @RequestParam year: Int,
-    ): List<FilingsComputationService.W2EmployeeAnnual> =
-        filings.computeW2s(employerId, year)
+    ): List<FilingsComputationService.W2EmployeeAnnual> = filings.computeW2s(employerId, year)
 
     @GetMapping("/w2/{employeeId}")
     fun w2ForEmployee(
         @PathVariable employerId: String,
         @PathVariable employeeId: String,
         @RequestParam year: Int,
-    ): FilingsComputationService.W2EmployeeAnnual =
-        filings.computeW2s(employerId, year).firstOrNull { it.employeeId == employeeId }
-            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "w2 not found")
+    ): FilingsComputationService.W2EmployeeAnnual = filings
+        .computeW2s(employerId, year)
+        .firstOrNull { it.employeeId == employeeId }
+        ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "w2 not found")
 
     @GetMapping("/w3")
     fun w3(
         @PathVariable employerId: String,
         @RequestParam year: Int,
-    ): FilingsComputationService.W3Annual =
-        filings.computeW3(employerId, year)
+    ): FilingsComputationService.W3Annual = filings.computeW3(employerId, year)
 
     @GetMapping("/state/withholding")
     fun stateWithholding(
         @PathVariable employerId: String,
         @RequestParam year: Int,
         @RequestParam quarter: Int,
-    ): FilingsComputationService.StateWithholdingQuarterly =
-        filings.computeStateWithholding(employerId, year, quarter)
+    ): FilingsComputationService.StateWithholdingQuarterly = filings.computeStateWithholding(employerId, year, quarter)
 
     /**
      * Lightweight validation hook for ops/reconciliation workflows.

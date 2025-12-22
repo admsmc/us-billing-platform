@@ -4,6 +4,7 @@ import com.example.uspayroll.orchestrator.support.InternalAuthTestSupport
 import com.example.uspayroll.orchestrator.support.StubClientsTestConfig
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
@@ -41,6 +42,15 @@ class PayRunReconciliationIT(
     private val paycheckComputationService: com.example.uspayroll.orchestrator.payrun.PaycheckComputationService,
 ) {
 
+    @BeforeEach
+    fun cleanDb() {
+        jdbcTemplate.update("DELETE FROM paycheck_audit")
+        jdbcTemplate.update("DELETE FROM paycheck_payment")
+        jdbcTemplate.update("DELETE FROM paycheck")
+        jdbcTemplate.update("DELETE FROM pay_run_item")
+        jdbcTemplate.update("DELETE FROM pay_run")
+        jdbcTemplate.update("DELETE FROM outbox_event")
+    }
     private fun internalHeaders(): HttpHeaders = InternalAuthTestSupport.internalAuthHeaders()
 
     private fun completeItem(employerId: String, payRunId: String, employeeId: String, payPeriodId: String = "pp-1") {
@@ -82,7 +92,8 @@ class PayRunReconciliationIT(
 
     @Test
     fun `requeue queued is idempotent and does not duplicate outbox jobs`() {
-        val employerId = "emp-1"
+        // Use a class-specific employerId to avoid sharing payrun business keys with other ITs.
+        val employerId = "emp-reconcile-1"
         val payRunId = "run-reconcile-1"
 
         val start = rest.exchange(
@@ -150,7 +161,7 @@ class PayRunReconciliationIT(
 
     @Test
     fun `requeue stale running moves item back to queued and enqueues job`() {
-        val employerId = "emp-1"
+        val employerId = "emp-reconcile-1"
         val payRunId = "run-reconcile-2"
 
         rest.exchange(
@@ -220,7 +231,7 @@ class PayRunReconciliationIT(
 
     @Test
     fun `payment request re-enqueue is idempotent`() {
-        val employerId = "emp-1"
+        val employerId = "emp-reconcile-1"
         val payRunId = "run-reconcile-3"
 
         rest.exchange(
@@ -323,7 +334,7 @@ class PayRunReconciliationIT(
 
     @Test
     fun `recompute run status sets pay_run status but does not emit kafka outbox events`() {
-        val employerId = "emp-1"
+        val employerId = "emp-reconcile-1"
         val payRunId = "run-reconcile-recompute-status-1"
 
         rest.exchange(
@@ -379,7 +390,7 @@ class PayRunReconciliationIT(
 
     @Test
     fun `recompute run status persist=false only computes and does not update pay_run`() {
-        val employerId = "emp-1"
+        val employerId = "emp-reconcile-1"
         val payRunId = "run-reconcile-recompute-status-2"
 
         rest.exchange(
@@ -428,7 +439,7 @@ class PayRunReconciliationIT(
 
     @Test
     fun `finalize and enqueue events emits deterministic kafka outbox events`() {
-        val employerId = "emp-1"
+        val employerId = "emp-reconcile-1"
         val payRunId = "run-reconcile-finalize-1"
 
         rest.exchange(
@@ -507,7 +518,7 @@ class PayRunReconciliationIT(
 
     @Test
     fun `recompute payment status sets pay_run payment_status from paycheck counts`() {
-        val employerId = "emp-1"
+        val employerId = "emp-reconcile-1"
         val payRunId = "run-reconcile-payment-status-1"
 
         rest.exchange(

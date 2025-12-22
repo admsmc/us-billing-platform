@@ -169,9 +169,7 @@ class PayRunService(
         )
     }
 
-    fun markFinalizeCompletedIfNull(employerId: String, payRunId: String): Boolean {
-        return payRunRepository.markFinalizeCompletedIfNull(employerId, payRunId)
-    }
+    fun markFinalizeCompletedIfNull(employerId: String, payRunId: String): Boolean = payRunRepository.markFinalizeCompletedIfNull(employerId, payRunId)
 
     data class ApproveResult(
         val payRun: PayRunRecord,

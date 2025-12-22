@@ -7,9 +7,10 @@ import com.example.uspayroll.orchestrator.payrun.model.PayRunStatus
 import com.example.uspayroll.orchestrator.support.InternalAuthTestSupport
 import com.example.uspayroll.orchestrator.support.StubClientsTestConfig
 import com.example.uspayroll.payroll.model.PaycheckResult
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.BeforeEach
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.context.annotation.Import
@@ -37,10 +38,19 @@ import java.util.UUID
 class PayRunVoidReissueWorkflowIT(
     private val rest: TestRestTemplate,
     private val jdbcTemplate: JdbcTemplate,
+    private val objectMapper: ObjectMapper,
     private val paymentProjection: PaymentStatusProjectionService,
 ) {
 
-    @Test
+    @BeforeEach
+    fun cleanDb() {
+        jdbcTemplate.update("DELETE FROM paycheck_audit")
+        jdbcTemplate.update("DELETE FROM paycheck_payment")
+        jdbcTemplate.update("DELETE FROM paycheck")
+        jdbcTemplate.update("DELETE FROM pay_run_item")
+        jdbcTemplate.update("DELETE FROM pay_run")
+        jdbcTemplate.update("DELETE FROM outbox_event")
+    }
     fun `create payrun then pay then void then reissue`() {
         val employerId = "emp-1"
         val payRunId = "run-c1-${UUID.randomUUID()}"
