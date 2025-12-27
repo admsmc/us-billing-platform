@@ -93,7 +93,43 @@ data class BillResult(
     val amountDue: Money,
     val dueDate: LocalDate,
     val computedAt: Instant
-)
+) {
+    /**
+     * Get charges by category.
+     */
+    fun chargesByCategory(category: ChargeCategory): List<ChargeLineItem> {
+        return charges.filter { it.category == category }
+    }
+    
+    /**
+     * Calculate total charges for a specific category.
+     */
+    fun totalForCategory(category: ChargeCategory): Money {
+        val total = charges
+            .filter { it.category == category && it.amount.amount >= 0 }
+            .sumOf { it.amount.amount }
+        return Money(total)
+    }
+    
+    /**
+     * Check if this bill includes any credits.
+     */
+    fun hasCredits(): Boolean = totalCredits.amount > 0
+    
+    /**
+     * Check if this bill has a positive amount due.
+     */
+    fun hasAmountDue(): Boolean = amountDue.amount > 0
+    
+    /**
+     * Format amount for display (e.g., "$75.50").
+     */
+    fun formatAmount(amount: Money): String {
+        val dollars = amount.amount / 100
+        val cents = amount.amount % 100
+        return "$${dollars}.${cents.toString().padStart(2, '0')}"
+    }
+}
 
 /**
  * Rate tariff structure - sealed hierarchy supporting different rate types.

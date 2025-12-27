@@ -23,7 +23,38 @@ data class BillingPeriod(
     val billDate: LocalDate,
     val dueDate: LocalDate,
     val frequency: BillingFrequency
-)
+) {
+    /**
+     * Calculate the number of days in this billing period.
+     */
+    fun daysInPeriod(): Int {
+        return java.time.temporal.ChronoUnit.DAYS.between(startDate, endDate).toInt() + 1
+    }
+    
+    /**
+     * Check if a given date falls within this billing period.
+     */
+    fun contains(date: LocalDate): Boolean {
+        return !date.isBefore(startDate) && !date.isAfter(endDate)
+    }
+    
+    /**
+     * Calculate proration factor for a partial period.
+     * 
+     * @param effectiveStartDate Actual start date for service
+     * @param effectiveEndDate Actual end date for service
+     * @return Proration factor between 0.0 and 1.0
+     */
+    fun prorationFactor(effectiveStartDate: LocalDate, effectiveEndDate: LocalDate): Double {
+        val actualStart = maxOf(startDate, effectiveStartDate)
+        val actualEnd = minOf(endDate, effectiveEndDate)
+        
+        if (actualStart.isAfter(actualEnd)) return 0.0
+        
+        val actualDays = java.time.temporal.ChronoUnit.DAYS.between(actualStart, actualEnd).toInt() + 1
+        return actualDays.toDouble() / daysInPeriod().toDouble()
+    }
+}
 
 /**
  * How frequently bills are generated.
