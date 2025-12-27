@@ -20,7 +20,7 @@ dependencyManagement {
 }
 
 dependencies {
-    implementation(project(":payroll-jackson"))
+    implementation(project(":billing-jackson"))
     implementation("org.springframework.boot:spring-boot-autoconfigure")
     implementation("org.springframework:spring-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")

@@ -16,10 +16,10 @@ kotlin {
 }
 
 dependencies {
-    implementation(project(":payroll-jackson-spring"))
+    implementation(project(":billing-jackson-spring"))
     implementation(project(":shared-kernel"))
     implementation(project(":payroll-domain"))
-    implementation(project(":payroll-jackson"))
+    implementation(project(":billing-jackson"))
     implementation(project(":messaging-core"))
     implementation(project(":web-core"))
     implementation(project(":tenancy-core"))

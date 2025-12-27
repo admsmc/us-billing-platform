@@ -1,4 +1,4 @@
-# Test-scoped defaults for payroll-worker-service.
+# Test-scoped defaults for billing-worker-service.
 #
 # Several other service modules (tax-service, labor-service, etc.) are on the
 # test classpath and include their own application.yml with defaults like

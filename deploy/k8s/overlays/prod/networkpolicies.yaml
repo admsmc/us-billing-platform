@@ -62,7 +62,7 @@ spec:
     - to:
         - podSelector:
             matchLabels:
-              app: payroll-worker-service
+              app: billing-worker-service
       ports:
         - protocol: TCP
           port: 8088
@@ -75,7 +75,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app: payroll-worker-service
+      app: billing-worker-service
   policyTypes:
     - Ingress
   ingress:
@@ -95,7 +95,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app: payroll-worker-service
+      app: billing-worker-service
   policyTypes:
     - Egress
   egress:
@@ -123,7 +123,7 @@ spec:
     - to:
         - podSelector:
             matchLabels:
-              app: payroll-orchestrator-service
+              app: billing-orchestrator-service
       ports:
         - protocol: TCP
           port: 8085
@@ -136,14 +136,14 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app: payroll-orchestrator-service
+      app: billing-orchestrator-service
   policyTypes:
     - Ingress
   ingress:
     - from:
         - podSelector:
             matchLabels:
-              app: payroll-worker-service
+              app: billing-worker-service
       ports:
         - protocol: TCP
           port: 8085
@@ -156,7 +156,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app: payroll-orchestrator-service
+      app: billing-orchestrator-service
   policyTypes:
     - Egress
   egress:
@@ -209,10 +209,10 @@ spec:
     - from:
         - podSelector:
             matchLabels:
-              app: payroll-worker-service
+              app: billing-worker-service
         - podSelector:
             matchLabels:
-              app: payroll-orchestrator-service
+              app: billing-orchestrator-service
       ports:
         - protocol: TCP
           port: 8081
@@ -236,7 +236,7 @@ spec:
           - hr-service
           - tax-service
           - labor-service
-          - payroll-orchestrator-service
+          - billing-orchestrator-service
   policyTypes:
     - Egress
   egress:

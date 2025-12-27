@@ -7,7 +7,7 @@ orchestrator:
       k1: dev-internal-token
     jwt-default-kid: k1
     jwt-issuer: us-payroll-platform
-    jwt-audience: payroll-orchestrator-service
+    jwt-audience: billing-orchestrator-service
 
   jobs:
     rabbit:

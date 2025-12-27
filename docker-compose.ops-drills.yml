@@ -1,5 +1,5 @@
 services:
-  payroll-worker-service:
+  billing-worker-service:
     environment:
       # Enable DLQ replay endpoint
       WORKER_JOBS_DLQ_REPLAYER_ENABLED: "true"
@@ -18,12 +18,12 @@ services:
               "jwt-keys": {"k1": "${WORKER_INTERNAL_AUTH_JWT_KEYS_K1:-dev-worker-internal-token}"},
               "jwt-default-kid": "k1",
               "jwt-issuer": "us-payroll-platform",
-              "jwt-audience": "payroll-worker-service"
+              "jwt-audience": "billing-worker-service"
             }
           }
         }
 
-  payroll-orchestrator-service:
+  billing-orchestrator-service:
     environment:
       # Orchestrator internal auth verifier key (used by worker -> orchestrator internal calls).
       # Keep this stable for drills; the worker's signing key can be changed to simulate auth failures.

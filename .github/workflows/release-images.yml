@@ -19,8 +19,8 @@ jobs:
       matrix:
         service:
           - edge-service
-          - payroll-worker-service
-          - payroll-orchestrator-service
+          - billing-worker-service
+          - billing-orchestrator-service
           - hr-service
           - tax-service
           - labor-service

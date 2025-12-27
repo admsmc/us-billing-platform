@@ -11,10 +11,10 @@ services:
   time-ingestion-service:
     ports:
       - "8084:8084"
-  payroll-orchestrator-service:
+  billing-orchestrator-service:
     ports:
       - "8085:8085"
   # Publish worker 8088 to a random host port per replica (enables scraping /actuator/prometheus per replica).
-  payroll-worker-service:
+  billing-worker-service:
     ports:
       - "8088"

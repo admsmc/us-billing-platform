@@ -7,8 +7,8 @@ downstreams:
     internal-jwt-secret: dev-internal-token
     internal-jwt-kid: k1
     internal-jwt-issuer: us-payroll-platform
-    internal-jwt-audience: payroll-orchestrator-service
-    internal-jwt-subject: payroll-worker-service
+    internal-jwt-audience: billing-orchestrator-service
+    internal-jwt-subject: billing-worker-service
 
   time:
     enabled: true

@@ -49,7 +49,7 @@ spec:
             - name: SERVER_PORT
               value: "8080"
             - name: WORKER_BASE_URL
-              value: http://payroll-worker-service:8088
+              value: http://billing-worker-service:8088
             - name: EDGE_AUTH_MODE
               value: OIDC
             - name: EDGE_AUTH_ALLOW_DISABLED

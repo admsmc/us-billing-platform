@@ -1,16 +1,16 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: payroll-orchestrator-service
+  name: billing-orchestrator-service
 automountServiceAccountToken: false
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: payroll-orchestrator-service
+  name: billing-orchestrator-service
 spec:
   selector:
-    app: payroll-orchestrator-service
+    app: billing-orchestrator-service
   ports:
     - name: http
       port: 8085
@@ -20,18 +20,18 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: payroll-orchestrator-service
+  name: billing-orchestrator-service
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: payroll-orchestrator-service
+      app: billing-orchestrator-service
   template:
     metadata:
       labels:
-        app: payroll-orchestrator-service
+        app: billing-orchestrator-service
     spec:
-      serviceAccountName: payroll-orchestrator-service
+      serviceAccountName: billing-orchestrator-service
       automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
@@ -42,8 +42,8 @@ spec:
         seccompProfile:
           type: RuntimeDefault
       containers:
-        - name: payroll-orchestrator-service
-          image: ghcr.io/REPLACE_ME/us-payroll-platform/payroll-orchestrator-service:REPLACE_TAG
+        - name: billing-orchestrator-service
+          image: ghcr.io/REPLACE_ME/us-payroll-platform/billing-orchestrator-service:REPLACE_TAG
           imagePullPolicy: IfNotPresent
           env:
             - name: SERVER_PORT

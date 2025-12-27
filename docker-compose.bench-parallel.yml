@@ -1,6 +1,6 @@
 # Queue-driven parallel benchmark configuration
 # Usage: docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.bench-parallel.yml up -d
-# Scale workers: docker compose ... up -d --scale payroll-worker-service=4
+# Scale workers: docker compose ... up -d --scale billing-worker-service=4
 
 services:
   rabbitmq:
@@ -20,7 +20,7 @@ services:
     volumes:
       - benchmark-pgdata:/var/lib/postgresql/data
 
-  payroll-orchestrator-service:
+  billing-orchestrator-service:
     depends_on:
       - rabbitmq
     environment:
@@ -49,7 +49,7 @@ services:
       SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-guest}
       SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
 
-  payroll-worker-service:
+  billing-worker-service:
     depends_on:
       - rabbitmq
     environment:
@@ -78,7 +78,7 @@ services:
 
   edge-service:
     depends_on:
-      - payroll-orchestrator-service
+      - billing-orchestrator-service
 
 volumes:
   benchmark-pgdata:

@@ -11,12 +11,12 @@ spec:
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: payroll-worker-service
+  name: billing-worker-service
 spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app: payroll-worker-service
+      app: billing-worker-service
 ---
 apiVersion: policy/v1
 kind: PodDisruptionBudget
@@ -51,9 +51,9 @@ spec:
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: payroll-orchestrator-service
+  name: billing-orchestrator-service
 spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app: payroll-orchestrator-service
+      app: billing-orchestrator-service

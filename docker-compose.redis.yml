@@ -19,7 +19,7 @@ services:
       timeout: 3s
       retries: 5
 
-  payroll-worker-service:
+  billing-worker-service:
     depends_on:
       - redis
     environment:

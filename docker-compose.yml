@@ -88,10 +88,10 @@ services:
       TIME_DB_USERNAME: time_service
       TIME_DB_PASSWORD: ${TIME_DB_PASSWORD:-time_service}
 
-  payroll-orchestrator-service:
+  billing-orchestrator-service:
     build:
       context: .
-      dockerfile: payroll-orchestrator-service/Dockerfile
+      dockerfile: billing-orchestrator-service/Dockerfile
     depends_on:
       - postgres
       - time-ingestion-service
@@ -109,10 +109,10 @@ services:
       DOWNSTREAMS_TIME_ENABLED: ${DOWNSTREAMS_TIME_ENABLED:-false}
 
 
-  payroll-worker-service:
+  billing-worker-service:
     build:
       context: .
-      dockerfile: payroll-worker-service/Dockerfile
+      dockerfile: billing-worker-service/Dockerfile
     depends_on:
       - hr-service
       - tax-service
@@ -126,7 +126,7 @@ services:
       DOWNSTREAMS_LABOR_BASE_URL: http://labor-service:8083
       DOWNSTREAMS_TIME_BASE_URL: http://time-ingestion-service:8084
       DOWNSTREAMS_TIME_ENABLED: ${DOWNSTREAMS_TIME_ENABLED:-false}
-      DOWNSTREAMS_ORCHESTRATOR_BASE_URL: http://payroll-orchestrator-service:8085
+      DOWNSTREAMS_ORCHESTRATOR_BASE_URL: http://billing-orchestrator-service:8085
       # JWT config moved to benchmark profile - see application-benchmark.yml
       # Benchmark-only endpoint (disabled by default).
       WORKER_BENCHMARKS_ENABLED: ${WORKER_BENCHMARKS_ENABLED:-false}
@@ -137,10 +137,10 @@ services:
       context: .
       dockerfile: edge-service/Dockerfile
     depends_on:
-      - payroll-worker-service
+      - billing-worker-service
     environment:
       SERVER_PORT: 8080
-      WORKER_BASE_URL: http://payroll-worker-service:8088
+      WORKER_BASE_URL: http://billing-worker-service:8088
       # Gateway auth is disabled by default; set EDGE_AUTH_MODE=HS256 and EDGE_AUTH_HS256_SECRET for dev JWT validation.
       EDGE_AUTH_MODE: ${EDGE_AUTH_MODE:-DISABLED}
       EDGE_AUTH_HS256_SECRET: ${EDGE_AUTH_HS256_SECRET:-}

@@ -1,12 +1,9 @@
 server:
-  port: ${SERVER_PORT:8086}
+  port: ${SERVER_PORT:8088}
 
 spring:
   application:
-    name: payroll-orchestrator-service
-  flyway:
-    enabled: true
-    locations: classpath:db/migration/orchestrator
+    name: billing-worker-service
 
 management:
   endpoint:

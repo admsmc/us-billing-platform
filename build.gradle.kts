@@ -41,7 +41,7 @@ dependencyLocking {
     lockMode.set(org.gradle.api.artifacts.dsl.LockMode.STRICT)
 }
 
-project(":payroll-jackson-spring") {
+project(":billing-jackson-spring") {
     dependencyLocking {
         lockAllConfigurations()
         lockMode.set(org.gradle.api.artifacts.dsl.LockMode.STRICT)
@@ -236,8 +236,8 @@ dependencyCheck {
 
 val sbomProjects = listOf(
     project(":edge-service"),
-    project(":payroll-worker-service"),
-    project(":payroll-orchestrator-service"),
+    project(":billing-worker-service"),
+    project(":billing-orchestrator-service"),
     project(":hr-service"),
     project(":tax-service"),
     project(":labor-service"),

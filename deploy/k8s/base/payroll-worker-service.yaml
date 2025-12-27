@@ -1,16 +1,16 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: payroll-worker-service
+  name: billing-worker-service
 automountServiceAccountToken: false
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: payroll-worker-service
+  name: billing-worker-service
 spec:
   selector:
-    app: payroll-worker-service
+    app: billing-worker-service
   ports:
     - name: http
       port: 8088
@@ -20,18 +20,18 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: payroll-worker-service
+  name: billing-worker-service
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: payroll-worker-service
+      app: billing-worker-service
   template:
     metadata:
       labels:
-        app: payroll-worker-service
+        app: billing-worker-service
     spec:
-      serviceAccountName: payroll-worker-service
+      serviceAccountName: billing-worker-service
       automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
@@ -42,8 +42,8 @@ spec:
         seccompProfile:
           type: RuntimeDefault
       containers:
-        - name: payroll-worker-service
-          image: ghcr.io/REPLACE_ME/us-payroll-platform/payroll-worker-service:REPLACE_TAG
+        - name: billing-worker-service
+          image: ghcr.io/REPLACE_ME/us-payroll-platform/billing-worker-service:REPLACE_TAG
           imagePullPolicy: IfNotPresent
           env:
             - name: SERVER_PORT
@@ -62,7 +62,7 @@ spec:
               value: "false"
 
             - name: DOWNSTREAMS_ORCHESTRATOR_BASE_URL
-              value: http://payroll-orchestrator-service:8085
+              value: http://billing-orchestrator-service:8085
 
             # Internal JWT signing secret for orchestrator internal endpoints
             - name: DOWNSTREAMS_ORCHESTRATOR_INTERNAL_JWT_SECRET

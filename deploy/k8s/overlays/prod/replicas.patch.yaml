@@ -8,7 +8,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: payroll-worker-service
+  name: billing-worker-service
 spec:
   replicas: 2
 ---
@@ -36,6 +36,6 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: payroll-orchestrator-service
+  name: billing-orchestrator-service
 spec:
   replicas: 2
