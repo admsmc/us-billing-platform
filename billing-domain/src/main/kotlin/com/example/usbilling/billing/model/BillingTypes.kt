@@ -19,6 +19,7 @@ import java.time.LocalDate
  * @property meterReads Meter readings for this period (start and end reads per meter)
  * @property rateTariff Rate structure to apply
  * @property accountBalance Account balance state including payment history and adjustments
+ * @property demandReadings Peak demand readings for demand-based billing (optional)
  */
 data class BillInput(
     val billId: BillId,
@@ -28,7 +29,8 @@ data class BillInput(
     val billPeriod: BillingPeriod,
     val meterReads: List<MeterReadPair>,
     val rateTariff: RateTariff,
-    val accountBalance: AccountBalance
+    val accountBalance: AccountBalance,
+    val demandReadings: List<DemandReading> = emptyList()
 )
 
 /**
@@ -141,7 +143,8 @@ sealed class RateTariff {
     data class FlatRate(
         val customerCharge: Money,
         val ratePerUnit: Money,
-        val unit: String
+        val unit: String,
+        val regulatorySurcharges: List<RegulatoryCharge> = emptyList()
     ) : RateTariff()
     
     /**
@@ -150,7 +153,8 @@ sealed class RateTariff {
     data class TieredRate(
         val customerCharge: Money,
         val tiers: List<RateTier>,
-        val unit: String
+        val unit: String,
+        val regulatorySurcharges: List<RegulatoryCharge> = emptyList()
     ) : RateTariff()
     
     /**
@@ -161,8 +165,31 @@ sealed class RateTariff {
         val peakRate: Money,
         val offPeakRate: Money,
         val shoulderRate: Money?,
-        val unit: String
+        val unit: String,
+        val regulatorySurcharges: List<RegulatoryCharge> = emptyList()
     ) : RateTariff()
+    
+    /**
+     * Demand rate for large commercial/industrial customers.
+     * Includes both energy (usage) charges and demand (capacity) charges.
+     */
+    data class DemandRate(
+        val customerCharge: Money,
+        val energyRatePerUnit: Money,
+        val demandRatePerKw: Money,
+        val unit: String,
+        val regulatorySurcharges: List<RegulatoryCharge> = emptyList()
+    ) : RateTariff()
+    
+    /**
+     * Get all regulatory surcharges for this tariff.
+     */
+    fun getRegulatoryCharges(): List<RegulatoryCharge> = when (this) {
+        is FlatRate -> regulatorySurcharges
+        is TieredRate -> regulatorySurcharges
+        is TimeOfUseRate -> regulatorySurcharges
+        is DemandRate -> regulatorySurcharges
+    }
 }
 
 /**
@@ -174,4 +201,50 @@ sealed class RateTariff {
 data class RateTier(
     val maxUsage: Double?,
     val ratePerUnit: Money
+)
+
+/**
+ * Regulatory surcharge or rider applied to bills.
+ *
+ * @property code Charge code (e.g., "PCA", "DSM", "ECA")
+ * @property description Human-readable name
+ * @property calculationType How this charge is calculated
+ * @property rate Rate or percentage for calculation
+ */
+data class RegulatoryCharge(
+    val code: String,
+    val description: String,
+    val calculationType: RegulatoryChargeType,
+    val rate: Money
+)
+
+/**
+ * How a regulatory charge is calculated.
+ */
+enum class RegulatoryChargeType {
+    /** Fixed amount per bill */
+    FIXED,
+    
+    /** Percentage of energy charges */
+    PERCENTAGE_OF_ENERGY,
+    
+    /** Per-unit charge ($/kWh, $/CCF, etc.) */
+    PER_UNIT,
+    
+    /** Percentage of total bill */
+    PERCENTAGE_OF_TOTAL
+}
+
+/**
+ * Demand reading for demand-based billing.
+ * Represents peak demand (kW) during the billing period.
+ *
+ * @property meterId Meter identifier
+ * @property peakDemandKw Peak demand in kilowatts
+ * @property timestamp When peak demand occurred
+ */
+data class DemandReading(
+    val meterId: String,
+    val peakDemandKw: Double,
+    val timestamp: java.time.Instant
 )

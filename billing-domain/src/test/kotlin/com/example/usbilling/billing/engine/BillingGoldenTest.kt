@@ -1,0 +1,314 @@
+package com.example.usbilling.billing.engine
+
+import com.example.usbilling.billing.model.*
+import com.example.usbilling.shared.*
+import org.junit.jupiter.api.Test
+import java.time.Instant
+import java.time.LocalDate
+import kotlin.test.assertEquals
+
+/**
+ * Golden tests for billing calculations.
+ * 
+ * These tests validate complete billing scenarios with realistic data
+ * and serve as regression tests for billing calculation accuracy.
+ */
+class BillingGoldenTest {
+    
+    @Test
+    fun `residential customer with flat rate - typical usage`() {
+        // Scenario: Typical residential customer, 750 kWh usage
+        val tariff = RateTariff.FlatRate(
+            customerCharge = Money(1295), // $12.95
+            ratePerUnit = Money(12), // $0.12/kWh
+            unit = "kWh",
+            regulatorySurcharges = listOf(
+                RegulatoryCharge(
+                    code = "ECA",
+                    description = "Energy Cost Adjustment",
+                    calculationType = RegulatoryChargeType.PER_UNIT,
+                    rate = Money(1) // $0.01/kWh
+                )
+            )
+        )
+        
+        val input = createInput(
+            customerId = "CUST-RES-001",
+            startReading = 25000.0,
+            endReading = 25750.0, // 750 kWh
+            tariff = tariff
+        )
+        
+        val result = BillingEngine.calculateBill(input)
+        
+        // Expected breakdown:
+        // Customer charge: $12.95
+        // Usage: 750 * $0.12 = $90.00
+        // ECA surcharge: 750 * $0.01 = $7.50
+        // Total: $110.45
+        
+        assertEquals(Money(1295), findCharge(result, "CUSTOMER_CHARGE"))
+        assertEquals(Money(9000), findCharge(result, "ELECTRIC_USAGE"))
+        assertEquals(Money(750), findCharge(result, "ECA"))
+        assertEquals(Money(11045), result.totalCharges)
+    }
+    
+    @Test
+    fun `residential customer with tiered rate - high usage`() {
+        // Scenario: Customer exceeds baseline allowance
+        val tariff = RateTariff.TieredRate(
+            customerCharge = Money(1500), // $15.00
+            tiers = listOf(
+                RateTier(maxUsage = 500.0, ratePerUnit = Money(10)), // $0.10 baseline
+                RateTier(maxUsage = null, ratePerUnit = Money(18))    // $0.18 over baseline
+            ),
+            unit = "kWh"
+        )
+        
+        val input = createInput(
+            customerId = "CUST-RES-002",
+            startReading = 10000.0,
+            endReading = 11200.0, // 1,200 kWh
+            tariff = tariff
+        )
+        
+        val result = BillingEngine.calculateBill(input)
+        
+        // Expected breakdown:
+        // Customer charge: $15.00
+        // Tier 1 (500 kWh): 500 * $0.10 = $50.00
+        // Tier 2 (700 kWh): 700 * $0.18 = $126.00
+        // Total: $191.00
+        
+        assertEquals(Money(1500), findCharge(result, "CUSTOMER_CHARGE"))
+        assertEquals(Money(5000), findCharge(result, "ELECTRIC_TIER1"))
+        assertEquals(Money(12600), findCharge(result, "ELECTRIC_TIER2"))
+        assertEquals(Money(19100), result.totalCharges)
+    }
+    
+    @Test
+    fun `commercial customer with demand rate`() {
+        // Scenario: Small commercial with demand billing
+        val tariff = RateTariff.DemandRate(
+            customerCharge = Money(7500), // $75.00
+            energyRatePerUnit = Money(7), // $0.07/kWh
+            demandRatePerKw = Money(1050), // $10.50/kW
+            unit = "kWh",
+            regulatorySurcharges = listOf(
+                RegulatoryCharge(
+                    code = "DSM",
+                    description = "Demand Side Management",
+                    calculationType = RegulatoryChargeType.PERCENTAGE_OF_ENERGY,
+                    rate = Money(300) // 3%
+                )
+            )
+        )
+        
+        val demandReadings = listOf(
+            DemandReading(
+                meterId = "MTR-COM-001",
+                peakDemandKw = 75.5,
+                timestamp = Instant.parse("2025-01-15T15:45:00Z")
+            )
+        )
+        
+        val input = createInput(
+            customerId = "CUST-COM-001",
+            meterId = "MTR-COM-001",
+            startReading = 50000.0,
+            endReading = 58000.0, // 8,000 kWh
+            tariff = tariff,
+            demandReadings = demandReadings
+        )
+        
+        val result = BillingEngine.calculateBill(input)
+        
+        // Expected breakdown:
+        // Customer charge: $75.00
+        // Energy: 8,000 * $0.07 = $560.00
+        // Demand: 75.5 * $10.50 = $792.75
+        // DSM surcharge: $560 * 3% = $16.80
+        // Total: $1,444.55
+        
+        assertEquals(Money(7500), findCharge(result, "CUSTOMER_CHARGE"))
+        assertEquals(Money(56000), findCharge(result, "ELECTRIC_ENERGY"))
+        assertEquals(Money(79275), findCharge(result, "ELECTRIC_DEMAND"))
+        assertEquals(Money(1680), findCharge(result, "DSM"))
+        assertEquals(Money(144455), result.totalCharges)
+    }
+    
+    @Test
+    fun `customer with prior balance`() {
+        // Scenario: Customer has unpaid balance from previous month
+        val tariff = RateTariff.FlatRate(
+            customerCharge = Money(1500),
+            ratePerUnit = Money(11),
+            unit = "kWh"
+        )
+        
+        val priorBalance = AccountBalance(
+            balance = Money(8500), // $85.00 prior balance
+            lastBillDate = LocalDate.of(2024, 12, 31),
+            lastBillAmount = Money(8500)
+        )
+        
+        val input = createInput(
+            customerId = "CUST-RES-003",
+            startReading = 5000.0,
+            endReading = 5600.0, // 600 kWh
+            tariff = tariff,
+            accountBalance = priorBalance
+        )
+        
+        val result = BillingEngine.calculateBill(input)
+        
+        // Expected breakdown:
+        // Previous balance: $85.00
+        // Customer charge: $15.00
+        // Usage: 600 * $0.11 = $66.00
+        // Current charges: $81.00
+        // Total due: $166.00
+        
+        assertEquals(Money(8100), result.totalCharges) // Current charges only
+        assertEquals(Money(16600), result.amountDue) // Including prior balance
+        assertEquals(Money(8500), result.accountBalanceBefore.balance)
+        // Account balance after: prior + this bill = $85 + $166 = $251
+        assertEquals(Money(25100), result.accountBalanceAfter.balance)
+    }
+    
+    @Test
+    fun `time-of-use rate residential`() {
+        // Scenario: Time-of-use rate with peak/off-peak pricing
+        val tariff = RateTariff.TimeOfUseRate(
+            customerCharge = Money(2000), // $20.00
+            peakRate = Money(25), // $0.25/kWh
+            offPeakRate = Money(8), // $0.08/kWh
+            shoulderRate = Money(15), // $0.15/kWh
+            unit = "kWh"
+        )
+        
+        val input = createInput(
+            customerId = "CUST-TOU-001",
+            startReading = 15000.0,
+            endReading = 15900.0, // 900 kWh total
+            tariff = tariff
+        )
+        
+        val result = BillingEngine.calculateBill(input)
+        
+        // Note: Our simplified TOU implementation splits 50/50 peak/off-peak
+        // Peak: 450 * $0.25 = $112.50
+        // Off-peak: 450 * $0.08 = $36.00
+        
+        assertEquals(Money(2000), findCharge(result, "CUSTOMER_CHARGE"))
+        assertEquals(Money(11250), findCharge(result, "ELECTRIC_PEAK"))
+        assertEquals(Money(3600), findCharge(result, "ELECTRIC_OFFPEAK"))
+        assertEquals(Money(16850), result.totalCharges)
+    }
+    
+    @Test
+    fun `multi-commodity customer - electric and gas`() {
+        // Scenario: Customer with both electric and gas service
+        val electricTariff = RateTariff.FlatRate(
+            customerCharge = Money(1200),
+            ratePerUnit = Money(12),
+            unit = "kWh"
+        )
+        
+        val meterReads = listOf(
+            MeterReadPair(
+                meterId = "MTR-ELEC-001",
+                usageType = UsageType.ELECTRIC,
+                startRead = createRead("MTR-ELEC-001", UsageType.ELECTRIC, 10000.0, "kWh"),
+                endRead = createRead("MTR-ELEC-001", UsageType.ELECTRIC, 10650.0, "kWh")
+            ),
+            MeterReadPair(
+                meterId = "MTR-GAS-001",
+                usageType = UsageType.GAS,
+                startRead = createRead("MTR-GAS-001", UsageType.GAS, 5000.0, "CCF"),
+                endRead = createRead("MTR-GAS-001", UsageType.GAS, 5085.0, "CCF")
+            )
+        )
+        
+        val input = BillInput(
+            billId = BillId("BILL-MULTI-001"),
+            billRunId = BillRunId("RUN-2025-01"),
+            utilityId = UtilityId("UTIL-001"),
+            customerId = CustomerId("CUST-MULTI-001"),
+            billPeriod = createTestPeriod(),
+            meterReads = meterReads,
+            rateTariff = electricTariff,
+            accountBalance = AccountBalance.zero()
+        )
+        
+        val result = BillingEngine.calculateBill(input)
+        
+        // Both commodities should be billed
+        val electricCharge = result.charges.find { it.code == "ELECTRIC_USAGE" }
+        val gasCharge = result.charges.find { it.code == "GAS_USAGE" }
+        
+        assertEquals(true, electricCharge != null)
+        assertEquals(true, gasCharge != null)
+        
+        // Electric: 650 kWh * $0.12 = $78.00
+        assertEquals(Money(7800), electricCharge!!.amount)
+        
+        // Gas: 85 CCF * $0.12 = $10.20 (using same rate for simplicity)
+        assertEquals(Money(1020), gasCharge!!.amount)
+    }
+    
+    private fun createInput(
+        customerId: String,
+        meterId: String = "MTR-001",
+        startReading: Double,
+        endReading: Double,
+        tariff: RateTariff,
+        accountBalance: AccountBalance = AccountBalance.zero(),
+        demandReadings: List<DemandReading> = emptyList()
+    ): BillInput {
+        return BillInput(
+            billId = BillId("BILL-$customerId"),
+            billRunId = BillRunId("RUN-2025-01"),
+            utilityId = UtilityId("UTIL-001"),
+            customerId = CustomerId(customerId),
+            billPeriod = createTestPeriod(),
+            meterReads = listOf(
+                MeterReadPair(
+                    meterId = meterId,
+                    usageType = UsageType.ELECTRIC,
+                    startRead = createRead(meterId, UsageType.ELECTRIC, startReading, "kWh"),
+                    endRead = createRead(meterId, UsageType.ELECTRIC, endReading, "kWh")
+                )
+            ),
+            rateTariff = tariff,
+            accountBalance = accountBalance,
+            demandReadings = demandReadings
+        )
+    }
+    
+    private fun createRead(meterId: String, usageType: UsageType, value: Double, unit: String): MeterRead {
+        return MeterRead(
+            meterId = meterId,
+            usageType = usageType,
+            readingValue = value,
+            timestamp = Instant.now(),
+            unit = unit
+        )
+    }
+    
+    private fun createTestPeriod(): BillingPeriod {
+        return BillingPeriod(
+            id = "2025-01",
+            utilityId = UtilityId("UTIL-001"),
+            startDate = LocalDate.of(2025, 1, 1),
+            endDate = LocalDate.of(2025, 1, 31),
+            billDate = LocalDate.of(2025, 2, 1),
+            dueDate = LocalDate.of(2025, 2, 15),
+            frequency = BillingFrequency.MONTHLY
+        )
+    }
+    
+    private fun findCharge(result: BillResult, code: String): Money {
+        return result.charges.find { it.code == code }?.amount ?: Money(0)
+    }
+}

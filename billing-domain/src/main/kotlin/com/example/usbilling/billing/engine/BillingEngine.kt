@@ -30,6 +30,7 @@ object BillingEngine {
             is RateTariff.FlatRate -> tariff.customerCharge
             is RateTariff.TieredRate -> tariff.customerCharge
             is RateTariff.TimeOfUseRate -> tariff.customerCharge
+            is RateTariff.DemandRate -> tariff.customerCharge
         }
         
         charges.add(
@@ -47,10 +48,17 @@ object BillingEngine {
         // Step 2: Calculate usage charges for each meter
         for (meterReadPair in input.meterReads) {
             val consumption = meterReadPair.calculateConsumption()
+            
+            // Find corresponding demand reading if applicable
+            val demandKw = input.demandReadings
+                .find { it.meterId == meterReadPair.meterId }
+                ?.peakDemandKw
+            
             val usageCharges = RateApplier.applyRate(
                 consumption = consumption,
                 tariff = input.rateTariff,
-                usageType = meterReadPair.usageType
+                usageType = meterReadPair.usageType,
+                demandKw = demandKw
             )
             charges.addAll(usageCharges)
         }

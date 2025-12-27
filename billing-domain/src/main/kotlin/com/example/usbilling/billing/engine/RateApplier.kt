@@ -19,13 +19,25 @@ object RateApplier {
     fun applyRate(
         consumption: Double,
         tariff: RateTariff,
-        usageType: UsageType
+        usageType: UsageType,
+        demandKw: Double? = null
     ): List<ChargeLineItem> {
-        return when (tariff) {
+        val charges = when (tariff) {
             is RateTariff.FlatRate -> applyFlatRate(consumption, tariff, usageType)
             is RateTariff.TieredRate -> applyTieredRate(consumption, tariff, usageType)
             is RateTariff.TimeOfUseRate -> applyTimeOfUseRate(consumption, tariff, usageType)
+            is RateTariff.DemandRate -> applyDemandRate(consumption, demandKw ?: 0.0, tariff, usageType)
         }
+        
+        // Add regulatory surcharges
+        val regulatoryCharges = applyRegulatoryCharges(
+            baseCharges = charges,
+            surcharges = tariff.getRegulatoryCharges(),
+            consumption = consumption,
+            usageType = usageType
+        )
+        
+        return charges + regulatoryCharges
     }
     
     private fun applyFlatRate(
@@ -118,5 +130,75 @@ object RateApplier {
                 category = ChargeCategory.USAGE_CHARGE
             )
         )
+    }
+    
+    private fun applyDemandRate(
+        consumption: Double,
+        demandKw: Double,
+        tariff: RateTariff.DemandRate,
+        usageType: UsageType
+    ): List<ChargeLineItem> {
+        val energyCharge = Money((consumption * tariff.energyRatePerUnit.amount).toLong())
+        val demandCharge = Money((demandKw * tariff.demandRatePerKw.amount).toLong())
+        
+        return listOf(
+            ChargeLineItem(
+                code = "${usageType.name}_ENERGY",
+                description = "${usageType.name.lowercase().replaceFirstChar { it.uppercase() }} Energy Charge",
+                amount = energyCharge,
+                usageAmount = consumption,
+                usageUnit = tariff.unit,
+                rate = tariff.energyRatePerUnit,
+                category = ChargeCategory.USAGE_CHARGE
+            ),
+            ChargeLineItem(
+                code = "${usageType.name}_DEMAND",
+                description = "${usageType.name.lowercase().replaceFirstChar { it.uppercase() }} Demand Charge",
+                amount = demandCharge,
+                usageAmount = demandKw,
+                usageUnit = "kW",
+                rate = tariff.demandRatePerKw,
+                category = ChargeCategory.DEMAND_CHARGE
+            )
+        )
+    }
+    
+    private fun applyRegulatoryCharges(
+        baseCharges: List<ChargeLineItem>,
+        surcharges: List<RegulatoryCharge>,
+        consumption: Double,
+        usageType: UsageType
+    ): List<ChargeLineItem> {
+        return surcharges.map { surcharge ->
+            val amount = when (surcharge.calculationType) {
+                RegulatoryChargeType.FIXED -> surcharge.rate
+                
+                RegulatoryChargeType.PER_UNIT -> {
+                    Money((consumption * surcharge.rate.amount).toLong())
+                }
+                
+                RegulatoryChargeType.PERCENTAGE_OF_ENERGY -> {
+                    val energyTotal = baseCharges
+                        .filter { it.category == ChargeCategory.USAGE_CHARGE }
+                        .sumOf { it.amount.amount }
+                    Money((energyTotal * surcharge.rate.amount / 10000).toLong())
+                }
+                
+                RegulatoryChargeType.PERCENTAGE_OF_TOTAL -> {
+                    val total = baseCharges.sumOf { it.amount.amount }
+                    Money((total * surcharge.rate.amount / 10000).toLong())
+                }
+            }
+            
+            ChargeLineItem(
+                code = surcharge.code,
+                description = surcharge.description,
+                amount = amount,
+                usageAmount = null,
+                usageUnit = null,
+                rate = surcharge.rate,
+                category = ChargeCategory.REGULATORY_CHARGE
+            )
+        }
     }
 }
