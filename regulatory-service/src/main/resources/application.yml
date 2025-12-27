@@ -3,19 +3,19 @@ server:
 
 spring:
   application:
-    name: labor-service
+    name: regulatory-service
   flyway:
     enabled: true
-    locations: classpath:db/migration/labor
+    locations: classpath:db/migration/regulatory
 
-# Labor service database configuration.
+# Regulatory service database configuration.
 # Override these values per-environment when running against a real Postgres instance.
-labor:
+regulatory:
   db:
-    url: ${LABOR_DB_URL:jdbc:postgresql://localhost:5432/us_payroll_labor}
-    username: ${LABOR_DB_USERNAME:labor_service}
+    url: ${REGULATORY_DB_URL:jdbc:postgresql://localhost:5432/us_billing_regulatory}
+    username: ${REGULATORY_DB_USERNAME:regulatory_service}
     # Avoid committing credential-shaped defaults; supply via env/secret manager.
-    password: ${LABOR_DB_PASSWORD:}
+    password: ${REGULATORY_DB_PASSWORD:}
 
 management:
   endpoint:

@@ -3,20 +3,20 @@ server:
 
 spring:
   application:
-    name: tax-service
+    name: rate-service
   flyway:
     enabled: true
-    locations: classpath:db/migration/tax
+    locations: classpath:db/migration/rate
 
-# Tax service database configuration.
+# Rate service database configuration.
 # Override these values per-environment (e.g., via environment variables or
 # externalized configuration) when running against a real Postgres instance.
-tax:
+rate:
   db:
-    url: ${TAX_DB_URL:jdbc:postgresql://localhost:5432/us_payroll_tax}
-    username: ${TAX_DB_USERNAME:tax_service}
+    url: ${RATE_DB_URL:jdbc:postgresql://localhost:5432/us_billing_rate}
+    username: ${RATE_DB_USERNAME:rate_service}
     # Avoid committing credential-shaped defaults; supply via env/secret manager.
-    password: ${TAX_DB_PASSWORD:}
+    password: ${RATE_DB_PASSWORD:}
 
   federalWithholding:
     # Method used for federal income tax withholding. Valid values: PERCENTAGE, WAGE_BRACKET.
