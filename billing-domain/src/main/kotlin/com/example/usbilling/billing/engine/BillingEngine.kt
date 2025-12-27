@@ -57,7 +57,8 @@ object BillingEngine {
             val usageCharges = RateApplier.applyRate(
                 consumption = consumption,
                 tariff = input.rateTariff,
-                usageType = meterReadPair.usageType,
+                usageUnit = meterReadPair.usageType,
+                serviceType = meterReadPair.serviceType,
                 demandKw = demandKw
             )
             charges.addAll(usageCharges)

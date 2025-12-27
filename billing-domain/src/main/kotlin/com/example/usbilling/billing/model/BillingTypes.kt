@@ -10,6 +10,7 @@ import java.time.LocalDate
 
 /**
  * Input data for calculating a customer's bill for a billing period.
+ * Supports single-service billing (for backward compatibility).
  *
  * @property billId Unique identifier for this bill
  * @property billRunId Identifier for the bill run this bill is part of
@@ -20,6 +21,8 @@ import java.time.LocalDate
  * @property rateTariff Rate structure to apply
  * @property accountBalance Account balance state including payment history and adjustments
  * @property demandReadings Peak demand readings for demand-based billing (optional)
+ * @property regulatorySurcharges Regulatory surcharges to apply (optional)
+ * @property contributions Voluntary contributions (optional)
  */
 data class BillInput(
     val billId: BillId,
@@ -30,20 +33,65 @@ data class BillInput(
     val meterReads: List<MeterReadPair>,
     val rateTariff: RateTariff,
     val accountBalance: AccountBalance,
-    val demandReadings: List<DemandReading> = emptyList()
+    val demandReadings: List<DemandReading> = emptyList(),
+    val regulatorySurcharges: List<RegulatorySurcharge> = emptyList(),
+    val contributions: List<VoluntaryContribution> = emptyList()
+)
+
+/**
+ * Input data for calculating a multi-service bill.
+ * Used when a customer has multiple utility services (electric, water, etc.).
+ *
+ * @property billId Unique identifier for this bill
+ * @property billRunId Identifier for the bill run this bill is part of
+ * @property utilityId The utility company
+ * @property customerId The customer being billed
+ * @property billPeriod The billing period
+ * @property serviceReads Meter readings grouped by service type
+ * @property serviceTariffs Rate tariffs per service type
+ * @property accountBalance Account balance state
+ * @property demandReadings Peak demand readings (optional)
+ * @property regulatorySurcharges Regulatory surcharges to apply
+ * @property contributions Voluntary contributions
+ */
+data class MultiServiceBillInput(
+    val billId: BillId,
+    val billRunId: BillRunId,
+    val utilityId: UtilityId,
+    val customerId: CustomerId,
+    val billPeriod: BillingPeriod,
+    val serviceReads: List<ServiceMeterReads>,
+    val serviceTariffs: Map<ServiceType, RateTariff>,
+    val accountBalance: AccountBalance,
+    val demandReadings: List<DemandReading> = emptyList(),
+    val regulatorySurcharges: List<RegulatorySurcharge> = emptyList(),
+    val contributions: List<VoluntaryContribution> = emptyList()
+)
+
+/**
+ * Meter readings for a specific service type.
+ *
+ * @property serviceType The type of service (ELECTRIC, WATER, etc.)
+ * @property reads List of meter read pairs for this service
+ */
+data class ServiceMeterReads(
+    val serviceType: ServiceType,
+    val reads: List<MeterReadPair>
 )
 
 /**
  * A pair of meter readings (start and end) for calculating consumption.
  *
  * @property meterId Meter identifier
- * @property usageType Type of utility
+ * @property serviceType Type of utility service
+ * @property usageType Unit of usage for this meter
  * @property startRead Reading at start of period
  * @property endRead Reading at end of period
  */
 data class MeterReadPair(
     val meterId: String,
-    val usageType: UsageType,
+    val serviceType: ServiceType,
+    val usageType: UsageUnit,
     val startRead: MeterRead,
     val endRead: MeterRead
 ) {

@@ -76,6 +76,7 @@ enum class BillingFrequency {
  * @property usageUnit Unit of usage (e.g., "kWh", "CCF", null for fixed charges)
  * @property rate Rate per unit (null for fixed charges)
  * @property category Category of charge for grouping on bill
+ * @property serviceType Type of service this charge applies to (null for account-level charges)
  */
 data class ChargeLineItem(
     val code: String,
@@ -84,7 +85,8 @@ data class ChargeLineItem(
     val usageAmount: Double? = null,
     val usageUnit: String? = null,
     val rate: Money? = null,
-    val category: ChargeCategory
+    val category: ChargeCategory,
+    val serviceType: ServiceType? = null
 )
 
 /**
@@ -110,5 +112,8 @@ enum class ChargeCategory {
     CREDIT,
     
     /** Late fees and penalties */
-    FEE
+    FEE,
+    
+    /** Voluntary contributions and donations */
+    CONTRIBUTION
 }

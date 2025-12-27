@@ -13,20 +13,22 @@ object RateApplier {
      *
      * @param consumption Amount of consumption in units
      * @param tariff Rate structure to apply
-     * @param usageType Type of utility being billed
+     * @param usageUnit Unit of measurement for this consumption
+     * @param serviceType Type of service being billed (optional for display names)
      * @return List of charge line items for this consumption
      */
     fun applyRate(
         consumption: Double,
         tariff: RateTariff,
-        usageType: UsageType,
+        usageUnit: UsageUnit,
+        serviceType: ServiceType? = null,
         demandKw: Double? = null
     ): List<ChargeLineItem> {
         val charges = when (tariff) {
-            is RateTariff.FlatRate -> applyFlatRate(consumption, tariff, usageType)
-            is RateTariff.TieredRate -> applyTieredRate(consumption, tariff, usageType)
-            is RateTariff.TimeOfUseRate -> applyTimeOfUseRate(consumption, tariff, usageType)
-            is RateTariff.DemandRate -> applyDemandRate(consumption, demandKw ?: 0.0, tariff, usageType)
+            is RateTariff.FlatRate -> applyFlatRate(consumption, tariff, usageUnit, serviceType)
+            is RateTariff.TieredRate -> applyTieredRate(consumption, tariff, usageUnit, serviceType)
+            is RateTariff.TimeOfUseRate -> applyTimeOfUseRate(consumption, tariff, usageUnit, serviceType)
+            is RateTariff.DemandRate -> applyDemandRate(consumption, demandKw ?: 0.0, tariff, usageUnit, serviceType)
         }
         
         // Add regulatory surcharges
@@ -34,7 +36,7 @@ object RateApplier {
             baseCharges = charges,
             surcharges = tariff.getRegulatoryCharges(),
             consumption = consumption,
-            usageType = usageType
+            usageUnit = usageUnit
         )
         
         return charges + regulatoryCharges
@@ -43,19 +45,22 @@ object RateApplier {
     private fun applyFlatRate(
         consumption: Double,
         tariff: RateTariff.FlatRate,
-        usageType: UsageType
+        usageUnit: UsageUnit,
+        serviceType: ServiceType?
     ): List<ChargeLineItem> {
         val chargeAmount = Money((consumption * tariff.ratePerUnit.amount).toLong())
+        val serviceName = serviceType?.displayName() ?: "Usage"
         
         return listOf(
             ChargeLineItem(
-                code = "${usageType.name}_USAGE",
-                description = "${usageType.name.lowercase().replaceFirstChar { it.uppercase() }} Usage Charge",
+                code = "USAGE",
+                description = "$serviceName Usage Charge",
                 amount = chargeAmount,
                 usageAmount = consumption,
                 usageUnit = tariff.unit,
                 rate = tariff.ratePerUnit,
-                category = ChargeCategory.USAGE_CHARGE
+                category = ChargeCategory.USAGE_CHARGE,
+                serviceType = serviceType
             )
         )
     }
@@ -63,10 +68,12 @@ object RateApplier {
     private fun applyTieredRate(
         consumption: Double,
         tariff: RateTariff.TieredRate,
-        usageType: UsageType
+        usageUnit: UsageUnit,
+        serviceType: ServiceType?
     ): List<ChargeLineItem> {
         val charges = mutableListOf<ChargeLineItem>()
         var remainingConsumption = consumption
+        val serviceName = serviceType?.displayName() ?: "Usage"
         
         for ((tierIndex, tier) in tariff.tiers.withIndex()) {
             if (remainingConsumption <= 0.0) break
@@ -81,13 +88,14 @@ object RateApplier {
             
             charges.add(
                 ChargeLineItem(
-                    code = "${usageType.name}_TIER${tierIndex + 1}",
-                    description = "${usageType.name.lowercase().replaceFirstChar { it.uppercase() }} Usage - Tier ${tierIndex + 1}",
+                    code = "TIER${tierIndex + 1}",
+                    description = "$serviceName Usage - Tier ${tierIndex + 1}",
                     amount = tierCharge,
                     usageAmount = tierConsumption,
                     usageUnit = tariff.unit,
                     rate = tier.ratePerUnit,
-                    category = ChargeCategory.USAGE_CHARGE
+                    category = ChargeCategory.USAGE_CHARGE,
+                    serviceType = serviceType
                 )
             )
             
@@ -100,34 +108,38 @@ object RateApplier {
     private fun applyTimeOfUseRate(
         consumption: Double,
         tariff: RateTariff.TimeOfUseRate,
-        usageType: UsageType
+        usageUnit: UsageUnit,
+        serviceType: ServiceType?
     ): List<ChargeLineItem> {
         // Simplified: assume 50% peak, 50% off-peak for now
         // In real implementation, would use actual hourly consumption data
         val peakConsumption = consumption * 0.5
         val offPeakConsumption = consumption * 0.5
+        val serviceName = serviceType?.displayName() ?: "Usage"
         
         val peakCharge = Money((peakConsumption * tariff.peakRate.amount).toLong())
         val offPeakCharge = Money((offPeakConsumption * tariff.offPeakRate.amount).toLong())
         
         return listOf(
             ChargeLineItem(
-                code = "${usageType.name}_PEAK",
-                description = "${usageType.name.lowercase().replaceFirstChar { it.uppercase() }} Peak Usage",
+                code = "PEAK",
+                description = "$serviceName Peak Usage",
                 amount = peakCharge,
                 usageAmount = peakConsumption,
                 usageUnit = tariff.unit,
                 rate = tariff.peakRate,
-                category = ChargeCategory.USAGE_CHARGE
+                category = ChargeCategory.USAGE_CHARGE,
+                serviceType = serviceType
             ),
             ChargeLineItem(
-                code = "${usageType.name}_OFFPEAK",
-                description = "${usageType.name.lowercase().replaceFirstChar { it.uppercase() }} Off-Peak Usage",
+                code = "OFFPEAK",
+                description = "$serviceName Off-Peak Usage",
                 amount = offPeakCharge,
                 usageAmount = offPeakConsumption,
                 usageUnit = tariff.unit,
                 rate = tariff.offPeakRate,
-                category = ChargeCategory.USAGE_CHARGE
+                category = ChargeCategory.USAGE_CHARGE,
+                serviceType = serviceType
             )
         )
     }
@@ -136,29 +148,33 @@ object RateApplier {
         consumption: Double,
         demandKw: Double,
         tariff: RateTariff.DemandRate,
-        usageType: UsageType
+        usageUnit: UsageUnit,
+        serviceType: ServiceType?
     ): List<ChargeLineItem> {
         val energyCharge = Money((consumption * tariff.energyRatePerUnit.amount).toLong())
         val demandCharge = Money((demandKw * tariff.demandRatePerKw.amount).toLong())
+        val serviceName = serviceType?.displayName() ?: "Usage"
         
         return listOf(
             ChargeLineItem(
-                code = "${usageType.name}_ENERGY",
-                description = "${usageType.name.lowercase().replaceFirstChar { it.uppercase() }} Energy Charge",
+                code = "ENERGY",
+                description = "$serviceName Energy Charge",
                 amount = energyCharge,
                 usageAmount = consumption,
                 usageUnit = tariff.unit,
                 rate = tariff.energyRatePerUnit,
-                category = ChargeCategory.USAGE_CHARGE
+                category = ChargeCategory.USAGE_CHARGE,
+                serviceType = serviceType
             ),
             ChargeLineItem(
-                code = "${usageType.name}_DEMAND",
-                description = "${usageType.name.lowercase().replaceFirstChar { it.uppercase() }} Demand Charge",
+                code = "DEMAND",
+                description = "$serviceName Demand Charge",
                 amount = demandCharge,
                 usageAmount = demandKw,
                 usageUnit = "kW",
                 rate = tariff.demandRatePerKw,
-                category = ChargeCategory.DEMAND_CHARGE
+                category = ChargeCategory.DEMAND_CHARGE,
+                serviceType = serviceType
             )
         )
     }
@@ -167,7 +183,7 @@ object RateApplier {
         baseCharges: List<ChargeLineItem>,
         surcharges: List<RegulatoryCharge>,
         consumption: Double,
-        usageType: UsageType
+        usageUnit: UsageUnit
     ): List<ChargeLineItem> {
         return surcharges.map { surcharge ->
             val amount = when (surcharge.calculationType) {

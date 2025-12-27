@@ -96,14 +96,14 @@ enum class AccountStatus {
  * Information about a meter assigned to a customer.
  *
  * @property meterId Unique meter identifier
- * @property usageType Type of service metered
+ * @property serviceType Type of service metered
  * @property meterType Physical meter type
  * @property installDate When meter was installed
  * @property lastReadDate Most recent meter reading date
  */
 data class MeterInfo(
     val meterId: String,
-    val usageType: UsageType,
+    val serviceType: ServiceType,
     val meterType: MeterType,
     val installDate: java.time.LocalDate,
     val lastReadDate: java.time.LocalDate?
