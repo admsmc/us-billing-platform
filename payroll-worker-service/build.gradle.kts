@@ -19,6 +19,7 @@ dependencies {
     implementation(project(":payroll-jackson-spring"))
     implementation(project(":shared-kernel"))
     implementation(project(":payroll-domain"))
+    implementation(project(":billing-domain")) // New billing domain
     implementation(project(":payroll-jackson"))
     implementation(project(":hr-api"))
     implementation(project(":hr-client"))
