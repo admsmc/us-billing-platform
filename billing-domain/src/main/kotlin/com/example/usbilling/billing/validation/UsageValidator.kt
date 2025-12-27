@@ -2,6 +2,7 @@ package com.example.usbilling.billing.validation
 
 import com.example.usbilling.billing.model.MeterRead
 import com.example.usbilling.billing.model.MeterReadPair
+import com.example.usbilling.billing.model.ReadingType
 import java.time.temporal.ChronoUnit
 
 /**
@@ -57,20 +58,20 @@ object UsageValidator {
             }
 
             // Check for timing issues (start read after end read)
-            if (read.startRead.timestamp.isAfter(read.endRead.timestamp)) {
+            if (read.startRead.readDate.isAfter(read.endRead.readDate)) {
                 errors.add(
                     ValidationError(
                         meterId = read.meterId,
                         errorType = ValidationErrorType.INVALID_TIMESTAMP,
-                        message = "Meter ${read.meterId} start read timestamp is after end read"
+                        message = "Meter ${read.meterId} start read date is after end read"
                     )
                 )
             }
 
             // Check for very short period (less than 25 days for monthly billing)
             val daysBetween = ChronoUnit.DAYS.between(
-                read.startRead.timestamp,
-                read.endRead.timestamp
+                read.startRead.readDate,
+                read.endRead.readDate
             )
             if (daysBetween < 25) {
                 warnings.add(
@@ -144,7 +145,7 @@ object UsageValidator {
                 read.copy(
                     endRead = read.endRead.copy(
                         readingValue = estimatedEndValue,
-                        isEstimated = true
+                        readingType = ReadingType.ESTIMATED
                     )
                 )
             } else {
