@@ -170,7 +170,7 @@ class MichiganUtilityDemoController {
         
         val input = MultiServiceBillInput(
             billId = BillId("BILL-202512-12345"),
-            billRunId = BillRunId("RUN-202512"),
+            billRunId = BillingCycleId("RUN-202512"),
             utilityId = utilityId,
             customerId = customerId,
             billPeriod = billPeriod,

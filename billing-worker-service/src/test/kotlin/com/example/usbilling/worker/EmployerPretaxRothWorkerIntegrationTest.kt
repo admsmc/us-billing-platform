@@ -44,7 +44,7 @@ class EmployerPretaxRothWorkerIntegrationTest {
         )
         return PaycheckInput(
             paycheckId = com.example.usbilling.shared.BillId("chk-worker-pre-roth-${employerId.value}"),
-            payRunId = com.example.usbilling.shared.BillRunId("run-worker-pre-roth"),
+            payRunId = com.example.usbilling.shared.BillingCycleId("run-worker-pre-roth"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,

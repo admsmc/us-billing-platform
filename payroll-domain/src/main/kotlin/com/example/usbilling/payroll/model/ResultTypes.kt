@@ -3,7 +3,7 @@ package com.example.usbilling.payroll.model
 import com.example.usbilling.shared.CustomerId
 import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillingCycleId
 import com.example.usbilling.shared.BillId
 
 // Output line items
@@ -42,7 +42,7 @@ data class EmployerContributionLine(
 
 data class PaycheckResult(
     val paycheckId: BillId,
-    val payRunId: BillRunId?,
+    val payRunId: BillingCycleId?,
     val employerId: UtilityId,
     val employeeId: CustomerId,
     val period: PayPeriod,

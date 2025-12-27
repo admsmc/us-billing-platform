@@ -7,7 +7,7 @@ import com.example.usbilling.payroll.model.TaxRule.FlatRateTax
 import com.example.usbilling.shared.CustomerId
 import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillingCycleId
 import com.example.usbilling.shared.BillId
 import com.example.usbilling.tax.impl.CachingTaxCatalog
 import com.example.usbilling.tax.impl.CatalogBackedTaxContextProvider
@@ -161,7 +161,7 @@ class DbTaxCatalogIntegrationTest {
 
             val input = PaycheckInput(
                 paycheckId = BillId("CHK-${'$'}{snapshot.employeeId.value}"),
-                payRunId = BillRunId("RUN-SIT-DB"),
+                payRunId = BillingCycleId("RUN-SIT-DB"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,

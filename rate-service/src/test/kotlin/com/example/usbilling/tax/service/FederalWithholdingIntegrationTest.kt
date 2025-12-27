@@ -4,7 +4,7 @@ import com.example.usbilling.payroll.model.*
 import com.example.usbilling.shared.CustomerId
 import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillingCycleId
 import com.example.usbilling.shared.BillId
 import com.example.usbilling.tax.impl.CachingTaxCatalog
 import com.example.usbilling.tax.impl.CatalogBackedTaxContextProvider
@@ -119,7 +119,7 @@ class FederalWithholdingIntegrationTest {
 
             return PaycheckInput(
                 paycheckId = BillId("CHK-$status-W4"),
-                payRunId = BillRunId("RUN-FED-W4"),
+                payRunId = BillingCycleId("RUN-FED-W4"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,
@@ -191,7 +191,7 @@ class FederalWithholdingIntegrationTest {
 
             val input = PaycheckInput(
                 paycheckId = BillId("CHK-W4-BEHAVIOR"),
-                payRunId = BillRunId("RUN-FED-W4-BEHAVIOR"),
+                payRunId = BillingCycleId("RUN-FED-W4-BEHAVIOR"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,
@@ -274,7 +274,7 @@ class FederalWithholdingIntegrationTest {
 
             val input = PaycheckInput(
                 paycheckId = BillId("CHK-NRA-$isNra"),
-                payRunId = BillRunId("RUN-FED-W4-NRA"),
+                payRunId = BillingCycleId("RUN-FED-W4-NRA"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,
@@ -339,7 +339,7 @@ class FederalWithholdingIntegrationTest {
 
             val input = PaycheckInput(
                 paycheckId = BillId("CHK-NRA-WEEKLY-$isNra"),
-                payRunId = BillRunId("RUN-FED-W4-NRA-WEEKLY"),
+                payRunId = BillingCycleId("RUN-FED-W4-NRA-WEEKLY"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,
@@ -408,7 +408,7 @@ class FederalWithholdingIntegrationTest {
 
             val input = PaycheckInput(
                 paycheckId = BillId("CHK-STEP2-WB-$step2"),
-                payRunId = BillRunId("RUN-FED-W4-STEP2-WB"),
+                payRunId = BillingCycleId("RUN-FED-W4-STEP2-WB"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,
@@ -471,7 +471,7 @@ class FederalWithholdingIntegrationTest {
 
             val input = PaycheckInput(
                 paycheckId = BillId("CHK-CROSS-METHOD-$wagesCents"),
-                payRunId = BillRunId("RUN-FED-W4-CROSS-METHOD"),
+                payRunId = BillingCycleId("RUN-FED-W4-CROSS-METHOD"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,

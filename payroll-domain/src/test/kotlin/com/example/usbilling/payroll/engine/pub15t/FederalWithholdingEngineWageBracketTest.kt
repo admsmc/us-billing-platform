@@ -5,7 +5,7 @@ import com.example.usbilling.payroll.model.*
 import com.example.usbilling.shared.CustomerId
 import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillingCycleId
 import com.example.usbilling.shared.BillId
 import java.time.LocalDate
 import kotlin.test.Test
@@ -38,7 +38,7 @@ class FederalWithholdingEngineWageBracketTest {
 
         val input = PaycheckInput(
             paycheckId = BillId("chk-fw-wb"),
-            payRunId = BillRunId("run-fw-wb"),
+            payRunId = BillingCycleId("run-fw-wb"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,

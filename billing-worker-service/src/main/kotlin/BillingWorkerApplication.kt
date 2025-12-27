@@ -8,7 +8,7 @@ import com.example.usbilling.payroll.model.garnishment.GarnishmentContext
 import com.example.usbilling.shared.CustomerId
 import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillingCycleId
 import com.example.usbilling.shared.toLocalityCodeStrings
 import com.example.usbilling.tax.api.TaxContextProvider
 import com.example.usbilling.tax.service.FederalWithholdingCalculator
@@ -24,21 +24,25 @@ import java.time.Instant
 import java.time.LocalDate
 
 @SpringBootApplication
-class WorkerApplication
+class BillingWorkerApplication
 
 fun main(args: Array<String>) {
-    runApplication<WorkerApplication>(*args)
+    runApplication<BillingWorkerApplication>(*args)
 }
 
 /**
- * Service responsible for orchestrating a payroll run for an employer.
+ * Service responsible for billing computation.
  *
+ * NOTE: Currently uses legacy payroll engine - will be migrated to billing-domain in Phase 3.
  * This service demonstrates the intended performance behavior:
- * - It calls [TaxContextProvider] once per (employer, checkDate).
- * - It reuses the resulting [TaxContext] for every employee in the run.
+ * - It calls [TaxContextProvider] once per (utility, billingDate).
+ * - It reuses the resulting [TaxContext] for every customer in the billing cycle.
+ *
+ * @deprecated Legacy payroll logic - migrate to BillingEngine in Phase 3
  */
+@Deprecated("Legacy payroll logic - migrate to BillingEngine in Phase 3")
 @org.springframework.stereotype.Service
-class PayrollRunService(
+class BillingComputationService(
     private val taxContextProvider: TaxContextProvider,
     private val earningConfigRepository: com.example.usbilling.payroll.model.config.EarningConfigRepository,
     private val deductionConfigRepository: com.example.usbilling.payroll.model.config.DeductionConfigRepository,
@@ -54,7 +58,7 @@ class PayrollRunService(
     private val payrollProperties: WorkerPayrollProperties,
 ) {
 
-    private val logger = LoggerFactory.getLogger(PayrollRunService::class.java)
+    private val logger = LoggerFactory.getLogger(BillingComputationService::class.java)
 
     fun runDemoPayForEmployer(): List<Pair<PaycheckResult, Money>> {
         val employerId = UtilityId("emp-1")
@@ -114,7 +118,7 @@ class PayrollRunService(
             }
             val input = PaycheckInput(
                 paycheckId = com.example.usbilling.shared.BillId("chk-demo-${index + 1}"),
-                payRunId = BillRunId("run-demo"),
+                payRunId = BillingCycleId("run-demo"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,
@@ -266,9 +270,9 @@ class PayrollRunService(
         }
 
         val payRunId = if (runId.isNullOrBlank()) {
-            BillRunId("run-${payPeriod.id}")
+            BillingCycleId("run-${payPeriod.id}")
         } else {
-            BillRunId("run-${payPeriod.id}-$runId")
+            BillingCycleId("run-${payPeriod.id}-$runId")
         }
 
         val baseComp = snapshot.baseCompensation
@@ -461,17 +465,20 @@ class PayrollRunService(
 }
 
 /**
- * Simple HTTP endpoint to trigger the demo payroll run and show the reused
+ * Simple HTTP endpoint to trigger the demo billing computation and show the reused
  * TaxContext behavior end-to-end.
+ * 
+ * @deprecated Legacy payroll logic - will be replaced with BillingEngine in Phase 3
  */
+@Deprecated("Legacy payroll logic - will be replaced with BillingEngine in Phase 3")
 @RestController
 class PayrollRunController(
-    private val payrollRunService: PayrollRunService,
+    private val billingComputationService: BillingComputationService,
 ) {
 
     @GetMapping("/dry-run-paychecks")
     fun dryRunPaychecks(): Map<String, Any> {
-        val results = payrollRunService.runDemoPayForEmployer()
+        val results = billingComputationService.runDemoPayForEmployer()
         return mapOf(
             "version" to PayrollEngine.version(),
             "paychecks" to results.map { (paycheck, federalWithholding) ->

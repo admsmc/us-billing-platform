@@ -7,7 +7,7 @@ import com.example.usbilling.payroll.model.config.DeductionPlan
 import com.example.usbilling.shared.CustomerId
 import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillingCycleId
 import com.example.usbilling.shared.BillId
 import java.time.LocalDate
 import kotlin.test.Test
@@ -50,7 +50,7 @@ class DeductionsCalculatorTest {
         )
         val input = PaycheckInput(
             paycheckId = BillId("chk-4"),
-            payRunId = BillRunId("run-3"),
+            payRunId = BillingCycleId("run-3"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,
@@ -113,7 +113,7 @@ class DeductionsCalculatorTest {
         )
         val input = PaycheckInput(
             paycheckId = BillId("chk-5"),
-            payRunId = BillRunId("run-4"),
+            payRunId = BillingCycleId("run-4"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,

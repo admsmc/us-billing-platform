@@ -4,7 +4,7 @@ import com.example.usbilling.payroll.model.*
 import com.example.usbilling.shared.CustomerId
 import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillingCycleId
 import com.example.usbilling.shared.BillId
 import java.time.LocalDate
 import kotlin.test.Test
@@ -46,7 +46,7 @@ class TaxesCalculatorTest {
 
         val input = PaycheckInput(
             paycheckId = BillId("chk-3"),
-            payRunId = BillRunId("run-2"),
+            payRunId = BillingCycleId("run-2"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,
@@ -111,7 +111,7 @@ class TaxesCalculatorTest {
 
         val input = PaycheckInput(
             paycheckId = BillId("chk-ee"),
-            payRunId = BillRunId("run-ee"),
+            payRunId = BillingCycleId("run-ee"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,
@@ -188,7 +188,7 @@ class TaxesCalculatorTest {
 
         val input = PaycheckInput(
             paycheckId = BillId("chk-both"),
-            payRunId = BillRunId("run-both"),
+            payRunId = BillingCycleId("run-both"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,

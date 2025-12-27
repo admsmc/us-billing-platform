@@ -4,7 +4,7 @@ import com.example.usbilling.payroll.model.*
 import com.example.usbilling.shared.CustomerId
 import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillingCycleId
 import com.example.usbilling.shared.BillId
 import java.time.LocalDate
 import kotlin.test.Test
@@ -36,7 +36,7 @@ class EarningsCalculatorTest {
         )
         val input = PaycheckInput(
             paycheckId = BillId("chk-1"),
-            payRunId = BillRunId("run-1"),
+            payRunId = BillingCycleId("run-1"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,
@@ -84,7 +84,7 @@ class EarningsCalculatorTest {
             )
             return PaycheckInput(
                 paycheckId = BillId("chk-$periodId"),
-                payRunId = BillRunId("run-$periodId"),
+                payRunId = BillingCycleId("run-$periodId"),
                 employerId = employerId,
                 employeeId = employeeId,
                 period = period,
@@ -136,7 +136,7 @@ class EarningsCalculatorTest {
         )
         val input = PaycheckInput(
             paycheckId = BillId("chk-2"),
-            payRunId = BillRunId("run-1"),
+            payRunId = BillingCycleId("run-1"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,
@@ -185,7 +185,7 @@ class EarningsCalculatorTest {
 
         val halfPeriodInput = PaycheckInput(
             paycheckId = BillId("chk-prorate-half"),
-            payRunId = BillRunId("run-prorate"),
+            payRunId = BillingCycleId("run-prorate"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,
@@ -244,7 +244,7 @@ class EarningsCalculatorTest {
 
         val input = PaycheckInput(
             paycheckId = BillId("chk-hire-prorate"),
-            payRunId = BillRunId("run-hire-prorate"),
+            payRunId = BillingCycleId("run-hire-prorate"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,
@@ -304,7 +304,7 @@ class EarningsCalculatorTest {
             )
             return PaycheckInput(
                 paycheckId = BillId("chk-seq-$sequenceInYear"),
-                payRunId = BillRunId("run-seq"),
+                payRunId = BillingCycleId("run-seq"),
                 employerId = employerId,
                 employeeId = employeeId,
                 period = period,
@@ -357,7 +357,7 @@ class EarningsCalculatorTest {
         )
         val input = PaycheckInput(
             paycheckId = BillId("chk-ot"),
-            payRunId = BillRunId("run-ot"),
+            payRunId = BillingCycleId("run-ot"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,

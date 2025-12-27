@@ -6,7 +6,7 @@ Enterprise-focused, Kotlin-based utility billing platform with a functional-core
 
 This platform adapts the proven architecture from us-payroll-platform for utility customer information management and billing cycles.
 
-Status: **initial fork - in active development**. Refactoring from payroll domain to billing domain in progress.
+Status: **Phase 2 complete**. Ready for Phase 3 billing domain migration.
 
 ## Refactoring Status
 
@@ -14,14 +14,26 @@ Status: **initial fork - in active development**. Refactoring from payroll domai
 - Forked from us-payroll-platform with full git history preserved
 - Renamed root project to us-billing-platform
 
-**Phase 2: Core Renames** 🚧 In Progress
-- Package names: `com.example.uspayroll` → `com.example.usbilling`
-- Identifiers: `EmployerId` → `UtilityId`, `EmployeeId` → `CustomerId`
-- Modules: `payroll-*` → `billing-*`, `hr-service` → `customer-service`
+**Phase 2: Core Renames** ✅ Complete
+- ✅ Package names: all code uses `com.example.usbilling`
+- ✅ Identifiers: `UtilityId`, `CustomerId`, `BillingCycleId`, `BillId`
+- ✅ Application classes: `BillingOrchestratorApplication`, `BillingWorkerApplication`
+- ✅ Service classes: `BillingComputationService` (marked deprecated, uses legacy payroll engine)
+- ⚠️ Note: `payroll-domain` temporarily preserved for Phase 3 migration
 
-**Phase 3: Domain Replacement** ⏳ Planned
-- Replace `payroll-domain` with `billing-domain`
-- Meter reading models, usage calculation, rate engine
+**Phase 3: Domain Migration** 🚧 In Progress
+- Build out `billing-domain` with utility billing logic:
+  - Complete `BillingEngine.calculateBill()` implementation
+  - Implement tariff application (tiered, TOU, demand charges)
+  - Add regulatory fee calculators for different PUC jurisdictions
+- Migrate `billing-orchestrator-service` to use `BillingEngine` (replace PayrollEngine)
+- Migrate `billing-worker-service` to use billing domain (replace payroll computation)
+- Remove legacy modules:
+  - Delete `payroll-domain/`
+  - Delete `payroll-jackson/`, `payroll-jackson-spring/`
+  - Clean up payroll-specific packages (garnishment, withholding, etc.)
+
+See `billing-domain/README.md` for detailed Phase 3 migration plan.
 
 ## Target Architecture
 

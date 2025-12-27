@@ -7,7 +7,7 @@ import com.example.usbilling.shared.CustomerId
 import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.toLocalityCodeStrings
 import com.example.usbilling.worker.LocalityResolver
-import com.example.usbilling.worker.PayrollRunService
+import com.example.usbilling.worker.BillingComputationService
 import com.example.usbilling.worker.benchmarks.PaycheckRunStore
 import com.example.usbilling.worker.client.LaborStandardsClient
 import com.example.usbilling.worker.client.TaxClient
@@ -61,7 +61,7 @@ class WorkerBenchmarksConfig
 @ConditionalOnProperty(prefix = "worker.benchmarks", name = ["enabled"], havingValue = "true")
 @RequestMapping("/benchmarks/employers/{employerId}")
 class BenchmarkHrBackedPaychecksController(
-    private val payrollRunService: PayrollRunService,
+    private val billingComputationService: BillingComputationService,
     private val localityResolver: LocalityResolver,
     private val hrClient: HrClient?,
     private val taxClient: TaxClient?,
@@ -199,7 +199,7 @@ class BenchmarkHrBackedPaychecksController(
         val runId = request.runId?.takeIf { it.isNotBlank() } ?: UUID.randomUUID().toString()
 
         val start = System.nanoTime()
-        val paychecks = payrollRunService.runHrBackedPayForPeriod(
+        val paychecks = billingComputationService.runHrBackedPayForPeriod(
             employerId = UtilityId(employerId),
             payPeriodId = request.payPeriodId,
             employeeIds = employeeIds,
@@ -260,7 +260,7 @@ class BenchmarkHrBackedPaychecksController(
         val runId = request.runId?.takeIf { it.isNotBlank() } ?: UUID.randomUUID().toString()
 
         val start = System.nanoTime()
-        val paychecks = payrollRunService.runHrBackedPayForPeriod(
+        val paychecks = billingComputationService.runHrBackedPayForPeriod(
             employerId = UtilityId(employerId),
             payPeriodId = request.payPeriodId,
             employeeIds = employeeIds,
@@ -656,7 +656,7 @@ class BenchmarkHrBackedPaychecksController(
         )
 
         val paycheck: PaycheckSummaryDto? = if (includePaycheck) {
-            val p = payrollRunService.previewHrBackedPaycheck(
+            val p = billingComputationService.previewHrBackedPaycheck(
                 employerId = employer,
                 payPeriodId = payPeriodId,
                 employeeId = CustomerId(employeeId),

@@ -5,7 +5,7 @@ import com.example.usbilling.payroll.model.*
 import com.example.usbilling.shared.CustomerId
 import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillingCycleId
 import com.example.usbilling.shared.BillId
 import com.example.usbilling.tax.api.TaxQuery
 import com.example.usbilling.tax.impl.CachingTaxCatalog
@@ -98,7 +98,7 @@ class LocalIncomeGoldenTest {
 
         val input = PaycheckInput(
             paycheckId = BillId("CHK-LOCAL-INCOME-$residentState-$wagesCents"),
-            payRunId = BillRunId("RUN-LOCAL-INCOME"),
+            payRunId = BillingCycleId("RUN-LOCAL-INCOME"),
             employerId = employerId,
             employeeId = snapshot.employeeId,
             period = period,

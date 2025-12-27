@@ -5,7 +5,7 @@ import com.example.usbilling.payroll.model.*
 import com.example.usbilling.shared.CustomerId
 import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillingCycleId
 import com.example.usbilling.shared.BillId
 import com.example.usbilling.tax.impl.CachingTaxCatalog
 import com.example.usbilling.tax.impl.CatalogBackedTaxContextProvider
@@ -126,7 +126,7 @@ class Pub15TFederalGoldenTest {
 
             val input = PaycheckInput(
                 paycheckId = BillId("CHK-PUB15T-SINGLE-$wagesCents"),
-                payRunId = BillRunId("RUN-PUB15T-SINGLE"),
+                payRunId = BillingCycleId("RUN-PUB15T-SINGLE"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,

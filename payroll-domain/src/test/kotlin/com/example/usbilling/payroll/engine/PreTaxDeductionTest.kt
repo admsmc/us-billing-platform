@@ -7,7 +7,7 @@ import com.example.usbilling.payroll.model.config.DeductionPlan
 import com.example.usbilling.shared.CustomerId
 import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillingCycleId
 import com.example.usbilling.shared.BillId
 import java.time.LocalDate
 import kotlin.test.Test
@@ -59,7 +59,7 @@ class PreTaxDeductionTest {
 
         val input = PaycheckInput(
             paycheckId = BillId("chk-401k"),
-            payRunId = BillRunId("run-401k"),
+            payRunId = BillingCycleId("run-401k"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,

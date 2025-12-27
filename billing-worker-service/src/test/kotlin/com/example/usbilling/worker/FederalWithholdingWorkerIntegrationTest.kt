@@ -69,7 +69,7 @@ class FederalWithholdingWorkerIntegrationTest {
             val snap = snapshot(status)
             return PaycheckInput(
                 paycheckId = com.example.usbilling.shared.BillId("chk-fw-worker-$status"),
-                payRunId = com.example.usbilling.shared.BillRunId("run-fw-worker"),
+                payRunId = com.example.usbilling.shared.BillingCycleId("run-fw-worker"),
                 employerId = employerId,
                 employeeId = snap.employeeId,
                 period = period,
@@ -130,7 +130,7 @@ class FederalWithholdingWorkerIntegrationTest {
             val snap = snapshot(creditCents, otherIncomeCents, deductionsCents)
             val input = PaycheckInput(
                 paycheckId = com.example.usbilling.shared.BillId("chk-fw-worker-w4"),
-                payRunId = com.example.usbilling.shared.BillRunId("run-fw-worker-w4"),
+                payRunId = com.example.usbilling.shared.BillingCycleId("run-fw-worker-w4"),
                 employerId = employerId,
                 employeeId = snap.employeeId,
                 period = period,

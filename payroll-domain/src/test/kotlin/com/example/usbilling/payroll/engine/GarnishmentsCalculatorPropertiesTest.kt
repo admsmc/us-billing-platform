@@ -10,7 +10,7 @@ import com.example.usbilling.payroll.model.garnishment.GarnishmentOrderId
 import com.example.usbilling.shared.CustomerId
 import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillingCycleId
 import com.example.usbilling.shared.BillId
 import java.time.LocalDate
 import kotlin.random.Random
@@ -96,7 +96,7 @@ class GarnishmentsCalculatorPropertiesTest {
 
         val input = PaycheckInput(
             paycheckId = BillId("CHK-PROP"),
-            payRunId = BillRunId("RUN-PROP"),
+            payRunId = BillingCycleId("RUN-PROP"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,

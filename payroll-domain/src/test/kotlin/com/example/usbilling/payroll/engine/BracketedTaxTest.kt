@@ -4,7 +4,7 @@ import com.example.usbilling.payroll.model.*
 import com.example.usbilling.shared.CustomerId
 import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillingCycleId
 import com.example.usbilling.shared.BillId
 import java.time.LocalDate
 import kotlin.test.Test
@@ -33,7 +33,7 @@ class BracketedTaxTest {
         )
         return PaycheckInput(
             paycheckId = BillId("chk-br"),
-            payRunId = BillRunId("run-br"),
+            payRunId = BillingCycleId("run-br"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,

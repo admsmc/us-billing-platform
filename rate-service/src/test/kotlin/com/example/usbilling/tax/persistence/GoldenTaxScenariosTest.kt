@@ -5,7 +5,7 @@ import com.example.usbilling.payroll.model.*
 import com.example.usbilling.shared.CustomerId
 import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillingCycleId
 import com.example.usbilling.shared.BillId
 import com.example.usbilling.tax.api.TaxQuery
 import com.example.usbilling.tax.impl.CachingTaxCatalog
@@ -131,7 +131,7 @@ class GoldenTaxScenariosTest {
 
         val input = PaycheckInput(
             paycheckId = BillId("CHK-FED-GOLDEN"),
-            payRunId = BillRunId("RUN-FED-GOLDEN"),
+            payRunId = BillingCycleId("RUN-FED-GOLDEN"),
             employerId = employerId,
             employeeId = snapshot.employeeId,
             period = period,
@@ -199,7 +199,7 @@ class GoldenTaxScenariosTest {
 
             val input = PaycheckInput(
                 paycheckId = BillId("CHK-FED-${filingStatus.name}-$wagesCents"),
-                payRunId = BillRunId("RUN-FED-GOLDEN-MULTI"),
+                payRunId = BillingCycleId("RUN-FED-GOLDEN-MULTI"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,
@@ -312,7 +312,7 @@ class GoldenTaxScenariosTest {
 
             val input = PaycheckInput(
                 paycheckId = BillId("CHK-$stateCode-GOLDEN"),
-                payRunId = BillRunId("RUN-STATE-GOLDEN"),
+                payRunId = BillingCycleId("RUN-STATE-GOLDEN"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,
@@ -405,7 +405,7 @@ class GoldenTaxScenariosTest {
 
             val input = PaycheckInput(
                 paycheckId = BillId("CHK-$stateCode-GOLDEN-MULTI-$taxableCents"),
-                payRunId = BillRunId("RUN-STATE-GOLDEN-MULTI"),
+                payRunId = BillingCycleId("RUN-STATE-GOLDEN-MULTI"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,
@@ -501,7 +501,7 @@ class GoldenTaxScenariosTest {
 
             val input = PaycheckInput(
                 paycheckId = BillId("CHK-$stateCode-AL-AZ"),
-                payRunId = BillRunId("RUN-STATE-GOLDEN-AL-AZ"),
+                payRunId = BillingCycleId("RUN-STATE-GOLDEN-AL-AZ"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,
@@ -603,7 +603,7 @@ class GoldenTaxScenariosTest {
 
             val input = PaycheckInput(
                 paycheckId = BillId("CHK-LOCAL-NYC-$employeeIdSuffix"),
-                payRunId = BillRunId("RUN-LOCAL-NYC"),
+                payRunId = BillingCycleId("RUN-LOCAL-NYC"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,
@@ -702,7 +702,7 @@ class GoldenTaxScenariosTest {
 
             val input = PaycheckInput(
                 paycheckId = BillId("CHK-$stateCode-GOLDEN-FLAT"),
-                payRunId = BillRunId("RUN-STATE-GOLDEN-FLAT"),
+                payRunId = BillingCycleId("RUN-STATE-GOLDEN-FLAT"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,

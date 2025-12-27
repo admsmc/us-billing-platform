@@ -5,7 +5,7 @@ import com.example.usbilling.payroll.model.*
 import com.example.usbilling.shared.CustomerId
 import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillingCycleId
 import com.example.usbilling.shared.BillId
 import com.example.usbilling.tax.config.TaxBracketConfig
 import com.example.usbilling.tax.config.TaxRuleConfig
@@ -290,7 +290,7 @@ object Pub15TWageBracketGenerator {
 
         val input = PaycheckInput(
             paycheckId = BillId("CHK-PUB15T-$annualWagesCents"),
-            payRunId = BillRunId("RUN-PUB15T-WB"),
+            payRunId = BillingCycleId("RUN-PUB15T-WB"),
             employerId = employerId,
             employeeId = snapshot.employeeId,
             period = period,

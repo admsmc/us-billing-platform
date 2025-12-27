@@ -60,7 +60,7 @@ class AdditionalMedicareTest {
 
         val input = PaycheckInput(
             paycheckId = com.example.usbilling.shared.BillId("CHK-MED"),
-            payRunId = com.example.usbilling.shared.BillRunId("RUN-MED"),
+            payRunId = com.example.usbilling.shared.BillingCycleId("RUN-MED"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,

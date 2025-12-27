@@ -17,7 +17,7 @@ import com.example.usbilling.payroll.model.garnishment.GarnishmentContext
 import com.example.usbilling.shared.CustomerId
 import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillingCycleId
 import com.example.usbilling.shared.BillId
 import com.example.usbilling.shared.toLocalityCodeStrings
 import com.example.usbilling.worker.LocalityResolver
@@ -149,7 +149,7 @@ class WorkerPaycheckComputationService(
 
         val input = PaycheckInput(
             paycheckId = BillId(job.paycheckId),
-            payRunId = BillRunId(job.payRunId),
+            payRunId = BillingCycleId(job.payRunId),
             employerId = employerId,
             employeeId = snapshot.employeeId,
             period = payPeriod,

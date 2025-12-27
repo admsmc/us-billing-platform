@@ -4,7 +4,7 @@ import com.example.usbilling.payroll.model.*
 import com.example.usbilling.shared.CustomerId
 import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillingCycleId
 import com.example.usbilling.shared.BillId
 import java.time.LocalDate
 import kotlin.test.Test
@@ -50,7 +50,7 @@ class RegularRateCalculatorTest {
 
         val input = PaycheckInput(
             paycheckId = BillId("chk-rr"),
-            payRunId = BillRunId("run-rr"),
+            payRunId = BillingCycleId("run-rr"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,

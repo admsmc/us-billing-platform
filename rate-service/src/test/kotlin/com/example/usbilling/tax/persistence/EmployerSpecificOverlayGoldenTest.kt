@@ -5,7 +5,7 @@ import com.example.usbilling.payroll.model.*
 import com.example.usbilling.shared.CustomerId
 import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillingCycleId
 import com.example.usbilling.shared.BillId
 import com.example.usbilling.tax.impl.CachingTaxCatalog
 import com.example.usbilling.tax.impl.CatalogBackedTaxContextProvider
@@ -96,7 +96,7 @@ class EmployerSpecificOverlayGoldenTest {
 
             val input = PaycheckInput(
                 paycheckId = BillId("CHK-STATE-OVERLAY-$employerId"),
-                payRunId = BillRunId("RUN-STATE-OVERLAY"),
+                payRunId = BillingCycleId("RUN-STATE-OVERLAY"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,

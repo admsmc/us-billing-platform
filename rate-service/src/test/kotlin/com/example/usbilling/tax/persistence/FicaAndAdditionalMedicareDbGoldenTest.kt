@@ -5,7 +5,7 @@ import com.example.usbilling.payroll.model.*
 import com.example.usbilling.shared.CustomerId
 import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillingCycleId
 import com.example.usbilling.shared.BillId
 import com.example.usbilling.tax.impl.CachingTaxCatalog
 import com.example.usbilling.tax.impl.CatalogBackedTaxContextProvider
@@ -118,7 +118,7 @@ class FicaAndAdditionalMedicareDbGoldenTest {
 
         val input = PaycheckInput(
             paycheckId = BillId("CHK-FICA-DB"),
-            payRunId = BillRunId("RUN-FICA-DB"),
+            payRunId = BillingCycleId("RUN-FICA-DB"),
             employerId = employerId,
             employeeId = snapshot.employeeId,
             period = period,
@@ -198,7 +198,7 @@ class FicaAndAdditionalMedicareDbGoldenTest {
 
         val input = PaycheckInput(
             paycheckId = BillId("CHK-ADDL-MED-DB"),
-            payRunId = BillRunId("RUN-ADDL-MED-DB"),
+            payRunId = BillingCycleId("RUN-ADDL-MED-DB"),
             employerId = employerId,
             employeeId = snapshot.employeeId,
             period = period,

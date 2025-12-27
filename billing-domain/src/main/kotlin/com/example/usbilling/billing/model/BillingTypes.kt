@@ -1,7 +1,7 @@
 package com.example.usbilling.billing.model
 
 import com.example.usbilling.shared.BillId
-import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillingCycleId
 import com.example.usbilling.shared.CustomerId
 import com.example.usbilling.shared.Money
 import com.example.usbilling.shared.UtilityId
@@ -26,7 +26,7 @@ import java.time.LocalDate
  */
 data class BillInput(
     val billId: BillId,
-    val billRunId: BillRunId,
+    val billRunId: BillingCycleId,
     val utilityId: UtilityId,
     val customerId: CustomerId,
     val billPeriod: BillingPeriod,
@@ -56,7 +56,7 @@ data class BillInput(
  */
 data class MultiServiceBillInput(
     val billId: BillId,
-    val billRunId: BillRunId,
+    val billRunId: BillingCycleId,
     val utilityId: UtilityId,
     val customerId: CustomerId,
     val billPeriod: BillingPeriod,
@@ -131,7 +131,7 @@ data class MeterReadPair(
  */
 data class BillResult(
     val billId: BillId,
-    val billRunId: BillRunId,
+    val billRunId: BillingCycleId,
     val utilityId: UtilityId,
     val customerId: CustomerId,
     val billPeriod: BillingPeriod,

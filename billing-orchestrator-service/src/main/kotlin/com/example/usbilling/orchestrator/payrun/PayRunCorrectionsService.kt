@@ -19,7 +19,7 @@ import com.example.usbilling.payroll.model.audit.PaycheckAudit
 import com.example.usbilling.shared.CustomerId
 import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillingCycleId
 import com.example.usbilling.shared.BillId
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -192,7 +192,7 @@ class PayRunCorrectionsService(
 
         val correctionRun = createOrGet.payRun
 
-        val acceptedLink = payRunRepository.acceptCorrectionOfBillRunId(
+        val acceptedLink = payRunRepository.acceptCorrectionOfBillingCycleId(
             employerId = employerId,
             payRunId = correctionRun.payRunId,
             correctionOfPayRunId = sourcePayRunId,
@@ -253,7 +253,7 @@ class PayRunCorrectionsService(
                 val transformed = transformPaycheck(original)
                     .copy(
                         paycheckId = BillId(newPaycheckId),
-                        payRunId = BillRunId(correctionRun.payRunId),
+                        payRunId = BillingCycleId(correctionRun.payRunId),
                         employerId = employer,
                         employeeId = CustomerId(employeeId),
                     )

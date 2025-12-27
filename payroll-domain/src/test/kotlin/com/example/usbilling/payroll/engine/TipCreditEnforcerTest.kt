@@ -4,7 +4,7 @@ import com.example.usbilling.payroll.model.*
 import com.example.usbilling.shared.CustomerId
 import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillingCycleId
 import com.example.usbilling.shared.BillId
 import java.time.LocalDate
 import kotlin.test.Test
@@ -83,7 +83,7 @@ class TipCreditEnforcerTest {
         val earnings = TipCreditEnforcer.applyTipCreditMakeup(
             input = PaycheckInput(
                 paycheckId = BillId("chk-tip-ok"),
-                payRunId = BillRunId("run-tip-ok"),
+                payRunId = BillingCycleId("run-tip-ok"),
                 employerId = employerId,
                 employeeId = employeeId,
                 period = period,
@@ -150,7 +150,7 @@ class TipCreditEnforcerTest {
         val earnings = TipCreditEnforcer.applyTipCreditMakeup(
             input = PaycheckInput(
                 paycheckId = BillId("chk-tip-mu"),
-                payRunId = BillRunId("run-tip-mu"),
+                payRunId = BillingCycleId("run-tip-mu"),
                 employerId = employerId,
                 employeeId = employeeId,
                 period = period,
@@ -230,7 +230,7 @@ class TipCreditEnforcerTest {
         val earnings = TipCreditEnforcer.applyTipCreditMakeup(
             input = PaycheckInput(
                 paycheckId = BillId("chk-tip-ca"),
-                payRunId = BillRunId("run-tip-ca"),
+                payRunId = BillingCycleId("run-tip-ca"),
                 employerId = employerId,
                 employeeId = employeeId,
                 period = period,

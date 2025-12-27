@@ -59,7 +59,7 @@ class FicaGatingTest {
         val basisComputation = BasisBuilder.compute(basisContext)
         val input = PaycheckInput(
             paycheckId = com.example.usbilling.shared.BillId("CHK1"),
-            payRunId = com.example.usbilling.shared.BillRunId("RUN1"),
+            payRunId = com.example.usbilling.shared.BillingCycleId("RUN1"),
             employerId = employerId,
             employeeId = snapshot.employeeId,
             period = period,

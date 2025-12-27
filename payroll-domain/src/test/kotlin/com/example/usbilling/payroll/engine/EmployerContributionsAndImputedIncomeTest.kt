@@ -4,7 +4,7 @@ import com.example.usbilling.payroll.model.*
 import com.example.usbilling.shared.CustomerId
 import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillingCycleId
 import com.example.usbilling.shared.BillId
 import java.time.LocalDate
 import kotlin.test.Test
@@ -35,7 +35,7 @@ class EmployerContributionsAndImputedIncomeTest {
 
         val input = PaycheckInput(
             paycheckId = BillId("chk-hsa-er"),
-            payRunId = BillRunId("run-hsa-er"),
+            payRunId = BillingCycleId("run-hsa-er"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,
@@ -112,7 +112,7 @@ class EmployerContributionsAndImputedIncomeTest {
 
         val input = PaycheckInput(
             paycheckId = BillId("chk-imputed"),
-            payRunId = BillRunId("run-imputed"),
+            payRunId = BillingCycleId("run-imputed"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,

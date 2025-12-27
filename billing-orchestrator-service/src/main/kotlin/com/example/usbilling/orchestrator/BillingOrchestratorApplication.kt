@@ -6,8 +6,8 @@ import org.springframework.scheduling.annotation.EnableScheduling
 
 @SpringBootApplication
 @EnableScheduling
-class PayrollOrchestratorApplication
+class BillingOrchestratorApplication
 
 fun main(args: Array<String>) {
-    runApplication<PayrollOrchestratorApplication>(*args)
+    runApplication<BillingOrchestratorApplication>(*args)
 }

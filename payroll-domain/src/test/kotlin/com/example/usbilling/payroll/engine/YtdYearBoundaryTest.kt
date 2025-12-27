@@ -4,7 +4,7 @@ import com.example.usbilling.payroll.model.*
 import com.example.usbilling.shared.CustomerId
 import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillingCycleId
 import com.example.usbilling.shared.BillId
 import java.time.LocalDate
 import kotlin.test.Test
@@ -54,7 +54,7 @@ class YtdYearBoundaryTest {
 
         val input1 = PaycheckInput(
             paycheckId = BillId("chk-ytd-1"),
-            payRunId = BillRunId("run-ytd-1"),
+            payRunId = BillingCycleId("run-ytd-1"),
             employerId = employerId,
             employeeId = employeeId,
             period = period1,
@@ -72,7 +72,7 @@ class YtdYearBoundaryTest {
 
         val input2 = input1.copy(
             paycheckId = BillId("chk-ytd-2"),
-            payRunId = BillRunId("run-ytd-2"),
+            payRunId = BillingCycleId("run-ytd-2"),
             period = period2,
             priorYtd = result1.ytdAfter,
         )
@@ -125,7 +125,7 @@ class YtdYearBoundaryTest {
 
         val input = PaycheckInput(
             paycheckId = BillId("chk-ytd-mismatch"),
-            payRunId = BillRunId("run-ytd-mismatch"),
+            payRunId = BillingCycleId("run-ytd-mismatch"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,

@@ -72,7 +72,7 @@ class EmployerSpecificConfigWorkerIntegrationTest {
 
             val input = PaycheckInput(
                 paycheckId = com.example.usbilling.shared.BillId("chk-worker-${employerId.value}"),
-                payRunId = com.example.usbilling.shared.BillRunId("run-worker-demo"),
+                payRunId = com.example.usbilling.shared.BillingCycleId("run-worker-demo"),
                 employerId = employerId,
                 employeeId = employeeId,
                 period = period,

@@ -4,7 +4,7 @@ import com.example.usbilling.payroll.model.*
 import com.example.usbilling.shared.CustomerId
 import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillingCycleId
 import com.example.usbilling.shared.BillId
 import java.time.LocalDate
 import kotlin.test.Test
@@ -94,7 +94,7 @@ class StateIncomeTaxIntegrationTest {
         fun runFor(snapshot: EmployeeSnapshot, stateRules: List<TaxRule>): PaycheckResult {
             val input = PaycheckInput(
                 paycheckId = BillId("CHK-${'$'}{snapshot.employeeId.value}"),
-                payRunId = BillRunId("RUN-SIT"),
+                payRunId = BillingCycleId("RUN-SIT"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,
@@ -149,7 +149,7 @@ class StateIncomeTaxIntegrationTest {
         fun runFor(snapshot: EmployeeSnapshot, stateRules: List<TaxRule>): PaycheckResult {
             val input = PaycheckInput(
                 paycheckId = BillId("CHK-${'$'}{snapshot.employeeId.value}"),
-                payRunId = BillRunId("RUN-SIT-FLAT"),
+                payRunId = BillingCycleId("RUN-SIT-FLAT"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,

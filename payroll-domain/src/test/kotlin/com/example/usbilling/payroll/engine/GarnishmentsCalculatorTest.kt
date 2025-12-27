@@ -11,7 +11,7 @@ import com.example.usbilling.payroll.model.garnishment.GarnishmentType
 import com.example.usbilling.shared.CustomerId
 import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillingCycleId
 import com.example.usbilling.shared.BillId
 import java.time.LocalDate
 import kotlin.test.Test
@@ -53,7 +53,7 @@ class GarnishmentsCalculatorTest {
         )
         return PaycheckInput(
             paycheckId = BillId("chk-garn-calc"),
-            payRunId = BillRunId("run-garn-calc"),
+            payRunId = BillingCycleId("run-garn-calc"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,
@@ -1296,7 +1296,7 @@ class GarnishmentsCalculatorTest {
             val orders = if (status == FilingStatus.SINGLE) listOf(orderSingle) else listOf(orderMarried)
             return PaycheckInput(
                 paycheckId = BillId("chk-garn-golden-2-$idSuffix"),
-                payRunId = BillRunId("run-garn-golden-2"),
+                payRunId = BillingCycleId("run-garn-golden-2"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,
@@ -1493,7 +1493,7 @@ class GarnishmentsCalculatorTest {
             )
             return PaycheckInput(
                 paycheckId = BillId("chk-garn-levy-status-${'$'}{employeeId.value}"),
-                payRunId = BillRunId("run-garn-levy-status"),
+                payRunId = BillingCycleId("run-garn-levy-status"),
                 employerId = employerId,
                 employeeId = employeeId,
                 period = period,
@@ -1584,7 +1584,7 @@ class GarnishmentsCalculatorTest {
         )
         val input = PaycheckInput(
             paycheckId = BillId("chk-garn-levy-status-none"),
-            payRunId = BillRunId("run-garn-levy-status-none"),
+            payRunId = BillingCycleId("run-garn-levy-status-none"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,

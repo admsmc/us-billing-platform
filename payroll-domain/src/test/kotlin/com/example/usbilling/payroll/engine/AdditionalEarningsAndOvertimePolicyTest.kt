@@ -6,7 +6,7 @@ import com.example.usbilling.payroll.model.config.EarningDefinition
 import com.example.usbilling.shared.CustomerId
 import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillingCycleId
 import com.example.usbilling.shared.BillId
 import java.time.LocalDate
 import kotlin.test.Test
@@ -53,7 +53,7 @@ class AdditionalEarningsAndOvertimePolicyTest {
         )
         val input = PaycheckInput(
             paycheckId = BillId("chk-ot2"),
-            payRunId = BillRunId("run-ot2"),
+            payRunId = BillingCycleId("run-ot2"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,
@@ -106,7 +106,7 @@ class AdditionalEarningsAndOvertimePolicyTest {
         // correctly prices the 10 overtime hours at the configured multiplier.
         val input = PaycheckInput(
             paycheckId = BillId("chk-ot-ca"),
-            payRunId = BillRunId("run-ot-ca"),
+            payRunId = BillingCycleId("run-ot-ca"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,
@@ -160,7 +160,7 @@ class AdditionalEarningsAndOvertimePolicyTest {
 
         val input = PaycheckInput(
             paycheckId = BillId("chk-bonus"),
-            payRunId = BillRunId("run-bonus"),
+            payRunId = BillingCycleId("run-bonus"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,

@@ -21,7 +21,7 @@ import com.example.usbilling.payroll.model.config.EarningConfigRepository
 import com.example.usbilling.payroll.model.garnishment.GarnishmentContext
 import com.example.usbilling.shared.CustomerId
 import com.example.usbilling.shared.UtilityId
-import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillingCycleId
 import com.example.usbilling.shared.BillId
 import com.example.usbilling.shared.toLocalityCodeStrings
 import org.springframework.stereotype.Service
@@ -180,7 +180,7 @@ class PaycheckComputationService(
 
         val input = PaycheckInput(
             paycheckId = BillId(paycheckId),
-            payRunId = BillRunId(payRunId),
+            payRunId = BillingCycleId(payRunId),
             employerId = employerId,
             employeeId = snapshot.employeeId,
             period = payPeriod,

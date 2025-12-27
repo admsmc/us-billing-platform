@@ -106,7 +106,7 @@ class PayRunOutboxEnqueuer(
     @Transactional
     fun enqueuePaycheckLedgerEventsForApprovedPayRun(employerId: String, payRunId: String) {
         val payRun = payRunRepository.findPayRun(employerId, payRunId) ?: return
-        val correctionOfPayRunId = payRunRepository.findCorrectionOfBillRunId(employerId, payRunId)
+        val correctionOfPayRunId = payRunRepository.findCorrectionOfBillingCycleId(employerId, payRunId)
 
         val action = when (payRun.runType) {
             PayRunType.VOID -> PaycheckLedgerAction.VOIDED

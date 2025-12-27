@@ -30,7 +30,7 @@ import com.example.usbilling.payroll.model.garnishment.ProtectedEarningsRule
 import com.example.usbilling.shared.CustomerId
 import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillingCycleId
 import com.example.usbilling.shared.BillId
 import org.openjdk.jmh.annotations.Benchmark
 import org.openjdk.jmh.annotations.BenchmarkMode
@@ -111,7 +111,7 @@ open class PaycheckComputationBenchmark {
 
             baseline = PaycheckInput(
                 paycheckId = BillId("chk-bench-1"),
-                payRunId = BillRunId("run-bench"),
+                payRunId = BillingCycleId("run-bench"),
                 employerId = employerId,
                 employeeId = employeeId,
                 period = period,

@@ -5,7 +5,7 @@ import com.example.usbilling.payroll.model.*
 import com.example.usbilling.shared.CustomerId
 import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillingCycleId
 import com.example.usbilling.shared.BillId
 import com.example.usbilling.tax.impl.CachingTaxCatalog
 import com.example.usbilling.tax.impl.CatalogBackedTaxContextProvider
@@ -85,7 +85,7 @@ class EmployerTaxesGoldenTest {
 
         val input = PaycheckInput(
             paycheckId = BillId("CHK-FUTA-GOLDEN"),
-            payRunId = BillRunId("RUN-FUTA-GOLDEN"),
+            payRunId = BillingCycleId("RUN-FUTA-GOLDEN"),
             employerId = employerId,
             employeeId = snapshot.employeeId,
             period = period,
@@ -154,7 +154,7 @@ class EmployerTaxesGoldenTest {
 
         val input = PaycheckInput(
             paycheckId = BillId("CHK-SUI-GOLDEN"),
-            payRunId = BillRunId("RUN-SUI-GOLDEN"),
+            payRunId = BillingCycleId("RUN-SUI-GOLDEN"),
             employerId = employerId,
             employeeId = snapshot.employeeId,
             period = period,
@@ -227,7 +227,7 @@ class EmployerTaxesGoldenTest {
 
             val input = PaycheckInput(
                 paycheckId = BillId("CHK-$ruleId"),
-                payRunId = BillRunId("RUN-SUI-GOLDEN-MULTI"),
+                payRunId = BillingCycleId("RUN-SUI-GOLDEN-MULTI"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,
@@ -317,7 +317,7 @@ class EmployerTaxesGoldenTest {
 
             val input = PaycheckInput(
                 paycheckId = BillId("CHK-$ruleId"),
-                payRunId = BillRunId("RUN-SUI-GOLDEN-EXPANDED"),
+                payRunId = BillingCycleId("RUN-SUI-GOLDEN-EXPANDED"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,

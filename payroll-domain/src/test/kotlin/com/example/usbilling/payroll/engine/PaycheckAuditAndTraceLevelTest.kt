@@ -23,7 +23,7 @@ import com.example.usbilling.payroll.model.config.DeductionPlan
 import com.example.usbilling.shared.CustomerId
 import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillingCycleId
 import com.example.usbilling.shared.BillId
 import java.time.Instant
 import java.time.LocalDate
@@ -64,7 +64,7 @@ class PaycheckAuditAndTraceLevelTest {
 
         return PaycheckInput(
             paycheckId = BillId("chk-audit-1"),
-            payRunId = BillRunId("run-audit-1"),
+            payRunId = BillingCycleId("run-audit-1"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,

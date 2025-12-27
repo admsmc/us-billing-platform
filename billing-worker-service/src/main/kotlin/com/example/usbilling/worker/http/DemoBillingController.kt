@@ -24,7 +24,7 @@ class DemoBillingController {
         // Create a sample bill input for a residential customer
         val input = BillInput(
             billId = BillId("DEMO-BILL-001"),
-            billRunId = BillRunId("DEMO-RUN-2025-01"),
+            billRunId = BillingCycleId("DEMO-RUN-2025-01"),
             utilityId = UtilityId("UTIL-DEMO"),
             customerId = CustomerId("CUST-DEMO-001"),
             billPeriod = BillingPeriod(

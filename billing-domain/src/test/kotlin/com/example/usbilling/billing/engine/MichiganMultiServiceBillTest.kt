@@ -69,7 +69,7 @@ class MichiganMultiServiceBillTest {
         
         val input = MultiServiceBillInput(
             billId = BillId("BILL-001"),
-            billRunId = BillRunId("RUN-001"),
+            billRunId = BillingCycleId("RUN-001"),
             utilityId = utilityId,
             customerId = customerId,
             billPeriod = billPeriod,
@@ -145,7 +145,7 @@ class MichiganMultiServiceBillTest {
         
         val input = MultiServiceBillInput(
             billId = BillId("BILL-001"),
-            billRunId = BillRunId("RUN-001"),
+            billRunId = BillingCycleId("RUN-001"),
             utilityId = utilityId,
             customerId = customerId,
             billPeriod = billPeriod,
@@ -224,7 +224,7 @@ class MichiganMultiServiceBillTest {
         
         val input = MultiServiceBillInput(
             billId = BillId("BILL-001"),
-            billRunId = BillRunId("RUN-001"),
+            billRunId = BillingCycleId("RUN-001"),
             utilityId = utilityId,
             customerId = customerId,
             billPeriod = billPeriod,
@@ -283,7 +283,7 @@ class MichiganMultiServiceBillTest {
         
         val input = MultiServiceBillInput(
             billId = BillId("BILL-001"),
-            billRunId = BillRunId("RUN-001"),
+            billRunId = BillingCycleId("RUN-001"),
             utilityId = utilityId,
             customerId = customerId,
             billPeriod = billPeriod,
