@@ -56,7 +56,13 @@ object BillingEngine {
         }
         
         // Step 3: Aggregate totals
-        val aggregation = ChargeAggregator.aggregate(charges, input.priorBalance)
+        val aggregation = ChargeAggregator.aggregate(charges, input.accountBalance)
+        
+        // Step 4: Update account balance with this bill
+        val accountBalanceAfter = input.accountBalance.applyBill(
+            amount = aggregation.amountDue,
+            billDate = input.billPeriod.billDate
+        )
         
         return BillResult(
             billId = input.billId,
@@ -67,7 +73,8 @@ object BillingEngine {
             charges = charges,
             totalCharges = aggregation.totalCharges,
             totalCredits = aggregation.totalCredits,
-            priorBalance = input.priorBalance,
+            accountBalanceBefore = input.accountBalance,
+            accountBalanceAfter = accountBalanceAfter,
             amountDue = aggregation.amountDue,
             dueDate = input.billPeriod.dueDate,
             computedAt = computedAt

@@ -62,7 +62,7 @@ class BillingEngineTest {
                 )
             ),
             rateTariff = tariff,
-            priorBalance = Money(0)
+            accountBalance = AccountBalance.zero()
         )
         
         // When: Calculate the bill
@@ -159,7 +159,7 @@ class BillingEngineTest {
                 )
             ),
             rateTariff = tariff,
-            priorBalance = Money(0)
+            accountBalance = AccountBalance.zero()
         )
     }
 }

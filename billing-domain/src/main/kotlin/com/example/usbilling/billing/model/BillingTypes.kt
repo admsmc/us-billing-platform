@@ -18,7 +18,7 @@ import java.time.LocalDate
  * @property billPeriod The billing period
  * @property meterReads Meter readings for this period (start and end reads per meter)
  * @property rateTariff Rate structure to apply
- * @property priorBalance Outstanding balance from previous bills
+ * @property accountBalance Account balance state including payment history and adjustments
  */
 data class BillInput(
     val billId: BillId,
@@ -28,7 +28,7 @@ data class BillInput(
     val billPeriod: BillingPeriod,
     val meterReads: List<MeterReadPair>,
     val rateTariff: RateTariff,
-    val priorBalance: Money
+    val accountBalance: AccountBalance
 )
 
 /**
@@ -73,8 +73,9 @@ data class MeterReadPair(
  * @property charges All line item charges
  * @property totalCharges Sum of all positive charges
  * @property totalCredits Sum of all negative charges (as positive number)
- * @property priorBalance Balance carried forward from previous bills
- * @property amountDue Total amount due (totalCharges - totalCredits + priorBalance)
+ * @property accountBalanceBefore Account balance before this bill
+ * @property accountBalanceAfter Account balance after applying this bill
+ * @property amountDue Total amount due (totalCharges - totalCredits + prior balance)
  * @property dueDate Payment due date
  * @property computedAt When this bill was calculated
  */
@@ -87,7 +88,8 @@ data class BillResult(
     val charges: List<ChargeLineItem>,
     val totalCharges: Money,
     val totalCredits: Money,
-    val priorBalance: Money,
+    val accountBalanceBefore: AccountBalance,
+    val accountBalanceAfter: AccountBalance,
     val amountDue: Money,
     val dueDate: LocalDate,
     val computedAt: Instant
