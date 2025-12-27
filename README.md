@@ -1,6 +1,6 @@
 # US Billing Platform
 
-**Forked from us-payroll-platform (commit a07abf4) on 2025-12-27**
+**Forked from us-payroll-platform (commit 68adb8e) on 2025-12-27**
 
 Enterprise-focused, Kotlin-based utility billing platform with a functional-core architecture (pure calculation domain) surrounded by service modules.
 

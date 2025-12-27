@@ -3,9 +3,10 @@
 ## Provenance
 
 **Forked from**: `us-payroll-platform`  
-**Source commit**: `a07abf4` (Hardening config and orchestrator integration tests)  
+**Source commit**: `68adb8e` (Add performance optimizations and production configuration support)  
 **Fork date**: 2025-12-27  
-**Git history**: Preserved via `git clone` (upstream remote: `payroll-upstream`)
+**Git history**: Preserved via `git clone` (upstream remote: `payroll-upstream`)  
+**Rebase**: Updated from initial a07abf4 to 68adb8e to include latest performance improvements
 
 ## Rationale
 
