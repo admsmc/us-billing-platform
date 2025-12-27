@@ -1,34 +1,45 @@
-# US Payroll Platform
+# US Billing Platform
 
-Enterprise-focused, Kotlin-based US payroll platform with a functional-core architecture (pure calculation domain) surrounded by service modules.
+**Forked from us-payroll-platform (commit a07abf4) on 2025-12-27**
 
-Status: **active development**. This README reflects repo capabilities as of **2025-12-16**.
+Enterprise-focused, Kotlin-based utility billing platform with a functional-core architecture (pure calculation domain) surrounded by service modules.
 
-## High-level architecture
+This platform adapts the proven architecture from us-payroll-platform for utility customer information management and billing cycles.
 
-The system is structured as a functional core (pure payroll domain) surrounded by service modules and infrastructure. See:
+Status: **initial fork - in active development**. Refactoring from payroll domain to billing domain in progress.
 
-- `docs/architecture.md` – overall module layout and boundaries (domain, HR, tax, worker).
-- `tax-service/README.md` – state and federal tax configuration pipeline.
-- `labor-service/README.md` – state and federal labor standards pipeline.
+## Refactoring Status
 
-## Modules
+**Phase 1: Initial Fork** ✅ Complete
+- Forked from us-payroll-platform with full git history preserved
+- Renamed root project to us-billing-platform
+
+**Phase 2: Core Renames** 🚧 In Progress
+- Package names: `com.example.uspayroll` → `com.example.usbilling`
+- Identifiers: `EmployerId` → `UtilityId`, `EmployeeId` → `CustomerId`
+- Modules: `payroll-*` → `billing-*`, `hr-service` → `customer-service`
+
+**Phase 3: Domain Replacement** ⏳ Planned
+- Replace `payroll-domain` with `billing-domain`
+- Meter reading models, usage calculation, rate engine
+
+## Target Architecture
 
 Core:
-- `shared-kernel`: shared identifiers and value types.
-- `payroll-domain`: pure payroll calculation logic (functional core).
+- `shared-kernel`: shared identifiers (UtilityId, CustomerId, MeterId, BillId) and value types.
+- `billing-domain`: pure billing calculation logic (usage → charges → bill totals).
 
 Core services:
-- `hr-service`: HR system-of-record for employee profiles and pay periods (effective-dated + audit).
-- `tax-service` + `tax-content`: curated tax artifacts, validators, and DB-backed tax catalogs.
-- `labor-service`: curated labor standards artifacts, validators, and DB-backed labor standards catalog.
-- `payroll-orchestrator-service`: pay run workflows (off-cycle, corrections, retro), outbox/event publishing, and reconciliation.
-- `payroll-worker-service`: queue-driven per-employee paycheck computation + workflow execution.
-- `payments-service`: payment initiation/status workflows (system-of-record) and integration seam.
-- `reporting-service`: downstream reporting projections/consumers.
-- `filings-service`: filing “shapes” (941/940/W-2/W-3/state summaries) and reconciliation hooks.
+- `customer-service`: Customer Information System (CIS) for accounts and meters (effective-dated + audit).
+- `rate-service`: Rate tariff catalog (tiered rates, time-of-use, regulatory fees).
+- `regulatory-service`: Regulatory compliance rules and PUC reporting requirements.
+- `billing-orchestrator-service`: Billing cycle workflows (regular cycles, rebills, corrections).
+- `billing-worker-service`: Queue-driven per-customer bill computation.
+- `payments-service`: Payment processing and allocation (reused from payroll).
+- `reporting-service`: Usage analytics and billing reports.
+- `filings-service`: Regulatory reporting (PUC filings, compliance reports).
 
-Shared infrastructure:
+Shared infrastructure (reused from payroll):
 - `persistence-core`, `messaging-core`, `web-core`, `tenancy-core`: shared building blocks for JDBC, outbox/inbox, HTTP, and multi-tenant patterns.
 
 ## Current limitations (as of 2025-12-16)

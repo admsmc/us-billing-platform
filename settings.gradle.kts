@@ -6,9 +6,7 @@ pluginManagement {
     }
 }
 
-rootProject.name = "us-payroll-platform"
-
-rootProject.name = "us-payroll-platform"
+rootProject.name = "us-billing-platform"
 
 include(
     "shared-kernel",
