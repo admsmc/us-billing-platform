@@ -1,0 +1,165 @@
+package com.example.usbilling.billing.engine
+
+import com.example.usbilling.billing.model.*
+import com.example.usbilling.shared.*
+import org.junit.jupiter.api.Test
+import java.time.Instant
+import java.time.LocalDate
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+
+class BillingEngineTest {
+    
+    @Test
+    fun `calculateBill with flat rate produces expected charges`() {
+        // Given: A simple flat rate tariff for electric service
+        val utilityId = UtilityId("UTIL-001")
+        val customerId = CustomerId("CUST-001")
+        val billPeriod = BillingPeriod(
+            id = "2025-01",
+            utilityId = utilityId,
+            startDate = LocalDate.of(2025, 1, 1),
+            endDate = LocalDate.of(2025, 1, 31),
+            billDate = LocalDate.of(2025, 2, 1),
+            dueDate = LocalDate.of(2025, 2, 15),
+            frequency = BillingFrequency.MONTHLY
+        )
+        
+        val tariff = RateTariff.FlatRate(
+            customerCharge = Money(1500), // $15.00
+            ratePerUnit = Money(12), // $0.12 per kWh
+            unit = "kWh"
+        )
+        
+        val startRead = MeterRead(
+            meterId = "MTR-001",
+            usageType = UsageType.ELECTRIC,
+            readingValue = 10000.0,
+            timestamp = Instant.parse("2025-01-01T00:00:00Z"),
+            unit = "kWh"
+        )
+        
+        val endRead = MeterRead(
+            meterId = "MTR-001",
+            usageType = UsageType.ELECTRIC,
+            readingValue = 10500.0, // 500 kWh consumed
+            timestamp = Instant.parse("2025-01-31T23:59:59Z"),
+            unit = "kWh"
+        )
+        
+        val input = BillInput(
+            billId = BillId("BILL-001"),
+            billRunId = BillRunId("RUN-2025-01"),
+            utilityId = utilityId,
+            customerId = customerId,
+            billPeriod = billPeriod,
+            meterReads = listOf(
+                MeterReadPair(
+                    meterId = "MTR-001",
+                    usageType = UsageType.ELECTRIC,
+                    startRead = startRead,
+                    endRead = endRead
+                )
+            ),
+            rateTariff = tariff,
+            priorBalance = Money(0)
+        )
+        
+        // When: Calculate the bill
+        val result = BillingEngine.calculateBill(input)
+        
+        // Then: Should have customer charge + usage charge
+        assertEquals(2, result.charges.size)
+        
+        val customerCharge = result.charges.find { it.code == "CUSTOMER_CHARGE" }
+        assertTrue(customerCharge != null)
+        assertEquals(Money(1500), customerCharge.amount)
+        
+        val usageCharge = result.charges.find { it.code == "ELECTRIC_USAGE" }
+        assertTrue(usageCharge != null)
+        assertEquals(Money(6000), usageCharge.amount) // 500 kWh * $0.12
+        assertEquals(500.0, usageCharge.usageAmount)
+        
+        // Total should be customer charge + usage charge
+        assertEquals(Money(7500), result.totalCharges) // $75.00
+        assertEquals(Money(0), result.totalCredits)
+        assertEquals(Money(7500), result.amountDue)
+    }
+    
+    @Test
+    fun `calculateBill with tiered rate applies progressive rates`() {
+        // Given: A tiered rate structure
+        val tariff = RateTariff.TieredRate(
+            customerCharge = Money(2000), // $20.00
+            tiers = listOf(
+                RateTier(maxUsage = 300.0, ratePerUnit = Money(10)), // $0.10 for first 300 kWh
+                RateTier(maxUsage = null, ratePerUnit = Money(15))    // $0.15 for usage above 300 kWh
+            ),
+            unit = "kWh"
+        )
+        
+        val input = createTestInput(
+            tariff = tariff,
+            consumption = 500.0 // 300 @ $0.10 + 200 @ $0.15
+        )
+        
+        // When: Calculate the bill
+        val result = BillingEngine.calculateBill(input)
+        
+        // Then: Should have customer charge + two tier charges
+        assertEquals(3, result.charges.size)
+        
+        val tier1 = result.charges.find { it.code == "ELECTRIC_TIER1" }
+        assertTrue(tier1 != null)
+        assertEquals(Money(3000), tier1.amount) // 300 * $0.10
+        
+        val tier2 = result.charges.find { it.code == "ELECTRIC_TIER2" }
+        assertTrue(tier2 != null)
+        assertEquals(Money(3000), tier2.amount) // 200 * $0.15
+        
+        assertEquals(Money(8000), result.totalCharges) // $20 + $30 + $30
+    }
+    
+    private fun createTestInput(tariff: RateTariff, consumption: Double): BillInput {
+        val utilityId = UtilityId("UTIL-001")
+        val customerId = CustomerId("CUST-001")
+        
+        return BillInput(
+            billId = BillId("BILL-TEST"),
+            billRunId = BillRunId("RUN-TEST"),
+            utilityId = utilityId,
+            customerId = customerId,
+            billPeriod = BillingPeriod(
+                id = "TEST",
+                utilityId = utilityId,
+                startDate = LocalDate.of(2025, 1, 1),
+                endDate = LocalDate.of(2025, 1, 31),
+                billDate = LocalDate.of(2025, 2, 1),
+                dueDate = LocalDate.of(2025, 2, 15),
+                frequency = BillingFrequency.MONTHLY
+            ),
+            meterReads = listOf(
+                MeterReadPair(
+                    meterId = "MTR-TEST",
+                    usageType = UsageType.ELECTRIC,
+                    startRead = MeterRead(
+                        meterId = "MTR-TEST",
+                        usageType = UsageType.ELECTRIC,
+                        readingValue = 10000.0,
+                        timestamp = Instant.now(),
+                        unit = "kWh"
+                    ),
+                    endRead = MeterRead(
+                        meterId = "MTR-TEST",
+                        usageType = UsageType.ELECTRIC,
+                        readingValue = 10000.0 + consumption,
+                        timestamp = Instant.now(),
+                        unit = "kWh"
+                    )
+                )
+            ),
+            rateTariff = tariff,
+            priorBalance = Money(0)
+        )
+    }
+}
