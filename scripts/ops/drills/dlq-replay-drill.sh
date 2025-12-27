@@ -37,6 +37,9 @@ Env (optional):
 
   # Root cause injection: misconfigure worker's internal JWT signing key for orchestrator.
   # Orchestrator verifier key remains stable in docker-compose.ops-drills.yml.
+  # NOTE: These env vars are intentionally used for failure injection in this drill.
+  # Normal deployments should use Spring Boot profiles (application-benchmark.yml, etc.)
+  # rather than environment variable overrides for Map properties.
   DOWNSTREAMS_ORCHESTRATOR_INTERNAL_JWT_SECRET_BAD (default: bad-internal-token)
   DOWNSTREAMS_ORCHESTRATOR_INTERNAL_JWT_SECRET_GOOD (default: dev-internal-token)
 

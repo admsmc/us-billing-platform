@@ -19,6 +19,8 @@ COPY gradle.lockfile gradle.lockfile
 COPY shared-kernel shared-kernel
 COPY time-domain time-domain
 COPY web-core web-core
+COPY tenancy-core tenancy-core
+COPY persistence-core persistence-core
 COPY time-ingestion-service time-ingestion-service
 
 RUN --mount=type=cache,target=/home/gradle/.gradle,uid=1000,gid=1000 \

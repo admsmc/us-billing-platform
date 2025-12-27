@@ -19,6 +19,6 @@ services:
     ports:
       - "8085:8085"
 
-  payroll-worker-service:
-    ports:
-      - "8088:8088"
+  # payroll-worker-service:
+  #   ports:
+  #     - "8088:8088"

@@ -8,6 +8,9 @@ import org.springframework.validation.annotation.Validated
 @ConfigurationProperties(prefix = "downstreams.hr")
 class HrClientProperties : DownstreamHttpClientProperties() {
     init {
-        baseUrl = "http://localhost:8081"
+        // Default to the local dev HR service, but prefer the DOWNSTREAMS_HR_BASE_URL
+        // environment variable when present (e.g., Docker compose).
+        val envBaseUrl = System.getenv("DOWNSTREAMS_HR_BASE_URL")
+        baseUrl = envBaseUrl?.takeIf { it.isNotBlank() } ?: "http://localhost:8081"
     }
 }

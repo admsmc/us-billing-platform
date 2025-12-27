@@ -110,6 +110,7 @@ class PayRunRepository(
         runType: com.example.uspayroll.orchestrator.payrun.model.PayRunType,
         runSequence: Int,
         requestedIdempotencyKey: String?,
+        initialStatus: PayRunStatus = PayRunStatus.QUEUED,
     ): CreateOrGetPayRunResult {
         // IMPORTANT: Use ON CONFLICT DO NOTHING so uniqueness collisions do not abort the
         // surrounding @Transactional payrun start flow (Postgres marks the transaction as aborted
@@ -133,7 +134,7 @@ class PayRunRepository(
             payPeriodId,
             runType.name,
             runSequence,
-            PayRunStatus.QUEUED.name,
+            initialStatus.name,
             com.example.uspayroll.orchestrator.payrun.model.ApprovalStatus.PENDING.name,
             com.example.uspayroll.orchestrator.payrun.model.PaymentStatus.UNPAID.name,
             requestedIdempotencyKey,
@@ -359,12 +360,13 @@ class PayRunRepository(
             SET status = ?,
                 finalize_started_at = COALESCE(finalize_started_at, CURRENT_TIMESTAMP),
                 updated_at = CURRENT_TIMESTAMP
-            WHERE employer_id = ? AND pay_run_id = ? AND status = ?
+            WHERE employer_id = ? AND pay_run_id = ? AND status IN (?, ?)
             """.trimIndent(),
             PayRunStatus.RUNNING.name,
             employerId,
             payRunId,
             PayRunStatus.QUEUED.name,
+            PayRunStatus.PENDING.name,
         )
         return updated == 1
     }

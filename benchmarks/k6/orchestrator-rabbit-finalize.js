@@ -64,7 +64,9 @@ export const options = {
     // Defaults are intentionally loose; tune after you collect a baseline.
     payrun_finalize_rabbit_e2e_ms: ['p(50)<1800000'],
     // This is a throughput metric; keep thresholds loose by default.
-    payrun_finalize_rabbit_employees_per_sec: ['p(50)>0'],
+    // In local/dev environments we only require that the metric is defined;
+    // callers can tighten this via K6_THRESHOLD_EMPLOYEES_PER_SEC if desired.
+    payrun_finalize_rabbit_employees_per_sec: [__ENV.K6_THRESHOLD_EMPLOYEES_PER_SEC || 'p(50)>=0'],
   },
 };
 

@@ -3,6 +3,8 @@ package com.example.uspayroll.orchestrator.payrun.model
 import java.time.Instant
 
 enum class PayRunStatus {
+    /** Payrun created but items not yet inserted (async-first pattern). */
+    PENDING,
     QUEUED,
     RUNNING,
     FINALIZED,

@@ -1,62 +1,84 @@
+# Queue-driven parallel benchmark configuration
+# Usage: docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.bench-parallel.yml up -d
+# Scale workers: docker compose ... up -d --scale payroll-worker-service=4
+
 services:
   rabbitmq:
     image: rabbitmq:3-management
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-guest}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+      # Disable Khepri metadata store to avoid startup timeout on ARM64/Apple Silicon
+      # Khepri is the new RabbitMQ metadata store (3.13+) but has slow initialization
+      # For benchmarks/dev, classic metadata store is sufficient and faster
+      RABBITMQ_METADATA_STORE: mnesia
     ports:
       - "5672:5672"
       - "15672:15672"
+
+  postgres:
+    volumes:
+      - benchmark-pgdata:/var/lib/postgresql/data
 
   payroll-orchestrator-service:
     depends_on:
       - rabbitmq
     environment:
+      # Activate benchmark profile with proper JWT config
+      SPRING_PROFILES_ACTIVE: benchmark
+      
+      # Override JWT secret via env var if needed
+      ORCHESTRATOR_INTERNAL_AUTH_JWT_KEYS_K1: ${DOWNSTREAMS_ORCHESTRATOR_INTERNAL_JWT_SECRET:-dev-internal-token}
+      
       # Enable queue-driven finalize flow
       ORCHESTRATOR_JOBS_RABBIT_ENABLED: "true"
       ORCHESTRATOR_OUTBOX_RABBIT_RELAY_ENABLED: "true"
       ORCHESTRATOR_PAYRUN_FINALIZER_ENABLED: "true"
-
+      
+      # Finalizer tuning
+      ORCHESTRATOR_PAYRUN_FINALIZER_FIXED_DELAY_MILLIS: 1000
+      ORCHESTRATOR_PAYRUN_FINALIZER_BATCH_SIZE: 50
+      
       # Enable benchmark-only Phase B endpoints (render/export)
       ORCHESTRATOR_BENCHMARKS_ENABLED: ${ORCHESTRATOR_BENCHMARKS_ENABLED:-true}
       ORCHESTRATOR_BENCHMARKS_TOKEN: ${WORKER_BENCHMARKS_TOKEN:-dev-secret}
-
+      
       # RabbitMQ connection
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_PORT: 5672
       SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-guest}
       SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
-
-      # Required so worker can call internal endpoints (JWT verifier keyring)
-      ORCHESTRATOR_INTERNAL_AUTH_JWT_KEYS_K1: ${DOWNSTREAMS_ORCHESTRATOR_INTERNAL_JWT_SECRET:-dev-internal-token}
-      ORCHESTRATOR_INTERNAL_AUTH_JWT_DEFAULT_KID: ${DOWNSTREAMS_ORCHESTRATOR_INTERNAL_JWT_KID:-k1}
 
   payroll-worker-service:
     depends_on:
       - rabbitmq
-
     environment:
+      # Activate benchmark profile with proper JWT config
+      SPRING_PROFILES_ACTIVE: benchmark
+      
+      # Override JWT secret via env var if needed
+      DOWNSTREAMS_ORCHESTRATOR_INTERNAL_JWT_SECRET: ${DOWNSTREAMS_ORCHESTRATOR_INTERNAL_JWT_SECRET:-dev-internal-token}
+      
       # Enable queue consumption for per-employee finalize jobs
       WORKER_JOBS_RABBIT_ENABLED: "true"
       WORKER_JOBS_FINALIZE_EMPLOYEE_ENABLED: "true"
       WORKER_JOBS_LEGACY_PAYRUN_ENABLED: "false"
-
+      
       # RabbitMQ connection
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_PORT: 5672
       SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-guest}
       SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
-
-      # Internal JWT signing secret for orchestrator internal endpoints
-      DOWNSTREAMS_ORCHESTRATOR_INTERNAL_JWT_SECRET: ${DOWNSTREAMS_ORCHESTRATOR_INTERNAL_JWT_SECRET:-dev-internal-token}
-      DOWNSTREAMS_ORCHESTRATOR_INTERNAL_JWT_KID: ${DOWNSTREAMS_ORCHESTRATOR_INTERNAL_JWT_KID:-k1}
-
-      # Optional: enable queue depth gauges to resolve queue properties
-      # (Requires broker access; safe defaults.)
+      
+      # Redis caching (Phase 3) - disabled by default, enable with BENCH_ENABLE_REDIS=true
+      CACHE_ENABLED: "${BENCH_ENABLE_REDIS:-false}"
+      
+      # Optional: enable queue depth gauges
       WORKER_METRICS_RABBIT_QUEUE_DEPTH_FIXED_DELAY_MILLIS: "5000"
 
   edge-service:
-    # For parallel benchmarks we typically hit orchestrator directly.
-    # Keeping edge-service port exposed is fine.
     depends_on:
       - payroll-orchestrator-service
+
+volumes:
+  benchmark-pgdata:

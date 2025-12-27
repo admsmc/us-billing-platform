@@ -7,7 +7,6 @@ import com.example.uspayroll.orchestrator.payrun.persistence.PayRunRepository
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
-import org.springframework.scheduling.annotation.EnableScheduling
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
@@ -19,7 +18,6 @@ data class PayRunFinalizerProperties(
     var fixedDelayMillis: Long = 1_000L,
 )
 
-@EnableScheduling
 @EnableConfigurationProperties(PayRunFinalizerProperties::class)
 @Component
 class PayRunFinalizer(
@@ -33,9 +31,20 @@ class PayRunFinalizer(
 
     @Scheduled(fixedDelayString = "\${orchestrator.payrun.finalizer.fixed-delay-millis:1000}")
     fun tick() {
-        if (!props.enabled) return
+        if (!props.enabled) {
+            logger.trace("payrun.finalizer.tick.disabled")
+            return
+        }
 
         val running = payRunRepository.listPayRunsByStatus(PayRunStatus.RUNNING, limit = props.batchSize)
+
+        logger.debug(
+            "payrun.finalizer.tick enabled={} batchSize={} runningCount={}",
+            props.enabled,
+            props.batchSize,
+            running.size,
+        )
+
         if (running.isEmpty()) return
 
         running.forEach { run ->

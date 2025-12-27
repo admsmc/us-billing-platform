@@ -1,5 +1,6 @@
 package com.example.uspayroll.orchestrator.jobs
 
+import com.example.uspayroll.messaging.jobs.CreatePayRunItemsJob
 import com.example.uspayroll.messaging.jobs.FinalizePayRunEmployeeJob
 import com.example.uspayroll.messaging.jobs.FinalizePayRunJobRouting
 import com.example.uspayroll.orchestrator.outbox.OutboxDestinationType
@@ -19,6 +20,7 @@ data class OrchestratorRabbitJobsProperties(
     var enabled: Boolean = false,
     var exchange: String = FinalizePayRunJobRouting.EXCHANGE,
     var finalizeEmployeeRoutingKey: String = FinalizePayRunJobRouting.FINALIZE_EMPLOYEE,
+    var createItemsRoutingKey: String = FinalizePayRunJobRouting.CREATE_ITEMS,
 )
 
 @Service
@@ -98,5 +100,58 @@ class PayRunFinalizeJobProducer(
         }
 
         return inserted
+    }
+
+    /**
+     * Transactionally enqueue bulk item creation job (async-first pattern).
+     *
+     * This job will chunk employeeIds and insert pay_run_item rows in batches,
+     * then publish per-employee finalize jobs.
+     */
+    @Transactional
+    fun enqueueCreateItemsJob(
+        employerId: String,
+        payRunId: String,
+        payPeriodId: String,
+        runType: String,
+        runSequence: Int,
+        employeeIds: List<String>,
+        earningOverridesByEmployeeId: Map<String, List<com.example.uspayroll.messaging.jobs.PayRunEarningOverrideJob>> = emptyMap(),
+        chunkSize: Int = 2000,
+        now: Instant = Instant.now(),
+    ): Boolean {
+        if (!props.enabled) return false
+
+        val msg = CreatePayRunItemsJob(
+            messageId = "msg-${UUID.randomUUID()}",
+            employerId = employerId,
+            payRunId = payRunId,
+            payPeriodId = payPeriodId,
+            runType = runType,
+            runSequence = runSequence,
+            employeeIds = employeeIds,
+            earningOverridesByEmployeeId = earningOverridesByEmployeeId,
+            chunkSize = chunkSize,
+        )
+
+        // Use deterministic eventId for idempotency.
+        val eventId = "job-create-items:$employerId:$payRunId"
+
+        try {
+            outbox.enqueue(
+                topic = props.exchange,
+                eventKey = props.createItemsRoutingKey,
+                eventType = "CreatePayRunItemsJob",
+                eventId = eventId,
+                aggregateId = "$employerId:$payRunId",
+                payloadJson = objectMapper.writeValueAsString(msg),
+                destinationType = OutboxDestinationType.RABBIT,
+                now = now,
+            )
+            return true
+        } catch (_: DataIntegrityViolationException) {
+            // Already enqueued.
+            return false
+        }
     }
 }

@@ -61,7 +61,7 @@ class OrchestratorClientProperties : DownstreamHttpClientProperties() {
     var internalJwtSubject: String = "payroll-worker-service"
 
     /** Key id (kid) for the internal JWT signing key. Must match orchestrator's configured keyring kid. */
-    var internalJwtKid: String = "k1"
+    var internalJwtKid: String = ""
 
     /** Token TTL (seconds). Keep this short in production. */
     var internalJwtTtlSeconds: Long = 60

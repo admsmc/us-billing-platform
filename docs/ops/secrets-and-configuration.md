@@ -41,10 +41,30 @@ Internal operational endpoints are protected and should never be exposed publicl
 mTLS remains an infrastructure concern (service mesh / SPIFFE), but this repo supports an application-level internal JWT (HS256) option so service-to-service auth can be production-grade even without a mesh.
 
 ### Orchestrator internal endpoints
-Orchestrator internal endpoints (e.g. `/payruns/internal/**`) require a short-lived internal JWT (HS256):
-- Verifier keyring (recommended for rotation):
-  - `orchestrator.internal-auth.jwt-keys.<kid>=<random>` (e.g. `orchestrator.internal-auth.jwt-keys.k1=...`)
-  - `orchestrator.internal-auth.jwt-default-kid=k1` (optional; used only when a token has no `kid` header)
+Orchestrator internal endpoints (e.g. `/payruns/internal/**`) require a short-lived internal JWT (HS256).
+
+#### Configuration via Spring Boot Profiles (Recommended)
+For development and benchmarks, use Spring profiles (e.g. `application-benchmark.yml`):
+```yaml
+orchestrator:
+  internal-auth:
+    jwt-keys:
+      k1: <secret>
+    jwt-default-kid: k1
+```
+
+Activate via: `SPRING_PROFILES_ACTIVE=benchmark`
+
+#### Configuration via Environment Variables
+For production Kubernetes/Docker deployments, use environment variables:
+- Verifier keyring:
+  - Via property: `orchestrator.internal-auth.jwt-keys.<kid>=<random>`
+  - Note: Environment variable Map binding requires YAML-in-JSON approach:
+    ```yaml
+    SPRING_APPLICATION_JSON: |
+      {"orchestrator":{"internal-auth":{"jwt-keys":{"k1":"<secret>"}}}}
+    ```
+  - Or use `orchestrator.internal-auth.jwt-shared-secret=<random>` for single-key setup
 - Token claims constraints:
   - `orchestrator.internal-auth.jwt-issuer=us-payroll-platform` (default)
   - `orchestrator.internal-auth.jwt-audience=payroll-orchestrator-service` (default)

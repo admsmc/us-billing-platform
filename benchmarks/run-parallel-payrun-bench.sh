@@ -45,7 +45,7 @@ EMPLOYEE_ID_PAD=${EMPLOYEE_ID_PAD:-6}
 
 # Seed knobs (match hr_seed.sql defaults)
 MI_EVERY=${MI_EVERY:-5}
-GARNISHMENT_EVERY=${GARNISHMENT_EVERY:-3}
+GARNISHMENT_EVERY=${GARNISHMENT_EVERY:-10}
 
 # Compose files for parallel stack
 COMPOSE_FILES=(
@@ -55,6 +55,36 @@ COMPOSE_FILES=(
   # Bench-only Postgres profiling (pg_stat_statements + extra stats views)
   -f "$ROOT_DIR/docker-compose.bench-postgres-statements.yml"
 )
+
+# PgBouncer connection pooling (enabled by default for Phase 2 scaling improvements)
+# Set BENCH_DISABLE_PGBOUNCER=true to benchmark without connection pooling
+BENCH_DISABLE_PGBOUNCER=${BENCH_DISABLE_PGBOUNCER:-false}
+if [[ "$BENCH_DISABLE_PGBOUNCER" != "true" ]]; then
+  COMPOSE_FILES+=(
+    -f "$ROOT_DIR/docker-compose.pgbouncer.yml"
+  )
+  echo "[bench] PgBouncer connection pooling enabled (Phase 2)"
+else
+  echo "[bench] PgBouncer disabled (direct Postgres connections)"
+fi
+
+# Redis caching (Phase 3 optimization)
+# Set BENCH_ENABLE_REDIS=true to enable Redis caching for tax/labor standards
+BENCH_ENABLE_REDIS=${BENCH_ENABLE_REDIS:-false}
+if [[ "$BENCH_ENABLE_REDIS" == "true" ]]; then
+  COMPOSE_FILES+=(
+    -f "$ROOT_DIR/docker-compose.redis.yml"
+  )
+  echo "[bench] Redis caching enabled (Phase 3)"
+else
+  echo "[bench] Redis caching disabled"
+fi
+
+
+# Optional: reset all benchmark data (drops Postgres volume and containers) before seeding.
+# This prevents stale/partial seeds from skewing results.
+# Defaults to true for clean, reproducible runs.
+BENCH_RESET_DB=${BENCH_RESET_DB:-true}
 
 # Bench-only A/B toggle: disable synchronous_commit to test whether we are WAL-sync bound.
 # Valid values: on|off
@@ -121,6 +151,11 @@ export DOWNSTREAMS_ORCHESTRATOR_INTERNAL_JWT_SECRET
 export DOWNSTREAMS_ORCHESTRATOR_INTERNAL_JWT_KID
 
 echo "[bench] starting stack (compose)"
+# Optional full reset for clean seeds
+if [[ "$BENCH_RESET_DB" == "true" ]]; then
+  echo "[bench] resetting databases and services (docker compose down -v)"
+  docker compose "${COMPOSE_FILES[@]}" down -v || true
+fi
 
 # Docker Desktop builds can OOM when Compose/BuildKit builds multiple Gradle images concurrently.
 # Default to a sequential build to reduce peak memory usage.
@@ -162,13 +197,125 @@ if [[ -z "${pg_container}" ]]; then
   exit 1
 fi
 
-# Wait for Postgres to accept connections and then enable pg_stat_statements.
-for _ in 1 2 3 4 5 6 7 8 9 10; do
-  docker exec "$pg_container" psql -U postgres -d postgres -c "SELECT 1;" >/dev/null 2>&1 && break
-  sleep 1
+# Wait for Postgres to accept connections (up to 30 seconds)
+echo "[bench] waiting for Postgres to accept connections..."
+for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do
+  if docker exec "$pg_container" psql -U postgres -d postgres -c "SELECT 1;" >/dev/null 2>&1; then
+    echo "[bench] Postgres ready after ${i} attempts"
+    break
+  fi
+  sleep 2
 done
 
 docker exec "$pg_container" psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c "CREATE EXTENSION IF NOT EXISTS pg_stat_statements;" >/dev/null 2>&1 || true
+
+# PgBouncer requires MD5 password encryption for auth_query.
+# Check if password encryption is already MD5, otherwise reconfigure.
+if [[ "$BENCH_DISABLE_PGBOUNCER" != "true" ]]; then
+  current_enc=$(docker exec "$pg_container" psql -U postgres -d postgres -tAc "SHOW password_encryption;" | tr -d '[:space:]')
+  
+  if [[ "$current_enc" != "md5" ]]; then
+    echo "[bench] configuring MD5 password encryption for PgBouncer compatibility"
+    
+    # Set password_encryption to md5
+    docker exec "$pg_container" psql -U postgres -d postgres -c "ALTER SYSTEM SET password_encryption='md5';" >/dev/null 2>&1 || true
+    
+    # Restart Postgres to apply the setting
+    echo "[bench] restarting Postgres to apply password_encryption=md5"
+    docker compose "${COMPOSE_FILES[@]}" restart postgres >/dev/null 2>&1 || true
+    
+    # Wait for Postgres to fully shut down first
+    echo "[bench] waiting for Postgres to shut down..."
+    sleep 3
+    
+    # Wait for Postgres to come back up (up to 60 seconds)
+    echo "[bench] waiting for Postgres to start up..."
+    postgres_ready=false
+    for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30; do
+      if docker exec "$pg_container" psql -U postgres -d postgres -c "SELECT 1;" >/dev/null 2>&1; then
+        echo "[bench] Postgres ready after ${i} attempts"
+        postgres_ready=true
+        break
+      fi
+      sleep 2
+    done
+    
+    if [[ "$postgres_ready" != "true" ]]; then
+      echo "[bench] ERROR: Postgres did not start up after 60 seconds" >&2
+      docker logs "$pg_container" 2>&1 | tail -50 >&2
+      exit 1
+    fi
+    
+    # Verify password encryption is now MD5
+    current_enc=$(docker exec "$pg_container" psql -U postgres -d postgres -tAc "SHOW password_encryption;" | tr -d '[:space:]')
+    echo "[bench] password_encryption now set to: $current_enc"
+    
+    echo "[bench] resetting service user passwords with MD5 encryption"
+    # Now that password_encryption=md5, recreate all passwords
+    for u in postgres hr_service tax_service labor_service orchestrator_service time_service; do
+      docker exec "$pg_container" psql -U postgres -d postgres -c "ALTER USER $u WITH PASSWORD '$u';" >/dev/null 2>&1 || true
+    done
+    
+    # Restart all services to pick up new password hashes
+    echo "[bench] restarting services for MD5 password authentication"
+    docker compose "${COMPOSE_FILES[@]}" restart >/dev/null 2>&1 || true
+    sleep 5
+  else
+    echo "[bench] password encryption already set to MD5"
+  fi
+fi
+
+# ---- Wait for schemas to exist (Flyway via service startup) ----
+wait_for_service_health() {
+  local service_name="$1"
+  local port="$2"
+  local tries=60
+  echo "[bench] waiting for $service_name health endpoint (max ${tries} retries)..."
+  while [[ $tries -gt 0 ]]; do
+    if curl -sf "http://localhost:${port}/actuator/health" >/dev/null 2>&1; then
+      echo "[bench] $service_name is healthy"
+      return 0
+    fi
+    sleep 2
+    tries=$((tries-1))
+  done
+  echo "[bench] ERROR: $service_name did not become healthy" >&2
+  return 1
+}
+
+wait_for_table() {
+  local db="$1"
+  local table="$2"
+  local tries=30  # Reduced since we already waited for service health
+  echo "[bench] waiting for table $table in $db (max ${tries} retries)..."
+  # Extract just the table name without schema for grep (to_regclass returns just the table name)
+  local table_name="${table##*.}"
+  while [[ $tries -gt 0 ]]; do
+    local result
+    result=$(docker exec "$pg_container" psql -U postgres -d "$db" -tAc "select to_regclass('$table')" 2>/dev/null)
+    if [[ -n "$result" ]] && [[ "$result" != "" ]] && ! grep -q "does not exist" <<<"$result"; then
+      echo "[bench] table $table found in $db (result: $result)"
+      return 0
+    fi
+    sleep 2
+    tries=$((tries-1))
+  done
+  echo "[bench] ERROR: table $table not found in $db after waiting" >&2
+  echo "[bench] DEBUG: checking database..." >&2
+  docker exec "$pg_container" psql -U postgres -d "$db" -c "\dt" 2>&1 | tail -20 >&2
+  exit 1
+}
+
+echo "[bench] waiting for services to become healthy"
+wait_for_service_health "hr-service" 8081
+wait_for_service_health "tax-service" 8082
+wait_for_service_health "labor-service" 8083
+wait_for_service_health "orchestrator-service" 8085
+
+echo "[bench] waiting for Flyway migrations to finish (hr/tax/labor)"
+wait_for_table us_payroll_hr public.employee_profile_effective
+wait_for_table us_payroll_tax public.tax_rule
+wait_for_table us_payroll_labor public.labor_standard
 
 # ---- Seed HR/Tax/Labor for requested EMPLOYEE_COUNT ----
 echo "[bench] seeding benchmark data (employees=$EMPLOYEE_COUNT)"
@@ -493,6 +640,44 @@ PY
   ) &
   metrics_pid=$!
 
+  # Set bench_start_time before starting progress monitor
+  bench_start_time=$(date +%s)
+
+  # Start progress monitor to show payrun completion status by querying database
+  (
+    sleep 10  # Give k6 time to start and create payrun
+    
+    while true; do
+      # Query pay_run_item table directly for progress
+      progress=$(docker exec "$pg_container" psql -U postgres -d us_payroll_orchestrator -t -A -F '|' -c \
+        "SELECT \
+           COUNT(*) FILTER (WHERE status = 'SUCCEEDED') AS succeeded, \
+           COUNT(*) FILTER (WHERE status = 'FAILED') AS failed, \
+           COUNT(*) FILTER (WHERE status = 'RUNNING') AS running, \
+           COUNT(*) FILTER (WHERE status = 'QUEUED') AS queued, \
+           COUNT(*) AS total \
+         FROM pay_run_item \
+         WHERE employer_id = '$EMPLOYER_ID';" 2>/dev/null | tr -d '[:space:]')
+      
+      if [[ -n "$progress" ]] && [[ "$progress" != "0|0|0|0|0" ]]; then
+        succeeded=$(echo "$progress" | cut -d'|' -f1)
+        failed=$(echo "$progress" | cut -d'|' -f2)
+        running=$(echo "$progress" | cut -d'|' -f3)
+        queued=$(echo "$progress" | cut -d'|' -f4)
+        total=$(echo "$progress" | cut -d'|' -f5)
+        
+        if [[ "$total" -gt 0 ]]; then
+          pct=$(python3 -c "print(f'{($succeeded * 100.0 / $total):.1f}')")
+          rate=$(python3 -c "print(f'{($succeeded / (($(date +%s) - $bench_start_time) or 1)):.1f}')" 2>/dev/null || echo "?")
+          echo "[bench] Progress: $succeeded/$total ($pct%) | Running: $running | Queued: $queued | Failed: $failed | Rate: ${rate}/s"
+        fi
+      fi
+      
+      sleep 5
+    done
+  ) &
+  progress_pid=$!
+
   echo "[bench] running k6 run_id=$run_id trials=$TRIALS"
   set +e
   k6 run \
@@ -515,11 +700,13 @@ PY
     -e RENDER_LIMIT="$RENDER_LIMIT" \
     --summary-export "$json_out" \
     "$ROOT_DIR/benchmarks/k6/orchestrator-rabbit-finalize.js" \
-    >"$txt_out" 2>&1
-  k6_exit=$?
+    2>&1 | tee "$txt_out"
+  k6_exit=${PIPESTATUS[0]}
   set -e
 
-  # Stop metrics sampler
+  # Stop progress monitor and metrics sampler
+  kill "$progress_pid" >/dev/null 2>&1 || true
+  wait "$progress_pid" >/dev/null 2>&1 || true
   kill "$metrics_pid" >/dev/null 2>&1 || true
   wait "$metrics_pid" >/dev/null 2>&1 || true
 

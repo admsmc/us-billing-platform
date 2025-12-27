@@ -1,0 +1,7 @@
+"postgres" "md53175bce1d3201d16594cebf9d7eb3f9d"
+"hr_service" "md5ac4fa5586dee88360c0f0d63f95ca881"
+"tax_service" "md5a4b4173e45564b88d9aa0643b7e70a74"
+"labor_service" "md5f397857721895a8001e6a3e74cf1b704"
+"orchestrator_service" "md5f75f6a0664982fc103c53e93487b0129"
+"reporting_service" "md57a679848ab819ccd9612e97534a38fac"
+"time_service" "md57f6c8cf8ba6b68ab5530fb7894e074b5"

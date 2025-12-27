@@ -35,25 +35,33 @@ class PayRunItemRepository(
         val distinct = employeeIds.distinct()
         if (distinct.isEmpty()) return
 
-        jdbcTemplate.batchUpdate(
-            """
-                INSERT INTO pay_run_item (
-                  employer_id, pay_run_id, employee_id,
-                  status, paycheck_id,
-                  attempt_count, last_error,
-                  started_at, completed_at, updated_at
-                ) VALUES (?, ?, ?, ?, NULL, 0, NULL, NULL, NULL, CURRENT_TIMESTAMP)
-                ON CONFLICT DO NOTHING
-            """.trimIndent(),
-            distinct.map { employeeId ->
-                arrayOf(
-                    employerId,
-                    payRunId,
-                    employeeId,
-                    PayRunItemStatus.QUEUED.name,
-                )
-            },
-        )
+        // PostgreSQL prepared statement parameter limit: 65,535
+        // Each row uses 4 parameters (employer_id, pay_run_id, employee_id, status).
+        // Use 16,000 as max (16000 * 4 = 64000 < 65535)
+        val maxRowsPerBatch = 16_000
+
+        distinct.chunked(maxRowsPerBatch).forEach { batch ->
+            // Build VALUES clause with placeholders
+            val valuesClause = batch.joinToString(",") { "(?, ?, ?, ?, NULL, 0, NULL, NULL, NULL, CURRENT_TIMESTAMP)" }
+
+            // Flatten parameters: each row contributes 4 params
+            val params = batch.flatMap { employeeId ->
+                listOf(employerId, payRunId, employeeId, PayRunItemStatus.QUEUED.name)
+            }
+
+            jdbcTemplate.update(
+                """
+                    INSERT INTO pay_run_item (
+                      employer_id, pay_run_id, employee_id,
+                      status, paycheck_id,
+                      attempt_count, last_error,
+                      started_at, completed_at, updated_at
+                    ) VALUES $valuesClause
+                    ON CONFLICT DO NOTHING
+                """.trimIndent(),
+                *params.toTypedArray(),
+            )
+        }
     }
 
     /**
@@ -188,22 +196,27 @@ class PayRunItemRepository(
     fun setEarningOverridesIfAbsentBatch(employerId: String, payRunId: String, earningOverridesByEmployeeId: Map<String, String>) {
         if (earningOverridesByEmployeeId.isEmpty()) return
 
-        jdbcTemplate.batchUpdate(
-            """
-            UPDATE pay_run_item
-            SET earning_overrides_json = ?, updated_at = CURRENT_TIMESTAMP
-            WHERE employer_id = ? AND pay_run_id = ? AND employee_id = ?
-              AND earning_overrides_json IS NULL
-            """.trimIndent(),
-            earningOverridesByEmployeeId.entries.map { (employeeId, json) ->
-                arrayOf(
-                    json,
-                    employerId,
-                    payRunId,
-                    employeeId,
-                )
-            },
-        )
+        // Each UPDATE uses 4 parameters (json, employer_id, pay_run_id, employee_id)
+        val maxRowsPerBatch = 10_000
+
+        earningOverridesByEmployeeId.entries.chunked(maxRowsPerBatch).forEach { batch ->
+            jdbcTemplate.batchUpdate(
+                """
+                UPDATE pay_run_item
+                SET earning_overrides_json = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE employer_id = ? AND pay_run_id = ? AND employee_id = ?
+                  AND earning_overrides_json IS NULL
+                """.trimIndent(),
+                batch.map { (employeeId, json) ->
+                    arrayOf(
+                        json,
+                        employerId,
+                        payRunId,
+                        employeeId,
+                    )
+                },
+            )
+        }
     }
 
     fun getOrAssignPaycheckId(employerId: String, payRunId: String, employeeId: String): String {
@@ -259,48 +272,59 @@ class PayRunItemRepository(
     fun assignPaycheckIdsIfAbsentBatch(employerId: String, payRunId: String, paycheckIdsByEmployeeId: Map<String, String>) {
         if (paycheckIdsByEmployeeId.isEmpty()) return
 
-        jdbcTemplate.batchUpdate(
-            """
-            UPDATE pay_run_item
-            SET paycheck_id = ?, updated_at = CURRENT_TIMESTAMP
-            WHERE employer_id = ? AND pay_run_id = ? AND employee_id = ?
-              AND paycheck_id IS NULL
-            """.trimIndent(),
-            paycheckIdsByEmployeeId.entries.map { (employeeId, paycheckId) ->
-                arrayOf(
-                    paycheckId,
-                    employerId,
-                    payRunId,
-                    employeeId,
-                )
-            },
-        )
+        // Each UPDATE uses 4 parameters (paycheck_id, employer_id, pay_run_id, employee_id)
+        val maxRowsPerBatch = 10_000
+
+        paycheckIdsByEmployeeId.entries.chunked(maxRowsPerBatch).forEach { batch ->
+            jdbcTemplate.batchUpdate(
+                """
+                UPDATE pay_run_item
+                SET paycheck_id = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE employer_id = ? AND pay_run_id = ? AND employee_id = ?
+                  AND paycheck_id IS NULL
+                """.trimIndent(),
+                batch.map { (employeeId, paycheckId) ->
+                    arrayOf(
+                        paycheckId,
+                        employerId,
+                        payRunId,
+                        employeeId,
+                    )
+                },
+            )
+        }
     }
 
     fun findPaycheckIds(employerId: String, payRunId: String, employeeIds: List<String>): Map<String, String> {
         val distinct = employeeIds.distinct()
         if (distinct.isEmpty()) return emptyMap()
 
-        val placeholders = distinct.joinToString(",") { "?" }
+        // PostgreSQL parameter limit: 65,535
+        // Each query uses 2 base params + N employee IDs, so max ~65K IDs per batch
+        val maxIdsPerBatch = 60_000
 
-        val rows = jdbcTemplate.query(
-            """
-            SELECT employee_id, paycheck_id
-            FROM pay_run_item
-            WHERE employer_id = ? AND pay_run_id = ?
-              AND employee_id IN ($placeholders)
-            """.trimIndent(),
-            { ps ->
-                var i = 1
-                ps.setString(i++, employerId)
-                ps.setString(i++, payRunId)
-                distinct.forEach { id -> ps.setString(i++, id) }
-            },
-        ) { rs, _ ->
-            rs.getString("employee_id") to rs.getString("paycheck_id")
+        val allRows = distinct.chunked(maxIdsPerBatch).flatMap { batch ->
+            val placeholders = batch.joinToString(",") { "?" }
+
+            jdbcTemplate.query(
+                """
+                SELECT employee_id, paycheck_id
+                FROM pay_run_item
+                WHERE employer_id = ? AND pay_run_id = ?
+                  AND employee_id IN ($placeholders)
+                """.trimIndent(),
+                { ps ->
+                    var i = 1
+                    ps.setString(i++, employerId)
+                    ps.setString(i++, payRunId)
+                    batch.forEach { id -> ps.setString(i++, id) }
+                },
+            ) { rs, _ ->
+                rs.getString("employee_id") to rs.getString("paycheck_id")
+            }
         }
 
-        return rows
+        return allRows
             .filter { (_, paycheckId) -> !paycheckId.isNullOrBlank() }
             .associate { (employeeId, paycheckId) -> employeeId to paycheckId }
     }
@@ -309,26 +333,32 @@ class PayRunItemRepository(
         val distinct = employeeIds.distinct()
         if (distinct.isEmpty()) return emptyMap()
 
-        val placeholders = distinct.joinToString(",") { "?" }
+        // PostgreSQL parameter limit: 65,535
+        // Each query uses 2 base params + N employee IDs, so max ~65K IDs per batch
+        val maxIdsPerBatch = 60_000
 
-        val rows = jdbcTemplate.query(
-            """
-            SELECT employee_id, earning_overrides_json
-            FROM pay_run_item
-            WHERE employer_id = ? AND pay_run_id = ?
-              AND employee_id IN ($placeholders)
-            """.trimIndent(),
-            { ps ->
-                var i = 1
-                ps.setString(i++, employerId)
-                ps.setString(i++, payRunId)
-                distinct.forEach { id -> ps.setString(i++, id) }
-            },
-        ) { rs, _ ->
-            rs.getString("employee_id") to rs.getString("earning_overrides_json")
+        val allRows = distinct.chunked(maxIdsPerBatch).flatMap { batch ->
+            val placeholders = batch.joinToString(",") { "?" }
+
+            jdbcTemplate.query(
+                """
+                SELECT employee_id, earning_overrides_json
+                FROM pay_run_item
+                WHERE employer_id = ? AND pay_run_id = ?
+                  AND employee_id IN ($placeholders)
+                """.trimIndent(),
+                { ps ->
+                    var i = 1
+                    ps.setString(i++, employerId)
+                    ps.setString(i++, payRunId)
+                    batch.forEach { id -> ps.setString(i++, id) }
+                },
+            ) { rs, _ ->
+                rs.getString("employee_id") to rs.getString("earning_overrides_json")
+            }
         }
 
-        return rows
+        return allRows
             .filter { (_, json) -> !json.isNullOrBlank() }
             .associate { (employeeId, json) -> employeeId to json }
     }

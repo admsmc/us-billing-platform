@@ -1,6 +1,31 @@
 package com.example.uspayroll.messaging.jobs
 
 /**
+ * Work item for creating pay_run_item rows in bulk for a payrun.
+ *
+ * This is phase 0 of the async-first finalization flow:
+ * 1. Orchestrator receives POST /payruns/finalize
+ * 2. Creates pay_run record with status PENDING
+ * 3. Publishes CreatePayRunItemsJob to queue
+ * 4. Returns 202 immediately
+ * 5. Worker chunks employeeIds and inserts in batches
+ * 6. Worker publishes FinalizePayRunEmployeeJob for each employee
+ * 7. Background finalizer transitions PENDING -> RUNNING -> FINALIZED
+ */
+data class CreatePayRunItemsJob(
+    val messageId: String,
+    val employerId: String,
+    val payRunId: String,
+    val payPeriodId: String,
+    val runType: String,
+    val runSequence: Int,
+    val employeeIds: List<String>,
+    val earningOverridesByEmployeeId: Map<String, List<PayRunEarningOverrideJob>> = emptyMap(),
+    /** Chunk size for batched INSERTs (default 2000). */
+    val chunkSize: Int = 2000,
+)
+
+/**
  * Work item for finalizing (computing + persisting) a single employee paycheck within a payrun.
  *
  * Delivery is assumed at-least-once; consumers must be idempotent.
@@ -42,6 +67,9 @@ data class PayRunEarningOverrideJob(
  */
 object FinalizePayRunJobRouting {
     const val EXCHANGE = "payrun.jobs"
+
+    // Bulk item creation (async-first pattern)
+    const val CREATE_ITEMS = "payrun.create.items"
 
     // Main
     const val FINALIZE_EMPLOYEE = "payrun.finalize.employee"

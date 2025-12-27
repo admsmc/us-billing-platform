@@ -81,6 +81,15 @@ spec:
               value: "false"
 
             # Orchestrator internal auth (JWT keyring). Leave blank to disable internal endpoints.
+            # NOTE: Environment variable syntax for Map properties does NOT work reliably with Spring Boot.
+            # Production deployments should use a ConfigMap with application-prod.yml containing:
+            #   orchestrator:
+            #     internal-auth:
+            #       jwt-keys:
+            #         k1: ${JWT_SECRET_FROM_ENV}
+            #       jwt-default-kid: k1
+            # Then mount the ConfigMap and set SPRING_CONFIG_ADDITIONAL_LOCATION.
+            # For now, keeping these for reference but they may not bind correctly.
             - name: ORCHESTRATOR_INTERNAL_AUTH_JWT_KEYS_K1
               valueFrom:
                 secretKeyRef:

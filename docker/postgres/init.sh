@@ -14,8 +14,16 @@ HR_DB_PASSWORD="${HR_DB_PASSWORD:-hr_service}"
 TAX_DB_PASSWORD="${TAX_DB_PASSWORD:-tax_service}"
 LABOR_DB_PASSWORD="${LABOR_DB_PASSWORD:-labor_service}"
 ORCHESTRATOR_DB_PASSWORD="${ORCHESTRATOR_DB_PASSWORD:-orchestrator_service}"
+TIME_DB_PASSWORD="${TIME_DB_PASSWORD:-time_service}"
 
+# Set password_encryption to md5 for this session
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<SQL
+-- Force MD5 password encryption for PgBouncer compatibility
+SET password_encryption = 'md5';
+
+-- Reset postgres user password with MD5
+ALTER USER postgres WITH PASSWORD '${POSTGRES_PASSWORD:-postgres}';
+
 DO \$\$
 BEGIN
   IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'hr_service') THEN
@@ -29,6 +37,9 @@ BEGIN
   END IF;
   IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'orchestrator_service') THEN
     CREATE USER orchestrator_service WITH PASSWORD '${ORCHESTRATOR_DB_PASSWORD}';
+  END IF;
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'time_service') THEN
+    CREATE USER time_service WITH PASSWORD '${TIME_DB_PASSWORD}';
   END IF;
 END
 \$\$;
@@ -46,8 +57,12 @@ WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'us_payroll_labor')\ge
 SELECT 'CREATE DATABASE us_payroll_orchestrator OWNER orchestrator_service'
 WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'us_payroll_orchestrator')\gexec
 
+SELECT 'CREATE DATABASE us_payroll_time OWNER time_service'
+WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'us_payroll_time')\gexec
+
 GRANT ALL PRIVILEGES ON DATABASE us_payroll_hr TO hr_service;
 GRANT ALL PRIVILEGES ON DATABASE us_payroll_tax TO tax_service;
 GRANT ALL PRIVILEGES ON DATABASE us_payroll_labor TO labor_service;
 GRANT ALL PRIVILEGES ON DATABASE us_payroll_orchestrator TO orchestrator_service;
+GRANT ALL PRIVILEGES ON DATABASE us_payroll_time TO time_service;
 SQL

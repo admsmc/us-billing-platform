@@ -1,0 +1,58 @@
+# PgBouncer connection pooling overlay
+# Usage: docker compose -f docker-compose.yml -f docker-compose.pgbouncer.yml up -d
+#
+# This overlay reconfigures all services to use PgBouncer instead of direct Postgres connections.
+# Benefits:
+# - Connection pooling reduces overhead
+# - Supports 8-16+ worker replicas without connection exhaustion
+# - Transaction-level pooling mode optimizes for high concurrency
+
+services:
+  hr-service:
+    depends_on:
+      - postgres
+      - pgbouncer
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://pgbouncer:6432/us_payroll_hr
+
+  tax-service:
+    depends_on:
+      - postgres
+      - pgbouncer
+    environment:
+      TAX_DB_URL: jdbc:postgresql://pgbouncer:6432/us_payroll_tax
+
+  labor-service:
+    depends_on:
+      - postgres
+      - pgbouncer
+    environment:
+      LABOR_DB_URL: jdbc:postgresql://pgbouncer:6432/us_payroll_labor
+
+  time-ingestion-service:
+    depends_on:
+      - postgres
+      - pgbouncer
+    environment:
+      TIME_DB_URL: jdbc:postgresql://pgbouncer:6432/us_payroll_time
+      TIME_DB_USERNAME: time_service
+      TIME_DB_PASSWORD: time_service
+
+  payroll-orchestrator-service:
+    depends_on:
+      - postgres
+      - pgbouncer
+      - time-ingestion-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://pgbouncer:6432/us_payroll_orchestrator
+      # Increase Hikari pool size for better utilization with PgBouncer
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: 20
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: 5
+
+  payroll-worker-service:
+    depends_on:
+      - pgbouncer
+    environment:
+      # Worker service doesn't directly access DB, but future caching might need connection pooling awareness
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: 10
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: 2

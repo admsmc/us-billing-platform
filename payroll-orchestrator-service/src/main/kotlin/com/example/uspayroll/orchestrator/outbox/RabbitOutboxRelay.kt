@@ -8,7 +8,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Configuration
-import org.springframework.scheduling.annotation.EnableScheduling
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.nio.charset.StandardCharsets
@@ -27,7 +26,6 @@ data class RabbitOutboxRelayProperties(
 )
 
 @Configuration
-@EnableScheduling
 @EnableConfigurationProperties(RabbitOutboxRelayProperties::class)
 class RabbitOutboxRelayConfig
 

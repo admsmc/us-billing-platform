@@ -137,6 +137,88 @@ class PayRunService(
         return StartPayRunResult(payRun = updatedPayRun, counts = counts, wasCreated = true)
     }
 
+    /**
+     * Async-first finalization pattern for scalability.
+     *
+     * Creates pay_run with PENDING status, enqueues bulk item creation job, returns immediately.
+     * A dedicated worker will:
+     * 1. Insert pay_run_item rows in chunks
+     * 2. Publish per-employee finalize jobs
+     * 3. Background finalizer transitions PENDING -> RUNNING -> FINALIZED
+     */
+    @Transactional
+    fun startFinalizationAsync(
+        employerId: String,
+        payPeriodId: String,
+        employeeIds: List<String>,
+        runType: PayRunType = PayRunType.REGULAR,
+        runSequence: Int = 1,
+        earningOverridesByEmployeeId: Map<String, List<PayRunEarningOverride>> = emptyMap(),
+        requestedPayRunId: String? = null,
+        idempotencyKey: String? = null,
+        chunkSize: Int = 2000,
+    ): StartPayRunResult {
+        val payRunId = requestedPayRunId ?: "run-${UUID.randomUUID()}"
+
+        val existingByKey = if (idempotencyKey != null) {
+            payRunRepository.findByIdempotencyKey(employerId, idempotencyKey)
+        } else {
+            null
+        }
+
+        if (existingByKey != null) {
+            val counts = payRunItemRepository.countsForPayRun(employerId, existingByKey.payRunId)
+            return StartPayRunResult(payRun = existingByKey, counts = counts, wasCreated = false)
+        }
+
+        val createOrGet = payRunRepository.createOrGetPayRun(
+            employerId = employerId,
+            payRunId = payRunId,
+            payPeriodId = payPeriodId,
+            runType = runType,
+            runSequence = runSequence,
+            requestedIdempotencyKey = idempotencyKey,
+            initialStatus = PayRunStatus.PENDING,
+        )
+
+        if (!createOrGet.wasCreated) {
+            val existing = createOrGet.payRun
+            val counts = payRunItemRepository.countsForPayRun(employerId, existing.payRunId)
+            return StartPayRunResult(payRun = existing, counts = counts, wasCreated = false)
+        }
+
+        val payRun = createOrGet.payRun
+
+        // Convert overrides to messaging format.
+        val overridesByEmployee: Map<String, List<com.example.uspayroll.messaging.jobs.PayRunEarningOverrideJob>> =
+            earningOverridesByEmployeeId.mapValues { (_, overrides) ->
+                overrides.map { o ->
+                    com.example.uspayroll.messaging.jobs.PayRunEarningOverrideJob(
+                        code = o.code,
+                        units = o.units,
+                        rateCents = o.rateCents,
+                        amountCents = o.amountCents,
+                    )
+                }
+            }
+
+        // Enqueue bulk item creation job.
+        jobProducer.enqueueCreateItemsJob(
+            employerId = employerId,
+            payRunId = payRun.payRunId,
+            payPeriodId = payRun.payPeriodId,
+            runType = payRun.runType.name,
+            runSequence = payRun.runSequence,
+            employeeIds = employeeIds,
+            earningOverridesByEmployeeId = overridesByEmployee,
+            chunkSize = chunkSize,
+        )
+
+        // Return immediately with PENDING status and zero counts.
+        val counts = PayRunStatusCounts(total = 0, queued = 0, running = 0, succeeded = 0, failed = 0)
+        return StartPayRunResult(payRun = payRun, counts = counts, wasCreated = true)
+    }
+
     data class PayRunStatusView(
         val payRun: PayRunRecord,
         val counts: PayRunStatusCounts,

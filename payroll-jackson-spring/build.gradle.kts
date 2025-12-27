@@ -1,6 +1,16 @@
+import org.gradle.api.tasks.compile.JavaCompile
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     kotlin("jvm")
     id("io.spring.dependency-management") version "1.1.5"
+}
+
+kotlin {
+    jvmToolchain(21)
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_21)
+    }
 }
 
 dependencyManagement {
@@ -23,4 +33,9 @@ configurations.matching { it.name.contains("detekt", ignoreCase = true) }.config
             useVersion("2.0.21")
         }
     }
+}
+
+tasks.withType<JavaCompile> {
+    sourceCompatibility = "21"
+    targetCompatibility = "21"
 }

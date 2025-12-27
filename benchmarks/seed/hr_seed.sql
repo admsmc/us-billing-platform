@@ -49,6 +49,10 @@
 \else
 \set tipped_every 11
 \endif
+\if :{?realistic_profile}
+\else
+\set realistic_profile 0
+\endif
 --
 -- Mixed population controls:
 --   :mi_every (default 5)           - every Nth employee is seeded as MI (hourly + MI city)
@@ -56,6 +60,7 @@
 --   :ca_hourly_every (default 9)    - every Nth employee is seeded as CA (hourly)
 --   :tipped_every (default 11)      - every Nth employee is marked as a tipped employee (tip-credit logic only applies to hourly)
 --   :garnishment_every (default 3)  - every Nth employee receives at least one ACTIVE garnishment order
+--   :realistic_profile (0/1)        - when 1, use more realistic filing status, dependents, and salary mixes
 
 BEGIN;
 
@@ -130,11 +135,29 @@ INSERT INTO employee (
     WHEN (n % ca_hourly_every) = 0 THEN 'Los Angeles'
     ELSE COALESCE(NULLIF(:'work_city', ''), 'San Francisco')
   END,
-  'SINGLE',
+  CASE
+    WHEN (:'realistic_profile'::int) = 1 THEN
+      CASE
+        WHEN (n % 10) IN (0, 1, 2, 3, 4) THEN 'SINGLE'                     -- ~50%
+        WHEN (n % 10) IN (5, 6, 7) THEN 'MARRIED_FILING_JOINTLY'          -- ~30%
+        WHEN (n % 10) = 8 THEN 'HEAD_OF_HOUSEHOLD'                        -- ~10%
+        ELSE 'MARRIED_FILING_SEPARATELY'                                  -- ~10%
+      END
+    ELSE 'SINGLE'
+  END,
   'REGULAR',
   :'start_date'::date,
   NULL,
-  0,
+  CASE
+    WHEN (:'realistic_profile'::int) = 1 THEN
+      CASE
+        WHEN (n % 10) IN (0, 1, 2, 3) THEN 0
+        WHEN (n % 10) IN (4, 5, 6) THEN 1
+        WHEN (n % 10) IN (7, 8) THEN 2
+        ELSE 3
+      END
+    ELSE 0
+  END,
   FALSE,
   FALSE,
   NULL,
@@ -198,11 +221,29 @@ INSERT INTO employee_profile_effective (
     WHEN (n % ca_hourly_every) = 0 THEN 'Los Angeles'
     ELSE COALESCE(NULLIF(:'work_city', ''), 'San Francisco')
   END,
-  'SINGLE',
+  CASE
+    WHEN (:'realistic_profile'::int) = 1 THEN
+      CASE
+        WHEN (n % 10) IN (0, 1, 2, 3, 4) THEN 'SINGLE'
+        WHEN (n % 10) IN (5, 6, 7) THEN 'MARRIED_FILING_JOINTLY'
+        WHEN (n % 10) = 8 THEN 'HEAD_OF_HOUSEHOLD'
+        ELSE 'MARRIED_FILING_SEPARATELY'
+      END
+    ELSE 'SINGLE'
+  END,
   'REGULAR',
   :'start_date'::date,
   NULL,
-  0,
+  CASE
+    WHEN (:'realistic_profile'::int) = 1 THEN
+      CASE
+        WHEN (n % 10) IN (0, 1, 2, 3) THEN 0
+        WHEN (n % 10) IN (4, 5, 6) THEN 1
+        WHEN (n % 10) IN (7, 8) THEN 2
+        ELSE 3
+      END
+    ELSE 0
+  END,
   FALSE,
   FALSE,
   NULL,
@@ -243,16 +284,33 @@ INSERT INTO employment_compensation (
     WHEN (n % ny_every) = 0 THEN NULL
     WHEN (n % mi_every) = 0 THEN NULL
     WHEN (n % ca_hourly_every) = 0 THEN NULL
-    ELSE CASE (n % 8)
-      WHEN 0 THEN 4500000   -- $45,000
-      WHEN 1 THEN 6000000   -- $60,000
-      WHEN 2 THEN 8000000   -- $80,000
-      WHEN 3 THEN 10000000  -- $100,000
-      WHEN 4 THEN 13000000  -- $130,000
-      WHEN 5 THEN 16000000  -- $160,000
-      WHEN 6 THEN 20000000  -- $200,000
-      ELSE 5200000          -- $52,000
-    END
+    ELSE
+      CASE
+        WHEN (:'realistic_profile'::int) = 1 THEN
+          CASE (n % 10)
+            WHEN 0 THEN 2500000   -- $25,000
+            WHEN 1 THEN 3000000   -- $30,000
+            WHEN 2 THEN 4000000   -- $40,000
+            WHEN 3 THEN 5000000   -- $50,000
+            WHEN 4 THEN 6000000   -- $60,000
+            WHEN 5 THEN 8000000   -- $80,000
+            WHEN 6 THEN 10000000  -- $100,000
+            WHEN 7 THEN 13000000  -- $130,000
+            WHEN 8 THEN 16000000  -- $160,000
+            ELSE 20000000         -- $200,000
+          END
+        ELSE
+          CASE (n % 8)
+            WHEN 0 THEN 4500000   -- $45,000
+            WHEN 1 THEN 6000000   -- $60,000
+            WHEN 2 THEN 8000000   -- $80,000
+            WHEN 3 THEN 10000000  -- $100,000
+            WHEN 4 THEN 13000000  -- $130,000
+            WHEN 5 THEN 16000000  -- $160,000
+            WHEN 6 THEN 20000000  -- $200,000
+            ELSE 5200000          -- $52,000
+          END
+      END
   END,
   CASE
     WHEN (n % ny_every) = 0 THEN CASE (n % 4)
@@ -338,13 +396,13 @@ INSERT INTO garnishment_order (
   END,
   CASE
     WHEN (n % 2) = 0 THEN 0.10
-    ELSE 0.60
+    ELSE 0.25
   END,
   NULL,
   CASE
     -- For child support, apply a protected floor so we hit protected earnings behavior.
     WHEN (n % 2) = 0 THEN NULL
-    ELSE 300000
+    ELSE 50000
   END,
   NULL,
   NULL,
@@ -403,7 +461,7 @@ INSERT INTO garnishment_order (
   NULL,
   'FIXED_AMOUNT_PER_PERIOD',
   NULL,
-  12345,
+  5000,
   NULL,
   NULL,
   NULL,

@@ -57,6 +57,52 @@ Each deployable service applies the Spring Boot Gradle plugin and is runnable vi
 
 Services are standard Spring Boot applications with `*ApplicationKt` main classes under `com.example.uspayroll.*`.
 
+### Configuration approach
+
+Services use Spring Boot profiles for environment-specific configuration:
+
+- Default profile: Local development with sensible defaults
+- `benchmark` profile: Queue-driven benchmarks with internal JWT authentication configured
+- Profile-specific YAML files: `application-<profile>.yml` in each service's `src/main/resources/`
+
+**Important**: Spring Boot Map properties (e.g., `orchestrator.internal-auth.jwt-keys`) do NOT bind reliably from environment variables with underscore or dot notation. Use one of these approaches:
+
+1. **Profile-based (recommended for dev/test)**: Create `application-<profile>.yml` with nested YAML:
+   ```yaml
+   orchestrator:
+     internal-auth:
+       jwt-keys:
+         k1: dev-secret
+       jwt-default-kid: k1
+   ```
+   Activate via `SPRING_PROFILES_ACTIVE=<profile>`.
+
+2. **SPRING_APPLICATION_JSON (docker-compose overlays)**: For environment-specific overrides:
+   ```yaml
+   environment:
+     SPRING_APPLICATION_JSON: |
+       {"orchestrator": {"internal-auth": {"jwt-keys": {"k1": "secret"}, "jwt-default-kid": "k1"}}}
+   ```
+
+3. **ConfigMap + Secret mounting (Kubernetes)**: Mount application YAML as ConfigMap and reference Secrets via placeholders.
+
+See `docs/ops/secrets-and-configuration.md` for detailed guidance.
+
+### Benchmarking
+
+Queue-driven benchmarks simulate realistic payrun workloads. See `benchmarks/README.md` for:
+
+- Running benchmarks via `docker-compose.bench-parallel.yml` (uses `benchmark` profile)
+- Seeding test data with `benchmarks/seed/seed-benchmark-data.sh`
+- Interpreting results (throughput, latency, queue metrics)
+
+Example:
+```bash
+docker compose -f docker-compose.yml -f docker-compose.bench-parallel.yml up -d
+./benchmarks/seed/seed-benchmark-data.sh
+./benchmarks/run-queue-driven-benchmark.sh
+```
+
 ### Labor standards pipeline (labor-service)
 
 Authoritative labor standards data is maintained as a CSV and compiled into JSON + SQL artifacts.

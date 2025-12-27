@@ -43,6 +43,11 @@ dependencies {
     // SQS-like work queue semantics via RabbitMQ (cloud-agnostic).
     implementation("org.springframework.boot:spring-boot-starter-amqp")
 
+    // Redis caching for tax and labor standards reference data
+    implementation("org.springframework.boot:spring-boot-starter-data-redis")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.17.0")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.0")
+
     testImplementation(kotlin("test"))
     testImplementation(project(":persistence-core"))
     testImplementation("org.springframework.boot:spring-boot-starter-test")

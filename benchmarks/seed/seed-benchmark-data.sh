@@ -20,19 +20,52 @@ set -euo pipefail
 
 ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 
-EMPLOYER_ID=${EMPLOYER_ID:-EMP-BENCH}
-PAY_PERIOD_ID=${PAY_PERIOD_ID:-2025-01-BW1}
-START_DATE=${START_DATE:-2025-01-01}
-END_DATE=${END_DATE:-2025-01-14}
-CHECK_DATE=${CHECK_DATE:-2025-01-15}
-EMPLOYEE_COUNT=${EMPLOYEE_COUNT:-200}
+# Benchmark profile controls how we size and mix the seeded population.
+#
+# Supported values:
+# - PROFILE=stress     (default; original high-coverage mix with dense garnishments)
+# - PROFILE=realistic  (more production-like filing statuses, dependents, and garnishment density)
+PROFILE=${PROFILE:-stress}
 
-# Mixed population knobs (defaults match hr_seed.sql docs)
-MI_EVERY=${MI_EVERY:-5}
-NY_EVERY=${NY_EVERY:-7}
-CA_HOURLY_EVERY=${CA_HOURLY_EVERY:-9}
-TIPPED_EVERY=${TIPPED_EVERY:-11}
-GARNISHMENT_EVERY=${GARNISHMENT_EVERY:-3}
+case "${PROFILE}" in
+  realistic)
+    # Realistic profile: keep EMP-BENCH but use a slightly larger, more typical distribution
+    # with lower garnishment density. Callers can still override any of these via env.
+    EMPLOYER_ID=${EMPLOYER_ID:-EMP-BENCH}
+    PAY_PERIOD_ID=${PAY_PERIOD_ID:-2025-01-BW1}
+    START_DATE=${START_DATE:-2025-01-01}
+    END_DATE=${END_DATE:-2025-01-14}
+    CHECK_DATE=${CHECK_DATE:-2025-01-15}
+    EMPLOYEE_COUNT=${EMPLOYEE_COUNT:-400}
+
+    # Mixed population knobs (realistic-ish defaults)
+    # - smaller MI/NY/CA hourly cohorts so salaried CA remains a large base
+    # - fewer tipped employees
+    # - much lower garnishment density by default
+    MI_EVERY=${MI_EVERY:-20}
+    NY_EVERY=${NY_EVERY:-18}
+    CA_HOURLY_EVERY=${CA_HOURLY_EVERY:-16}
+    TIPPED_EVERY=${TIPPED_EVERY:-20}
+    GARNISHMENT_EVERY=${GARNISHMENT_EVERY:-30}
+    ;;
+  *)
+    # Stress / legacy profile: preserve existing defaults used by docs and k6 scripts.
+    EMPLOYER_ID=${EMPLOYER_ID:-EMP-BENCH}
+    PAY_PERIOD_ID=${PAY_PERIOD_ID:-2025-01-BW1}
+    START_DATE=${START_DATE:-2025-01-01}
+    END_DATE=${END_DATE:-2025-01-14}
+    CHECK_DATE=${CHECK_DATE:-2025-01-15}
+    EMPLOYEE_COUNT=${EMPLOYEE_COUNT:-200}
+
+    # Mixed population knobs (defaults match hr_seed.sql docs)
+    MI_EVERY=${MI_EVERY:-5}
+    NY_EVERY=${NY_EVERY:-7}
+    CA_HOURLY_EVERY=${CA_HOURLY_EVERY:-9}
+    TIPPED_EVERY=${TIPPED_EVERY:-11}
+    GARNISHMENT_EVERY=${GARNISHMENT_EVERY:-3}
+    ;;
+
+esac
 
 # Optional: seed time entries into time-ingestion-service (in-memory) so overtime is time-derived.
 # Requires time-ingestion-service to be running and reachable from the host.
@@ -97,6 +130,14 @@ run_psql_file() {
     <"${sql_file}"
 }
 
+# Flag passed through to hr_seed.sql so it can adjust filing status, dependents,
+# and salary distributions when PROFILE=realistic.
+if [[ "${PROFILE}" == "realistic" ]]; then
+  REALISTIC_PROFILE=1
+else
+  REALISTIC_PROFILE=0
+fi
+
 run_psql_file \
   "host=${PGHOST} port=${PGPORT} dbname=${HR_DB} user=${PGUSER}" \
   "host=localhost port=5432 dbname=${HR_DB} user=${PGUSER}" \
@@ -112,6 +153,7 @@ run_psql_file \
   -v ca_hourly_every="${CA_HOURLY_EVERY}" \
   -v tipped_every="${TIPPED_EVERY}" \
   -v garnishment_every="${GARNISHMENT_EVERY}" \
+  -v realistic_profile="${REALISTIC_PROFILE}" \
   >/dev/null
 
 seed_time_for_hourly_employees() {

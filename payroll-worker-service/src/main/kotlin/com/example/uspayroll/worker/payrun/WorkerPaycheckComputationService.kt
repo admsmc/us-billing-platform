@@ -26,6 +26,7 @@ import com.example.uspayroll.worker.audit.InputFingerprinter
 import com.example.uspayroll.worker.client.LaborStandardsClient
 import com.example.uspayroll.worker.client.TaxClient
 import com.example.uspayroll.worker.client.TimeClient
+import com.example.uspayroll.worker.metrics.PerformanceMetrics
 import org.springframework.stereotype.Service
 import java.time.Instant
 
@@ -39,9 +40,21 @@ class WorkerPaycheckComputationService(
     private val earningConfigRepository: EarningConfigRepository,
     private val deductionConfigRepository: DeductionConfigRepository,
     private val inputFingerprinter: InputFingerprinter,
+    private val performanceMetrics: PerformanceMetrics,
 ) {
 
     fun computeForFinalizeJob(job: FinalizePayRunEmployeeJob): PaycheckComputation {
+        val startTime = System.nanoTime()
+        return try {
+            computeForFinalizeJobInternal(job)
+        } finally {
+            val duration = System.nanoTime() - startTime
+            performanceMetrics.recordPaycheckComputationTime(duration)
+            performanceMetrics.incrementPaychecksProcessed()
+        }
+    }
+
+    private fun computeForFinalizeJobInternal(job: FinalizePayRunEmployeeJob): PaycheckComputation {
         val employerId = EmployerId(job.employerId)
         val employeeId = EmployeeId(job.employeeId)
 

@@ -27,11 +27,12 @@ class PayRunController(
     private val itemFinalizationService: com.example.uspayroll.orchestrator.payrun.PayRunItemFinalizationService,
     private val correctionsService: com.example.uspayroll.orchestrator.payrun.PayRunCorrectionsService,
     private val retroAdjustmentsService: com.example.uspayroll.orchestrator.payrun.PayRunRetroAdjustmentsService,
+    private val props: com.example.uspayroll.orchestrator.jobs.OrchestratorRabbitJobsProperties,
 ) {
 
     data class StartFinalizeRequest(
         val payPeriodId: String,
-        val employeeIds: List<String>,
+        val employeeIds: List<String>? = null,
         /** Defaults to REGULAR. */
         val runType: String? = null,
         /** Defaults to 1. */
@@ -70,7 +71,7 @@ class PayRunController(
         )
 
         val overrides = request.earningOverridesByEmployeeId ?: emptyMap()
-        if (overrides.isNotEmpty()) {
+        if (overrides.isNotEmpty() && request.employeeIds != null) {
             val allowed = request.employeeIds.toSet()
             val extra = overrides.keys.filterNot { it in allowed }
             if (extra.isNotEmpty()) {
@@ -78,16 +79,35 @@ class PayRunController(
             }
         }
 
-        val result = payRunService.startFinalization(
-            employerId = employerId,
-            payPeriodId = request.payPeriodId,
-            employeeIds = request.employeeIds,
-            runType = runType,
-            runSequence = runSequence,
-            earningOverridesByEmployeeId = overrides,
-            requestedPayRunId = request.requestedPayRunId,
-            idempotencyKey = resolvedIdempotencyKey,
-        )
+        // Use async-first pattern when queue-driven jobs are enabled.
+        // This avoids blocking the HTTP request on bulk INSERT of 10K+ pay_run_item rows.
+        // If employeeIds is null, we query all employees from the pay period.
+        val result = if (props.enabled) {
+            val employeeIds = request.employeeIds ?: emptyList()
+            payRunService.startFinalizationAsync(
+                employerId = employerId,
+                payPeriodId = request.payPeriodId,
+                employeeIds = employeeIds,
+                runType = runType,
+                runSequence = runSequence,
+                earningOverridesByEmployeeId = overrides,
+                requestedPayRunId = request.requestedPayRunId,
+                idempotencyKey = resolvedIdempotencyKey,
+            )
+        } else {
+            val employeeIds = request.employeeIds
+                ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "employeeIds is required when async jobs are disabled")
+            payRunService.startFinalization(
+                employerId = employerId,
+                payPeriodId = request.payPeriodId,
+                employeeIds = employeeIds,
+                runType = runType,
+                runSequence = runSequence,
+                earningOverridesByEmployeeId = overrides,
+                requestedPayRunId = request.requestedPayRunId,
+                idempotencyKey = resolvedIdempotencyKey,
+            )
+        }
 
         val statusView = payRunService.getStatus(employerId, result.payRun.payRunId)
         val status = statusView?.effectiveStatus ?: result.payRun.status

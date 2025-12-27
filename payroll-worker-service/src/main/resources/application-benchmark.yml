@@ -1,0 +1,34 @@
+# Benchmark profile for queue-driven parallel payroll processing
+# Activated via SPRING_PROFILES_ACTIVE=benchmark
+
+downstreams:
+  orchestrator:
+    base-url: http://localhost:8085
+    internal-jwt-secret: dev-internal-token
+    internal-jwt-kid: k1
+    internal-jwt-issuer: us-payroll-platform
+    internal-jwt-audience: payroll-orchestrator-service
+    internal-jwt-subject: payroll-worker-service
+
+  time:
+    enabled: true
+
+worker:
+  jobs:
+    rabbit:
+      enabled: true
+    finalize-employee:
+      enabled: true
+    legacy-payrun:
+      enabled: false
+
+  benchmarks:
+    enabled: true
+    token: dev-secret
+
+spring:
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
