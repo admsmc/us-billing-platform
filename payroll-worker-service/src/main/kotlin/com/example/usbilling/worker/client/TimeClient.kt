@@ -1,7 +1,7 @@
 package com.example.usbilling.worker.client
 
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.web.client.CircuitBreakerOpenException
 import com.example.usbilling.web.client.DownstreamHttpClientProperties
 import com.example.usbilling.web.client.HttpClientGuardrails
@@ -19,7 +19,7 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 
 interface TimeClient {
-    fun getTimeSummary(employerId: EmployerId, employeeId: EmployeeId, start: LocalDate, end: LocalDate, workState: String? = null, weekStartsOn: DayOfWeek = DayOfWeek.MONDAY): TimeSummary
+    fun getTimeSummary(employerId: UtilityId, employeeId: CustomerId, start: LocalDate, end: LocalDate, workState: String? = null, weekStartsOn: DayOfWeek = DayOfWeek.MONDAY): TimeSummary
 
     data class TimeSummary(
         val regularHours: Double,
@@ -85,7 +85,7 @@ class HttpTimeClient(
         circuitBreakerPolicy = if (props.circuitBreakerEnabled) props.circuitBreaker else null,
     )
 
-    override fun getTimeSummary(employerId: EmployerId, employeeId: EmployeeId, start: LocalDate, end: LocalDate, workState: String?, weekStartsOn: DayOfWeek): TimeClient.TimeSummary {
+    override fun getTimeSummary(employerId: UtilityId, employeeId: CustomerId, start: LocalDate, end: LocalDate, workState: String?, weekStartsOn: DayOfWeek): TimeClient.TimeSummary {
         if (!props.enabled) {
             return emptySummary()
         }

@@ -5,8 +5,8 @@ import com.example.usbilling.payroll.model.EmployeeSnapshot
 import com.example.usbilling.payroll.model.EmploymentType
 import com.example.usbilling.payroll.model.FilingStatus
 import com.example.usbilling.payroll.model.PayFrequency
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
 import java.time.LocalDate
 import kotlin.test.Test
@@ -16,8 +16,8 @@ import kotlin.test.assertTrue
 class WithholdingProfilesTest {
 
     private fun baseSnapshot(): EmployeeSnapshot = EmployeeSnapshot(
-        employerId = EmployerId("EMP-PROFILE"),
-        employeeId = EmployeeId("EE-PROFILE"),
+        employerId = UtilityId("EMP-PROFILE"),
+        employeeId = CustomerId("EE-PROFILE"),
         homeState = "CA",
         workState = "CA",
         filingStatus = FilingStatus.MARRIED,

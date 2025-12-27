@@ -338,7 +338,7 @@ class PayRunReconciliationController(
             val stillMissing = employeeIds.filterNot { paycheckIds.containsKey(it) }
             if (stillMissing.isNotEmpty()) {
                 paycheckIds = paycheckIds + stillMissing.associateWith { employeeId ->
-                    payRunItemRepository.getOrAssignPaycheckId(employerId = employerId, payRunId = payRunId, employeeId = employeeId)
+                    payRunItemRepository.getOrAssignBillId(employerId = employerId, payRunId = payRunId, employeeId = employeeId)
                 }
             }
         }

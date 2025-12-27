@@ -3,17 +3,17 @@ package com.example.usbilling.payroll.engine
 import com.example.usbilling.payroll.model.*
 import com.example.usbilling.payroll.model.config.EarningConfigRepository
 import com.example.usbilling.payroll.model.config.EarningDefinition
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.PayRunId
-import com.example.usbilling.shared.PaycheckId
+import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillId
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 private class TestEarningConfigRepository : EarningConfigRepository {
-    override fun findByEmployerAndCode(employerId: EmployerId, code: EarningCode): EarningDefinition? = when (code.value) {
+    override fun findByEmployerAndCode(employerId: UtilityId, code: EarningCode): EarningDefinition? = when (code.value) {
         "HOURLY" -> EarningDefinition(
             code = code,
             displayName = "Hourly Wages",
@@ -34,8 +34,8 @@ class AdditionalEarningsAndOvertimePolicyTest {
 
     @Test
     fun `hourly with overtime uses configured multiplier (generic)`() {
-        val employerId = EmployerId("emp-ot")
-        val employeeId = EmployeeId("ee-ot2")
+        val employerId = UtilityId("emp-ot")
+        val employeeId = CustomerId("ee-ot2")
         val period = PayPeriod(
             id = "2025-01-W-OT2",
             employerId = employerId,
@@ -52,8 +52,8 @@ class AdditionalEarningsAndOvertimePolicyTest {
             baseCompensation = BaseCompensation.Hourly(hourlyRate = Money(50_00L)),
         )
         val input = PaycheckInput(
-            paycheckId = PaycheckId("chk-ot2"),
-            payRunId = PayRunId("run-ot2"),
+            paycheckId = BillId("chk-ot2"),
+            payRunId = BillRunId("run-ot2"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,
@@ -80,8 +80,8 @@ class AdditionalEarningsAndOvertimePolicyTest {
 
     @Test
     fun `CA-style daily overtime shaping yields correct overtime dollars`() {
-        val employerId = EmployerId("emp-ot-ca")
-        val employeeId = EmployeeId("ee-ot-ca")
+        val employerId = UtilityId("emp-ot-ca")
+        val employeeId = CustomerId("ee-ot-ca")
         val period = PayPeriod(
             id = "2025-01-W-OT-CA",
             employerId = employerId,
@@ -105,8 +105,8 @@ class AdditionalEarningsAndOvertimePolicyTest {
         // threshold configured in labor standards; here we assert the engine
         // correctly prices the 10 overtime hours at the configured multiplier.
         val input = PaycheckInput(
-            paycheckId = PaycheckId("chk-ot-ca"),
-            payRunId = PayRunId("run-ot-ca"),
+            paycheckId = BillId("chk-ot-ca"),
+            payRunId = BillRunId("run-ot-ca"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,
@@ -133,8 +133,8 @@ class AdditionalEarningsAndOvertimePolicyTest {
 
     @Test
     fun `other earnings are converted into earning lines`() {
-        val employerId = EmployerId("emp-bonus")
-        val employeeId = EmployeeId("ee-bonus")
+        val employerId = UtilityId("emp-bonus")
+        val employeeId = CustomerId("ee-bonus")
         val period = PayPeriod(
             id = "2025-01-W-BONUS",
             employerId = employerId,
@@ -159,8 +159,8 @@ class AdditionalEarningsAndOvertimePolicyTest {
         )
 
         val input = PaycheckInput(
-            paycheckId = PaycheckId("chk-bonus"),
-            payRunId = PayRunId("run-bonus"),
+            paycheckId = BillId("chk-bonus"),
+            payRunId = BillRunId("run-bonus"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,

@@ -3,8 +3,8 @@ package com.example.usbilling.worker
 import com.example.usbilling.hr.HrApplication
 import com.example.usbilling.payroll.model.*
 import com.example.usbilling.persistence.flyway.FlywaySupport
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.tax.api.TaxCatalog
 import com.example.usbilling.tax.api.TaxQuery
 import com.example.usbilling.tax.config.TaxRuleFile
@@ -227,7 +227,7 @@ class MichiganLocalityHrTaxIntegrationTest {
             catalog = CachingTaxCatalog(dbCatalog)
         }
 
-        override fun getTaxContext(employerId: EmployerId, asOfDate: LocalDate, residentState: String?, workState: String?, localityCodes: List<String>): TaxContext {
+        override fun getTaxContext(employerId: UtilityId, asOfDate: LocalDate, residentState: String?, workState: String?, localityCodes: List<String>): TaxContext {
             val query = TaxQuery(
                 employerId = employerId,
                 asOfDate = asOfDate,
@@ -355,7 +355,7 @@ class MichiganLocalityHrTaxIntegrationTest {
                         bracketsJson = r.get("BRACKETS_JSON", String::class.java),
                         standardDeductionCents = r.get("STANDARD_DEDUCTION_CENTS", Long::class.java),
                         additionalWithholdingCents = r.get("ADDITIONAL_WITHHOLDING_CENTS", Long::class.java),
-                        employerId = r.get("EMPLOYER_ID", String::class.java)?.let(::EmployerId),
+                        employerId = r.get("EMPLOYER_ID", String::class.java)?.let(::UtilityId),
                         effectiveFrom = r.get("EFFECTIVE_FROM", LocalDate::class.java),
                         effectiveTo = r.get("EFFECTIVE_TO", LocalDate::class.java),
                         filingStatus = r.get("FILING_STATUS", String::class.java),
@@ -378,10 +378,10 @@ class MichiganLocalityHrTaxIntegrationTest {
 
     @Test
     fun `Detroit employee has MI_DETROIT local tax while non-local MI employee does not`() {
-        val employerId = EmployerId("EMP-HR-MI-LOCAL-TAX")
+        val employerId = UtilityId("EMP-HR-MI-LOCAL-TAX")
         val payPeriodId = "2025-01-BW-MI-LOCALS"
-        val detroitEmp = EmployeeId("EE-MI-DETROIT")
-        val annArborEmp = EmployeeId("EE-MI-ANNARBOR")
+        val detroitEmp = CustomerId("EE-MI-DETROIT")
+        val annArborEmp = CustomerId("EE-MI-ANNARBOR")
 
         val results = payrollRunService.runHrBackedPayForPeriod(
             employerId = employerId,
@@ -423,10 +423,10 @@ class MichiganLocalityHrTaxIntegrationTest {
 
     @Test
     fun `Grand Rapids and Lansing employees both have local tax with GR higher than Lansing`() {
-        val employerId = EmployerId("EMP-HR-MI-LOCAL-TAX")
+        val employerId = UtilityId("EMP-HR-MI-LOCAL-TAX")
         val payPeriodId = "2025-01-BW-MI-LOCALS"
-        val grandRapidsEmp = EmployeeId("EE-MI-GR")
-        val lansingEmp = EmployeeId("EE-MI-LANSING")
+        val grandRapidsEmp = CustomerId("EE-MI-GR")
+        val lansingEmp = CustomerId("EE-MI-LANSING")
 
         val results = payrollRunService.runHrBackedPayForPeriod(
             employerId = employerId,

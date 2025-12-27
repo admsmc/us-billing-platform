@@ -1,16 +1,16 @@
 package com.example.usbilling.shared
 
 @JvmInline
-value class EmployerId(val value: String)
+value class UtilityId(val value: String)
 
 @JvmInline
-value class EmployeeId(val value: String)
+value class CustomerId(val value: String)
 
 @JvmInline
-value class PayRunId(val value: String)
+value class BillRunId(val value: String)
 
 @JvmInline
-value class PaycheckId(val value: String)
+value class BillId(val value: String)
 
 @JvmInline
 value class LocalityCode(val value: String)

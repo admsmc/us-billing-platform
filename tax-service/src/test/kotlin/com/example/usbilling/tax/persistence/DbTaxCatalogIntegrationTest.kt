@@ -4,11 +4,11 @@ import com.example.usbilling.payroll.engine.PayrollEngine
 import com.example.usbilling.payroll.model.*
 import com.example.usbilling.payroll.model.TaxRule.BracketedIncomeTax
 import com.example.usbilling.payroll.model.TaxRule.FlatRateTax
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.PayRunId
-import com.example.usbilling.shared.PaycheckId
+import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillId
 import com.example.usbilling.tax.impl.CachingTaxCatalog
 import com.example.usbilling.tax.impl.CatalogBackedTaxContextProvider
 import com.example.usbilling.tax.impl.DbTaxCatalog
@@ -43,7 +43,7 @@ class DbTaxCatalogIntegrationTest {
         val cachingCatalog = CachingTaxCatalog(dbCatalog)
         val provider = CatalogBackedTaxContextProvider(cachingCatalog)
 
-        val employerId = EmployerId("EMP_DB")
+        val employerId = UtilityId("EMP_DB")
         val asOfDate = LocalDate.of(2025, 6, 30)
 
         val taxContext = provider.getTaxContext(employerId, asOfDate)
@@ -121,7 +121,7 @@ class DbTaxCatalogIntegrationTest {
         val cachingCatalog = CachingTaxCatalog(dbCatalog)
         val provider = CatalogBackedTaxContextProvider(cachingCatalog)
 
-        val employerId = EmployerId("EMP-SIT-DB")
+        val employerId = UtilityId("EMP-SIT-DB")
         val asOfDate = LocalDate.of(2025, 1, 15)
 
         // Load TaxContext once from the DB-backed provider. All subsequent work is in-memory.
@@ -137,7 +137,7 @@ class DbTaxCatalogIntegrationTest {
 
         fun baseSnapshot(employeeId: String, homeState: String, workState: String): EmployeeSnapshot = EmployeeSnapshot(
             employerId = employerId,
-            employeeId = EmployeeId(employeeId),
+            employeeId = CustomerId(employeeId),
             homeState = homeState,
             workState = workState,
             filingStatus = FilingStatus.SINGLE,
@@ -160,8 +160,8 @@ class DbTaxCatalogIntegrationTest {
             val perEmployeeTaxContext = taxContextFor(snapshot.homeState)
 
             val input = PaycheckInput(
-                paycheckId = PaycheckId("CHK-${'$'}{snapshot.employeeId.value}"),
-                payRunId = PayRunId("RUN-SIT-DB"),
+                paycheckId = BillId("CHK-${'$'}{snapshot.employeeId.value}"),
+                payRunId = BillRunId("RUN-SIT-DB"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,

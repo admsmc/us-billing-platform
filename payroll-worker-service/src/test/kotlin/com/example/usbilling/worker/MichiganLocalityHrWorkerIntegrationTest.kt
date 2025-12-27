@@ -2,8 +2,8 @@ package com.example.usbilling.worker
 
 import com.example.usbilling.hr.HrApplication
 import com.example.usbilling.payroll.model.*
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.worker.support.StubLaborClientTestConfig
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
@@ -179,7 +179,7 @@ class MichiganLocalityHrWorkerIntegrationTest {
     class CapturingTaxClient : com.example.usbilling.worker.client.TaxClient {
         val capturedLocalityCodes = mutableListOf<List<String>>()
 
-        override fun getTaxContext(employerId: EmployerId, asOfDate: LocalDate, residentState: String?, workState: String?, localityCodes: List<String>): TaxContext {
+        override fun getTaxContext(employerId: UtilityId, asOfDate: LocalDate, residentState: String?, workState: String?, localityCodes: List<String>): TaxContext {
             capturedLocalityCodes += localityCodes
             // Return an empty TaxContext; this test only cares about localityCodes.
             return TaxContext()
@@ -206,9 +206,9 @@ class MichiganLocalityHrWorkerIntegrationTest {
 
     @Test
     fun `MI employee working in Detroit yields DETROIT locality code in TaxClient`() {
-        val employerId = EmployerId("EMP-HR-MI-LOCAL")
+        val employerId = UtilityId("EMP-HR-MI-LOCAL")
         val payPeriodId = "2025-01-BW-MI"
-        val employeeId = EmployeeId("EE-MI-DETROIT")
+        val employeeId = CustomerId("EE-MI-DETROIT")
 
         val results = payrollRunService.runHrBackedPayForPeriod(
             employerId = employerId,

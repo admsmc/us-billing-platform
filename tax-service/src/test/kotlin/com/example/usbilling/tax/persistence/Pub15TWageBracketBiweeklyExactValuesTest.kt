@@ -1,7 +1,7 @@
 package com.example.usbilling.tax.persistence
 
 import com.example.usbilling.payroll.model.*
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.tax.support.H2TaxTestSupport
 import com.example.usbilling.tax.support.H2TaxTestSupport.H2TaxRuleRepository
 import com.example.usbilling.tax.tools.WageBracketCsvParser
@@ -50,7 +50,7 @@ class Pub15TWageBracketBiweeklyExactValuesTest {
         val dbCatalog = com.example.usbilling.tax.impl.DbTaxCatalog(repository)
         val provider = com.example.usbilling.tax.impl.CatalogBackedTaxContextProvider(dbCatalog)
 
-        val employerId = EmployerId("EMP-PUB15T-WB-EXACT")
+        val employerId = UtilityId("EMP-PUB15T-WB-EXACT")
         val asOfDate = LocalDate.of(2025, 6, 30)
 
         val taxContext = provider.getTaxContext(employerId, asOfDate)

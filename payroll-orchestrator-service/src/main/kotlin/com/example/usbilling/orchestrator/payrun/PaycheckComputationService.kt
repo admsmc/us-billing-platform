@@ -19,10 +19,10 @@ import com.example.usbilling.payroll.model.audit.TraceLevel
 import com.example.usbilling.payroll.model.config.DeductionConfigRepository
 import com.example.usbilling.payroll.model.config.EarningConfigRepository
 import com.example.usbilling.payroll.model.garnishment.GarnishmentContext
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
-import com.example.usbilling.shared.PayRunId
-import com.example.usbilling.shared.PaycheckId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
+import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillId
 import com.example.usbilling.shared.toLocalityCodeStrings
 import org.springframework.stereotype.Service
 import java.time.Instant
@@ -48,13 +48,13 @@ class PaycheckComputationService(
      * can implement durable, retryable per-employee execution.
      */
     fun computeAndPersistFinalPaycheckForEmployee(
-        employerId: EmployerId,
+        employerId: UtilityId,
         payRunId: String,
         payPeriodId: String,
         runType: com.example.usbilling.orchestrator.payrun.model.PayRunType,
         runSequence: Int,
         paycheckId: String,
-        employeeId: EmployeeId,
+        employeeId: CustomerId,
         earningOverrides: List<EarningInput> = emptyList(),
     ): PaycheckResult {
         val computation = computePaycheckComputationForEmployee(
@@ -90,12 +90,12 @@ class PaycheckComputationService(
     }
 
     fun computePaycheckComputationForEmployee(
-        employerId: EmployerId,
+        employerId: UtilityId,
         payRunId: String,
         payPeriodId: String,
         runType: com.example.usbilling.orchestrator.payrun.model.PayRunType,
         paycheckId: String,
-        employeeId: EmployeeId,
+        employeeId: CustomerId,
         earningOverrides: List<EarningInput> = emptyList(),
     ): PaycheckComputation {
         val payPeriod = hrClient.getPayPeriod(employerId, payPeriodId)
@@ -179,8 +179,8 @@ class PaycheckComputationService(
         val otherEarnings = earningOverrides + doubleTimeEarnings
 
         val input = PaycheckInput(
-            paycheckId = PaycheckId(paycheckId),
-            payRunId = PayRunId(payRunId),
+            paycheckId = BillId(paycheckId),
+            payRunId = BillRunId(payRunId),
             employerId = employerId,
             employeeId = snapshot.employeeId,
             period = payPeriod,

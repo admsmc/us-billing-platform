@@ -183,12 +183,12 @@ class PayRunQueueDrivenIT(
         assertNotNull(paycheckId)
 
         val computation = paycheckComputationService.computePaycheckComputationForEmployee(
-            employerId = com.example.usbilling.shared.EmployerId(employerId),
+            employerId = com.example.usbilling.shared.UtilityId(employerId),
             payRunId = "run-queue-2",
             payPeriodId = "pp-1",
             runType = com.example.usbilling.orchestrator.payrun.model.PayRunType.REGULAR,
             paycheckId = paycheckId!!,
-            employeeId = com.example.usbilling.shared.EmployeeId("e-1"),
+            employeeId = com.example.usbilling.shared.CustomerId("e-1"),
         )
 
         val headers = InternalAuthTestSupport.internalAuthHeaders()

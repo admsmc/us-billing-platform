@@ -2,11 +2,11 @@ package com.example.usbilling.tax.persistence
 
 import com.example.usbilling.payroll.engine.TaxesCalculator
 import com.example.usbilling.payroll.model.*
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.PayRunId
-import com.example.usbilling.shared.PaycheckId
+import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillId
 import com.example.usbilling.tax.impl.CachingTaxCatalog
 import com.example.usbilling.tax.impl.CatalogBackedTaxContextProvider
 import com.example.usbilling.tax.impl.DbTaxCatalog
@@ -31,7 +31,7 @@ class MichiganLocalTaxGoldenTest {
         H2TaxTestSupport.importConfigFromResource(dsl, resourcePath, javaClass.classLoader)
     }
 
-    private fun taxContext(employerId: EmployerId, asOfDate: LocalDate, residentState: String?, localJurisdictions: List<String>, dsl: DSLContext): TaxContext {
+    private fun taxContext(employerId: UtilityId, asOfDate: LocalDate, residentState: String?, localJurisdictions: List<String>, dsl: DSLContext): TaxContext {
         val repository: TaxRuleRepository = H2TaxRuleRepository(dsl)
         val dbCatalog = DbTaxCatalog(repository)
         val cachingCatalog = CachingTaxCatalog(dbCatalog)
@@ -70,7 +70,7 @@ class MichiganLocalTaxGoldenTest {
         )
     }
 
-    private fun computeLocalTax(context: TaxContext, employerId: EmployerId, asOfDate: LocalDate, residentState: String, localJurisdictions: List<String>): Map<String, Long> {
+    private fun computeLocalTax(context: TaxContext, employerId: UtilityId, asOfDate: LocalDate, residentState: String, localJurisdictions: List<String>): Map<String, Long> {
         val wagesCents = 100_000_00L // $100,000 state taxable wages
         val bases: Map<TaxBasis, Money> = mapOf(
             TaxBasis.StateTaxable to Money(wagesCents),
@@ -89,7 +89,7 @@ class MichiganLocalTaxGoldenTest {
 
         val snapshot = EmployeeSnapshot(
             employerId = employerId,
-            employeeId = EmployeeId("EE-MI-LOCAL"),
+            employeeId = CustomerId("EE-MI-LOCAL"),
             homeState = residentState,
             workState = residentState,
             filingStatus = FilingStatus.SINGLE,
@@ -100,8 +100,8 @@ class MichiganLocalTaxGoldenTest {
         )
 
         val input = PaycheckInput(
-            paycheckId = PaycheckId("CHK-MI-LOCAL-$employerId-${localJurisdictions.joinToString("-")}"),
-            payRunId = PayRunId("RUN-MI-LOCAL"),
+            paycheckId = BillId("CHK-MI-LOCAL-$employerId-${localJurisdictions.joinToString("-")}"),
+            payRunId = BillRunId("RUN-MI-LOCAL"),
             employerId = employerId,
             employeeId = snapshot.employeeId,
             period = period,
@@ -127,7 +127,7 @@ class MichiganLocalTaxGoldenTest {
         val dsl = createDslContext("taxdb-mi-locals-detroit")
         importConfig(dsl, "tax-config/mi-locals-2025.json")
 
-        val employerId = EmployerId("EMP-MI-LOCAL")
+        val employerId = UtilityId("EMP-MI-LOCAL")
         val asOfDate = LocalDate.of(2025, 3, 31)
         val residentState = "MI"
 
@@ -180,7 +180,7 @@ class MichiganLocalTaxGoldenTest {
         val dsl = createDslContext("taxdb-mi-locals-gr-lansing")
         importConfig(dsl, "tax-config/mi-locals-2025.json")
 
-        val employerId = EmployerId("EMP-MI-LOCAL-2")
+        val employerId = UtilityId("EMP-MI-LOCAL-2")
         val asOfDate = LocalDate.of(2025, 3, 31)
         val residentState = "MI"
 

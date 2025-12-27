@@ -18,11 +18,11 @@ import com.example.usbilling.payroll.model.TaxRule
 import com.example.usbilling.payroll.model.TimeSlice
 import com.example.usbilling.payroll.model.TraceStep
 import com.example.usbilling.payroll.model.YtdSnapshot
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.PayRunId
-import com.example.usbilling.shared.PaycheckId
+import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillId
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -38,8 +38,8 @@ class OffCyclePaycheckGoldenTest {
 
     @Test
     fun `off-cycle paycheck pays only supplemental earnings (no base salary)`() {
-        val employerId = EmployerId("emp-offcycle")
-        val employeeId = EmployeeId("ee-offcycle")
+        val employerId = UtilityId("emp-offcycle")
+        val employeeId = CustomerId("ee-offcycle")
 
         val period = PayPeriod(
             id = "2025-OFF-CYCLE-01",
@@ -77,8 +77,8 @@ class OffCyclePaycheckGoldenTest {
         )
 
         val input = PaycheckInput(
-            paycheckId = PaycheckId("chk-offcycle"),
-            payRunId = PayRunId("run-offcycle"),
+            paycheckId = BillId("chk-offcycle"),
+            payRunId = BillRunId("run-offcycle"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,

@@ -20,11 +20,11 @@ import com.example.usbilling.payroll.model.audit.TraceLevel
 import com.example.usbilling.payroll.model.config.DeductionConfigRepository
 import com.example.usbilling.payroll.model.config.DeductionKind
 import com.example.usbilling.payroll.model.config.DeductionPlan
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.PayRunId
-import com.example.usbilling.shared.PaycheckId
+import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillId
 import java.time.Instant
 import java.time.LocalDate
 import kotlin.test.Test
@@ -34,7 +34,7 @@ import kotlin.test.assertTrue
 
 class PaycheckAuditAndTraceLevelTest {
 
-    private fun baseInput(employerId: EmployerId, employeeId: EmployeeId): PaycheckInput {
+    private fun baseInput(employerId: UtilityId, employeeId: CustomerId): PaycheckInput {
         val checkDate = LocalDate.of(2025, 1, 15)
         val period = PayPeriod(
             id = "AUDIT-TEST-PP",
@@ -63,8 +63,8 @@ class PaycheckAuditAndTraceLevelTest {
         )
 
         return PaycheckInput(
-            paycheckId = PaycheckId("chk-audit-1"),
-            payRunId = PayRunId("run-audit-1"),
+            paycheckId = BillId("chk-audit-1"),
+            payRunId = BillRunId("run-audit-1"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,
@@ -80,7 +80,7 @@ class PaycheckAuditAndTraceLevelTest {
     }
 
     private fun deductionRepo(planId: String): DeductionConfigRepository = object : DeductionConfigRepository {
-        override fun findPlansForEmployer(employerId: EmployerId): List<DeductionPlan> = listOf(
+        override fun findPlansForEmployer(employerId: UtilityId): List<DeductionPlan> = listOf(
             DeductionPlan(
                 id = planId,
                 name = "401k",
@@ -92,8 +92,8 @@ class PaycheckAuditAndTraceLevelTest {
 
     @Test
     fun `AUDIT mode produces populated stable PaycheckAudit and empty CalculationTrace`() {
-        val employerId = EmployerId("EMP-AUDIT")
-        val employeeId = EmployeeId("EE-AUDIT")
+        val employerId = UtilityId("EMP-AUDIT")
+        val employeeId = CustomerId("EE-AUDIT")
         val input = baseInput(employerId, employeeId)
         val computedAt = Instant.parse("2025-01-15T12:00:00Z")
 
@@ -160,7 +160,7 @@ class PaycheckAuditAndTraceLevelTest {
 
     @Test
     fun `DEBUG mode preserves trace while still producing audit`() {
-        val input = baseInput(EmployerId("EMP-DBG"), EmployeeId("EE-DBG"))
+        val input = baseInput(UtilityId("EMP-DBG"), CustomerId("EE-DBG"))
         val computedAt = Instant.parse("2025-01-15T12:00:00Z")
 
         val result = PayrollEngine.calculatePaycheckComputation(

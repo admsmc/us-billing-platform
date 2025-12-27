@@ -1,7 +1,7 @@
 package com.example.usbilling.tax.api
 
 import com.example.usbilling.payroll.model.TaxRule
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import java.time.LocalDate
 
 /**
@@ -11,7 +11,7 @@ import java.time.LocalDate
  * such as resident state, work state, locality, filing status, etc.
  */
 data class TaxQuery(
-    val employerId: EmployerId,
+    val employerId: UtilityId,
     val asOfDate: LocalDate,
     val residentState: String? = null,
     val workState: String? = null,

@@ -2,7 +2,7 @@ package com.example.usbilling.orchestrator.http
 
 import com.example.usbilling.orchestrator.persistence.PaycheckAuditStoreRepository
 import com.example.usbilling.payroll.model.audit.PaycheckAudit
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -27,7 +27,7 @@ class PaycheckAuditController(
         @PathVariable paycheckId: String,
     ): ResponseEntity<PaycheckAudit> {
         val audit = paycheckAuditStoreRepository.findAudit(
-            employerId = EmployerId(employerId),
+            employerId = UtilityId(employerId),
             paycheckId = paycheckId,
         ) ?: return ResponseEntity.notFound().build()
 

@@ -2,7 +2,7 @@ package com.example.usbilling.orchestrator.http
 
 import com.example.usbilling.orchestrator.payrun.PayRunService
 import com.example.usbilling.orchestrator.payrun.model.PayRunStatus
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.web.Idempotency
 import com.example.usbilling.web.WebHeaders
 import com.example.usbilling.web.security.SecurityAuditLogger
@@ -533,7 +533,7 @@ class PayRunController(
         @org.springframework.web.bind.annotation.RequestBody request: CompleteEmployeeItemRequest,
     ): ResponseEntity<CompleteEmployeeItemResponse> {
         val result = itemFinalizationService.completeOneEmployeeItem(
-            employerId = EmployerId(employerId).value,
+            employerId = UtilityId(employerId).value,
             payRunId = payRunId,
             employeeId = employeeId,
             request = com.example.usbilling.orchestrator.payrun.PayRunItemFinalizationService.CompleteItemRequest(

@@ -7,7 +7,7 @@ import com.example.usbilling.orchestrator.persistence.PaycheckAuditStoreReposito
 import com.example.usbilling.orchestrator.persistence.PaycheckStoreRepository
 import com.example.usbilling.payroll.model.PaycheckResult
 import com.example.usbilling.payroll.model.audit.PaycheckAudit
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Timer
 import org.springframework.boot.context.properties.ConfigurationProperties
@@ -99,7 +99,7 @@ class PayRunItemFinalizationService(
                 val audit = requireNotNull(request.audit) { "audit is required on success" }
 
                 paycheckStoreRepository.insertFinalPaycheckIfAbsent(
-                    employerId = EmployerId(employerId),
+                    employerId = UtilityId(employerId),
                     paycheckId = resolvedPaycheckId,
                     payRunId = payRunId,
                     employeeId = employeeId,

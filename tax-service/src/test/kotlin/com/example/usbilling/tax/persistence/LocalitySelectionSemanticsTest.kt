@@ -1,6 +1,6 @@
 package com.example.usbilling.tax.persistence
 
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.tax.api.TaxQuery
 import com.example.usbilling.tax.impl.TaxRuleRecord
 import com.example.usbilling.tax.impl.TaxRuleRepository
@@ -31,7 +31,7 @@ class LocalitySelectionSemanticsTest {
         H2TaxTestSupport.importConfigFromResource(dsl, resourcePath, javaClass.classLoader)
     }
 
-    private fun rulesFor(dsl: DSLContext, employerId: EmployerId, residentState: String?, workState: String?, locals: List<String>): List<TaxRuleRecord> {
+    private fun rulesFor(dsl: DSLContext, employerId: UtilityId, residentState: String?, workState: String?, locals: List<String>): List<TaxRuleRecord> {
         val repo: TaxRuleRepository = H2TaxRuleRepository(dsl)
         val query = TaxQuery(
             employerId = employerId,
@@ -48,7 +48,7 @@ class LocalitySelectionSemanticsTest {
         val dsl = createDslContext("taxdb-locality-nyc")
         importConfig(dsl, "tax-config/example-federal-2025.json")
 
-        val employerId = EmployerId("EMP-LOCALITY-NYC")
+        val employerId = UtilityId("EMP-LOCALITY-NYC")
 
         // A. No locality codes -> no LOCAL rules.
         val rulesNoLocals = rulesFor(
@@ -86,7 +86,7 @@ class LocalitySelectionSemanticsTest {
         val dsl = createDslContext("taxdb-locality-mi")
         importConfig(dsl, "tax-config/mi-locals-2025.json")
 
-        val employerId = EmployerId("EMP-LOCALITY-MI")
+        val employerId = UtilityId("EMP-LOCALITY-MI")
 
         // A. No locality codes -> no LOCAL rules.
         val rulesNoLocals = rulesFor(

@@ -4,8 +4,8 @@ import com.example.usbilling.hr.api.EmployeeSnapshotProvider
 import com.example.usbilling.hr.api.PayPeriodProvider
 import com.example.usbilling.payroll.model.*
 import com.example.usbilling.persistence.flyway.FlywaySupport
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import org.h2.jdbcx.JdbcDataSource
 import org.junit.jupiter.api.Test
 import org.springframework.jdbc.core.JdbcTemplate
@@ -38,8 +38,8 @@ class JdbcHrAdaptersTest {
     @Test
     fun `JdbcEmployeeSnapshotProvider returns expected EmployeeSnapshot`() {
         val jdbcTemplate = createJdbcTemplate()
-        val employerId = EmployerId("EMP-HR-JDBC")
-        val employeeId = EmployeeId("EE-JDBC-1")
+        val employerId = UtilityId("EMP-HR-JDBC")
+        val employeeId = CustomerId("EE-JDBC-1")
         val asOf = LocalDate.of(2025, 1, 15)
 
         // Seed employee and effective-dated profile rows.
@@ -144,7 +144,7 @@ class JdbcHrAdaptersTest {
     @Test
     fun `JdbcPayPeriodProvider returns expected PayPeriod and lookup by check date`() {
         val jdbcTemplate = createJdbcTemplate()
-        val employerId = EmployerId("EMP-HR-JDBC")
+        val employerId = UtilityId("EMP-HR-JDBC")
         val payPeriodId = "2025-01-BW1"
         val start = LocalDate.of(2025, 1, 1)
         val end = LocalDate.of(2025, 1, 14)

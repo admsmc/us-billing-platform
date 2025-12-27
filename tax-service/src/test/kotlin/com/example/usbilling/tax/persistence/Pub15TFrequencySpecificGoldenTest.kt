@@ -2,11 +2,11 @@ package com.example.usbilling.tax.persistence
 
 import com.example.usbilling.payroll.engine.TaxesCalculator
 import com.example.usbilling.payroll.model.*
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.PayRunId
-import com.example.usbilling.shared.PaycheckId
+import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillId
 import com.example.usbilling.tax.impl.CachingTaxCatalog
 import com.example.usbilling.tax.impl.CatalogBackedTaxContextProvider
 import com.example.usbilling.tax.impl.DbTaxCatalog
@@ -45,7 +45,7 @@ class Pub15TFrequencySpecificGoldenTest {
         val cachingCatalog = CachingTaxCatalog(dbCatalog)
         val provider = CatalogBackedTaxContextProvider(cachingCatalog)
 
-        val employerId = EmployerId("EMP-PUB15T-WEEKLY")
+        val employerId = UtilityId("EMP-PUB15T-WEEKLY")
         val asOfDate = LocalDate.of(2025, 6, 30)
 
         val taxContext = provider.getTaxContext(employerId, asOfDate)
@@ -82,7 +82,7 @@ class Pub15TFrequencySpecificGoldenTest {
         val cachingCatalog = CachingTaxCatalog(dbCatalog)
         val provider = CatalogBackedTaxContextProvider(cachingCatalog)
 
-        val employerId = EmployerId("EMP-PUB15T-WEEKLY-MONO")
+        val employerId = UtilityId("EMP-PUB15T-WEEKLY-MONO")
         val asOfDate = LocalDate.of(2025, 6, 30)
 
         val taxContext = provider.getTaxContext(employerId, asOfDate)
@@ -107,7 +107,7 @@ class Pub15TFrequencySpecificGoldenTest {
 
             val snapshot = EmployeeSnapshot(
                 employerId = employerId,
-                employeeId = EmployeeId("EE-PUB15T-WEEKLY-${filingStatus.name}-$weeklyWagesCents"),
+                employeeId = CustomerId("EE-PUB15T-WEEKLY-${filingStatus.name}-$weeklyWagesCents"),
                 homeState = "CA",
                 workState = "CA",
                 filingStatus = filingStatus,
@@ -118,8 +118,8 @@ class Pub15TFrequencySpecificGoldenTest {
             )
 
             val input = PaycheckInput(
-                paycheckId = PaycheckId("CHK-PUB15T-WEEKLY-${filingStatus.name}-$weeklyWagesCents"),
-                payRunId = PayRunId("RUN-PUB15T-WEEKLY"),
+                paycheckId = BillId("CHK-PUB15T-WEEKLY-${filingStatus.name}-$weeklyWagesCents"),
+                payRunId = BillRunId("RUN-PUB15T-WEEKLY"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,

@@ -2,11 +2,11 @@ package com.example.usbilling.tax.persistence
 
 import com.example.usbilling.payroll.engine.TaxesCalculator
 import com.example.usbilling.payroll.model.*
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.PayRunId
-import com.example.usbilling.shared.PaycheckId
+import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillId
 import com.example.usbilling.tax.api.TaxQuery
 import com.example.usbilling.tax.impl.CachingTaxCatalog
 import com.example.usbilling.tax.impl.CatalogBackedTaxContextProvider
@@ -47,7 +47,7 @@ class GoldenTaxScenariosTest {
         val cachingCatalog = CachingTaxCatalog(dbCatalog)
         val provider = CatalogBackedTaxContextProvider(cachingCatalog)
 
-        val employerId = EmployerId("EMP-FED-FIT-STRUCTURE")
+        val employerId = UtilityId("EMP-FED-FIT-STRUCTURE")
         val asOfDate = LocalDate.of(2025, 6, 30)
 
         val taxContext = provider.getTaxContext(employerId, asOfDate)
@@ -83,7 +83,7 @@ class GoldenTaxScenariosTest {
         val cachingCatalog = CachingTaxCatalog(dbCatalog)
         val provider = CatalogBackedTaxContextProvider(cachingCatalog)
 
-        val employerId = EmployerId("EMP-FED-GOLDEN")
+        val employerId = UtilityId("EMP-FED-GOLDEN")
         val asOfDate = LocalDate.of(2025, 6, 30)
 
         val taxContext = provider.getTaxContext(employerId, asOfDate)
@@ -119,7 +119,7 @@ class GoldenTaxScenariosTest {
 
         val snapshot = EmployeeSnapshot(
             employerId = employerId,
-            employeeId = EmployeeId("EE-FED-GOLDEN"),
+            employeeId = CustomerId("EE-FED-GOLDEN"),
             homeState = "CA",
             workState = "CA",
             filingStatus = FilingStatus.SINGLE,
@@ -130,8 +130,8 @@ class GoldenTaxScenariosTest {
         )
 
         val input = PaycheckInput(
-            paycheckId = PaycheckId("CHK-FED-GOLDEN"),
-            payRunId = PayRunId("RUN-FED-GOLDEN"),
+            paycheckId = BillId("CHK-FED-GOLDEN"),
+            payRunId = BillRunId("RUN-FED-GOLDEN"),
             employerId = employerId,
             employeeId = snapshot.employeeId,
             period = period,
@@ -164,7 +164,7 @@ class GoldenTaxScenariosTest {
         val cachingCatalog = CachingTaxCatalog(dbCatalog)
         val provider = CatalogBackedTaxContextProvider(cachingCatalog)
 
-        val employerId = EmployerId("EMP-FED-GOLDEN-MULTI")
+        val employerId = UtilityId("EMP-FED-GOLDEN-MULTI")
         val asOfDate = LocalDate.of(2025, 6, 30)
 
         val taxContext = provider.getTaxContext(employerId, asOfDate)
@@ -187,7 +187,7 @@ class GoldenTaxScenariosTest {
 
             val snapshot = EmployeeSnapshot(
                 employerId = employerId,
-                employeeId = EmployeeId("EE-FED-${filingStatus.name}-$wagesCents"),
+                employeeId = CustomerId("EE-FED-${filingStatus.name}-$wagesCents"),
                 homeState = "CA",
                 workState = "CA",
                 filingStatus = filingStatus,
@@ -198,8 +198,8 @@ class GoldenTaxScenariosTest {
             )
 
             val input = PaycheckInput(
-                paycheckId = PaycheckId("CHK-FED-${filingStatus.name}-$wagesCents"),
-                payRunId = PayRunId("RUN-FED-GOLDEN-MULTI"),
+                paycheckId = BillId("CHK-FED-${filingStatus.name}-$wagesCents"),
+                payRunId = BillRunId("RUN-FED-GOLDEN-MULTI"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,
@@ -262,7 +262,7 @@ class GoldenTaxScenariosTest {
         val cachingCatalog = CachingTaxCatalog(dbCatalog)
         val provider = CatalogBackedTaxContextProvider(cachingCatalog)
 
-        val employerId = EmployerId("EMP-STATE-GOLDEN")
+        val employerId = UtilityId("EMP-STATE-GOLDEN")
         val asOfDate = LocalDate.of(2025, 1, 15)
 
         val baseTaxContext = provider.getTaxContext(employerId, asOfDate)
@@ -300,7 +300,7 @@ class GoldenTaxScenariosTest {
 
             val snapshot = EmployeeSnapshot(
                 employerId = employerId,
-                employeeId = EmployeeId("EE-$stateCode-GOLDEN"),
+                employeeId = CustomerId("EE-$stateCode-GOLDEN"),
                 homeState = stateCode,
                 workState = stateCode,
                 filingStatus = FilingStatus.SINGLE,
@@ -311,8 +311,8 @@ class GoldenTaxScenariosTest {
             )
 
             val input = PaycheckInput(
-                paycheckId = PaycheckId("CHK-$stateCode-GOLDEN"),
-                payRunId = PayRunId("RUN-STATE-GOLDEN"),
+                paycheckId = BillId("CHK-$stateCode-GOLDEN"),
+                payRunId = BillRunId("RUN-STATE-GOLDEN"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,
@@ -362,7 +362,7 @@ class GoldenTaxScenariosTest {
         val cachingCatalog = CachingTaxCatalog(dbCatalog)
         val provider = CatalogBackedTaxContextProvider(cachingCatalog)
 
-        val employerId = EmployerId("EMP-STATE-GOLDEN-MULTI")
+        val employerId = UtilityId("EMP-STATE-GOLDEN-MULTI")
         val asOfDate = LocalDate.of(2025, 1, 15)
 
         val baseTaxContext = provider.getTaxContext(employerId, asOfDate)
@@ -393,7 +393,7 @@ class GoldenTaxScenariosTest {
 
             val snapshot = EmployeeSnapshot(
                 employerId = employerId,
-                employeeId = EmployeeId("EE-$stateCode-GOLDEN-MULTI-$taxableCents"),
+                employeeId = CustomerId("EE-$stateCode-GOLDEN-MULTI-$taxableCents"),
                 homeState = stateCode,
                 workState = stateCode,
                 filingStatus = FilingStatus.SINGLE,
@@ -404,8 +404,8 @@ class GoldenTaxScenariosTest {
             )
 
             val input = PaycheckInput(
-                paycheckId = PaycheckId("CHK-$stateCode-GOLDEN-MULTI-$taxableCents"),
-                payRunId = PayRunId("RUN-STATE-GOLDEN-MULTI"),
+                paycheckId = BillId("CHK-$stateCode-GOLDEN-MULTI-$taxableCents"),
+                payRunId = BillRunId("RUN-STATE-GOLDEN-MULTI"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,
@@ -454,7 +454,7 @@ class GoldenTaxScenariosTest {
         val cachingCatalog = CachingTaxCatalog(dbCatalog)
         val provider = CatalogBackedTaxContextProvider(cachingCatalog)
 
-        val employerId = EmployerId("EMP-STATE-GOLDEN-AL-AZ")
+        val employerId = UtilityId("EMP-STATE-GOLDEN-AL-AZ")
         val asOfDate = LocalDate.of(2025, 1, 15)
 
         val baseTaxContext = provider.getTaxContext(employerId, asOfDate)
@@ -489,7 +489,7 @@ class GoldenTaxScenariosTest {
 
             val snapshot = EmployeeSnapshot(
                 employerId = employerId,
-                employeeId = EmployeeId("EE-$stateCode-AL-AZ"),
+                employeeId = CustomerId("EE-$stateCode-AL-AZ"),
                 homeState = stateCode,
                 workState = stateCode,
                 filingStatus = FilingStatus.SINGLE,
@@ -500,8 +500,8 @@ class GoldenTaxScenariosTest {
             )
 
             val input = PaycheckInput(
-                paycheckId = PaycheckId("CHK-$stateCode-AL-AZ"),
-                payRunId = PayRunId("RUN-STATE-GOLDEN-AL-AZ"),
+                paycheckId = BillId("CHK-$stateCode-AL-AZ"),
+                payRunId = BillRunId("RUN-STATE-GOLDEN-AL-AZ"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,
@@ -545,7 +545,7 @@ class GoldenTaxScenariosTest {
         val repository: TaxRuleRepository = H2TaxRuleRepository(dsl)
         val dbCatalog = DbTaxCatalog(repository)
 
-        val employerId = EmployerId("EMP-LOCAL-NYC")
+        val employerId = UtilityId("EMP-LOCAL-NYC")
         val asOfDate = LocalDate.of(2025, 1, 15)
 
         val stateTaxableCents = 500_000L // $5,000.00
@@ -585,7 +585,7 @@ class GoldenTaxScenariosTest {
 
             val snapshot = EmployeeSnapshot(
                 employerId = employerId,
-                employeeId = EmployeeId("EE-LOCAL-NYC-$employeeIdSuffix"),
+                employeeId = CustomerId("EE-LOCAL-NYC-$employeeIdSuffix"),
                 homeState = residentState,
                 workState = workState,
                 filingStatus = FilingStatus.SINGLE,
@@ -602,8 +602,8 @@ class GoldenTaxScenariosTest {
             )
 
             val input = PaycheckInput(
-                paycheckId = PaycheckId("CHK-LOCAL-NYC-$employeeIdSuffix"),
-                payRunId = PayRunId("RUN-LOCAL-NYC"),
+                paycheckId = BillId("CHK-LOCAL-NYC-$employeeIdSuffix"),
+                payRunId = BillRunId("RUN-LOCAL-NYC"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,
@@ -657,7 +657,7 @@ class GoldenTaxScenariosTest {
         val cachingCatalog = CachingTaxCatalog(dbCatalog)
         val provider = CatalogBackedTaxContextProvider(cachingCatalog)
 
-        val employerId = EmployerId("EMP-STATE-GOLDEN-FLAT")
+        val employerId = UtilityId("EMP-STATE-GOLDEN-FLAT")
         val asOfDate = LocalDate.of(2025, 1, 15)
 
         val baseTaxContext = provider.getTaxContext(employerId, asOfDate)
@@ -690,7 +690,7 @@ class GoldenTaxScenariosTest {
 
             val snapshot = EmployeeSnapshot(
                 employerId = employerId,
-                employeeId = EmployeeId("EE-$stateCode-GOLDEN-FLAT"),
+                employeeId = CustomerId("EE-$stateCode-GOLDEN-FLAT"),
                 homeState = stateCode,
                 workState = stateCode,
                 filingStatus = FilingStatus.SINGLE,
@@ -701,8 +701,8 @@ class GoldenTaxScenariosTest {
             )
 
             val input = PaycheckInput(
-                paycheckId = PaycheckId("CHK-$stateCode-GOLDEN-FLAT"),
-                payRunId = PayRunId("RUN-STATE-GOLDEN-FLAT"),
+                paycheckId = BillId("CHK-$stateCode-GOLDEN-FLAT"),
+                payRunId = BillRunId("RUN-STATE-GOLDEN-FLAT"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,

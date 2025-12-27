@@ -3,7 +3,7 @@ package com.example.usbilling.worker
 import com.example.usbilling.labor.http.LaborStandardsContextDto
 import com.example.usbilling.payroll.model.FilingStatus
 import com.example.usbilling.payroll.model.TaxJurisdictionType
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.tax.http.TaxBracketDto
 import com.example.usbilling.tax.http.TaxContextDto
 import com.example.usbilling.tax.http.TaxRuleDto
@@ -152,7 +152,7 @@ class TaxLaborHttpClientsIntegrationTest {
 
     @Test
     fun `HttpTaxClient and HttpLaborStandardsClient consume DTOs and map to domain`() {
-        val employerId = EmployerId("EMP-WORKER-HTTP-CLIENTS")
+        val employerId = UtilityId("EMP-WORKER-HTTP-CLIENTS")
         val asOfDate = LocalDate.of(2025, 6, 30)
 
         val taxContext = taxClient.getTaxContext(

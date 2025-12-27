@@ -12,8 +12,8 @@ import com.example.usbilling.payroll.model.PayFrequency
 import com.example.usbilling.payroll.model.PayPeriod
 import com.example.usbilling.payroll.model.TaxContext
 import com.example.usbilling.payroll.model.garnishment.GarnishmentOrder
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
@@ -26,7 +26,7 @@ class StubClientsTestConfig {
     @Bean
     @Primary
     fun stubHrClient(): HrClient = object : HrClient {
-        override fun getEmployeeSnapshot(employerId: EmployerId, employeeId: EmployeeId, asOfDate: LocalDate): EmployeeSnapshot? {
+        override fun getEmployeeSnapshot(employerId: UtilityId, employeeId: CustomerId, asOfDate: LocalDate): EmployeeSnapshot? {
             if (employeeId.value == "e-bad") return null
 
             return EmployeeSnapshot(
@@ -43,7 +43,7 @@ class StubClientsTestConfig {
             )
         }
 
-        override fun getPayPeriod(employerId: EmployerId, payPeriodId: String): PayPeriod? {
+        override fun getPayPeriod(employerId: UtilityId, payPeriodId: String): PayPeriod? {
             if (payPeriodId != "pp-1") return null
 
             return PayPeriod(
@@ -58,22 +58,22 @@ class StubClientsTestConfig {
             )
         }
 
-        override fun findPayPeriodByCheckDate(employerId: EmployerId, checkDate: LocalDate): PayPeriod? = null
+        override fun findPayPeriodByCheckDate(employerId: UtilityId, checkDate: LocalDate): PayPeriod? = null
 
-        override fun getGarnishmentOrders(employerId: EmployerId, employeeId: EmployeeId, asOfDate: LocalDate): List<GarnishmentOrder> = emptyList()
+        override fun getGarnishmentOrders(employerId: UtilityId, employeeId: CustomerId, asOfDate: LocalDate): List<GarnishmentOrder> = emptyList()
 
-        override fun recordGarnishmentWithholding(employerId: EmployerId, employeeId: EmployeeId, request: GarnishmentWithholdingRequest) = Unit
+        override fun recordGarnishmentWithholding(employerId: UtilityId, employeeId: CustomerId, request: GarnishmentWithholdingRequest) = Unit
     }
 
     @Bean
     @Primary
     fun stubTaxClient(): TaxClient = object : TaxClient {
-        override fun getTaxContext(employerId: EmployerId, asOfDate: LocalDate, residentState: String?, workState: String?, localityCodes: List<String>): TaxContext = TaxContext()
+        override fun getTaxContext(employerId: UtilityId, asOfDate: LocalDate, residentState: String?, workState: String?, localityCodes: List<String>): TaxContext = TaxContext()
     }
 
     @Bean
     @Primary
     fun stubLaborClient(): LaborStandardsClient = object : LaborStandardsClient {
-        override fun getLaborStandards(employerId: EmployerId, asOfDate: LocalDate, workState: String?, homeState: String?, localityCodes: List<String>) = null
+        override fun getLaborStandards(employerId: UtilityId, asOfDate: LocalDate, workState: String?, homeState: String?, localityCodes: List<String>) = null
     }
 }

@@ -1,11 +1,11 @@
 package com.example.usbilling.payroll.engine
 
 import com.example.usbilling.payroll.model.*
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.PayRunId
-import com.example.usbilling.shared.PaycheckId
+import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillId
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -14,8 +14,8 @@ class EmployerContributionsAndImputedIncomeTest {
 
     @Test
     fun `employer HSA contribution is tracked in YTD but not taxable`() {
-        val employerId = EmployerId("emp-hsa-er")
-        val employeeId = EmployeeId("ee-hsa-er")
+        val employerId = UtilityId("emp-hsa-er")
+        val employeeId = CustomerId("ee-hsa-er")
 
         val period = PayPeriod(
             id = "2025-01-BW-HSA-ER",
@@ -34,8 +34,8 @@ class EmployerContributionsAndImputedIncomeTest {
         )
 
         val input = PaycheckInput(
-            paycheckId = PaycheckId("chk-hsa-er"),
-            payRunId = PayRunId("run-hsa-er"),
+            paycheckId = BillId("chk-hsa-er"),
+            payRunId = BillRunId("run-hsa-er"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,
@@ -74,8 +74,8 @@ class EmployerContributionsAndImputedIncomeTest {
 
     @Test
     fun `imputed income is taxable but not paid in cash`() {
-        val employerId = EmployerId("emp-imputed")
-        val employeeId = EmployeeId("ee-imputed")
+        val employerId = UtilityId("emp-imputed")
+        val employeeId = CustomerId("ee-imputed")
 
         val period = PayPeriod(
             id = "2025-01-BW-IMPUTED",
@@ -111,8 +111,8 @@ class EmployerContributionsAndImputedIncomeTest {
         )
 
         val input = PaycheckInput(
-            paycheckId = PaycheckId("chk-imputed"),
-            payRunId = PayRunId("run-imputed"),
+            paycheckId = BillId("chk-imputed"),
+            payRunId = BillRunId("run-imputed"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,
@@ -129,7 +129,7 @@ class EmployerContributionsAndImputedIncomeTest {
 
         // Config repository that marks IMPUTED_GTL as imputed income
         val earningConfig = object : com.example.usbilling.payroll.model.config.EarningConfigRepository {
-            override fun findByEmployerAndCode(employerId: EmployerId, code: EarningCode): com.example.usbilling.payroll.model.config.EarningDefinition? = when (code.value) {
+            override fun findByEmployerAndCode(employerId: UtilityId, code: EarningCode): com.example.usbilling.payroll.model.config.EarningDefinition? = when (code.value) {
                 "HOURLY" -> com.example.usbilling.payroll.model.config.EarningDefinition(
                     code = code,
                     displayName = "Hourly Wages",

@@ -14,11 +14,11 @@ import com.example.usbilling.payroll.model.audit.TraceLevel
 import com.example.usbilling.payroll.model.config.DeductionConfigRepository
 import com.example.usbilling.payroll.model.config.EarningConfigRepository
 import com.example.usbilling.payroll.model.garnishment.GarnishmentContext
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.PayRunId
-import com.example.usbilling.shared.PaycheckId
+import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillId
 import com.example.usbilling.shared.toLocalityCodeStrings
 import com.example.usbilling.worker.LocalityResolver
 import com.example.usbilling.worker.SupportProfiles
@@ -55,8 +55,8 @@ class WorkerPaycheckComputationService(
     }
 
     private fun computeForFinalizeJobInternal(job: FinalizePayRunEmployeeJob): PaycheckComputation {
-        val employerId = EmployerId(job.employerId)
-        val employeeId = EmployeeId(job.employeeId)
+        val employerId = UtilityId(job.employerId)
+        val employeeId = CustomerId(job.employeeId)
 
         val payPeriod = hrClient.getPayPeriod(employerId, job.payPeriodId)
             ?: error("No pay period '${job.payPeriodId}' for employer ${job.employerId}")
@@ -148,8 +148,8 @@ class WorkerPaycheckComputationService(
         val otherEarnings = earningOverrides + doubleTimeEarnings
 
         val input = PaycheckInput(
-            paycheckId = PaycheckId(job.paycheckId),
-            payRunId = PayRunId(job.payRunId),
+            paycheckId = BillId(job.paycheckId),
+            payRunId = BillRunId(job.payRunId),
             employerId = employerId,
             employeeId = snapshot.employeeId,
             period = payPeriod,

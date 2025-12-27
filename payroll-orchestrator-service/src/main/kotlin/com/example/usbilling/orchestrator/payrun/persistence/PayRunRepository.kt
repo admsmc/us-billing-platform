@@ -415,7 +415,7 @@ class PayRunRepository(
     /**
      * Attach a correction linkage to a pay run if unset, or verify it matches if already set.
      */
-    fun acceptCorrectionOfPayRunId(employerId: String, payRunId: String, correctionOfPayRunId: String): Boolean {
+    fun acceptCorrectionOfBillRunId(employerId: String, payRunId: String, correctionOfPayRunId: String): Boolean {
         // Set if NULL, or keep existing.
         jdbcTemplate.update(
             """
@@ -443,7 +443,7 @@ class PayRunRepository(
         return stored == null || stored == correctionOfPayRunId
     }
 
-    fun findCorrectionOfPayRunId(employerId: String, payRunId: String): String? = jdbcTemplate.query(
+    fun findCorrectionOfBillRunId(employerId: String, payRunId: String): String? = jdbcTemplate.query(
         """
             SELECT correction_of_pay_run_id
             FROM pay_run

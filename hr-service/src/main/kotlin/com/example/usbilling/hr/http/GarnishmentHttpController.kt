@@ -2,8 +2,8 @@ package com.example.usbilling.hr.http
 
 import com.example.usbilling.hr.db.GarnishmentRuleConfigRepository
 import com.example.usbilling.hr.garnishment.GarnishmentOrderRepository
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
@@ -51,8 +51,8 @@ class GarnishmentHttpController(
         @PathVariable employeeId: String,
         @RequestParam("asOf") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) asOf: LocalDate,
     ): List<GarnishmentOrderDto> {
-        val employer = EmployerId(employerId)
-        val employee = EmployeeId(employeeId)
+        val employer = UtilityId(employerId)
+        val employee = CustomerId(employeeId)
 
         val activeOrders = orderRepository.findActiveOrdersForEmployee(employer, employee, asOf)
         val rules = ruleConfigRepository.findRulesForEmployer(employer)

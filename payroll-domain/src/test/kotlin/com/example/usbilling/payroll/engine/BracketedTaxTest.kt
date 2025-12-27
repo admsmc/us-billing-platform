@@ -1,18 +1,18 @@
 package com.example.usbilling.payroll.engine
 
 import com.example.usbilling.payroll.model.*
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.PayRunId
-import com.example.usbilling.shared.PaycheckId
+import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillId
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class BracketedTaxTest {
 
-    private fun baseInput(employerId: EmployerId, employeeId: EmployeeId, priorYtd: YtdSnapshot): PaycheckInput {
+    private fun baseInput(employerId: UtilityId, employeeId: CustomerId, priorYtd: YtdSnapshot): PaycheckInput {
         val period = PayPeriod(
             id = "BR-PERIOD",
             employerId = employerId,
@@ -32,8 +32,8 @@ class BracketedTaxTest {
             ),
         )
         return PaycheckInput(
-            paycheckId = PaycheckId("chk-br"),
-            payRunId = PayRunId("run-br"),
+            paycheckId = BillId("chk-br"),
+            payRunId = BillRunId("run-br"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,
@@ -50,8 +50,8 @@ class BracketedTaxTest {
 
     @Test
     fun `single bracket acts like flat tax`() {
-        val employerId = EmployerId("emp-br-1")
-        val employeeId = EmployeeId("ee-br-1")
+        val employerId = UtilityId("emp-br-1")
+        val employeeId = CustomerId("ee-br-1")
         val priorYtd = YtdSnapshot(year = 2025)
 
         val ruleId = "BR_SINGLE"
@@ -80,8 +80,8 @@ class BracketedTaxTest {
 
     @Test
     fun `multi bracket tax splits income correctly`() {
-        val employerId = EmployerId("emp-br-2")
-        val employeeId = EmployeeId("ee-br-2")
+        val employerId = UtilityId("emp-br-2")
+        val employeeId = CustomerId("ee-br-2")
         val priorYtd = YtdSnapshot(year = 2025)
 
         val ruleId = "BR_MULTI"
@@ -121,8 +121,8 @@ class BracketedTaxTest {
 
     @Test
     fun `standard deduction reduces taxable income to zero`() {
-        val employerId = EmployerId("emp-br-3")
-        val employeeId = EmployeeId("ee-br-3")
+        val employerId = UtilityId("emp-br-3")
+        val employeeId = CustomerId("ee-br-3")
         val priorYtd = YtdSnapshot(year = 2025)
 
         val ruleId = "BR_STDDED_ZERO"
@@ -149,8 +149,8 @@ class BracketedTaxTest {
 
     @Test
     fun `pre tax 401k reduces federal taxable before bracketed federal tax`() {
-        val employerId = EmployerId("emp-br-4")
-        val employeeId = EmployeeId("ee-br-4")
+        val employerId = UtilityId("emp-br-4")
+        val employeeId = CustomerId("ee-br-4")
         val priorYtd = YtdSnapshot(year = 2025)
 
         // Simple two-bracket federal tax on FederalTaxable basis
@@ -169,7 +169,7 @@ class BracketedTaxTest {
 
         // Pre-tax 401k plan: 10% of gross (10,000) = 1,000, so FederalTaxable = 9,000
         val deductionRepo = object : com.example.usbilling.payroll.model.config.DeductionConfigRepository {
-            override fun findPlansForEmployer(employerId: EmployerId): List<com.example.usbilling.payroll.model.config.DeductionPlan> = listOf(
+            override fun findPlansForEmployer(employerId: UtilityId): List<com.example.usbilling.payroll.model.config.DeductionPlan> = listOf(
                 com.example.usbilling.payroll.model.config.DeductionPlan(
                     id = "PLAN_401K_BR",
                     name = "401k Employee",

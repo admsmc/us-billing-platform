@@ -1,7 +1,7 @@
 package com.example.usbilling.hr.http
 
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -28,8 +28,8 @@ class HrHttpIntegrationTest {
     @Autowired
     lateinit var jdbcTemplate: JdbcTemplate
 
-    private val employerId = EmployerId("EMP-HR-HTTP-INT")
-    private val employeeId = EmployeeId("EE-HTTP-1")
+    private val employerId = UtilityId("EMP-HR-HTTP-INT")
+    private val employeeId = CustomerId("EE-HTTP-1")
     private val payPeriodId = "2025-01-BW1"
     private val checkDate = LocalDate.of(2025, 1, 15)
 
@@ -280,8 +280,8 @@ class HrHttpIntegrationTest {
 
     @Test
     fun `arrears are reconciled from ledger into orders and completed orders drop from GET garnishments`() {
-        val reconEmployerId = EmployerId("EMP-HR-RECON")
-        val reconEmployeeId = EmployeeId("EE-HR-RECON-1")
+        val reconEmployerId = UtilityId("EMP-HR-RECON")
+        val reconEmployeeId = CustomerId("EE-HR-RECON-1")
 
         // Seed an order with an initial arrears balance and ACTIVE status.
         jdbcTemplate.update(

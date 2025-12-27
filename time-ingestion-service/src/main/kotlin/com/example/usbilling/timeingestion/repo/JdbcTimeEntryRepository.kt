@@ -1,7 +1,7 @@
 package com.example.usbilling.timeingestion.repo
 
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Repository
 import java.sql.Date
@@ -22,13 +22,13 @@ class JdbcTimeEntryRepository(
         }
     }
 
-    override fun upsert(employerId: EmployerId, employeeId: EmployeeId, entry: TimeEntryRepository.StoredTimeEntry): Boolean {
+    override fun upsert(employerId: UtilityId, employeeId: CustomerId, entry: TimeEntryRepository.StoredTimeEntry): Boolean {
         val existed = exists(employerId, employeeId, entry.entryId)
         upsertInternal(employerId, employeeId, entry, now = Instant.now())
         return existed
     }
 
-    override fun upsertAll(employerId: EmployerId, employeeId: EmployeeId, entries: List<TimeEntryRepository.StoredTimeEntry>): Int {
+    override fun upsertAll(employerId: UtilityId, employeeId: CustomerId, entries: List<TimeEntryRepository.StoredTimeEntry>): Int {
         if (entries.isEmpty()) return 0
 
         val existed = countExisting(employerId, employeeId, entries.map { it.entryId })
@@ -37,7 +37,7 @@ class JdbcTimeEntryRepository(
         return existed
     }
 
-    override fun findInRange(employerId: EmployerId, employeeId: EmployeeId, start: LocalDate, end: LocalDate): List<TimeEntryRepository.StoredTimeEntry> = jdbcTemplate.query(
+    override fun findInRange(employerId: UtilityId, employeeId: CustomerId, start: LocalDate, end: LocalDate): List<TimeEntryRepository.StoredTimeEntry> = jdbcTemplate.query(
         """
             SELECT entry_id, work_date, hours,
                    cash_tips_cents, charged_tips_cents, allocated_tips_cents,
@@ -57,7 +57,7 @@ class JdbcTimeEntryRepository(
         Date.valueOf(end),
     )
 
-    override fun findAllInRange(employerId: EmployerId, start: LocalDate, end: LocalDate): List<TimeEntryRepository.StoredTimeEntryWithEmployee> = jdbcTemplate.query(
+    override fun findAllInRange(employerId: UtilityId, start: LocalDate, end: LocalDate): List<TimeEntryRepository.StoredTimeEntryWithEmployee> = jdbcTemplate.query(
         """
             SELECT employee_id,
                    entry_id, work_date, hours,
@@ -72,7 +72,7 @@ class JdbcTimeEntryRepository(
         """.trimIndent(),
         { rs, _ ->
             TimeEntryRepository.StoredTimeEntryWithEmployee(
-                employeeId = EmployeeId(rs.getString("employee_id")),
+                employeeId = CustomerId(rs.getString("employee_id")),
                 entry = rs.toStoredTimeEntry(),
             )
         },
@@ -81,7 +81,7 @@ class JdbcTimeEntryRepository(
         Date.valueOf(end),
     )
 
-    private fun exists(employerId: EmployerId, employeeId: EmployeeId, entryId: String): Boolean {
+    private fun exists(employerId: UtilityId, employeeId: CustomerId, entryId: String): Boolean {
         val n = jdbcTemplate.queryForObject(
             """
             SELECT COUNT(1)
@@ -96,7 +96,7 @@ class JdbcTimeEntryRepository(
         return n > 0L
     }
 
-    private fun countExisting(employerId: EmployerId, employeeId: EmployeeId, entryIds: List<String>): Int {
+    private fun countExisting(employerId: UtilityId, employeeId: CustomerId, entryIds: List<String>): Int {
         val distinct = entryIds.filter { it.isNotBlank() }.distinct()
         if (distinct.isEmpty()) return 0
 
@@ -123,7 +123,7 @@ class JdbcTimeEntryRepository(
         return n.toInt()
     }
 
-    private fun upsertInternal(employerId: EmployerId, employeeId: EmployeeId, entry: TimeEntryRepository.StoredTimeEntry, now: Instant) {
+    private fun upsertInternal(employerId: UtilityId, employeeId: CustomerId, entry: TimeEntryRepository.StoredTimeEntry, now: Instant) {
         val nowTs = Timestamp.from(now)
 
         if (isPostgres) {

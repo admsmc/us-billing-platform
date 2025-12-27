@@ -2,7 +2,7 @@ package com.example.usbilling.worker.jobs.rabbit
 
 import com.example.usbilling.messaging.jobs.FinalizePayRunEmployeeJob
 import com.example.usbilling.messaging.jobs.FinalizePayRunJobRouting
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.worker.client.CompleteEmployeeItemRequest
 import com.example.usbilling.worker.client.OrchestratorClient
 import com.example.usbilling.worker.payrun.WorkerPaycheckComputationService
@@ -168,7 +168,7 @@ class RabbitFinalizeEmployeeItemConsumer(
     fun onJob(job: FinalizePayRunEmployeeJob) {
         if (!props.enabled) return
 
-        val employerId = EmployerId(job.employerId)
+        val employerId = UtilityId(job.employerId)
 
         @Suppress("TooGenericExceptionCaught")
         try {

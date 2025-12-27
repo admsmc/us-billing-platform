@@ -2,11 +2,11 @@ package com.example.usbilling.tax.persistence
 
 import com.example.usbilling.payroll.engine.TaxesCalculator
 import com.example.usbilling.payroll.model.*
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.PayRunId
-import com.example.usbilling.shared.PaycheckId
+import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillId
 import com.example.usbilling.tax.impl.CachingTaxCatalog
 import com.example.usbilling.tax.impl.CatalogBackedTaxContextProvider
 import com.example.usbilling.tax.impl.DbTaxCatalog
@@ -44,7 +44,7 @@ class WageBracketTaxGoldenTest {
         val cachingCatalog = CachingTaxCatalog(dbCatalog)
         val provider = CatalogBackedTaxContextProvider(cachingCatalog)
 
-        val employerId = EmployerId("EMP-WB-DEMO")
+        val employerId = UtilityId("EMP-WB-DEMO")
         val asOfDate = LocalDate.of(2025, 6, 30)
 
         val taxContext = provider.getTaxContext(employerId, asOfDate)
@@ -72,7 +72,7 @@ class WageBracketTaxGoldenTest {
         val cachingCatalog = CachingTaxCatalog(dbCatalog)
         val provider = CatalogBackedTaxContextProvider(cachingCatalog)
 
-        val employerId = EmployerId("EMP-WB-DEMO-APPLY")
+        val employerId = UtilityId("EMP-WB-DEMO-APPLY")
         val asOfDate = LocalDate.of(2025, 6, 30)
 
         val taxContext = provider.getTaxContext(employerId, asOfDate)
@@ -95,7 +95,7 @@ class WageBracketTaxGoldenTest {
 
             val snapshot = EmployeeSnapshot(
                 employerId = employerId,
-                employeeId = EmployeeId("EE-WB-$wagesCents"),
+                employeeId = CustomerId("EE-WB-$wagesCents"),
                 homeState = "CA",
                 workState = "CA",
                 filingStatus = FilingStatus.SINGLE,
@@ -106,8 +106,8 @@ class WageBracketTaxGoldenTest {
             )
 
             val input = PaycheckInput(
-                paycheckId = PaycheckId("CHK-WB-$wagesCents"),
-                payRunId = PayRunId("RUN-WB-DEMO"),
+                paycheckId = BillId("CHK-WB-$wagesCents"),
+                payRunId = BillRunId("RUN-WB-DEMO"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,

@@ -16,11 +16,11 @@ import com.example.usbilling.payroll.model.EmployerContributionLine
 import com.example.usbilling.payroll.model.PaycheckResult
 import com.example.usbilling.payroll.model.TaxLine
 import com.example.usbilling.payroll.model.audit.PaycheckAudit
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.PayRunId
-import com.example.usbilling.shared.PaycheckId
+import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillId
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -192,7 +192,7 @@ class PayRunCorrectionsService(
 
         val correctionRun = createOrGet.payRun
 
-        val acceptedLink = payRunRepository.acceptCorrectionOfPayRunId(
+        val acceptedLink = payRunRepository.acceptCorrectionOfBillRunId(
             employerId = employerId,
             payRunId = correctionRun.payRunId,
             correctionOfPayRunId = sourcePayRunId,
@@ -210,7 +210,7 @@ class PayRunCorrectionsService(
 
         val sourcePaycheckIdByEmployeeId = succeededSourcePaychecks.toMap()
 
-        val employer = EmployerId(employerId)
+        val employer = UtilityId(employerId)
         val now = Instant.now()
 
         employeeIds.forEach { employeeId ->
@@ -239,7 +239,7 @@ class PayRunCorrectionsService(
                 return@forEach
             }
 
-            val newPaycheckId = payRunItemRepository.getOrAssignPaycheckId(
+            val newPaycheckId = payRunItemRepository.getOrAssignBillId(
                 employerId = employerId,
                 payRunId = correctionRun.payRunId,
                 employeeId = employeeId,
@@ -252,10 +252,10 @@ class PayRunCorrectionsService(
 
                 val transformed = transformPaycheck(original)
                     .copy(
-                        paycheckId = PaycheckId(newPaycheckId),
-                        payRunId = PayRunId(correctionRun.payRunId),
+                        paycheckId = BillId(newPaycheckId),
+                        payRunId = BillRunId(correctionRun.payRunId),
                         employerId = employer,
-                        employeeId = EmployeeId(employeeId),
+                        employeeId = CustomerId(employeeId),
                     )
 
                 paycheckStoreRepository.insertFinalPaycheckIfAbsent(

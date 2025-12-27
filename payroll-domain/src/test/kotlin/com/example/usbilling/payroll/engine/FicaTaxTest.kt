@@ -1,18 +1,18 @@
 package com.example.usbilling.payroll.engine
 
 import com.example.usbilling.payroll.model.*
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.PayRunId
-import com.example.usbilling.shared.PaycheckId
+import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillId
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class FicaTaxTest {
 
-    private fun baseInput(employerId: EmployerId, employeeId: EmployeeId, priorYtd: YtdSnapshot, grossAnnual: Long = 260_000_00L): PaycheckInput {
+    private fun baseInput(employerId: UtilityId, employeeId: CustomerId, priorYtd: YtdSnapshot, grossAnnual: Long = 260_000_00L): PaycheckInput {
         val period = PayPeriod(
             id = "FICA-PERIOD",
             employerId = employerId,
@@ -32,8 +32,8 @@ class FicaTaxTest {
             ),
         )
         return PaycheckInput(
-            paycheckId = PaycheckId("chk-fica"),
-            payRunId = PayRunId("run-fica"),
+            paycheckId = BillId("chk-fica"),
+            payRunId = BillRunId("run-fica"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,
@@ -50,8 +50,8 @@ class FicaTaxTest {
 
     @Test
     fun `social security flat tax applies fully when below wage cap`() {
-        val employerId = EmployerId("emp-ss-1")
-        val employeeId = EmployeeId("ee-ss-1")
+        val employerId = UtilityId("emp-ss-1")
+        val employeeId = CustomerId("ee-ss-1")
         val priorYtd = YtdSnapshot(year = 2025)
 
         val ssRuleId = "SS_EMP"
@@ -78,8 +78,8 @@ class FicaTaxTest {
 
     @Test
     fun `social security flat tax is limited when crossing wage cap`() {
-        val employerId = EmployerId("emp-ss-2")
-        val employeeId = EmployeeId("ee-ss-2")
+        val employerId = UtilityId("emp-ss-2")
+        val employeeId = CustomerId("ee-ss-2")
         val priorYtd = YtdSnapshot(
             year = 2025,
             wagesByBasis = mapOf(
@@ -113,8 +113,8 @@ class FicaTaxTest {
 
     @Test
     fun `social security tax is zero once wage cap already exceeded`() {
-        val employerId = EmployerId("emp-ss-3")
-        val employeeId = EmployeeId("ee-ss-3")
+        val employerId = UtilityId("emp-ss-3")
+        val employeeId = CustomerId("ee-ss-3")
         val priorYtd = YtdSnapshot(
             year = 2025,
             wagesByBasis = mapOf(
@@ -143,8 +143,8 @@ class FicaTaxTest {
 
     @Test
     fun `medicare employee tax applies on full wages when uncapped`() {
-        val employerId = EmployerId("emp-med-ee")
-        val employeeId = EmployeeId("ee-med-ee")
+        val employerId = UtilityId("emp-med-ee")
+        val employeeId = CustomerId("ee-med-ee")
         val priorYtd = YtdSnapshot(
             year = 2025,
             wagesByBasis = mapOf(
@@ -177,8 +177,8 @@ class FicaTaxTest {
 
     @Test
     fun `employee and employer social security taxes share same basis and cap`() {
-        val employerId = EmployerId("emp-ss-both")
-        val employeeId = EmployeeId("ee-ss-both")
+        val employerId = UtilityId("emp-ss-both")
+        val employeeId = CustomerId("ee-ss-both")
         val priorYtd = YtdSnapshot(year = 2025)
 
         val ssEmployeeRuleId = "SS_EMP_BOTH"

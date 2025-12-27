@@ -4,8 +4,8 @@ import com.example.usbilling.hr.HrApplication
 import com.example.usbilling.hr.client.HrClientProperties
 import com.example.usbilling.payroll.model.TraceStep
 import com.example.usbilling.payroll.model.garnishment.GarnishmentType
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.worker.support.StubTaxLaborClientsTestConfig
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.BeforeEach
@@ -73,8 +73,8 @@ class WorkerHrGarnishmentParamE2ETest {
 
     data class Scenario(
         val name: String,
-        val employerId: EmployerId,
-        val employeeId: EmployeeId,
+        val employerId: UtilityId,
+        val employeeId: CustomerId,
         val seedOrders: List<SeedOrder>,
         val expectedOrderId: String,
         val expectedType: GarnishmentType,
@@ -89,8 +89,8 @@ class WorkerHrGarnishmentParamE2ETest {
             // Creditor garnishments
             Scenario(
                 name = "CA creditor garnishment",
-                employerId = EmployerId("EMP-GARN-CA"),
-                employeeId = EmployeeId("EE-CA-CRED"),
+                employerId = UtilityId("EMP-GARN-CA"),
+                employeeId = CustomerId("EE-CA-CRED"),
                 seedOrders = listOf(
                     SeedOrder(
                         orderId = "ORDER-CA-CRED-1",
@@ -106,8 +106,8 @@ class WorkerHrGarnishmentParamE2ETest {
             ),
             Scenario(
                 name = "CA creditor garnishment uses typed per-order formula override when present",
-                employerId = EmployerId("EMP-GARN-CA"),
-                employeeId = EmployeeId("EE-CA-CRED-OVERRIDE"),
+                employerId = UtilityId("EMP-GARN-CA"),
+                employeeId = CustomerId("EE-CA-CRED-OVERRIDE"),
                 seedOrders = listOf(
                     SeedOrder(
                         orderId = "ORDER-CA-CRED-OVERRIDE-1",
@@ -124,8 +124,8 @@ class WorkerHrGarnishmentParamE2ETest {
             ),
             Scenario(
                 name = "NV creditor garnishment",
-                employerId = EmployerId("EMP-GARN-NV"),
-                employeeId = EmployeeId("EE-NV-CRED"),
+                employerId = UtilityId("EMP-GARN-NV"),
+                employeeId = CustomerId("EE-NV-CRED"),
                 seedOrders = listOf(
                     SeedOrder(
                         orderId = "ORDER-NV-CRED-1",
@@ -140,8 +140,8 @@ class WorkerHrGarnishmentParamE2ETest {
             ),
             Scenario(
                 name = "NY creditor garnishment",
-                employerId = EmployerId("EMP-GARN-NY"),
-                employeeId = EmployeeId("EE-NY-CRED"),
+                employerId = UtilityId("EMP-GARN-NY"),
+                employeeId = CustomerId("EE-NY-CRED"),
                 seedOrders = listOf(
                     SeedOrder(
                         orderId = "ORDER-NY-CRED-1",
@@ -159,8 +159,8 @@ class WorkerHrGarnishmentParamE2ETest {
             // State tax levies (levy-with-bands)
             Scenario(
                 name = "CA state tax levy",
-                employerId = EmployerId("EMP-GARN-CA"),
-                employeeId = EmployeeId("EE-CA-STLEVY"),
+                employerId = UtilityId("EMP-GARN-CA"),
+                employeeId = CustomerId("EE-CA-STLEVY"),
                 seedOrders = listOf(
                     SeedOrder(
                         orderId = "ORDER-CA-STLEVY-1",
@@ -176,8 +176,8 @@ class WorkerHrGarnishmentParamE2ETest {
             ),
             Scenario(
                 name = "NV state tax levy",
-                employerId = EmployerId("EMP-GARN-NV"),
-                employeeId = EmployeeId("EE-NV-STLEVY"),
+                employerId = UtilityId("EMP-GARN-NV"),
+                employeeId = CustomerId("EE-NV-STLEVY"),
                 seedOrders = listOf(
                     SeedOrder(
                         orderId = "ORDER-NV-STLEVY-1",
@@ -193,8 +193,8 @@ class WorkerHrGarnishmentParamE2ETest {
             ),
             Scenario(
                 name = "NY state tax levy",
-                employerId = EmployerId("EMP-GARN-NY"),
-                employeeId = EmployeeId("EE-NY-STLEVY"),
+                employerId = UtilityId("EMP-GARN-NY"),
+                employeeId = CustomerId("EE-NY-STLEVY"),
                 seedOrders = listOf(
                     SeedOrder(
                         orderId = "ORDER-NY-STLEVY-1",
@@ -212,8 +212,8 @@ class WorkerHrGarnishmentParamE2ETest {
             // Federal tax levy (levy-with-bands)
             Scenario(
                 name = "federal tax levy",
-                employerId = EmployerId("EMP-GARN-CA"),
-                employeeId = EmployeeId("EE-CA-FEDLEVY"),
+                employerId = UtilityId("EMP-GARN-CA"),
+                employeeId = CustomerId("EE-CA-FEDLEVY"),
                 seedOrders = listOf(
                     SeedOrder(
                         orderId = "ORDER-FEDLEVY-1",
@@ -231,8 +231,8 @@ class WorkerHrGarnishmentParamE2ETest {
             // Student loans
             Scenario(
                 name = "CA student loan garnishment",
-                employerId = EmployerId("EMP-GARN-CA"),
-                employeeId = EmployeeId("EE-CA-STUDENT"),
+                employerId = UtilityId("EMP-GARN-CA"),
+                employeeId = CustomerId("EE-CA-STUDENT"),
                 seedOrders = listOf(
                     SeedOrder(
                         orderId = "ORDER-CA-STUDENT-1",
@@ -247,8 +247,8 @@ class WorkerHrGarnishmentParamE2ETest {
             ),
             Scenario(
                 name = "NV student loan garnishment",
-                employerId = EmployerId("EMP-GARN-NV"),
-                employeeId = EmployeeId("EE-NV-STUDENT"),
+                employerId = UtilityId("EMP-GARN-NV"),
+                employeeId = CustomerId("EE-NV-STUDENT"),
                 seedOrders = listOf(
                     SeedOrder(
                         orderId = "ORDER-NV-STUDENT-1",
@@ -263,8 +263,8 @@ class WorkerHrGarnishmentParamE2ETest {
             ),
             Scenario(
                 name = "NY student loan garnishment",
-                employerId = EmployerId("EMP-GARN-NY"),
-                employeeId = EmployeeId("EE-NY-STUDENT"),
+                employerId = UtilityId("EMP-GARN-NY"),
+                employeeId = CustomerId("EE-NY-STUDENT"),
                 seedOrders = listOf(
                     SeedOrder(
                         orderId = "ORDER-NY-STUDENT-1",
@@ -281,8 +281,8 @@ class WorkerHrGarnishmentParamE2ETest {
             // Employer-specific override remains supported (exercise LESSER_OF_PERCENT_OR_AMOUNT mapping)
             Scenario(
                 name = "employer override lesser-of creditor rule (CA)",
-                employerId = EmployerId("EMP-GARN-OVERRIDE"),
-                employeeId = EmployeeId("EE-HR-OVERRIDE-E2E"),
+                employerId = UtilityId("EMP-GARN-OVERRIDE"),
+                employeeId = CustomerId("EE-HR-OVERRIDE-E2E"),
                 seedOrders = emptyList(),
                 expectedOrderId = "ORDER-RULE-1",
                 expectedType = GarnishmentType.CREDITOR_GARNISHMENT,

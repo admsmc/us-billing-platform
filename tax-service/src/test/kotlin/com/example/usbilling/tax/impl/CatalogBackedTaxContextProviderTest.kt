@@ -2,7 +2,7 @@ package com.example.usbilling.tax.impl
 
 import com.example.usbilling.payroll.model.TaxBasis
 import com.example.usbilling.payroll.model.TaxJurisdictionType
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.tax.api.TaxQuery
 import java.time.LocalDate
 import kotlin.test.Test
@@ -12,7 +12,7 @@ class CatalogBackedTaxContextProviderTest {
 
     @Test
     fun `partitions rules into TaxContext buckets by jurisdiction type`() {
-        val employerId = EmployerId("EMP123")
+        val employerId = UtilityId("EMP123")
         val asOfDate = LocalDate.of(2025, 1, 15)
 
         val inMemoryRepository = object : TaxRuleRepository {
@@ -92,7 +92,7 @@ class CatalogBackedTaxContextProviderTest {
 
     @Test
     fun `uses cached TaxContext for repeated calls with same employer and date`() {
-        val employerId = EmployerId("EMP456")
+        val employerId = UtilityId("EMP456")
         val asOfDate = LocalDate.of(2025, 6, 30)
 
         class CountingTaxRuleRepository : TaxRuleRepository {

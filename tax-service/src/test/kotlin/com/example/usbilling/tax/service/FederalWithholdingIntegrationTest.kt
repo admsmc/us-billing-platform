@@ -1,11 +1,11 @@
 package com.example.usbilling.tax.service
 
 import com.example.usbilling.payroll.model.*
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.PayRunId
-import com.example.usbilling.shared.PaycheckId
+import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillId
 import com.example.usbilling.tax.impl.CachingTaxCatalog
 import com.example.usbilling.tax.impl.CatalogBackedTaxContextProvider
 import com.example.usbilling.tax.impl.DbTaxCatalog
@@ -56,7 +56,7 @@ class FederalWithholdingIntegrationTest {
         importFederalConfig(dsl)
 
         val provider = createProvider(dsl)
-        val employerId = EmployerId("EMP-FED-W4-RULES")
+        val employerId = UtilityId("EMP-FED-W4-RULES")
         val asOfDate = LocalDate.of(2025, 6, 30)
 
         val taxContext = provider.getTaxContext(employerId, asOfDate)
@@ -89,7 +89,7 @@ class FederalWithholdingIntegrationTest {
         importFederalConfig(dsl)
 
         val provider = createProvider(dsl)
-        val employerId = EmployerId("EMP-FED-W4-CALC")
+        val employerId = UtilityId("EMP-FED-W4-CALC")
         val asOfDate = LocalDate.of(2025, 6, 30)
 
         val taxContext = provider.getTaxContext(employerId, asOfDate)
@@ -107,7 +107,7 @@ class FederalWithholdingIntegrationTest {
 
             val snapshot = EmployeeSnapshot(
                 employerId = employerId,
-                employeeId = EmployeeId("EE-$status-W4"),
+                employeeId = CustomerId("EE-$status-W4"),
                 homeState = "CA",
                 workState = "CA",
                 filingStatus = status,
@@ -118,8 +118,8 @@ class FederalWithholdingIntegrationTest {
             )
 
             return PaycheckInput(
-                paycheckId = PaycheckId("CHK-$status-W4"),
-                payRunId = PayRunId("RUN-FED-W4"),
+                paycheckId = BillId("CHK-$status-W4"),
+                payRunId = BillRunId("RUN-FED-W4"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,
@@ -158,7 +158,7 @@ class FederalWithholdingIntegrationTest {
         importFederalConfig(dsl)
 
         val provider = createProvider(dsl)
-        val employerId = EmployerId("EMP-FED-W4-BEHAVIOR")
+        val employerId = UtilityId("EMP-FED-W4-BEHAVIOR")
         val asOfDate = LocalDate.of(2025, 6, 30)
 
         val taxContext = provider.getTaxContext(employerId, asOfDate)
@@ -176,7 +176,7 @@ class FederalWithholdingIntegrationTest {
 
             val snapshot = EmployeeSnapshot(
                 employerId = employerId,
-                employeeId = EmployeeId("EE-W4-BEHAVIOR"),
+                employeeId = CustomerId("EE-W4-BEHAVIOR"),
                 homeState = "CA",
                 workState = "CA",
                 filingStatus = FilingStatus.SINGLE,
@@ -190,8 +190,8 @@ class FederalWithholdingIntegrationTest {
             )
 
             val input = PaycheckInput(
-                paycheckId = PaycheckId("CHK-W4-BEHAVIOR"),
-                payRunId = PayRunId("RUN-FED-W4-BEHAVIOR"),
+                paycheckId = BillId("CHK-W4-BEHAVIOR"),
+                payRunId = BillRunId("RUN-FED-W4-BEHAVIOR"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,
@@ -243,7 +243,7 @@ class FederalWithholdingIntegrationTest {
         importFederalConfig(dsl)
 
         val provider = createProvider(dsl)
-        val employerId = EmployerId("EMP-FED-W4-NRA")
+        val employerId = UtilityId("EMP-FED-W4-NRA")
         val asOfDate = LocalDate.of(2025, 6, 30)
 
         val taxContext = provider.getTaxContext(employerId, asOfDate)
@@ -261,7 +261,7 @@ class FederalWithholdingIntegrationTest {
 
             val snapshot = EmployeeSnapshot(
                 employerId = employerId,
-                employeeId = EmployeeId("EE-NRA-$isNra"),
+                employeeId = CustomerId("EE-NRA-$isNra"),
                 homeState = "CA",
                 workState = "CA",
                 filingStatus = FilingStatus.SINGLE,
@@ -273,8 +273,8 @@ class FederalWithholdingIntegrationTest {
             )
 
             val input = PaycheckInput(
-                paycheckId = PaycheckId("CHK-NRA-$isNra"),
-                payRunId = PayRunId("RUN-FED-W4-NRA"),
+                paycheckId = BillId("CHK-NRA-$isNra"),
+                payRunId = BillRunId("RUN-FED-W4-NRA"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,
@@ -308,7 +308,7 @@ class FederalWithholdingIntegrationTest {
         importFederalConfig(dsl)
 
         val provider = createProvider(dsl)
-        val employerId = EmployerId("EMP-FED-W4-NRA-WEEKLY")
+        val employerId = UtilityId("EMP-FED-W4-NRA-WEEKLY")
         val asOfDate = LocalDate.of(2025, 6, 30)
 
         val taxContext = provider.getTaxContext(employerId, asOfDate)
@@ -326,7 +326,7 @@ class FederalWithholdingIntegrationTest {
 
             val snapshot = EmployeeSnapshot(
                 employerId = employerId,
-                employeeId = EmployeeId("EE-NRA-WEEKLY-$isNra"),
+                employeeId = CustomerId("EE-NRA-WEEKLY-$isNra"),
                 homeState = "CA",
                 workState = "CA",
                 filingStatus = FilingStatus.SINGLE,
@@ -338,8 +338,8 @@ class FederalWithholdingIntegrationTest {
             )
 
             val input = PaycheckInput(
-                paycheckId = PaycheckId("CHK-NRA-WEEKLY-$isNra"),
-                payRunId = PayRunId("RUN-FED-W4-NRA-WEEKLY"),
+                paycheckId = BillId("CHK-NRA-WEEKLY-$isNra"),
+                payRunId = BillRunId("RUN-FED-W4-NRA-WEEKLY"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,
@@ -377,7 +377,7 @@ class FederalWithholdingIntegrationTest {
         )
 
         val provider = createProvider(dsl)
-        val employerId = EmployerId("EMP-FED-W4-STEP2-WB")
+        val employerId = UtilityId("EMP-FED-W4-STEP2-WB")
         val asOfDate = LocalDate.of(2025, 6, 30)
 
         val taxContext = provider.getTaxContext(employerId, asOfDate)
@@ -395,7 +395,7 @@ class FederalWithholdingIntegrationTest {
 
             val snapshot = EmployeeSnapshot(
                 employerId = employerId,
-                employeeId = EmployeeId("EE-STEP2-WB-$step2"),
+                employeeId = CustomerId("EE-STEP2-WB-$step2"),
                 homeState = "CA",
                 workState = "CA",
                 filingStatus = FilingStatus.SINGLE,
@@ -407,8 +407,8 @@ class FederalWithholdingIntegrationTest {
             )
 
             val input = PaycheckInput(
-                paycheckId = PaycheckId("CHK-STEP2-WB-$step2"),
-                payRunId = PayRunId("RUN-FED-W4-STEP2-WB"),
+                paycheckId = BillId("CHK-STEP2-WB-$step2"),
+                payRunId = BillRunId("RUN-FED-W4-STEP2-WB"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,
@@ -443,7 +443,7 @@ class FederalWithholdingIntegrationTest {
         importPub15TWageBracketConfig(dsl)
 
         val provider = createProvider(dsl)
-        val employerId = EmployerId("EMP-FED-W4-CROSS-METHOD-SINGLE")
+        val employerId = UtilityId("EMP-FED-W4-CROSS-METHOD-SINGLE")
         val asOfDate = LocalDate.of(2025, 6, 30)
 
         val taxContext = provider.getTaxContext(employerId, asOfDate)
@@ -459,7 +459,7 @@ class FederalWithholdingIntegrationTest {
         fun paycheck(wagesCents: Long): FederalWithholdingInput {
             val snapshot = EmployeeSnapshot(
                 employerId = employerId,
-                employeeId = EmployeeId("EE-CROSS-METHOD-$wagesCents"),
+                employeeId = CustomerId("EE-CROSS-METHOD-$wagesCents"),
                 homeState = "CA",
                 workState = "CA",
                 filingStatus = FilingStatus.SINGLE,
@@ -470,8 +470,8 @@ class FederalWithholdingIntegrationTest {
             )
 
             val input = PaycheckInput(
-                paycheckId = PaycheckId("CHK-CROSS-METHOD-$wagesCents"),
-                payRunId = PayRunId("RUN-FED-W4-CROSS-METHOD"),
+                paycheckId = BillId("CHK-CROSS-METHOD-$wagesCents"),
+                payRunId = BillRunId("RUN-FED-W4-CROSS-METHOD"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,

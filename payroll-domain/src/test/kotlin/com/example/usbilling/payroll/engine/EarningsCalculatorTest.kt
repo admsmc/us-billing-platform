@@ -1,11 +1,11 @@
 package com.example.usbilling.payroll.engine
 
 import com.example.usbilling.payroll.model.*
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.PayRunId
-import com.example.usbilling.shared.PaycheckId
+import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillId
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -14,8 +14,8 @@ class EarningsCalculatorTest {
 
     @Test
     fun `salaried employee gross is annual divided by biweekly frequency`() {
-        val employerId = EmployerId("emp-1")
-        val employeeId = EmployeeId("ee-1")
+        val employerId = UtilityId("emp-1")
+        val employeeId = CustomerId("ee-1")
         val period = PayPeriod(
             id = "2025-01-BW1",
             employerId = employerId,
@@ -35,8 +35,8 @@ class EarningsCalculatorTest {
             ),
         )
         val input = PaycheckInput(
-            paycheckId = PaycheckId("chk-1"),
-            payRunId = PayRunId("run-1"),
+            paycheckId = BillId("chk-1"),
+            payRunId = BillRunId("run-1"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,
@@ -59,8 +59,8 @@ class EarningsCalculatorTest {
 
     @Test
     fun `salaried employee gross uses correct divisors for other frequencies`() {
-        val employerId = EmployerId("emp-freq")
-        val employeeId = EmployeeId("ee-freq")
+        val employerId = UtilityId("emp-freq")
+        val employeeId = CustomerId("ee-freq")
         val annual = Money(260_000_00L)
 
         fun makeInput(freq: PayFrequency, periodId: String): PaycheckInput {
@@ -83,8 +83,8 @@ class EarningsCalculatorTest {
                 ),
             )
             return PaycheckInput(
-                paycheckId = PaycheckId("chk-$periodId"),
-                payRunId = PayRunId("run-$periodId"),
+                paycheckId = BillId("chk-$periodId"),
+                payRunId = BillRunId("run-$periodId"),
                 employerId = employerId,
                 employeeId = employeeId,
                 period = period,
@@ -117,8 +117,8 @@ class EarningsCalculatorTest {
 
     @Test
     fun `hourly employee gross is hourly rate times hours`() {
-        val employerId = EmployerId("emp-1")
-        val employeeId = EmployeeId("ee-2")
+        val employerId = UtilityId("emp-1")
+        val employeeId = CustomerId("ee-2")
         val period = PayPeriod(
             id = "2025-01-W1",
             employerId = employerId,
@@ -135,8 +135,8 @@ class EarningsCalculatorTest {
             baseCompensation = BaseCompensation.Hourly(hourlyRate = Money(50_00L)), // $50/hr
         )
         val input = PaycheckInput(
-            paycheckId = PaycheckId("chk-2"),
-            payRunId = PayRunId("run-1"),
+            paycheckId = BillId("chk-2"),
+            payRunId = BillRunId("run-1"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,
@@ -159,8 +159,8 @@ class EarningsCalculatorTest {
 
     @Test
     fun `salaried half-period proration reduces gross proportionally`() {
-        val employerId = EmployerId("emp-prorate")
-        val employeeId = EmployeeId("ee-prorate")
+        val employerId = UtilityId("emp-prorate")
+        val employeeId = CustomerId("ee-prorate")
         val annual = Money(120_000_00L) // cleanly divisible by 24 -> 5,000 per full period
 
         val period = PayPeriod(
@@ -184,8 +184,8 @@ class EarningsCalculatorTest {
         )
 
         val halfPeriodInput = PaycheckInput(
-            paycheckId = PaycheckId("chk-prorate-half"),
-            payRunId = PayRunId("run-prorate"),
+            paycheckId = BillId("chk-prorate-half"),
+            payRunId = BillRunId("run-prorate"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,
@@ -201,7 +201,7 @@ class EarningsCalculatorTest {
         )
 
         val fullPeriodInput = halfPeriodInput.copy(
-            paycheckId = PaycheckId("chk-prorate-full"),
+            paycheckId = BillId("chk-prorate-full"),
             timeSlice = halfPeriodInput.timeSlice.copy(proration = null),
         )
 
@@ -216,8 +216,8 @@ class EarningsCalculatorTest {
 
     @Test
     fun `salaried calendar-day proration based on hire date`() {
-        val employerId = EmployerId("emp-hire")
-        val employeeId = EmployeeId("ee-hire")
+        val employerId = UtilityId("emp-hire")
+        val employeeId = CustomerId("ee-hire")
         val annual = Money(120_000_00L) // 24 periods -> 5,000 full-period
 
         // Period: 15 days (1st to 15th), hire date on the 8th -> 8 days worked
@@ -243,8 +243,8 @@ class EarningsCalculatorTest {
         )
 
         val input = PaycheckInput(
-            paycheckId = PaycheckId("chk-hire-prorate"),
-            payRunId = PayRunId("run-hire-prorate"),
+            paycheckId = BillId("chk-hire-prorate"),
+            payRunId = BillRunId("run-hire-prorate"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,
@@ -278,8 +278,8 @@ class EarningsCalculatorTest {
 
     @Test
     fun `salaried allocation uses sequenceInYear when present`() {
-        val employerId = EmployerId("emp-seq")
-        val employeeId = EmployeeId("ee-seq")
+        val employerId = UtilityId("emp-seq")
+        val employeeId = CustomerId("ee-seq")
         val annual = Money(100_000_00L) // chosen so 24 periods yields a remainder
 
         fun makeInput(sequenceInYear: Int): PaycheckInput {
@@ -303,8 +303,8 @@ class EarningsCalculatorTest {
                 ),
             )
             return PaycheckInput(
-                paycheckId = PaycheckId("chk-seq-$sequenceInYear"),
-                payRunId = PayRunId("run-seq"),
+                paycheckId = BillId("chk-seq-$sequenceInYear"),
+                payRunId = BillRunId("run-seq"),
                 employerId = employerId,
                 employeeId = employeeId,
                 period = period,
@@ -338,8 +338,8 @@ class EarningsCalculatorTest {
 
     @Test
     fun `hourly employee with overtime has correct gross`() {
-        val employerId = EmployerId("emp-1")
-        val employeeId = EmployeeId("ee-ot")
+        val employerId = UtilityId("emp-1")
+        val employeeId = CustomerId("ee-ot")
         val period = PayPeriod(
             id = "2025-01-W2",
             employerId = employerId,
@@ -356,8 +356,8 @@ class EarningsCalculatorTest {
             baseCompensation = BaseCompensation.Hourly(hourlyRate = Money(50_00L)), // $50/hr
         )
         val input = PaycheckInput(
-            paycheckId = PaycheckId("chk-ot"),
-            payRunId = PayRunId("run-ot"),
+            paycheckId = BillId("chk-ot"),
+            payRunId = BillRunId("run-ot"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,

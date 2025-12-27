@@ -5,10 +5,10 @@ import com.example.usbilling.payroll.engine.PayrollEngine
 import com.example.usbilling.payroll.model.*
 import com.example.usbilling.payroll.model.audit.TraceLevel
 import com.example.usbilling.payroll.model.garnishment.GarnishmentContext
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.PayRunId
+import com.example.usbilling.shared.BillRunId
 import com.example.usbilling.shared.toLocalityCodeStrings
 import com.example.usbilling.tax.api.TaxContextProvider
 import com.example.usbilling.tax.service.FederalWithholdingCalculator
@@ -57,7 +57,7 @@ class PayrollRunService(
     private val logger = LoggerFactory.getLogger(PayrollRunService::class.java)
 
     fun runDemoPayForEmployer(): List<Pair<PaycheckResult, Money>> {
-        val employerId = EmployerId("emp-1")
+        val employerId = UtilityId("emp-1")
         val checkDate = LocalDate.of(2025, 1, 15)
 
         // Load tax context ONCE for this employer/date. For the demo path we
@@ -66,7 +66,7 @@ class PayrollRunService(
         // modeled for the demo employees.
         val taxContext = taxClient?.getTaxContext(employerId, checkDate)
             ?: taxContextProvider.getTaxContext(employerId, checkDate)
-        val laborStandardsByEmployee = mutableMapOf<EmployeeId, LaborStandardsContext?>()
+        val laborStandardsByEmployee = mutableMapOf<CustomerId, LaborStandardsContext?>()
 
         val period = PayPeriod(
             id = "2025-01-BW1",
@@ -81,7 +81,7 @@ class PayrollRunService(
         val employees = listOf(
             EmployeeSnapshot(
                 employerId = employerId,
-                employeeId = EmployeeId("ee-1"),
+                employeeId = CustomerId("ee-1"),
                 homeState = "CA",
                 workState = "CA",
                 filingStatus = FilingStatus.SINGLE,
@@ -92,7 +92,7 @@ class PayrollRunService(
             ),
             EmployeeSnapshot(
                 employerId = employerId,
-                employeeId = EmployeeId("ee-2"),
+                employeeId = CustomerId("ee-2"),
                 homeState = "CA",
                 workState = "CA",
                 filingStatus = FilingStatus.SINGLE,
@@ -113,8 +113,8 @@ class PayrollRunService(
                 )
             }
             val input = PaycheckInput(
-                paycheckId = com.example.usbilling.shared.PaycheckId("chk-demo-${index + 1}"),
-                payRunId = PayRunId("run-demo"),
+                paycheckId = com.example.usbilling.shared.BillId("chk-demo-${index + 1}"),
+                payRunId = BillRunId("run-demo"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,
@@ -151,9 +151,9 @@ class PayrollRunService(
      * integration tests and future real flows.
      */
     fun runHrBackedPayForPeriod(
-        employerId: EmployerId,
+        employerId: UtilityId,
         payPeriodId: String,
-        employeeIds: List<EmployeeId>,
+        employeeIds: List<CustomerId>,
         /** Optional unique suffix for paycheck IDs so repeated runs don't collide in HR withholding events. */
         runId: String? = null,
     ): List<PaycheckResult> = employeeIds.map { eid ->
@@ -170,7 +170,7 @@ class PayrollRunService(
      * Benchmark/debug helper: compute a single HR-backed paycheck but do NOT record
      * garnishment withholding events back to HR.
      */
-    fun previewHrBackedPaycheck(employerId: EmployerId, payPeriodId: String, employeeId: EmployeeId): PaycheckResult = computeHrBackedPaycheck(
+    fun previewHrBackedPaycheck(employerId: UtilityId, payPeriodId: String, employeeId: CustomerId): PaycheckResult = computeHrBackedPaycheck(
         employerId = employerId,
         payPeriodId = payPeriodId,
         employeeId = employeeId,
@@ -178,7 +178,7 @@ class PayrollRunService(
         recordHrWithholdings = false,
     )
 
-    private fun computeHrBackedPaycheck(employerId: EmployerId, payPeriodId: String, employeeId: EmployeeId, runId: String?, recordHrWithholdings: Boolean): PaycheckResult {
+    private fun computeHrBackedPaycheck(employerId: UtilityId, payPeriodId: String, employeeId: CustomerId, runId: String?, recordHrWithholdings: Boolean): PaycheckResult {
         val client = requireNotNull(hrClient) { "HrClient is required for HR-backed flows" }
 
         val payPeriod = client.getPayPeriod(employerId, payPeriodId)
@@ -260,15 +260,15 @@ class PayrollRunService(
         )
 
         val paycheckId = if (runId.isNullOrBlank()) {
-            com.example.usbilling.shared.PaycheckId("chk-${payPeriod.id}-${eid.value}")
+            com.example.usbilling.shared.BillId("chk-${payPeriod.id}-${eid.value}")
         } else {
-            com.example.usbilling.shared.PaycheckId("chk-${payPeriod.id}-${eid.value}-$runId")
+            com.example.usbilling.shared.BillId("chk-${payPeriod.id}-${eid.value}-$runId")
         }
 
         val payRunId = if (runId.isNullOrBlank()) {
-            PayRunId("run-${payPeriod.id}")
+            BillRunId("run-${payPeriod.id}")
         } else {
-            PayRunId("run-${payPeriod.id}-$runId")
+            BillRunId("run-${payPeriod.id}-$runId")
         }
 
         val baseComp = snapshot.baseCompensation

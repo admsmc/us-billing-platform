@@ -3,7 +3,7 @@ package com.example.usbilling.labor
 import com.example.usbilling.labor.api.LaborStandardsContextProvider
 import com.example.usbilling.labor.http.LaborStandardsContextDto
 import com.example.usbilling.labor.http.toDto
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.format.annotation.DateTimeFormat
@@ -44,7 +44,7 @@ class LaborHttpController(
         @RequestParam("locality", required = false) localityCodes: List<String>?,
     ): ResponseEntity<LaborStandardsContextDto> {
         val context = laborStandardsContextProvider.getLaborStandards(
-            employerId = EmployerId(employerId),
+            employerId = UtilityId(employerId),
             asOfDate = asOf,
             workState = workState,
             homeState = homeState,

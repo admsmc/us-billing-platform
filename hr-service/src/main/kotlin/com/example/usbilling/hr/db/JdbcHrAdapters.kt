@@ -4,8 +4,8 @@ import com.example.usbilling.hr.api.EmployeeSnapshotProvider
 import com.example.usbilling.hr.api.PayPeriodProvider
 import com.example.usbilling.payroll.engine.pub15t.W4Version
 import com.example.usbilling.payroll.model.*
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.core.RowMapper
@@ -18,7 +18,7 @@ class JdbcEmployeeSnapshotProvider(
     private val jdbcTemplate: JdbcTemplate,
 ) : EmployeeSnapshotProvider {
 
-    override fun getEmployeeSnapshot(employerId: EmployerId, employeeId: EmployeeId, asOfDate: LocalDate): EmployeeSnapshot? {
+    override fun getEmployeeSnapshot(employerId: UtilityId, employeeId: CustomerId, asOfDate: LocalDate): EmployeeSnapshot? {
         val sql =
             """
             SELECT p.*, c.compensation_type, c.annual_salary_cents, c.hourly_rate_cents, c.pay_frequency
@@ -76,8 +76,8 @@ class JdbcEmployeeSnapshotProvider(
         }
 
         return EmployeeSnapshot(
-            employerId = EmployerId(row.employerId),
-            employeeId = EmployeeId(row.employeeId),
+            employerId = UtilityId(row.employerId),
+            employeeId = CustomerId(row.employeeId),
             homeState = row.homeState,
             workState = row.workState,
             filingStatus = filingStatus,
@@ -180,7 +180,7 @@ class JdbcPayPeriodProvider(
     private val jdbcTemplate: JdbcTemplate,
 ) : PayPeriodProvider {
 
-    override fun getPayPeriod(employerId: EmployerId, payPeriodId: String): PayPeriod? {
+    override fun getPayPeriod(employerId: UtilityId, payPeriodId: String): PayPeriod? {
         val sql =
             """
             SELECT *
@@ -193,7 +193,7 @@ class JdbcPayPeriodProvider(
         return rows.firstOrNull()?.toDomain()
     }
 
-    override fun findPayPeriodByCheckDate(employerId: EmployerId, checkDate: LocalDate): PayPeriod? {
+    override fun findPayPeriodByCheckDate(employerId: UtilityId, checkDate: LocalDate): PayPeriod? {
         val sql =
             """
             SELECT *
@@ -219,7 +219,7 @@ class JdbcPayPeriodProvider(
     ) {
         fun toDomain(): PayPeriod = PayPeriod(
             id = id,
-            employerId = EmployerId(employerId),
+            employerId = UtilityId(employerId),
             dateRange = LocalDateRange(startInclusive = startDate, endInclusive = endDate),
             checkDate = checkDate,
             frequency = PayFrequency.valueOf(frequency),

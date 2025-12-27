@@ -1,12 +1,12 @@
 package com.example.usbilling.labor.api
 
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import java.time.LocalDate
 
 // (content copied from previous tax-service LaborStandardsCatalog.kt)
 
 data class LaborStandardsQuery(
-    val employerId: EmployerId,
+    val employerId: UtilityId,
     val asOfDate: LocalDate,
     val workState: String? = null,
     val homeState: String? = null,

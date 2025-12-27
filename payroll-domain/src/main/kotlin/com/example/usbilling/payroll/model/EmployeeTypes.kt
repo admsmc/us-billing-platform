@@ -1,8 +1,8 @@
 package com.example.usbilling.payroll.model
 
 import com.example.usbilling.payroll.engine.pub15t.W4Version
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
@@ -54,8 +54,8 @@ sealed class BaseCompensation {
 }
 
 data class EmployeeSnapshot(
-    val employerId: EmployerId,
-    val employeeId: EmployeeId,
+    val employerId: UtilityId,
+    val employeeId: CustomerId,
     val homeState: String,
     val workState: String,
     val filingStatus: FilingStatus,

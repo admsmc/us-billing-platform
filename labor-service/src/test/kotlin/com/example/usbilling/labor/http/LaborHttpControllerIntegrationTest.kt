@@ -4,7 +4,7 @@ import com.example.usbilling.labor.LaborHttpController
 import com.example.usbilling.labor.api.LaborStandardsContextProvider
 import com.example.usbilling.labor.web.CorrelationIdFilter
 import com.example.usbilling.payroll.model.LaborStandardsContext
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -84,7 +84,7 @@ class LaborHttpControllerIntegrationTest {
 
         @Bean
         fun laborStandardsContextProvider(): LaborStandardsContextProvider = object : LaborStandardsContextProvider {
-            override fun getLaborStandards(employerId: EmployerId, asOfDate: LocalDate, workState: String?, homeState: String?, localityCodes: List<String>): LaborStandardsContext? = when (workState) {
+            override fun getLaborStandards(employerId: UtilityId, asOfDate: LocalDate, workState: String?, homeState: String?, localityCodes: List<String>): LaborStandardsContext? = when (workState) {
                 "CA" -> LaborStandardsContext(
                     federalMinimumWage = Money(1_650L), // 16.50
                     federalTippedCashMinimum = null,

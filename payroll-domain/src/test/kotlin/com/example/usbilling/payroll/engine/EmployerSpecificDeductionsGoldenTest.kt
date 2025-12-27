@@ -5,11 +5,11 @@ import com.example.usbilling.payroll.model.config.DeductionConfigRepository
 import com.example.usbilling.payroll.model.config.DeductionEffect
 import com.example.usbilling.payroll.model.config.DeductionKind
 import com.example.usbilling.payroll.model.config.DeductionPlan
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.PayRunId
-import com.example.usbilling.shared.PaycheckId
+import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillId
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -22,7 +22,7 @@ import kotlin.test.assertEquals
  */
 class EmployerSpecificDeductionsGoldenTest {
 
-    private fun baseInput(employerId: EmployerId, employeeId: EmployeeId, taxRule: TaxRule.FlatRateTax): PaycheckInput {
+    private fun baseInput(employerId: UtilityId, employeeId: CustomerId, taxRule: TaxRule.FlatRateTax): PaycheckInput {
         val period = PayPeriod(
             id = "EMP-DEDS-GOLDEN",
             employerId = employerId,
@@ -42,8 +42,8 @@ class EmployerSpecificDeductionsGoldenTest {
             ),
         )
         return PaycheckInput(
-            paycheckId = PaycheckId("chk-emp-deds-${employerId.value}"),
-            payRunId = PayRunId("run-emp-deds"),
+            paycheckId = BillId("chk-emp-deds-${employerId.value}"),
+            payRunId = BillRunId("run-emp-deds"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,
@@ -61,7 +61,7 @@ class EmployerSpecificDeductionsGoldenTest {
     }
 
     private class EmployerRetirementConfigRepository : DeductionConfigRepository {
-        override fun findPlansForEmployer(employerId: EmployerId): List<DeductionPlan> = when (employerId.value) {
+        override fun findPlansForEmployer(employerId: UtilityId): List<DeductionPlan> = when (employerId.value) {
             "emp-pretax" -> listOf(
                 DeductionPlan(
                     id = "PLAN_401K_PRE",
@@ -87,8 +87,8 @@ class EmployerSpecificDeductionsGoldenTest {
 
     @Test
     fun `pretax vs roth employer plans yield different tax bases and net pay`() {
-        val pretaxEmployer = EmployerId("emp-pretax")
-        val rothEmployer = EmployerId("emp-roth")
+        val pretaxEmployer = UtilityId("emp-pretax")
+        val rothEmployer = UtilityId("emp-roth")
 
         // Simple flat federal tax at 10% on FederalTaxable basis.
         val taxRuleId = "EE_PRETAX_VS_ROTH"
@@ -99,8 +99,8 @@ class EmployerSpecificDeductionsGoldenTest {
             rate = Percent(0.10),
         )
 
-        val pretaxInput = baseInput(pretaxEmployer, EmployeeId("ee-pretax"), taxRule)
-        val rothInput = baseInput(rothEmployer, EmployeeId("ee-roth"), taxRule)
+        val pretaxInput = baseInput(pretaxEmployer, CustomerId("ee-pretax"), taxRule)
+        val rothInput = baseInput(rothEmployer, CustomerId("ee-roth"), taxRule)
 
         val repo = EmployerRetirementConfigRepository()
 

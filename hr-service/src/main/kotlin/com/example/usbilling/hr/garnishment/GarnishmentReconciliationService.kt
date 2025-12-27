@@ -1,7 +1,7 @@
 package com.example.usbilling.hr.garnishment
 
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Service
@@ -21,7 +21,7 @@ class GarnishmentReconciliationService(
 
     private val logger = LoggerFactory.getLogger(GarnishmentReconciliationService::class.java)
 
-    fun reconcileForEmployee(employerId: EmployerId, employeeId: EmployeeId) {
+    fun reconcileForEmployee(employerId: UtilityId, employeeId: CustomerId) {
         // Join garnishment_order with garnishment_ledger on order_id for this
         // employer/employee. We only reconcile orders that have an initial
         // arrears value; others are treated as "no arrears tracked".

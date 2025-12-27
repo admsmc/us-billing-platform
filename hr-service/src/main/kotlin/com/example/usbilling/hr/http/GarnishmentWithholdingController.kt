@@ -3,8 +3,8 @@ package com.example.usbilling.hr.http
 import com.example.usbilling.hr.garnishment.GarnishmentLedgerRepository
 import com.example.usbilling.hr.garnishment.GarnishmentReconciliationService
 import com.example.usbilling.hr.garnishment.GarnishmentWithholdingEventView
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -23,8 +23,8 @@ class GarnishmentWithholdingController(
 
     @PostMapping("/employees/{employeeId}/garnishments/withholdings")
     fun recordWithholdings(@PathVariable employerId: String, @PathVariable employeeId: String, @RequestBody request: GarnishmentWithholdingRequest) {
-        val employer = EmployerId(employerId)
-        val employee = EmployeeId(employeeId)
+        val employer = UtilityId(employerId)
+        val employee = CustomerId(employeeId)
         val views = request.events.map {
             GarnishmentWithholdingEventView(
                 orderId = it.orderId,
@@ -46,8 +46,8 @@ class GarnishmentWithholdingController(
      */
     @GetMapping("/employees/{employeeId}/garnishments/ledger")
     fun getLedger(@PathVariable employerId: String, @PathVariable employeeId: String): Map<String, GarnishmentLedgerEntryHr> {
-        val employer = EmployerId(employerId)
-        val employee = EmployeeId(employeeId)
+        val employer = UtilityId(employerId)
+        val employee = CustomerId(employeeId)
         val entries = ledgerRepository.findByEmployee(employer, employee)
         return entries.mapValues { (_, entry) ->
             GarnishmentLedgerEntryHr(

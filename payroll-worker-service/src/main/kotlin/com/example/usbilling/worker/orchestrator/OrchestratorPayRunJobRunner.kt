@@ -1,6 +1,6 @@
 package com.example.usbilling.worker.orchestrator
 
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.worker.client.OrchestratorClient
 import com.example.usbilling.worker.client.PayRunStatusResponse
 import org.slf4j.LoggerFactory
@@ -23,7 +23,7 @@ class OrchestratorPayRunJobRunner(
         val lastPoll: PayRunStatusResponse,
     )
 
-    fun runFinalizeJob(employerId: EmployerId, payPeriodId: String, employeeIds: List<String>, requestedPayRunId: String? = null, idempotencyKey: String? = null): JobResult {
+    fun runFinalizeJob(employerId: UtilityId, payPeriodId: String, employeeIds: List<String>, requestedPayRunId: String? = null, idempotencyKey: String? = null): JobResult {
         val start = orchestratorClient.startFinalize(
             employerId = employerId,
             payPeriodId = payPeriodId,

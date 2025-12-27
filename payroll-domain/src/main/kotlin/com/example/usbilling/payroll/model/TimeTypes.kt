@@ -1,6 +1,6 @@
 package com.example.usbilling.payroll.model
 
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
 import java.time.LocalDate
 
@@ -23,7 +23,7 @@ enum class PayFrequency {
 
 data class PayPeriod(
     val id: String,
-    val employerId: EmployerId,
+    val employerId: UtilityId,
     val dateRange: LocalDateRange,
     val checkDate: LocalDate,
     val frequency: PayFrequency,

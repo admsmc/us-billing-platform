@@ -4,8 +4,8 @@ import com.example.usbilling.hr.http.GarnishmentWithholdingRequest
 import com.example.usbilling.payroll.model.EmployeeSnapshot
 import com.example.usbilling.payroll.model.PayPeriod
 import com.example.usbilling.payroll.model.garnishment.GarnishmentOrder
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import java.time.LocalDate
 
 /**
@@ -15,13 +15,13 @@ import java.time.LocalDate
  * adapters live in service modules.
  */
 interface HrClient {
-    fun getEmployeeSnapshot(employerId: EmployerId, employeeId: EmployeeId, asOfDate: LocalDate): EmployeeSnapshot?
+    fun getEmployeeSnapshot(employerId: UtilityId, employeeId: CustomerId, asOfDate: LocalDate): EmployeeSnapshot?
 
-    fun getPayPeriod(employerId: EmployerId, payPeriodId: String): PayPeriod?
+    fun getPayPeriod(employerId: UtilityId, payPeriodId: String): PayPeriod?
 
-    fun findPayPeriodByCheckDate(employerId: EmployerId, checkDate: LocalDate): PayPeriod?
+    fun findPayPeriodByCheckDate(employerId: UtilityId, checkDate: LocalDate): PayPeriod?
 
-    fun getGarnishmentOrders(employerId: EmployerId, employeeId: EmployeeId, asOfDate: LocalDate): List<GarnishmentOrder>
+    fun getGarnishmentOrders(employerId: UtilityId, employeeId: CustomerId, asOfDate: LocalDate): List<GarnishmentOrder>
 
-    fun recordGarnishmentWithholding(employerId: EmployerId, employeeId: EmployeeId, request: GarnishmentWithholdingRequest)
+    fun recordGarnishmentWithholding(employerId: UtilityId, employeeId: CustomerId, request: GarnishmentWithholdingRequest)
 }

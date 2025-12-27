@@ -2,7 +2,7 @@ package com.example.usbilling.payroll.model.config
 
 import com.example.usbilling.payroll.model.Percent
 import com.example.usbilling.payroll.model.garnishment.GarnishmentType
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
 
 /**
@@ -71,7 +71,7 @@ data class DeductionPlan(
  * Port interface for loading deduction plans for an employer.
  */
 interface DeductionConfigRepository {
-    fun findPlansForEmployer(employerId: EmployerId): List<DeductionPlan>
+    fun findPlansForEmployer(employerId: UtilityId): List<DeductionPlan>
 }
 
 /**

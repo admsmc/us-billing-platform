@@ -1,7 +1,7 @@
 package com.example.usbilling.worker.config
 
 import com.example.usbilling.labor.api.LaborStandardsContextProvider
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.tax.api.TaxContextProvider
 import com.example.usbilling.tax.service.DefaultFederalWithholdingCalculator
 import com.example.usbilling.tax.service.FederalWithholdingCalculator
@@ -19,7 +19,7 @@ class WorkerServiceWiringConfig {
 
     @Bean
     fun taxContextProvider(taxClient: TaxClient): TaxContextProvider = object : TaxContextProvider {
-        override fun getTaxContext(employerId: EmployerId, asOfDate: LocalDate) = taxClient.getTaxContext(
+        override fun getTaxContext(employerId: UtilityId, asOfDate: LocalDate) = taxClient.getTaxContext(
             employerId = employerId,
             asOfDate = asOfDate,
             localityCodes = emptyList(),
@@ -28,7 +28,7 @@ class WorkerServiceWiringConfig {
 
     @Bean
     fun laborStandardsContextProvider(laborClient: LaborStandardsClient): LaborStandardsContextProvider = object : LaborStandardsContextProvider {
-        override fun getLaborStandards(employerId: EmployerId, asOfDate: LocalDate, workState: String?, homeState: String?, localityCodes: List<String>) = laborClient.getLaborStandards(
+        override fun getLaborStandards(employerId: UtilityId, asOfDate: LocalDate, workState: String?, homeState: String?, localityCodes: List<String>) = laborClient.getLaborStandards(
             employerId = employerId,
             asOfDate = asOfDate,
             workState = workState,

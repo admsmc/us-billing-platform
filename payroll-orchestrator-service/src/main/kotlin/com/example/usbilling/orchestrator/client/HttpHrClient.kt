@@ -7,8 +7,8 @@ import com.example.usbilling.hr.http.GarnishmentWithholdingRequest
 import com.example.usbilling.hr.http.toDomain
 import com.example.usbilling.payroll.model.EmployeeSnapshot
 import com.example.usbilling.payroll.model.PayPeriod
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.web.client.HttpClientGuardrails
 import com.example.usbilling.web.client.RestTemplateRetryClassifier
 import io.micrometer.core.instrument.MeterRegistry
@@ -45,7 +45,7 @@ class HttpHrClient(
         circuitBreakerPolicy = if (props.circuitBreakerEnabled) props.circuitBreaker else null,
     )
 
-    override fun getEmployeeSnapshot(employerId: EmployerId, employeeId: EmployeeId, asOfDate: LocalDate): EmployeeSnapshot? {
+    override fun getEmployeeSnapshot(employerId: UtilityId, employeeId: CustomerId, asOfDate: LocalDate): EmployeeSnapshot? {
         val url = "${props.baseUrl}/employers/${employerId.value}/employees/${employeeId.value}/snapshot?asOf=$asOfDate"
         // Avoid Kotlin RestTemplate.getForObject<T>() which throws when the body is empty (null).
         return try {
@@ -86,7 +86,7 @@ class HttpHrClient(
         }
     }
 
-    override fun getPayPeriod(employerId: EmployerId, payPeriodId: String): PayPeriod? {
+    override fun getPayPeriod(employerId: UtilityId, payPeriodId: String): PayPeriod? {
         val url = "${props.baseUrl}/employers/${employerId.value}/pay-periods/$payPeriodId"
         // hr-service returns `null` when not found (200 + empty body). Use the Java overload to allow null.
         return try {
@@ -126,7 +126,7 @@ class HttpHrClient(
         }
     }
 
-    override fun findPayPeriodByCheckDate(employerId: EmployerId, checkDate: LocalDate): PayPeriod? {
+    override fun findPayPeriodByCheckDate(employerId: UtilityId, checkDate: LocalDate): PayPeriod? {
         val url = "${props.baseUrl}/employers/${employerId.value}/pay-periods/by-check-date?checkDate=$checkDate"
         return try {
             guardrails.execute(
@@ -165,7 +165,7 @@ class HttpHrClient(
         }
     }
 
-    override fun getGarnishmentOrders(employerId: EmployerId, employeeId: EmployeeId, asOfDate: LocalDate): List<com.example.usbilling.payroll.model.garnishment.GarnishmentOrder> {
+    override fun getGarnishmentOrders(employerId: UtilityId, employeeId: CustomerId, asOfDate: LocalDate): List<com.example.usbilling.payroll.model.garnishment.GarnishmentOrder> {
         val url = "${props.baseUrl}/employers/${employerId.value}/employees/${employeeId.value}/garnishments?asOf=$asOfDate"
         val dtoArray = guardrails.execute(
             isRetryable = RestTemplateRetryClassifier::isRetryable,
@@ -196,7 +196,7 @@ class HttpHrClient(
         return dtoArray.toList().map { it.toDomain() }
     }
 
-    override fun recordGarnishmentWithholding(employerId: EmployerId, employeeId: EmployeeId, request: GarnishmentWithholdingRequest) {
+    override fun recordGarnishmentWithholding(employerId: UtilityId, employeeId: CustomerId, request: GarnishmentWithholdingRequest) {
         val url = "${props.baseUrl}/employers/${employerId.value}/employees/${employeeId.value}/garnishments/withholdings"
         guardrails.execute(
             isRetryable = RestTemplateRetryClassifier::isRetryable,

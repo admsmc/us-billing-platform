@@ -1,7 +1,7 @@
 package com.example.usbilling.worker.client
 
 import com.example.usbilling.payroll.model.LaborStandardsContext
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
@@ -54,7 +54,7 @@ class CachedLaborStandardsClient(
     private val logger = LoggerFactory.getLogger(CachedLaborStandardsClient::class.java)
 
     override fun getLaborStandards(
-        employerId: EmployerId,
+        employerId: UtilityId,
         asOfDate: LocalDate,
         workState: String?,
         homeState: String?,
@@ -103,7 +103,7 @@ class CachedLaborStandardsClient(
     }
 
     private fun buildCacheKey(
-        employerId: EmployerId,
+        employerId: UtilityId,
         asOfDate: LocalDate,
         workState: String?,
         homeState: String?,

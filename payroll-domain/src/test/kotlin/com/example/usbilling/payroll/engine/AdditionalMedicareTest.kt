@@ -1,8 +1,8 @@
 package com.example.usbilling.payroll.engine
 
 import com.example.usbilling.payroll.model.*
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
 import java.time.LocalDate
 import kotlin.test.Test
@@ -11,8 +11,8 @@ import kotlin.test.assertEquals
 class AdditionalMedicareTest {
 
     private fun paycheckInput(currentMedicareWagesCents: Long, priorMedicareWagesCents: Long): Pair<PaycheckInput, Map<TaxBasis, Money>> {
-        val employerId = EmployerId("EMP-MED")
-        val employeeId = EmployeeId("EE-MED")
+        val employerId = UtilityId("EMP-MED")
+        val employeeId = CustomerId("EE-MED")
         val period = PayPeriod(
             id = "P1",
             employerId = employerId,
@@ -59,8 +59,8 @@ class AdditionalMedicareTest {
         val bases = BasisBuilder.compute(basisContext)
 
         val input = PaycheckInput(
-            paycheckId = com.example.usbilling.shared.PaycheckId("CHK-MED"),
-            payRunId = com.example.usbilling.shared.PayRunId("RUN-MED"),
+            paycheckId = com.example.usbilling.shared.BillId("CHK-MED"),
+            payRunId = com.example.usbilling.shared.BillRunId("RUN-MED"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,

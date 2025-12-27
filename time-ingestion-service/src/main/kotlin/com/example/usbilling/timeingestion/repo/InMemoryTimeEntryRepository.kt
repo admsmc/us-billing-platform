@@ -1,7 +1,7 @@
 package com.example.usbilling.timeingestion.repo
 
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import org.springframework.stereotype.Component
 import java.time.LocalDate
 import java.util.concurrent.ConcurrentHashMap
@@ -26,14 +26,14 @@ class InMemoryTimeEntryRepository {
 
     private val byEmployee: ConcurrentHashMap<Key, ConcurrentHashMap<String, StoredTimeEntry>> = ConcurrentHashMap()
 
-    fun upsert(employerId: EmployerId, employeeId: EmployeeId, entry: StoredTimeEntry): Boolean {
+    fun upsert(employerId: UtilityId, employeeId: CustomerId, entry: StoredTimeEntry): Boolean {
         val m = byEmployee.computeIfAbsent(Key(employerId.value, employeeId.value)) { ConcurrentHashMap() }
         val existed = m.containsKey(entry.entryId)
         m[entry.entryId] = entry
         return existed
     }
 
-    fun upsertAll(employerId: EmployerId, employeeId: EmployeeId, entries: List<StoredTimeEntry>): Int {
+    fun upsertAll(employerId: UtilityId, employeeId: CustomerId, entries: List<StoredTimeEntry>): Int {
         if (entries.isEmpty()) return 0
         val m = byEmployee.computeIfAbsent(Key(employerId.value, employeeId.value)) { ConcurrentHashMap() }
         var existed = 0
@@ -44,7 +44,7 @@ class InMemoryTimeEntryRepository {
         return existed
     }
 
-    fun findInRange(employerId: EmployerId, employeeId: EmployeeId, start: LocalDate, end: LocalDate): List<StoredTimeEntry> {
+    fun findInRange(employerId: UtilityId, employeeId: CustomerId, start: LocalDate, end: LocalDate): List<StoredTimeEntry> {
         val m = byEmployee[Key(employerId.value, employeeId.value)] ?: return emptyList()
         return m.values
             .asSequence()
@@ -54,15 +54,15 @@ class InMemoryTimeEntryRepository {
     }
 
     data class StoredTimeEntryWithEmployee(
-        val employeeId: EmployeeId,
+        val employeeId: CustomerId,
         val entry: StoredTimeEntry,
     )
 
-    fun findAllInRange(employerId: EmployerId, start: LocalDate, end: LocalDate): List<StoredTimeEntryWithEmployee> {
+    fun findAllInRange(employerId: UtilityId, start: LocalDate, end: LocalDate): List<StoredTimeEntryWithEmployee> {
         val out = ArrayList<StoredTimeEntryWithEmployee>()
         for ((k, m) in byEmployee) {
             if (k.employerId != employerId.value) continue
-            val employee = EmployeeId(k.employeeId)
+            val employee = CustomerId(k.employeeId)
             for (e in m.values) {
                 if (e.date.isBefore(start) || e.date.isAfter(end)) continue
                 out.add(StoredTimeEntryWithEmployee(employeeId = employee, entry = e))

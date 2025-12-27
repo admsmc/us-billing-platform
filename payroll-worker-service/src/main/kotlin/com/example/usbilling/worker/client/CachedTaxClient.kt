@@ -1,7 +1,7 @@
 package com.example.usbilling.worker.client
 
 import com.example.usbilling.payroll.model.TaxContext
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
@@ -62,7 +62,7 @@ class CachedTaxClient(
     private val logger = LoggerFactory.getLogger(CachedTaxClient::class.java)
 
     override fun getTaxContext(
-        employerId: EmployerId,
+        employerId: UtilityId,
         asOfDate: LocalDate,
         residentState: String?,
         workState: String?,
@@ -99,7 +99,7 @@ class CachedTaxClient(
     }
 
     private fun buildCacheKey(
-        employerId: EmployerId,
+        employerId: UtilityId,
         asOfDate: LocalDate,
         residentState: String?,
         workState: String?,

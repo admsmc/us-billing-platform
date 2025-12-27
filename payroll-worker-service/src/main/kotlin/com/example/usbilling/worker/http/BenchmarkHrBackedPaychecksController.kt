@@ -3,8 +3,8 @@ package com.example.usbilling.worker.http
 import com.example.usbilling.hr.client.HrClient
 import com.example.usbilling.hr.client.HrClientProperties
 import com.example.usbilling.payroll.model.PaycheckResult
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.toLocalityCodeStrings
 import com.example.usbilling.worker.LocalityResolver
 import com.example.usbilling.worker.PayrollRunService
@@ -200,7 +200,7 @@ class BenchmarkHrBackedPaychecksController(
 
         val start = System.nanoTime()
         val paychecks = payrollRunService.runHrBackedPayForPeriod(
-            employerId = EmployerId(employerId),
+            employerId = UtilityId(employerId),
             payPeriodId = request.payPeriodId,
             employeeIds = employeeIds,
             runId = runId,
@@ -261,7 +261,7 @@ class BenchmarkHrBackedPaychecksController(
 
         val start = System.nanoTime()
         val paychecks = payrollRunService.runHrBackedPayForPeriod(
-            employerId = EmployerId(employerId),
+            employerId = UtilityId(employerId),
             payPeriodId = request.payPeriodId,
             employeeIds = employeeIds,
             runId = runId,
@@ -277,7 +277,7 @@ class BenchmarkHrBackedPaychecksController(
         val stored = try {
             paycheckRunStore.put(
                 PaycheckRunStore.StoredRun(
-                    employerId = EmployerId(employerId),
+                    employerId = UtilityId(employerId),
                     payPeriodId = request.payPeriodId,
                     runId = runId,
                     createdAt = Instant.now(),
@@ -300,7 +300,7 @@ class BenchmarkHrBackedPaychecksController(
                 paychecks = paychecks.size,
                 elapsedMillisCompute = elapsedMillis,
                 stored = stored,
-                store = paycheckRunStore.list(EmployerId(employerId)),
+                store = paycheckRunStore.list(UtilityId(employerId)),
                 correctness = correctness,
             ),
         )
@@ -322,7 +322,7 @@ class BenchmarkHrBackedPaychecksController(
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "BENCHMARK_UNAUTHORIZED")
         }
 
-        val employer = EmployerId(employerId)
+        val employer = UtilityId(employerId)
         val run = paycheckRunStore.get(employer, request.runId)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "RUN_ID_NOT_FOUND")
 
@@ -377,7 +377,7 @@ class BenchmarkHrBackedPaychecksController(
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "BENCHMARK_UNAUTHORIZED")
         }
 
-        val employer = EmployerId(employerId)
+        val employer = UtilityId(employerId)
         val run = paycheckRunStore.get(employer, request.runId)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "RUN_ID_NOT_FOUND")
 
@@ -625,12 +625,12 @@ class BenchmarkHrBackedPaychecksController(
         val tax = requireNotNull(taxClient) { "TaxClient must be configured" }
         val labor = requireNotNull(laborClient) { "LaborStandardsClient must be configured" }
 
-        val employer = EmployerId(employerId)
+        val employer = UtilityId(employerId)
 
         val period = hr.getPayPeriod(employer, payPeriodId)
             ?: throw ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "HR_PAY_PERIOD_NOT_FOUND")
 
-        val snapshot = hr.getEmployeeSnapshot(employer, EmployeeId(employeeId), period.checkDate)
+        val snapshot = hr.getEmployeeSnapshot(employer, CustomerId(employeeId), period.checkDate)
             ?: throw ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "HR_EMPLOYEE_SNAPSHOT_NOT_FOUND")
 
         val localityCodes = localityResolver
@@ -659,7 +659,7 @@ class BenchmarkHrBackedPaychecksController(
             val p = payrollRunService.previewHrBackedPaycheck(
                 employerId = employer,
                 payPeriodId = payPeriodId,
-                employeeId = EmployeeId(employeeId),
+                employeeId = CustomerId(employeeId),
             )
             PaycheckSummaryDto.from(p)
         } else {
@@ -809,9 +809,9 @@ class BenchmarkHrBackedPaychecksController(
         )
     }
 
-    private fun buildEmployeeIds(request: HrBackedPayPeriodRequest): List<EmployeeId> {
+    private fun buildEmployeeIds(request: HrBackedPayPeriodRequest): List<CustomerId> {
         if (request.employeeIds.isNotEmpty()) {
-            return request.employeeIds.map { EmployeeId(it) }
+            return request.employeeIds.map { CustomerId(it) }
         }
 
         val prefix = request.employeeIdPrefix?.takeIf { it.isNotBlank() } ?: return emptyList()
@@ -823,7 +823,7 @@ class BenchmarkHrBackedPaychecksController(
         val fmt = "%s%0${width}d"
 
         return (start..end).map { n ->
-            EmployeeId(String.format(fmt, prefix, n))
+            CustomerId(String.format(fmt, prefix, n))
         }
     }
 }

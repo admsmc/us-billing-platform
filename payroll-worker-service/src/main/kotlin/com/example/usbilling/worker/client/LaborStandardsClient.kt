@@ -3,7 +3,7 @@ package com.example.usbilling.worker.client
 import com.example.usbilling.labor.http.LaborStandardsContextDto
 import com.example.usbilling.labor.http.toDomain
 import com.example.usbilling.payroll.model.LaborStandardsContext
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.web.client.DownstreamHttpClientProperties
 import com.example.usbilling.web.client.HttpClientGuardrails
 import com.example.usbilling.web.client.RestTemplateRetryClassifier
@@ -21,7 +21,7 @@ import org.springframework.web.client.RestTemplate
 import java.time.LocalDate
 
 interface LaborStandardsClient {
-    fun getLaborStandards(employerId: EmployerId, asOfDate: LocalDate, workState: String?, homeState: String?, localityCodes: List<String> = emptyList()): LaborStandardsContext?
+    fun getLaborStandards(employerId: UtilityId, asOfDate: LocalDate, workState: String?, homeState: String?, localityCodes: List<String> = emptyList()): LaborStandardsContext?
 }
 
 @ConfigurationProperties(prefix = "downstreams.labor")
@@ -55,7 +55,7 @@ class HttpLaborStandardsClient(
         circuitBreakerPolicy = if (props.circuitBreakerEnabled) props.circuitBreaker else null,
     )
 
-    override fun getLaborStandards(employerId: EmployerId, asOfDate: LocalDate, workState: String?, homeState: String?, localityCodes: List<String>): LaborStandardsContext? {
+    override fun getLaborStandards(employerId: UtilityId, asOfDate: LocalDate, workState: String?, homeState: String?, localityCodes: List<String>): LaborStandardsContext? {
         if (workState == null) return null
         val base = "${props.baseUrl}/employers/${employerId.value}/labor-standards"
 

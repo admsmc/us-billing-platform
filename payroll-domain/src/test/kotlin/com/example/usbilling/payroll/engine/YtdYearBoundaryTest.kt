@@ -1,11 +1,11 @@
 package com.example.usbilling.payroll.engine
 
 import com.example.usbilling.payroll.model.*
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.PayRunId
-import com.example.usbilling.shared.PaycheckId
+import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillId
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -14,8 +14,8 @@ class YtdYearBoundaryTest {
 
     @Test
     fun `YTD accumulates earnings and taxes across checks in same year`() {
-        val employerId = EmployerId("emp-ytd-1")
-        val employeeId = EmployeeId("ee-ytd-1")
+        val employerId = UtilityId("emp-ytd-1")
+        val employeeId = CustomerId("ee-ytd-1")
 
         val period1 = PayPeriod(
             id = "2025-01-BW1",
@@ -53,8 +53,8 @@ class YtdYearBoundaryTest {
         )
 
         val input1 = PaycheckInput(
-            paycheckId = PaycheckId("chk-ytd-1"),
-            payRunId = PayRunId("run-ytd-1"),
+            paycheckId = BillId("chk-ytd-1"),
+            payRunId = BillRunId("run-ytd-1"),
             employerId = employerId,
             employeeId = employeeId,
             period = period1,
@@ -71,8 +71,8 @@ class YtdYearBoundaryTest {
         val result1 = calculatePaycheckDebug(input1)
 
         val input2 = input1.copy(
-            paycheckId = PaycheckId("chk-ytd-2"),
-            payRunId = PayRunId("run-ytd-2"),
+            paycheckId = BillId("chk-ytd-2"),
+            payRunId = BillRunId("run-ytd-2"),
             period = period2,
             priorYtd = result1.ytdAfter,
         )
@@ -98,8 +98,8 @@ class YtdYearBoundaryTest {
 
     @Test
     fun `YTD year mismatch produces trace note`() {
-        val employerId = EmployerId("emp-ytd-2")
-        val employeeId = EmployeeId("ee-ytd-2")
+        val employerId = UtilityId("emp-ytd-2")
+        val employeeId = CustomerId("ee-ytd-2")
 
         // Prior YTD is for 2025 but check date is in 2026
         val priorYtd = YtdSnapshot(year = 2025)
@@ -124,8 +124,8 @@ class YtdYearBoundaryTest {
         )
 
         val input = PaycheckInput(
-            paycheckId = PaycheckId("chk-ytd-mismatch"),
-            payRunId = PayRunId("run-ytd-mismatch"),
+            paycheckId = BillId("chk-ytd-mismatch"),
+            payRunId = BillRunId("run-ytd-mismatch"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,

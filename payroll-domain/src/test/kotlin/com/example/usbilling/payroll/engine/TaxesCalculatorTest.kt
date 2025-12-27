@@ -1,11 +1,11 @@
 package com.example.usbilling.payroll.engine
 
 import com.example.usbilling.payroll.model.*
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.PayRunId
-import com.example.usbilling.shared.PaycheckId
+import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillId
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -14,8 +14,8 @@ class TaxesCalculatorTest {
 
     @Test
     fun `employer flat tax on gross is applied and accumulated in YTD`() {
-        val employerId = EmployerId("emp-1")
-        val employeeId = EmployeeId("ee-3")
+        val employerId = UtilityId("emp-1")
+        val employeeId = CustomerId("ee-3")
         val period = PayPeriod(
             id = "2025-01-BW2",
             employerId = employerId,
@@ -45,8 +45,8 @@ class TaxesCalculatorTest {
         )
 
         val input = PaycheckInput(
-            paycheckId = PaycheckId("chk-3"),
-            payRunId = PayRunId("run-2"),
+            paycheckId = BillId("chk-3"),
+            payRunId = BillRunId("run-2"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,
@@ -80,8 +80,8 @@ class TaxesCalculatorTest {
 
     @Test
     fun `employee flat tax reduces net and updates YTD`() {
-        val employerId = EmployerId("emp-1")
-        val employeeId = EmployeeId("ee-6")
+        val employerId = UtilityId("emp-1")
+        val employeeId = CustomerId("ee-6")
         val period = PayPeriod(
             id = "2025-01-BW-EE",
             employerId = employerId,
@@ -110,8 +110,8 @@ class TaxesCalculatorTest {
         )
 
         val input = PaycheckInput(
-            paycheckId = PaycheckId("chk-ee"),
-            payRunId = PayRunId("run-ee"),
+            paycheckId = BillId("chk-ee"),
+            payRunId = BillRunId("run-ee"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,
@@ -150,8 +150,8 @@ class TaxesCalculatorTest {
 
     @Test
     fun `employee and employer taxes both applied`() {
-        val employerId = EmployerId("emp-1")
-        val employeeId = EmployeeId("ee-7")
+        val employerId = UtilityId("emp-1")
+        val employeeId = CustomerId("ee-7")
         val period = PayPeriod(
             id = "2025-01-BW-BOTH",
             employerId = employerId,
@@ -187,8 +187,8 @@ class TaxesCalculatorTest {
         )
 
         val input = PaycheckInput(
-            paycheckId = PaycheckId("chk-both"),
-            payRunId = PayRunId("run-both"),
+            paycheckId = BillId("chk-both"),
+            payRunId = BillRunId("run-both"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,

@@ -1,7 +1,7 @@
 package com.example.usbilling.timeingestion.repo
 
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import java.time.LocalDate
 
 interface TimeEntryRepository {
@@ -20,17 +20,17 @@ interface TimeEntryRepository {
     )
 
     data class StoredTimeEntryWithEmployee(
-        val employeeId: EmployeeId,
+        val employeeId: CustomerId,
         val entry: StoredTimeEntry,
     )
 
     /** @return true if entry existed and was updated; false if inserted */
-    fun upsert(employerId: EmployerId, employeeId: EmployeeId, entry: StoredTimeEntry): Boolean
+    fun upsert(employerId: UtilityId, employeeId: CustomerId, entry: StoredTimeEntry): Boolean
 
     /** @return count of entries that already existed (were updated) */
-    fun upsertAll(employerId: EmployerId, employeeId: EmployeeId, entries: List<StoredTimeEntry>): Int
+    fun upsertAll(employerId: UtilityId, employeeId: CustomerId, entries: List<StoredTimeEntry>): Int
 
-    fun findInRange(employerId: EmployerId, employeeId: EmployeeId, start: LocalDate, end: LocalDate): List<StoredTimeEntry>
+    fun findInRange(employerId: UtilityId, employeeId: CustomerId, start: LocalDate, end: LocalDate): List<StoredTimeEntry>
 
-    fun findAllInRange(employerId: EmployerId, start: LocalDate, end: LocalDate): List<StoredTimeEntryWithEmployee>
+    fun findAllInRange(employerId: UtilityId, start: LocalDate, end: LocalDate): List<StoredTimeEntryWithEmployee>
 }

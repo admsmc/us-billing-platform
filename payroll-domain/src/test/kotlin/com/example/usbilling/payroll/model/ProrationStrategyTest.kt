@@ -8,7 +8,7 @@ class ProrationStrategyTest {
 
     private fun period(start: LocalDate, end: LocalDate): PayPeriod = PayPeriod(
         id = "P",
-        employerId = com.example.usbilling.shared.EmployerId("E"),
+        employerId = com.example.usbilling.shared.UtilityId("E"),
         dateRange = LocalDateRange(start, end),
         checkDate = end,
         frequency = PayFrequency.SEMI_MONTHLY,

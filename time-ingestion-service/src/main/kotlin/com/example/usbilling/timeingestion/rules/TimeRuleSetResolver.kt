@@ -1,6 +1,6 @@
 package com.example.usbilling.timeingestion.rules
 
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.time.model.OvertimeRuleSet
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.core.io.ClassPathResource
@@ -13,7 +13,7 @@ class TimeRuleSetResolver(
 ) {
     private val cache = ConcurrentHashMap<String, OvertimeRuleSet>()
 
-    fun resolve(employerId: EmployerId, workState: String?): OvertimeRuleSet {
+    fun resolve(employerId: UtilityId, workState: String?): OvertimeRuleSet {
         val state = (workState ?: "").trim().uppercase()
         val key = "${employerId.value}|$state"
 

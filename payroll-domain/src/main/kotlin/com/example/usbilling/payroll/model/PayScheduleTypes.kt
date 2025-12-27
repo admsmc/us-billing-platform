@@ -1,6 +1,6 @@
 package com.example.usbilling.payroll.model
 
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 
 /**
  * Pay schedule metadata for an employer.
@@ -10,7 +10,7 @@ import com.example.usbilling.shared.EmployerId
  * instead of hard-coded in the engine.
  */
 data class PaySchedule(
-    val employerId: EmployerId,
+    val employerId: UtilityId,
     val frequency: PayFrequency,
     val periodsPerYear: Int,
 ) {
@@ -19,7 +19,7 @@ data class PaySchedule(
     }
 
     companion object {
-        fun defaultFor(employerId: EmployerId, frequency: PayFrequency): PaySchedule = PaySchedule(
+        fun defaultFor(employerId: UtilityId, frequency: PayFrequency): PaySchedule = PaySchedule(
             employerId = employerId,
             frequency = frequency,
             periodsPerYear = periodsPerYearFor(frequency),

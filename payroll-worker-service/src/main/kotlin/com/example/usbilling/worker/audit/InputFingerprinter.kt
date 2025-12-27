@@ -10,7 +10,7 @@ import com.example.usbilling.payroll.model.config.DeductionConfigRepository
 import com.example.usbilling.payroll.model.config.DeductionPlan
 import com.example.usbilling.payroll.model.config.EarningConfigRepository
 import com.example.usbilling.payroll.model.config.EarningDefinition
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import org.springframework.stereotype.Component
@@ -39,7 +39,7 @@ class InputFingerprinter(objectMapper: ObjectMapper) {
 
     fun stamp(
         audit: PaycheckAudit,
-        employerId: EmployerId,
+        employerId: UtilityId,
         employeeSnapshot: EmployeeSnapshot,
         taxContext: TaxContext,
         laborStandards: Any?,
@@ -69,7 +69,7 @@ class InputFingerprinter(objectMapper: ObjectMapper) {
         )
     }
 
-    private fun earningConfigFingerprint(employerId: EmployerId, earningOverrides: List<EarningInput>, repo: EarningConfigRepository): InputFingerprint {
+    private fun earningConfigFingerprint(employerId: UtilityId, earningOverrides: List<EarningInput>, repo: EarningConfigRepository): InputFingerprint {
         // TODO(enterprise-config): replace with a stable config version ID once backed by a config service.
         val codes: Set<EarningCode> = buildSet {
             add(EarningCode("BASE"))
@@ -94,7 +94,7 @@ class InputFingerprinter(objectMapper: ObjectMapper) {
         )
     }
 
-    private fun deductionConfigFingerprint(employerId: EmployerId, repo: DeductionConfigRepository): InputFingerprint {
+    private fun deductionConfigFingerprint(employerId: UtilityId, repo: DeductionConfigRepository): InputFingerprint {
         // TODO(enterprise-config): replace with a stable config version ID once backed by a config service.
         val plans = repo.findPlansForEmployer(employerId)
             .sortedBy { it.id }

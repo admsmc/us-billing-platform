@@ -2,11 +2,11 @@ package com.example.usbilling.tax.tools
 
 import com.example.usbilling.payroll.engine.TaxesCalculator
 import com.example.usbilling.payroll.model.*
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.PayRunId
-import com.example.usbilling.shared.PaycheckId
+import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillId
 import com.example.usbilling.tax.config.TaxBracketConfig
 import com.example.usbilling.tax.config.TaxRuleConfig
 import com.example.usbilling.tax.config.TaxRuleFile
@@ -251,7 +251,7 @@ object Pub15TWageBracketGenerator {
     }
 
     private fun computeAnnualFit(rule: TaxRule.BracketedIncomeTax, filingStatus: FilingStatus, annualWagesCents: Long): Long {
-        val employerId = EmployerId("GEN-PUB15T-WB")
+        val employerId = UtilityId("GEN-PUB15T-WB")
         val asOfDate = LocalDate.of(2025, 6, 30)
 
         val bases: Map<TaxBasis, Money> = mapOf(
@@ -271,7 +271,7 @@ object Pub15TWageBracketGenerator {
 
         val snapshot = EmployeeSnapshot(
             employerId = employerId,
-            employeeId = EmployeeId("EE-PUB15T-$annualWagesCents"),
+            employeeId = CustomerId("EE-PUB15T-$annualWagesCents"),
             homeState = "CA",
             workState = "CA",
             filingStatus = filingStatus,
@@ -289,8 +289,8 @@ object Pub15TWageBracketGenerator {
         )
 
         val input = PaycheckInput(
-            paycheckId = PaycheckId("CHK-PUB15T-$annualWagesCents"),
-            payRunId = PayRunId("RUN-PUB15T-WB"),
+            paycheckId = BillId("CHK-PUB15T-$annualWagesCents"),
+            payRunId = BillRunId("RUN-PUB15T-WB"),
             employerId = employerId,
             employeeId = snapshot.employeeId,
             period = period,

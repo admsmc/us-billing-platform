@@ -2,7 +2,7 @@ package com.example.usbilling.worker.client
 
 import com.example.usbilling.payroll.model.PaycheckResult
 import com.example.usbilling.payroll.model.audit.PaycheckAudit
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.web.client.DownstreamHttpClientProperties
 import com.example.usbilling.web.client.HttpClientGuardrails
 import com.example.usbilling.web.client.RestTemplateRetryClassifier
@@ -22,10 +22,10 @@ import java.net.URI
 import java.time.Duration
 
 interface OrchestratorClient {
-    fun startFinalize(employerId: EmployerId, payPeriodId: String, employeeIds: List<String>, requestedPayRunId: String? = null, idempotencyKey: String? = null): StartFinalizeResponse
+    fun startFinalize(employerId: UtilityId, payPeriodId: String, employeeIds: List<String>, requestedPayRunId: String? = null, idempotencyKey: String? = null): StartFinalizeResponse
 
     fun execute(
-        employerId: EmployerId,
+        employerId: UtilityId,
         payRunId: String,
         batchSize: Int = 25,
         maxItems: Int = 200,
@@ -35,9 +35,9 @@ interface OrchestratorClient {
         parallelism: Int = 4,
     ): Map<String, Any?>
 
-    fun completeEmployeeItem(employerId: EmployerId, payRunId: String, employeeId: String, request: CompleteEmployeeItemRequest): CompleteEmployeeItemResponse
+    fun completeEmployeeItem(employerId: UtilityId, payRunId: String, employeeId: String, request: CompleteEmployeeItemRequest): CompleteEmployeeItemResponse
 
-    fun getStatus(employerId: EmployerId, payRunId: String, failureLimit: Int = 25): PayRunStatusResponse
+    fun getStatus(employerId: UtilityId, payRunId: String, failureLimit: Int = 25): PayRunStatusResponse
 }
 
 @ConfigurationProperties(prefix = "downstreams.orchestrator")
@@ -112,7 +112,7 @@ class HttpOrchestratorClient(
         return HttpHeaders().apply { setBearerAuth(token) }
     }
 
-    override fun startFinalize(employerId: EmployerId, payPeriodId: String, employeeIds: List<String>, requestedPayRunId: String?, idempotencyKey: String?): StartFinalizeResponse {
+    override fun startFinalize(employerId: UtilityId, payPeriodId: String, employeeIds: List<String>, requestedPayRunId: String?, idempotencyKey: String?): StartFinalizeResponse {
         val url = "${props.baseUrl}/employers/${employerId.value}/payruns/finalize"
         val request = StartFinalizeRequest(
             payPeriodId = payPeriodId,
@@ -152,7 +152,7 @@ class HttpOrchestratorClient(
         return response.body ?: error("Orchestrator startFinalize returned null body")
     }
 
-    override fun execute(employerId: EmployerId, payRunId: String, batchSize: Int, maxItems: Int, maxMillis: Long, requeueStaleMillis: Long, leaseOwner: String, parallelism: Int): Map<String, Any?> {
+    override fun execute(employerId: UtilityId, payRunId: String, batchSize: Int, maxItems: Int, maxMillis: Long, requeueStaleMillis: Long, leaseOwner: String, parallelism: Int): Map<String, Any?> {
         val url = "${props.baseUrl}/employers/${employerId.value}/payruns/internal/$payRunId/execute?batchSize=$batchSize&maxItems=$maxItems&maxMillis=$maxMillis&requeueStaleMillis=$requeueStaleMillis&leaseOwner=$leaseOwner&parallelism=$parallelism"
 
         val headers = internalAuthHeaders()
@@ -192,7 +192,7 @@ class HttpOrchestratorClient(
             ?: error("Orchestrator execute returned null body")
     }
 
-    override fun completeEmployeeItem(employerId: EmployerId, payRunId: String, employeeId: String, request: CompleteEmployeeItemRequest): CompleteEmployeeItemResponse {
+    override fun completeEmployeeItem(employerId: UtilityId, payRunId: String, employeeId: String, request: CompleteEmployeeItemRequest): CompleteEmployeeItemResponse {
         val url = "${props.baseUrl}/employers/${employerId.value}/payruns/internal/$payRunId/items/$employeeId/complete"
 
         val headers = internalAuthHeaders()
@@ -230,7 +230,7 @@ class HttpOrchestratorClient(
         return response.body ?: error("Orchestrator completeEmployeeItem returned null body")
     }
 
-    override fun getStatus(employerId: EmployerId, payRunId: String, failureLimit: Int): PayRunStatusResponse {
+    override fun getStatus(employerId: UtilityId, payRunId: String, failureLimit: Int): PayRunStatusResponse {
         val url = "${props.baseUrl}/employers/${employerId.value}/payruns/$payRunId?failureLimit=$failureLimit"
         val result = guardrails.execute(
             isRetryable = RestTemplateRetryClassifier::isRetryable,

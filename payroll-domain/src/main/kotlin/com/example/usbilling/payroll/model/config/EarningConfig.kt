@@ -2,7 +2,7 @@ package com.example.usbilling.payroll.model.config
 
 import com.example.usbilling.payroll.model.EarningCategory
 import com.example.usbilling.payroll.model.EarningCode
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
 
 /**
@@ -22,5 +22,5 @@ data class EarningDefinition(
  * Implementations live in services (e.g. worker/config service), not in the domain.
  */
 interface EarningConfigRepository {
-    fun findByEmployerAndCode(employerId: EmployerId, code: EarningCode): EarningDefinition?
+    fun findByEmployerAndCode(employerId: UtilityId, code: EarningCode): EarningDefinition?
 }

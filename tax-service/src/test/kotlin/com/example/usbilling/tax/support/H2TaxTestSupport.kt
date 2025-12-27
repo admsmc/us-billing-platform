@@ -3,7 +3,7 @@ package com.example.usbilling.tax.support
 import com.example.usbilling.payroll.model.TaxBasis
 import com.example.usbilling.payroll.model.TaxJurisdictionType
 import com.example.usbilling.persistence.flyway.FlywaySupport
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.tax.api.TaxQuery
 import com.example.usbilling.tax.config.TaxRuleFile
 import com.example.usbilling.tax.impl.TaxRuleRecord
@@ -150,7 +150,7 @@ object H2TaxTestSupport {
                     bracketsJson = r.get("BRACKETS_JSON", String::class.java),
                     standardDeductionCents = r.get("STANDARD_DEDUCTION_CENTS", Long::class.java),
                     additionalWithholdingCents = r.get("ADDITIONAL_WITHHOLDING_CENTS", Long::class.java),
-                    employerId = r.get("EMPLOYER_ID", String::class.java)?.let(::EmployerId),
+                    employerId = r.get("EMPLOYER_ID", String::class.java)?.let(::UtilityId),
                     effectiveFrom = r.get("EFFECTIVE_FROM", LocalDate::class.java),
                     effectiveTo = r.get("EFFECTIVE_TO", LocalDate::class.java),
                     filingStatus = r.get("FILING_STATUS", String::class.java),

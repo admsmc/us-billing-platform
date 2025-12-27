@@ -1,7 +1,7 @@
 package com.example.usbilling.tax.http
 
 import com.example.usbilling.payroll.model.TaxContext
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.tax.api.TaxCatalog
 import com.example.usbilling.tax.api.TaxQuery
 import org.springframework.format.annotation.DateTimeFormat
@@ -35,7 +35,7 @@ class TaxHttpController(
         @RequestParam("locality", required = false) locality: List<String>?,
     ): TaxContextDto {
         val query = TaxQuery(
-            employerId = EmployerId(employerId),
+            employerId = UtilityId(employerId),
             asOfDate = asOf,
             residentState = residentState,
             workState = workState,

@@ -1,10 +1,10 @@
 package com.example.usbilling.payroll.model
 
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.PayRunId
-import com.example.usbilling.shared.PaycheckId
+import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillId
 
 // Output line items
 
@@ -41,10 +41,10 @@ data class EmployerContributionLine(
 // Full paycheck result
 
 data class PaycheckResult(
-    val paycheckId: PaycheckId,
-    val payRunId: PayRunId?,
-    val employerId: EmployerId,
-    val employeeId: EmployeeId,
+    val paycheckId: BillId,
+    val payRunId: BillRunId?,
+    val employerId: UtilityId,
+    val employeeId: CustomerId,
     val period: PayPeriod,
     val earnings: List<EarningLine>,
     val employeeTaxes: List<TaxLine>,

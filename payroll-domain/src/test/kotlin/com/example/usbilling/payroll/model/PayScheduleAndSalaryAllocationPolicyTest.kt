@@ -1,6 +1,6 @@
 package com.example.usbilling.payroll.model
 
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -9,7 +9,7 @@ class PayScheduleAndSalaryAllocationPolicyTest {
 
     @Test
     fun `periodsPerYearFor maps frequencies to expected counts`() {
-        val employerId = EmployerId("emp-test")
+        val employerId = UtilityId("emp-test")
 
         fun schedule(freq: PayFrequency) = PaySchedule.defaultFor(employerId, freq)
 
@@ -24,7 +24,7 @@ class PayScheduleAndSalaryAllocationPolicyTest {
 
     @Test
     fun `even allocation matches simple division for clean case`() {
-        val employerId = EmployerId("emp-even")
+        val employerId = UtilityId("emp-even")
         val schedule = PaySchedule.defaultFor(employerId, PayFrequency.BIWEEKLY) // 26 periods
         val annual = Money(260_000_00L) // $260,000
 
@@ -37,7 +37,7 @@ class PayScheduleAndSalaryAllocationPolicyTest {
 
     @Test
     fun `remainder-aware even allocation preserves annual total for non-even case`() {
-        val employerId = EmployerId("emp-rem")
+        val employerId = UtilityId("emp-rem")
         val schedule = PaySchedule(
             employerId = employerId,
             frequency = PayFrequency.SEMI_MONTHLY,

@@ -1,7 +1,7 @@
 package com.example.usbilling.hr.garnishment
 
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
 import org.h2.jdbcx.JdbcDataSource
 import org.junit.jupiter.api.BeforeEach
@@ -15,8 +15,8 @@ class JdbcGarnishmentLedgerRepositoryTest {
     private lateinit var jdbcTemplate: JdbcTemplate
     private lateinit var repo: JdbcGarnishmentLedgerRepository
 
-    private val employerId = EmployerId("EMP-GARN-LEDGER-TEST")
-    private val employeeId = EmployeeId("EE-GARN-LEDGER-TEST")
+    private val employerId = UtilityId("EMP-GARN-LEDGER-TEST")
+    private val employeeId = CustomerId("EE-GARN-LEDGER-TEST")
 
     @BeforeEach
     fun setUp() {

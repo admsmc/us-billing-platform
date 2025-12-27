@@ -2,7 +2,7 @@ package com.example.usbilling.tax.impl
 
 import com.example.usbilling.payroll.model.TaxBasis
 import com.example.usbilling.payroll.model.TaxJurisdictionType
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import java.time.LocalDate
 
 /**
@@ -24,7 +24,7 @@ data class TaxRuleRecord(
     val additionalWithholdingCents: Long?,
     // Real-world selection fields. These are used by the persistence layer
     // to choose which rules apply for a given employer/date/employee context.
-    val employerId: EmployerId? = null,
+    val employerId: UtilityId? = null,
     val effectiveFrom: LocalDate? = null,
     val effectiveTo: LocalDate? = null,
     val filingStatus: String? = null,

@@ -4,18 +4,18 @@ import com.example.usbilling.payroll.model.*
 import com.example.usbilling.payroll.model.config.DeductionConfigRepository
 import com.example.usbilling.payroll.model.config.DeductionKind
 import com.example.usbilling.payroll.model.config.DeductionPlan
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.PayRunId
-import com.example.usbilling.shared.PaycheckId
+import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillId
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class DeductionBehaviorTest {
 
-    private fun baseInput(employerId: EmployerId, employeeId: EmployeeId, priorYtd: YtdSnapshot, annualSalaryCents: Long = 260_000_00L): PaycheckInput {
+    private fun baseInput(employerId: UtilityId, employeeId: CustomerId, priorYtd: YtdSnapshot, annualSalaryCents: Long = 260_000_00L): PaycheckInput {
         val period = PayPeriod(
             id = "DED-BEHAVIOR",
             employerId = employerId,
@@ -35,8 +35,8 @@ class DeductionBehaviorTest {
             ),
         )
         return PaycheckInput(
-            paycheckId = PaycheckId("chk-ded"),
-            payRunId = PayRunId("run-ded"),
+            paycheckId = BillId("chk-ded"),
+            payRunId = BillRunId("run-ded"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,
@@ -53,14 +53,14 @@ class DeductionBehaviorTest {
 
     @Test
     fun `HSA contribution is capped by annual limit`() {
-        val employerId = EmployerId("emp-hsa")
-        val employeeId = EmployeeId("ee-hsa")
+        val employerId = UtilityId("emp-hsa")
+        val employeeId = CustomerId("ee-hsa")
 
         val planId = "HSA_PLAN"
         val annualCap = Money(3_000_00L)
 
         val repo = object : DeductionConfigRepository {
-            override fun findPlansForEmployer(employerId: EmployerId): List<DeductionPlan> = listOf(
+            override fun findPlansForEmployer(employerId: UtilityId): List<DeductionPlan> = listOf(
                 DeductionPlan(
                     id = planId,
                     name = "HSA",
@@ -114,8 +114,8 @@ class DeductionBehaviorTest {
 
     @Test
     fun `garnishment is limited by disposable income`() {
-        val employerId = EmployerId("emp-garn")
-        val employeeId = EmployeeId("ee-garn")
+        val employerId = UtilityId("emp-garn")
+        val employeeId = CustomerId("ee-garn")
 
         // Mandatory pre-tax 401k: 50% of gross (10,000) = 5,000
         val pretaxPlanId = "401K_MANDATORY"
@@ -123,7 +123,7 @@ class DeductionBehaviorTest {
         val garnPlanId = "GARNISH_1"
 
         val repo = object : DeductionConfigRepository {
-            override fun findPlansForEmployer(employerId: EmployerId): List<DeductionPlan> = listOf(
+            override fun findPlansForEmployer(employerId: UtilityId): List<DeductionPlan> = listOf(
                 DeductionPlan(
                     id = pretaxPlanId,
                     name = "401k Mandatory",
@@ -163,11 +163,11 @@ class DeductionBehaviorTest {
 
     @Test
     fun `multiple pre tax deductions interact correctly with tax bases`() {
-        val employerId = EmployerId("emp-multi-pre")
-        val employeeId = EmployeeId("ee-multi-pre")
+        val employerId = UtilityId("emp-multi-pre")
+        val employeeId = CustomerId("ee-multi-pre")
 
         val repo = object : DeductionConfigRepository {
-            override fun findPlansForEmployer(employerId: EmployerId): List<DeductionPlan> = listOf(
+            override fun findPlansForEmployer(employerId: UtilityId): List<DeductionPlan> = listOf(
                 DeductionPlan(
                     id = "HSA_MULTI",
                     name = "HSA",

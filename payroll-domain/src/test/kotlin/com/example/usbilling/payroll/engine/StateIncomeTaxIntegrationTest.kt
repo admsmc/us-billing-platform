@@ -1,11 +1,11 @@
 package com.example.usbilling.payroll.engine
 
 import com.example.usbilling.payroll.model.*
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.PayRunId
-import com.example.usbilling.shared.PaycheckId
+import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillId
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -13,7 +13,7 @@ import kotlin.test.assertTrue
 
 class StateIncomeTaxIntegrationTest {
 
-    private fun basePeriod(employerId: EmployerId): PayPeriod = PayPeriod(
+    private fun basePeriod(employerId: UtilityId): PayPeriod = PayPeriod(
         id = "2025-01-BW-SIT",
         employerId = employerId,
         dateRange = LocalDateRange(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 14)),
@@ -21,7 +21,7 @@ class StateIncomeTaxIntegrationTest {
         frequency = PayFrequency.BIWEEKLY,
     )
 
-    private fun baseSnapshot(employerId: EmployerId, employeeId: EmployeeId, homeState: String, workState: String): EmployeeSnapshot = EmployeeSnapshot(
+    private fun baseSnapshot(employerId: UtilityId, employeeId: CustomerId, homeState: String, workState: String): EmployeeSnapshot = EmployeeSnapshot(
         employerId = employerId,
         employeeId = employeeId,
         homeState = homeState,
@@ -83,18 +83,18 @@ class StateIncomeTaxIntegrationTest {
 
     @Test
     fun `state income tax differs across CA TX NY for the same gross`() {
-        val employerId = EmployerId("EMP-SIT")
+        val employerId = UtilityId("EMP-SIT")
         val period = basePeriod(employerId)
 
         // Build inputs for three employees with identical comp but different states.
-        val caSnapshot = baseSnapshot(employerId, EmployeeId("EE-CA"), homeState = "CA", workState = "CA")
-        val txSnapshot = baseSnapshot(employerId, EmployeeId("EE-TX"), homeState = "TX", workState = "TX")
-        val nySnapshot = baseSnapshot(employerId, EmployeeId("EE-NY"), homeState = "NY", workState = "NY")
+        val caSnapshot = baseSnapshot(employerId, CustomerId("EE-CA"), homeState = "CA", workState = "CA")
+        val txSnapshot = baseSnapshot(employerId, CustomerId("EE-TX"), homeState = "TX", workState = "TX")
+        val nySnapshot = baseSnapshot(employerId, CustomerId("EE-NY"), homeState = "NY", workState = "NY")
 
         fun runFor(snapshot: EmployeeSnapshot, stateRules: List<TaxRule>): PaycheckResult {
             val input = PaycheckInput(
-                paycheckId = PaycheckId("CHK-${'$'}{snapshot.employeeId.value}"),
-                payRunId = PayRunId("RUN-SIT"),
+                paycheckId = BillId("CHK-${'$'}{snapshot.employeeId.value}"),
+                payRunId = BillRunId("RUN-SIT"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,
@@ -139,17 +139,17 @@ class StateIncomeTaxIntegrationTest {
 
     @Test
     fun `flat IL state tax sits between TX zero and progressive NY`() {
-        val employerId = EmployerId("EMP-SIT")
+        val employerId = UtilityId("EMP-SIT")
         val period = basePeriod(employerId)
 
-        val txSnapshot = baseSnapshot(employerId, EmployeeId("EE-TX2"), homeState = "TX", workState = "TX")
-        val ilSnapshot = baseSnapshot(employerId, EmployeeId("EE-IL2"), homeState = "IL", workState = "IL")
-        val nySnapshot = baseSnapshot(employerId, EmployeeId("EE-NY2"), homeState = "NY", workState = "NY")
+        val txSnapshot = baseSnapshot(employerId, CustomerId("EE-TX2"), homeState = "TX", workState = "TX")
+        val ilSnapshot = baseSnapshot(employerId, CustomerId("EE-IL2"), homeState = "IL", workState = "IL")
+        val nySnapshot = baseSnapshot(employerId, CustomerId("EE-NY2"), homeState = "NY", workState = "NY")
 
         fun runFor(snapshot: EmployeeSnapshot, stateRules: List<TaxRule>): PaycheckResult {
             val input = PaycheckInput(
-                paycheckId = PaycheckId("CHK-${'$'}{snapshot.employeeId.value}"),
-                payRunId = PayRunId("RUN-SIT-FLAT"),
+                paycheckId = BillId("CHK-${'$'}{snapshot.employeeId.value}"),
+                payRunId = BillRunId("RUN-SIT-FLAT"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,

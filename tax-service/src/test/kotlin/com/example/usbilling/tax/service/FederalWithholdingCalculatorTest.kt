@@ -1,8 +1,8 @@
 package com.example.usbilling.tax.service
 
 import com.example.usbilling.payroll.model.*
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
 import java.time.LocalDate
 import kotlin.test.Test
@@ -18,8 +18,8 @@ class FederalWithholdingCalculatorTest {
         w4DeductionsCents: Long? = null,
         additionalPerPeriodCents: Long? = null,
     ): FederalWithholdingInput {
-        val employerId = EmployerId("EMP1")
-        val employeeId = EmployeeId("EE1")
+        val employerId = UtilityId("EMP1")
+        val employeeId = CustomerId("EE1")
         val period = PayPeriod(
             id = "P1",
             employerId = employerId,
@@ -45,8 +45,8 @@ class FederalWithholdingCalculatorTest {
         val ytd = YtdSnapshot(year = 2025)
 
         val input = PaycheckInput(
-            paycheckId = com.example.usbilling.shared.PaycheckId("CHK1"),
-            payRunId = com.example.usbilling.shared.PayRunId("RUN1"),
+            paycheckId = com.example.usbilling.shared.BillId("CHK1"),
+            payRunId = com.example.usbilling.shared.BillRunId("RUN1"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,

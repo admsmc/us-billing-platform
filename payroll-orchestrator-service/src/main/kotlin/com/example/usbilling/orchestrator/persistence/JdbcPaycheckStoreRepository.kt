@@ -2,7 +2,7 @@ package com.example.usbilling.orchestrator.persistence
 
 import com.example.usbilling.payroll.model.CalculationTrace
 import com.example.usbilling.payroll.model.PaycheckResult
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Repository
@@ -15,7 +15,7 @@ class JdbcPaycheckStoreRepository(
 ) : PaycheckStoreRepository {
 
     override fun insertFinalPaycheckIfAbsent(
-        employerId: EmployerId,
+        employerId: UtilityId,
         paycheckId: String,
         payRunId: String,
         employeeId: String,
@@ -62,7 +62,7 @@ class JdbcPaycheckStoreRepository(
         )
     }
 
-    override fun findPaycheck(employerId: EmployerId, paycheckId: String): PaycheckResult? {
+    override fun findPaycheck(employerId: UtilityId, paycheckId: String): PaycheckResult? {
         val json = jdbcTemplate.query(
             """
             SELECT payload_json
@@ -77,7 +77,7 @@ class JdbcPaycheckStoreRepository(
         return objectMapper.readValue(json, PaycheckResult::class.java)
     }
 
-    override fun findCorrectionOfPaycheckId(employerId: EmployerId, paycheckId: String): String? = jdbcTemplate.query(
+    override fun findCorrectionOfBillId(employerId: UtilityId, paycheckId: String): String? = jdbcTemplate.query(
         """
             SELECT correction_of_paycheck_id
             FROM paycheck
@@ -88,7 +88,7 @@ class JdbcPaycheckStoreRepository(
         paycheckId,
     ).firstOrNull()
 
-    override fun setCorrectionOfPaycheckIdIfNull(employerId: EmployerId, paycheckId: String, correctionOfPaycheckId: String): Boolean {
+    override fun setCorrectionOfPaycheckIdIfNull(employerId: UtilityId, paycheckId: String, correctionOfPaycheckId: String): Boolean {
         val updated = jdbcTemplate.update(
             """
             UPDATE paycheck

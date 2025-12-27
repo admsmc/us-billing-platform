@@ -1,11 +1,11 @@
 package com.example.usbilling.payroll.engine
 
 import com.example.usbilling.payroll.model.*
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.PayRunId
-import com.example.usbilling.shared.PaycheckId
+import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillId
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -35,8 +35,8 @@ class TipCreditEnforcerTest {
 
     @Test
     fun `no make-up when cash plus tips already meet minimum wage (TX profile)`() {
-        val employerId = EmployerId("emp-tip-ok")
-        val employeeId = EmployeeId("ee-tip-ok")
+        val employerId = UtilityId("emp-tip-ok")
+        val employeeId = CustomerId("ee-tip-ok")
         val period = PayPeriod(
             id = "2025-01-W-TIP-OK",
             employerId = employerId,
@@ -82,8 +82,8 @@ class TipCreditEnforcerTest {
 
         val earnings = TipCreditEnforcer.applyTipCreditMakeup(
             input = PaycheckInput(
-                paycheckId = PaycheckId("chk-tip-ok"),
-                payRunId = PayRunId("run-tip-ok"),
+                paycheckId = BillId("chk-tip-ok"),
+                payRunId = BillRunId("run-tip-ok"),
                 employerId = employerId,
                 employeeId = employeeId,
                 period = period,
@@ -102,8 +102,8 @@ class TipCreditEnforcerTest {
 
     @Test
     fun `make-up brings tipped employee up to minimum wage (TX profile)`() {
-        val employerId = EmployerId("emp-tip-mu")
-        val employeeId = EmployeeId("ee-tip-mu")
+        val employerId = UtilityId("emp-tip-mu")
+        val employeeId = CustomerId("ee-tip-mu")
         val period = PayPeriod(
             id = "2025-01-W-TIP-MU",
             employerId = employerId,
@@ -149,8 +149,8 @@ class TipCreditEnforcerTest {
         val labor = txLaborStandards()
         val earnings = TipCreditEnforcer.applyTipCreditMakeup(
             input = PaycheckInput(
-                paycheckId = PaycheckId("chk-tip-mu"),
-                payRunId = PayRunId("run-tip-mu"),
+                paycheckId = BillId("chk-tip-mu"),
+                payRunId = BillRunId("run-tip-mu"),
                 employerId = employerId,
                 employeeId = employeeId,
                 period = period,
@@ -182,8 +182,8 @@ class TipCreditEnforcerTest {
 
     @Test
     fun `CA tipped employee uses higher state minimum wage with no tip credit`() {
-        val employerId = EmployerId("emp-tip-ca")
-        val employeeId = EmployeeId("ee-tip-ca")
+        val employerId = UtilityId("emp-tip-ca")
+        val employeeId = CustomerId("ee-tip-ca")
         val period = PayPeriod(
             id = "2025-01-W-TIP-CA",
             employerId = employerId,
@@ -229,8 +229,8 @@ class TipCreditEnforcerTest {
         val labor = caLaborStandards()
         val earnings = TipCreditEnforcer.applyTipCreditMakeup(
             input = PaycheckInput(
-                paycheckId = PaycheckId("chk-tip-ca"),
-                payRunId = PayRunId("run-tip-ca"),
+                paycheckId = BillId("chk-tip-ca"),
+                payRunId = BillRunId("run-tip-ca"),
                 employerId = employerId,
                 employeeId = employeeId,
                 period = period,

@@ -1,7 +1,7 @@
 package com.example.usbilling.orchestrator.http
 
 import com.example.usbilling.orchestrator.payrun.PayRunExecutionService
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PathVariable
@@ -43,7 +43,7 @@ class PayRunExecuteController(
         @RequestParam(name = "parallelism", defaultValue = "4") parallelism: Int,
     ): ResponseEntity<ExecutePayRunResponse> {
         val result = executionService.executePayRun(
-            employerId = EmployerId(employerId).value,
+            employerId = UtilityId(employerId).value,
             payRunId = payRunId,
             batchSize = batchSize,
             maxItems = maxItems,

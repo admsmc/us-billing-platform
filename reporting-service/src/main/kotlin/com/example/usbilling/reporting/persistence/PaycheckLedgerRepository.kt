@@ -99,7 +99,7 @@ class PaycheckLedgerRepository(
         limit,
     )
 
-    fun findLedgerPayloadByEmployerAndPaycheckId(employerId: String, paycheckId: String): LedgerEntryPayloadRow? = jdbcTemplate.query(
+    fun findLedgerPayloadByEmployerAndBillId(employerId: String, paycheckId: String): LedgerEntryPayloadRow? = jdbcTemplate.query(
         """
             SELECT employer_id, paycheck_id, payload_json
             FROM paycheck_ledger_entry
@@ -117,7 +117,7 @@ class PaycheckLedgerRepository(
         paycheckId,
     ).firstOrNull()
 
-    fun findLedgerSummaryByEmployerAndPaycheckId(employerId: String, paycheckId: String): LedgerEntrySummaryRow? = jdbcTemplate.query(
+    fun findLedgerSummaryByEmployerAndBillId(employerId: String, paycheckId: String): LedgerEntrySummaryRow? = jdbcTemplate.query(
         """
             SELECT employer_id, paycheck_id, employee_id,
                    pay_run_id, pay_run_type, run_sequence, pay_period_id,

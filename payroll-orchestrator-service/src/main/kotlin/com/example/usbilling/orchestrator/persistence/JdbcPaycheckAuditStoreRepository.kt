@@ -1,7 +1,7 @@
 package com.example.usbilling.orchestrator.persistence
 
 import com.example.usbilling.payroll.model.audit.PaycheckAudit
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Repository
@@ -41,7 +41,7 @@ class JdbcPaycheckAuditStoreRepository(
         )
     }
 
-    override fun findAudit(employerId: EmployerId, paycheckId: String): PaycheckAudit? {
+    override fun findAudit(employerId: UtilityId, paycheckId: String): PaycheckAudit? {
         val json = jdbcTemplate.query(
             """
             SELECT audit_json

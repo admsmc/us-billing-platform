@@ -4,8 +4,8 @@ import com.example.usbilling.payroll.model.*
 import com.example.usbilling.payroll.model.garnishment.GarnishmentFormula
 import com.example.usbilling.payroll.model.garnishment.GarnishmentType
 import com.example.usbilling.payroll.model.garnishment.ProtectedEarningsRule
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
 import com.example.usbilling.worker.support.StubTaxLaborClientsTestConfig
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -68,7 +68,7 @@ class GarnishmentFeatureFlagIntegrationTest {
 
     @Test
     fun `employer not in feature flag allow-list does not apply garnishments or send withholdings`() {
-        val employerId = EmployerId("EMP-GARN-NOFLAG")
+        val employerId = UtilityId("EMP-GARN-NOFLAG")
         val payPeriodId = "2025-01-BW1"
         val checkDate = LocalDate.of(2025, 1, 15)
 
@@ -83,7 +83,7 @@ class GarnishmentFeatureFlagIntegrationTest {
             frequency = PayFrequency.BIWEEKLY,
         )
 
-        val employeeId = EmployeeId("EE-GARN-NOFLAG-1")
+        val employeeId = CustomerId("EE-GARN-NOFLAG-1")
         val snapshot = EmployeeSnapshot(
             employerId = employerId,
             employeeId = employeeId,

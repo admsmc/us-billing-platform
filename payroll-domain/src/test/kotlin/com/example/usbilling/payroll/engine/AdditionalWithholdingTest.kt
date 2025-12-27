@@ -1,18 +1,18 @@
 package com.example.usbilling.payroll.engine
 
 import com.example.usbilling.payroll.model.*
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.PayRunId
-import com.example.usbilling.shared.PaycheckId
+import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillId
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class AdditionalWithholdingTest {
 
-    private fun baseInput(employerId: EmployerId, employeeId: EmployeeId, withAdditional: Money? = null): PaycheckInput {
+    private fun baseInput(employerId: UtilityId, employeeId: CustomerId, withAdditional: Money? = null): PaycheckInput {
         val period = PayPeriod(
             id = "2025-01-BW-AW",
             employerId = employerId,
@@ -33,8 +33,8 @@ class AdditionalWithholdingTest {
             additionalWithholdingPerPeriod = withAdditional,
         )
         return PaycheckInput(
-            paycheckId = PaycheckId("chk-aw"),
-            payRunId = PayRunId("run-aw"),
+            paycheckId = BillId("chk-aw"),
+            payRunId = BillRunId("run-aw"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,
@@ -51,8 +51,8 @@ class AdditionalWithholdingTest {
 
     @Test
     fun `flat tax rule includes per-employee additional withholding`() {
-        val employerId = EmployerId("emp-aw-flat")
-        val employeeId = EmployeeId("ee-aw-flat")
+        val employerId = UtilityId("emp-aw-flat")
+        val employeeId = CustomerId("ee-aw-flat")
 
         // Base input with $50 additional per period
         val input = baseInput(employerId, employeeId, withAdditional = Money(50_00L))
@@ -94,8 +94,8 @@ class AdditionalWithholdingTest {
 
     @Test
     fun `bracketed tax rule includes per-employee additional withholding`() {
-        val employerId = EmployerId("emp-aw-br")
-        val employeeId = EmployeeId("ee-aw-br")
+        val employerId = UtilityId("emp-aw-br")
+        val employeeId = CustomerId("ee-aw-br")
 
         // Base input with $75 additional per period
         val input = baseInput(employerId, employeeId, withAdditional = Money(75_00L))

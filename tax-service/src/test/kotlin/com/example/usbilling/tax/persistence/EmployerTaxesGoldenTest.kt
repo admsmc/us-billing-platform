@@ -2,11 +2,11 @@ package com.example.usbilling.tax.persistence
 
 import com.example.usbilling.payroll.engine.TaxesCalculator
 import com.example.usbilling.payroll.model.*
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.PayRunId
-import com.example.usbilling.shared.PaycheckId
+import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillId
 import com.example.usbilling.tax.impl.CachingTaxCatalog
 import com.example.usbilling.tax.impl.CatalogBackedTaxContextProvider
 import com.example.usbilling.tax.impl.DbTaxCatalog
@@ -30,7 +30,7 @@ class EmployerTaxesGoldenTest {
         H2TaxTestSupport.importConfigFromResource(dsl, resourcePath, javaClass.classLoader)
     }
 
-    private fun employerTaxContext(employerId: EmployerId, asOfDate: LocalDate, dsl: DSLContext): TaxContext {
+    private fun employerTaxContext(employerId: UtilityId, asOfDate: LocalDate, dsl: DSLContext): TaxContext {
         val repository: TaxRuleRepository = H2TaxRuleRepository(dsl)
         val dbCatalog = DbTaxCatalog(repository)
         val cachingCatalog = CachingTaxCatalog(dbCatalog)
@@ -43,7 +43,7 @@ class EmployerTaxesGoldenTest {
         val dsl = createDslContext("taxdb-golden-futa")
         importConfig(dsl, "tax-config/example-federal-2025.json")
 
-        val employerId = EmployerId("EMP-FUTA-GOLDEN")
+        val employerId = UtilityId("EMP-FUTA-GOLDEN")
         val asOfDate = LocalDate.of(2025, 3, 31)
 
         val taxContext = employerTaxContext(employerId, asOfDate, dsl)
@@ -73,7 +73,7 @@ class EmployerTaxesGoldenTest {
 
         val snapshot = EmployeeSnapshot(
             employerId = employerId,
-            employeeId = EmployeeId("EE-FUTA-GOLDEN"),
+            employeeId = CustomerId("EE-FUTA-GOLDEN"),
             homeState = "CA",
             workState = "CA",
             filingStatus = FilingStatus.SINGLE,
@@ -84,8 +84,8 @@ class EmployerTaxesGoldenTest {
         )
 
         val input = PaycheckInput(
-            paycheckId = PaycheckId("CHK-FUTA-GOLDEN"),
-            payRunId = PayRunId("RUN-FUTA-GOLDEN"),
+            paycheckId = BillId("CHK-FUTA-GOLDEN"),
+            payRunId = BillRunId("RUN-FUTA-GOLDEN"),
             employerId = employerId,
             employeeId = snapshot.employeeId,
             period = period,
@@ -113,7 +113,7 @@ class EmployerTaxesGoldenTest {
         val dsl = createDslContext("taxdb-golden-sui")
         importConfig(dsl, "tax-config/example-federal-2025.json")
 
-        val employerId = EmployerId("EMP-SUI-GOLDEN")
+        val employerId = UtilityId("EMP-SUI-GOLDEN")
         val asOfDate = LocalDate.of(2025, 3, 31)
 
         val taxContext = employerTaxContext(employerId, asOfDate, dsl)
@@ -142,7 +142,7 @@ class EmployerTaxesGoldenTest {
 
         val snapshot = EmployeeSnapshot(
             employerId = employerId,
-            employeeId = EmployeeId("EE-SUI-GOLDEN"),
+            employeeId = CustomerId("EE-SUI-GOLDEN"),
             homeState = "CA",
             workState = "CA",
             filingStatus = FilingStatus.SINGLE,
@@ -153,8 +153,8 @@ class EmployerTaxesGoldenTest {
         )
 
         val input = PaycheckInput(
-            paycheckId = PaycheckId("CHK-SUI-GOLDEN"),
-            payRunId = PayRunId("RUN-SUI-GOLDEN"),
+            paycheckId = BillId("CHK-SUI-GOLDEN"),
+            payRunId = BillRunId("RUN-SUI-GOLDEN"),
             employerId = employerId,
             employeeId = snapshot.employeeId,
             period = period,
@@ -182,7 +182,7 @@ class EmployerTaxesGoldenTest {
         val dsl = createDslContext("taxdb-golden-sui-multi")
         importConfig(dsl, "tax-config/example-federal-2025.json")
 
-        val employerId = EmployerId("EMP-SUI-GOLDEN-MULTI")
+        val employerId = UtilityId("EMP-SUI-GOLDEN-MULTI")
         val asOfDate = LocalDate.of(2025, 3, 31)
 
         val taxContext = employerTaxContext(employerId, asOfDate, dsl)
@@ -215,7 +215,7 @@ class EmployerTaxesGoldenTest {
 
             val snapshot = EmployeeSnapshot(
                 employerId = employerId,
-                employeeId = EmployeeId("EE-$ruleId"),
+                employeeId = CustomerId("EE-$ruleId"),
                 homeState = "CA",
                 workState = "CA",
                 filingStatus = FilingStatus.SINGLE,
@@ -226,8 +226,8 @@ class EmployerTaxesGoldenTest {
             )
 
             val input = PaycheckInput(
-                paycheckId = PaycheckId("CHK-$ruleId"),
-                payRunId = PayRunId("RUN-SUI-GOLDEN-MULTI"),
+                paycheckId = BillId("CHK-$ruleId"),
+                payRunId = BillRunId("RUN-SUI-GOLDEN-MULTI"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,
@@ -265,7 +265,7 @@ class EmployerTaxesGoldenTest {
         val dsl = createDslContext("taxdb-golden-sui-expanded")
         importConfig(dsl, "tax-config/example-federal-2025.json")
 
-        val employerId = EmployerId("EMP-SUI-GOLDEN-EXPANDED")
+        val employerId = UtilityId("EMP-SUI-GOLDEN-EXPANDED")
         val asOfDate = LocalDate.of(2025, 3, 31)
 
         val taxContext = employerTaxContext(employerId, asOfDate, dsl)
@@ -305,7 +305,7 @@ class EmployerTaxesGoldenTest {
 
             val snapshot = EmployeeSnapshot(
                 employerId = employerId,
-                employeeId = EmployeeId("EE-$ruleId"),
+                employeeId = CustomerId("EE-$ruleId"),
                 homeState = "CA",
                 workState = "CA",
                 filingStatus = FilingStatus.SINGLE,
@@ -316,8 +316,8 @@ class EmployerTaxesGoldenTest {
             )
 
             val input = PaycheckInput(
-                paycheckId = PaycheckId("CHK-$ruleId"),
-                payRunId = PayRunId("RUN-SUI-GOLDEN-EXPANDED"),
+                paycheckId = BillId("CHK-$ruleId"),
+                payRunId = BillRunId("RUN-SUI-GOLDEN-EXPANDED"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,

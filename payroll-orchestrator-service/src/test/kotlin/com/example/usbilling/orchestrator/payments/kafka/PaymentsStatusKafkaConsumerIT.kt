@@ -97,7 +97,7 @@ class PaymentsStatusKafkaConsumerIT(
             Map::class.java,
         )
 
-        val paycheckId = waitForPaycheckId(employerId, payRunId, "e-1")
+        val paycheckId = waitForBillId(employerId, payRunId, "e-1")
         assertNotNull(paycheckId)
 
         // Publish payment status event to embedded Kafka.
@@ -160,7 +160,7 @@ class PaymentsStatusKafkaConsumerIT(
         throw AssertionError("Timed out waiting for terminal pay_run.status")
     }
 
-    private fun waitForPaycheckId(employerId: String, payRunId: String, employeeId: String): String? {
+    private fun waitForBillId(employerId: String, payRunId: String, employeeId: String): String? {
         val deadlineMs = System.currentTimeMillis() + 10_000
         while (System.currentTimeMillis() < deadlineMs) {
             val paycheckId = jdbcTemplate.query(

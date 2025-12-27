@@ -2,8 +2,8 @@ package com.example.usbilling.worker
 
 import com.example.usbilling.hr.HrApplication
 import com.example.usbilling.payroll.model.*
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.worker.support.StubTaxLaborClientsTestConfig
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
@@ -177,9 +177,9 @@ class RealHrEndToEndTest {
 
     @Test
     fun `worker-service computes paycheck using real hr-service over HTTP`() {
-        val employerId = EmployerId("EMP-HR-E2E")
+        val employerId = UtilityId("EMP-HR-E2E")
         val payPeriodId = "2025-01-BW1"
-        val employeeId = EmployeeId("EE-E2E-1")
+        val employeeId = CustomerId("EE-E2E-1")
 
         val results = payrollRunService.runHrBackedPayForPeriod(
             employerId = employerId,

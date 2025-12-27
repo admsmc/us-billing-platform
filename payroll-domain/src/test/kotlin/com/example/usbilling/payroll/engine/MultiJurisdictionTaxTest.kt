@@ -15,11 +15,11 @@ import com.example.usbilling.payroll.model.TaxJurisdictionType
 import com.example.usbilling.payroll.model.TaxRule
 import com.example.usbilling.payroll.model.TimeSlice
 import com.example.usbilling.payroll.model.YtdSnapshot
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.PayRunId
-import com.example.usbilling.shared.PaycheckId
+import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillId
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -27,7 +27,7 @@ import kotlin.test.assertNotNull
 
 class MultiJurisdictionTaxTest {
 
-    private fun basePeriod(employerId: EmployerId): PayPeriod = PayPeriod(
+    private fun basePeriod(employerId: UtilityId): PayPeriod = PayPeriod(
         id = "2025-01-BW-MULTI",
         employerId = employerId,
         dateRange = LocalDateRange(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 14)),
@@ -36,8 +36,8 @@ class MultiJurisdictionTaxTest {
     )
 
     private fun baseInput(
-        employerId: EmployerId,
-        employeeId: EmployeeId,
+        employerId: UtilityId,
+        employeeId: CustomerId,
         homeState: String,
         workState: String,
         additionalWithholding: Money? = null,
@@ -59,8 +59,8 @@ class MultiJurisdictionTaxTest {
         )
 
         return PaycheckInput(
-            paycheckId = PaycheckId("chk-multi-${employeeId.value}"),
-            payRunId = PayRunId("run-multi"),
+            paycheckId = BillId("chk-multi-${employeeId.value}"),
+            payRunId = BillRunId("run-multi"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,
@@ -78,8 +78,8 @@ class MultiJurisdictionTaxTest {
 
     @Test
     fun `employee can have resident and work state taxes applied concurrently`() {
-        val employerId = EmployerId("EMP-MULTI-STATE")
-        val employeeId = EmployeeId("EE-MULTI-STATE")
+        val employerId = UtilityId("EMP-MULTI-STATE")
+        val employeeId = CustomerId("EE-MULTI-STATE")
 
         val federalRuleId = "US_FED_10"
         val caRuleId = "CA_SIT_5"
@@ -142,8 +142,8 @@ class MultiJurisdictionTaxTest {
 
     @Test
     fun `local taxes split bases across multiple localities when no explicit allocation is provided`() {
-        val employerId = EmployerId("EMP-MULTI-LOCAL")
-        val employeeId = EmployeeId("EE-MULTI-LOCAL")
+        val employerId = UtilityId("EMP-MULTI-LOCAL")
+        val employeeId = CustomerId("EE-MULTI-LOCAL")
 
         val detroitRuleId = "MI_DETROIT_LOCAL"
         val lansingRuleId = "MI_LANSING_LOCAL"

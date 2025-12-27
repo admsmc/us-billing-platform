@@ -7,11 +7,11 @@ import com.example.usbilling.payroll.model.garnishment.GarnishmentContext
 import com.example.usbilling.payroll.model.garnishment.GarnishmentFormula
 import com.example.usbilling.payroll.model.garnishment.GarnishmentOrder
 import com.example.usbilling.payroll.model.garnishment.GarnishmentOrderId
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.PayRunId
-import com.example.usbilling.shared.PaycheckId
+import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillId
 import java.time.LocalDate
 import kotlin.random.Random
 import kotlin.test.Test
@@ -29,7 +29,7 @@ class GarnishmentsCalculatorPropertiesTest {
     private fun randomPercent(rng: Random): Percent = Percent(rng.nextDouble(from = 0.0, until = 0.6)) // up to 60%
 
     private fun randomOrder(rng: Random, idSuffix: Int): GarnishmentOrder {
-        val employer = EmployerId("EMP-PROP")
+        val employer = UtilityId("EMP-PROP")
         val orderId = GarnishmentOrderId("ORDER-PROP-$idSuffix")
         val type = if (rng.nextBoolean()) {
             com.example.usbilling.payroll.model.garnishment.GarnishmentType.CREDITOR_GARNISHMENT
@@ -64,8 +64,8 @@ class GarnishmentsCalculatorPropertiesTest {
     }
 
     private fun randomInput(rng: Random, orders: List<GarnishmentOrder>): Pair<PaycheckInput, Map<DeductionCode, DeductionPlan>> {
-        val employerId = EmployerId("EMP-PROP")
-        val employeeId = EmployeeId("EE-PROP")
+        val employerId = UtilityId("EMP-PROP")
+        val employeeId = CustomerId("EE-PROP")
         val period = PayPeriod(
             id = "PROP-PERIOD",
             employerId = employerId,
@@ -95,8 +95,8 @@ class GarnishmentsCalculatorPropertiesTest {
         }
 
         val input = PaycheckInput(
-            paycheckId = PaycheckId("CHK-PROP"),
-            payRunId = PayRunId("RUN-PROP"),
+            paycheckId = BillId("CHK-PROP"),
+            payRunId = BillRunId("RUN-PROP"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,

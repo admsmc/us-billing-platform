@@ -4,17 +4,17 @@ import com.example.usbilling.payroll.model.*
 import com.example.usbilling.payroll.model.config.DeductionConfigRepository
 import com.example.usbilling.payroll.model.config.DeductionKind
 import com.example.usbilling.payroll.model.config.DeductionPlan
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.PayRunId
-import com.example.usbilling.shared.PaycheckId
+import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillId
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 private class PreTax401kConfigRepository : DeductionConfigRepository {
-    override fun findPlansForEmployer(employerId: EmployerId): List<DeductionPlan> = listOf(
+    override fun findPlansForEmployer(employerId: UtilityId): List<DeductionPlan> = listOf(
         DeductionPlan(
             id = "PLAN_401K",
             name = "401k Employee",
@@ -28,8 +28,8 @@ class PreTaxDeductionTest {
 
     @Test
     fun `pre tax 401k reduces tax basis and net pay`() {
-        val employerId = EmployerId("emp-1")
-        val employeeId = EmployeeId("ee-401k")
+        val employerId = UtilityId("emp-1")
+        val employeeId = CustomerId("ee-401k")
         val period = PayPeriod(
             id = "2025-01-BW-401K",
             employerId = employerId,
@@ -58,8 +58,8 @@ class PreTaxDeductionTest {
         )
 
         val input = PaycheckInput(
-            paycheckId = PaycheckId("chk-401k"),
-            payRunId = PayRunId("run-401k"),
+            paycheckId = BillId("chk-401k"),
+            payRunId = BillRunId("run-401k"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,

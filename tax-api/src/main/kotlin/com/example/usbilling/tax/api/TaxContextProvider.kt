@@ -1,7 +1,7 @@
 package com.example.usbilling.tax.api
 
 import com.example.usbilling.payroll.model.TaxContext
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import java.time.LocalDate
 
 /**
@@ -15,5 +15,5 @@ interface TaxContextProvider {
      * Returns a TaxContext that includes all relevant federal/state/local/employer-specific rules
      * for the given employer as of [asOfDate].
      */
-    fun getTaxContext(employerId: EmployerId, asOfDate: LocalDate): TaxContext
+    fun getTaxContext(employerId: UtilityId, asOfDate: LocalDate): TaxContext
 }

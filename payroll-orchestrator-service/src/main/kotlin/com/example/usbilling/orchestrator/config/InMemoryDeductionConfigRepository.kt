@@ -3,7 +3,7 @@ package com.example.usbilling.orchestrator.config
 import com.example.usbilling.payroll.model.config.DeductionConfigRepository
 import com.example.usbilling.payroll.model.config.DeductionKind
 import com.example.usbilling.payroll.model.config.DeductionPlan
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
 import org.springframework.stereotype.Component
 
@@ -13,8 +13,8 @@ import org.springframework.stereotype.Component
 @Component
 class InMemoryDeductionConfigRepository : DeductionConfigRepository {
 
-    private val data: Map<EmployerId, List<DeductionPlan>> = mapOf(
-        EmployerId("emp-1") to listOf(
+    private val data: Map<UtilityId, List<DeductionPlan>> = mapOf(
+        UtilityId("emp-1") to listOf(
             DeductionPlan(
                 id = "PLAN_VOLUNTARY",
                 name = "Voluntary Post-Tax Deduction",
@@ -24,5 +24,5 @@ class InMemoryDeductionConfigRepository : DeductionConfigRepository {
         ),
     )
 
-    override fun findPlansForEmployer(employerId: EmployerId): List<DeductionPlan> = data[employerId] ?: emptyList()
+    override fun findPlansForEmployer(employerId: UtilityId): List<DeductionPlan> = data[employerId] ?: emptyList()
 }

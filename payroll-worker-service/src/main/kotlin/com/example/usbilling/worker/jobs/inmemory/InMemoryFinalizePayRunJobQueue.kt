@@ -1,6 +1,6 @@
 package com.example.usbilling.worker.jobs.inmemory
 
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.worker.jobs.FinalizePayRunJob
 import com.example.usbilling.worker.jobs.FinalizePayRunJobQueue
 import com.example.usbilling.worker.jobs.FinalizePayRunJobResult
@@ -122,7 +122,7 @@ class InMemoryFinalizePayRunJobConsumer(
 
                 try {
                     val result = runner.runFinalizeJob(
-                        employerId = EmployerId(job.employerId),
+                        employerId = UtilityId(job.employerId),
                         payPeriodId = job.payPeriodId,
                         employeeIds = job.employeeIds,
                         requestedPayRunId = job.requestedPayRunId,

@@ -1,11 +1,11 @@
 package com.example.usbilling.payroll.engine
 
 import com.example.usbilling.payroll.model.*
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.PayRunId
-import com.example.usbilling.shared.PaycheckId
+import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillId
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -14,8 +14,8 @@ class RegularRateCalculatorTest {
 
     @Test
     fun `additional overtime premium is added for hourly bonus week`() {
-        val employerId = EmployerId("emp-rr")
-        val employeeId = EmployeeId("ee-rr")
+        val employerId = UtilityId("emp-rr")
+        val employeeId = CustomerId("ee-rr")
         val period = PayPeriod(
             id = "2025-01-W-RR",
             employerId = employerId,
@@ -49,8 +49,8 @@ class RegularRateCalculatorTest {
         )
 
         val input = PaycheckInput(
-            paycheckId = PaycheckId("chk-rr"),
-            payRunId = PayRunId("run-rr"),
+            paycheckId = BillId("chk-rr"),
+            payRunId = BillRunId("run-rr"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,

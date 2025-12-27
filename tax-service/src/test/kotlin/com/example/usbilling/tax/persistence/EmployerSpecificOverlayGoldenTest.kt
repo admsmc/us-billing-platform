@@ -2,11 +2,11 @@ package com.example.usbilling.tax.persistence
 
 import com.example.usbilling.payroll.engine.TaxesCalculator
 import com.example.usbilling.payroll.model.*
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.PayRunId
-import com.example.usbilling.shared.PaycheckId
+import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillId
 import com.example.usbilling.tax.impl.CachingTaxCatalog
 import com.example.usbilling.tax.impl.CatalogBackedTaxContextProvider
 import com.example.usbilling.tax.impl.DbTaxCatalog
@@ -32,7 +32,7 @@ class EmployerSpecificOverlayGoldenTest {
         H2TaxTestSupport.importConfigFromResource(dsl, resourcePath, javaClass.classLoader)
     }
 
-    private fun taxContext(employerId: EmployerId, asOfDate: LocalDate, dsl: DSLContext): TaxContext {
+    private fun taxContext(employerId: UtilityId, asOfDate: LocalDate, dsl: DSLContext): TaxContext {
         val repository: TaxRuleRepository = H2TaxRuleRepository(dsl)
         val dbCatalog = DbTaxCatalog(repository)
         val cachingCatalog = CachingTaxCatalog(dbCatalog)
@@ -50,8 +50,8 @@ class EmployerSpecificOverlayGoldenTest {
         val asOfDate = LocalDate.of(2025, 3, 31)
         val annualWagesCents = 100_000_00L // $100,000 annual wages
 
-        val acme = EmployerId("EMP-ACME")
-        val baseline = EmployerId("EMP-BASELINE")
+        val acme = UtilityId("EMP-ACME")
+        val baseline = UtilityId("EMP-BASELINE")
 
         val acmeContext = taxContext(acme, asOfDate, dsl)
         val baselineContext = taxContext(baseline, asOfDate, dsl)
@@ -66,7 +66,7 @@ class EmployerSpecificOverlayGoldenTest {
         assertTrue("US_CA_EMP_BASELINE_SURCHARGE_2025" in baselineStateRuleIds)
         assertFalse("US_CA_EMP_ACME_SURCHARGE_2025" in baselineStateRuleIds)
 
-        fun computeStateTax(context: TaxContext, employerId: EmployerId, employeeId: String): Long {
+        fun computeStateTax(context: TaxContext, employerId: UtilityId, employeeId: String): Long {
             val bases: Map<TaxBasis, Money> = mapOf(
                 TaxBasis.StateTaxable to Money(annualWagesCents),
             )
@@ -84,7 +84,7 @@ class EmployerSpecificOverlayGoldenTest {
 
             val snapshot = EmployeeSnapshot(
                 employerId = employerId,
-                employeeId = EmployeeId(employeeId),
+                employeeId = CustomerId(employeeId),
                 homeState = "CA",
                 workState = "CA",
                 filingStatus = FilingStatus.SINGLE,
@@ -95,8 +95,8 @@ class EmployerSpecificOverlayGoldenTest {
             )
 
             val input = PaycheckInput(
-                paycheckId = PaycheckId("CHK-STATE-OVERLAY-$employerId"),
-                payRunId = PayRunId("RUN-STATE-OVERLAY"),
+                paycheckId = BillId("CHK-STATE-OVERLAY-$employerId"),
+                payRunId = BillRunId("RUN-STATE-OVERLAY"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,

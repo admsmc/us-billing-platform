@@ -1,6 +1,6 @@
 package com.example.usbilling.worker.orchestrator
 
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.worker.client.OrchestratorClient
 import com.example.usbilling.worker.client.PayRunStatusResponse
 import com.example.usbilling.worker.client.StartFinalizeResponse
@@ -18,7 +18,7 @@ class OrchestratorPayRunJobRunnerTest {
 
         Mockito.`when`(
             client.startFinalize(
-                EmployerId("EMP"),
+                UtilityId("EMP"),
                 "PP",
                 listOf("EE1", "EE2"),
                 null,
@@ -36,7 +36,7 @@ class OrchestratorPayRunJobRunnerTest {
 
         Mockito.`when`(
             client.execute(
-                EmployerId("EMP"),
+                UtilityId("EMP"),
                 "PR-1",
                 25,
                 200,
@@ -49,7 +49,7 @@ class OrchestratorPayRunJobRunnerTest {
             .thenReturn(mapOf("finalStatus" to null, "moreWork" to true))
             .thenReturn(mapOf("finalStatus" to "FINALIZED", "moreWork" to false))
 
-        Mockito.`when`(client.getStatus(EmployerId("EMP"), "PR-1", 50)).thenReturn(
+        Mockito.`when`(client.getStatus(UtilityId("EMP"), "PR-1", 50)).thenReturn(
             PayRunStatusResponse(
                 employerId = "EMP",
                 payRunId = "PR-1",
@@ -72,7 +72,7 @@ class OrchestratorPayRunJobRunnerTest {
         )
 
         val result = runner.runFinalizeJob(
-            employerId = EmployerId("EMP"),
+            employerId = UtilityId("EMP"),
             payPeriodId = "PP",
             employeeIds = listOf("EE1", "EE2"),
             requestedPayRunId = null,
@@ -83,7 +83,7 @@ class OrchestratorPayRunJobRunnerTest {
         assertEquals("FINALIZED", result.finalStatus)
 
         Mockito.verify(client, Mockito.atLeastOnce()).execute(
-            EmployerId("EMP"),
+            UtilityId("EMP"),
             "PR-1",
             25,
             200,

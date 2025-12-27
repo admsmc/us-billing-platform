@@ -5,8 +5,8 @@ import com.example.usbilling.payroll.model.TaxJurisdictionType
 import com.example.usbilling.payroll.model.garnishment.GarnishmentFormula
 import com.example.usbilling.payroll.model.garnishment.GarnishmentType
 import com.example.usbilling.payroll.model.garnishment.ProtectedEarningsRule
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.jdbc.core.JdbcTemplate
@@ -21,8 +21,8 @@ import java.time.LocalDate
  * statutory behavior such as formulas and protected earnings.
  */
 data class GarnishmentOrderRow(
-    val employerId: EmployerId,
-    val employeeId: EmployeeId,
+    val employerId: UtilityId,
+    val employeeId: CustomerId,
     val orderId: String,
     val type: GarnishmentType,
     val issuingJurisdiction: TaxJurisdiction?,
@@ -50,13 +50,13 @@ enum class OrderStatus {
 
 interface GarnishmentOrderRepository {
 
-    fun findActiveOrdersForEmployee(employerId: EmployerId, employeeId: EmployeeId, asOf: LocalDate): List<GarnishmentOrderRow>
+    fun findActiveOrdersForEmployee(employerId: UtilityId, employeeId: CustomerId, asOf: LocalDate): List<GarnishmentOrderRow>
 
     /**
      * True if the employee has any persisted garnishment orders in HR (active or not).
      * Used to distinguish demo fallback behavior from real but currently-inactive orders.
      */
-    fun hasAnyOrdersForEmployee(employerId: EmployerId, employeeId: EmployeeId): Boolean
+    fun hasAnyOrdersForEmployee(employerId: UtilityId, employeeId: CustomerId): Boolean
 }
 
 @Repository
@@ -65,7 +65,7 @@ class JdbcGarnishmentOrderRepository(
     private val objectMapper: ObjectMapper,
 ) : GarnishmentOrderRepository {
 
-    override fun findActiveOrdersForEmployee(employerId: EmployerId, employeeId: EmployeeId, asOf: LocalDate): List<GarnishmentOrderRow> {
+    override fun findActiveOrdersForEmployee(employerId: UtilityId, employeeId: CustomerId, asOf: LocalDate): List<GarnishmentOrderRow> {
         val sql =
             """
              SELECT employer_id,
@@ -117,7 +117,7 @@ class JdbcGarnishmentOrderRepository(
         return rows
     }
 
-    override fun hasAnyOrdersForEmployee(employerId: EmployerId, employeeId: EmployeeId): Boolean {
+    override fun hasAnyOrdersForEmployee(employerId: UtilityId, employeeId: CustomerId): Boolean {
         val sql =
             """
             SELECT 1
@@ -132,8 +132,8 @@ class JdbcGarnishmentOrderRepository(
     }
 
     private fun mapRow(rs: ResultSet): GarnishmentOrderRow {
-        val employerId = EmployerId(rs.getString("employer_id"))
-        val employeeId = EmployeeId(rs.getString("employee_id"))
+        val employerId = UtilityId(rs.getString("employer_id"))
+        val employeeId = CustomerId(rs.getString("employee_id"))
         val orderId = rs.getString("order_id")
 
         val type = GarnishmentType.valueOf(rs.getString("type"))

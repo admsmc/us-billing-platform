@@ -1,8 +1,8 @@
 package com.example.usbilling.worker
 
 import com.example.usbilling.payroll.model.*
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
 import com.example.usbilling.worker.support.StubTaxLaborClientsTestConfig
 import org.junit.jupiter.api.Test
@@ -40,7 +40,7 @@ class EmployerSpecificConfigWorkerIntegrationTest {
     fun `worker-service uses employer-specific deduction config to produce different nets`() {
         val checkDate = LocalDate.of(2025, 1, 15)
 
-        fun runSingle(employerId: EmployerId, employeeId: EmployeeId): PaycheckResult {
+        fun runSingle(employerId: UtilityId, employeeId: CustomerId): PaycheckResult {
             val period = PayPeriod(
                 id = "2025-01-BW-DEMO-${employerId.value}",
                 employerId = employerId,
@@ -71,8 +71,8 @@ class EmployerSpecificConfigWorkerIntegrationTest {
             val taxContext = TaxContext(federal = listOf(rule))
 
             val input = PaycheckInput(
-                paycheckId = com.example.usbilling.shared.PaycheckId("chk-worker-${employerId.value}"),
-                payRunId = com.example.usbilling.shared.PayRunId("run-worker-demo"),
+                paycheckId = com.example.usbilling.shared.BillId("chk-worker-${employerId.value}"),
+                payRunId = com.example.usbilling.shared.BillRunId("run-worker-demo"),
                 employerId = employerId,
                 employeeId = employeeId,
                 period = period,
@@ -103,11 +103,11 @@ class EmployerSpecificConfigWorkerIntegrationTest {
             )
         }
 
-        val empWithPlan = EmployerId("emp-1")
-        val empWithoutPlan = EmployerId("emp-2")
+        val empWithPlan = UtilityId("emp-1")
+        val empWithoutPlan = UtilityId("emp-2")
 
-        val paycheckWithPlan = runSingle(empWithPlan, EmployeeId("ee-plan"))
-        val paycheckWithoutPlan = runSingle(empWithoutPlan, EmployeeId("ee-noplan"))
+        val paycheckWithPlan = runSingle(empWithPlan, CustomerId("ee-plan"))
+        val paycheckWithoutPlan = runSingle(empWithoutPlan, CustomerId("ee-noplan"))
 
         // Gross should match for both employers.
         assertEquals(paycheckWithoutPlan.gross.amount, paycheckWithPlan.gross.amount)

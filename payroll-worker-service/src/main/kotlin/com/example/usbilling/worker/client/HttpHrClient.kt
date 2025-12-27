@@ -8,8 +8,8 @@ import com.example.usbilling.hr.http.toDomain
 import com.example.usbilling.payroll.model.EmployeeSnapshot
 import com.example.usbilling.payroll.model.PayPeriod
 import com.example.usbilling.payroll.model.garnishment.GarnishmentOrder
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.web.client.CircuitBreakerOpenException
 import com.example.usbilling.web.client.HttpClientGuardrails
 import com.example.usbilling.web.client.RestTemplateRetryClassifier
@@ -47,7 +47,7 @@ class HttpHrClient(
         circuitBreakerPolicy = if (props.circuitBreakerEnabled) props.circuitBreaker else null,
     )
 
-    override fun getEmployeeSnapshot(employerId: EmployerId, employeeId: EmployeeId, asOfDate: LocalDate): EmployeeSnapshot? {
+    override fun getEmployeeSnapshot(employerId: UtilityId, employeeId: CustomerId, asOfDate: LocalDate): EmployeeSnapshot? {
         val url = "${props.baseUrl}/employers/${employerId.value}/employees/${employeeId.value}/snapshot?asOf=$asOfDate"
         return try {
             executeWithGuardrails("GET employee snapshot", url) {
@@ -66,7 +66,7 @@ class HttpHrClient(
         }
     }
 
-    override fun getPayPeriod(employerId: EmployerId, payPeriodId: String): PayPeriod? {
+    override fun getPayPeriod(employerId: UtilityId, payPeriodId: String): PayPeriod? {
         val url = "${props.baseUrl}/employers/${employerId.value}/pay-periods/$payPeriodId"
         return try {
             executeWithGuardrails("GET pay period", url) {
@@ -84,7 +84,7 @@ class HttpHrClient(
         }
     }
 
-    override fun findPayPeriodByCheckDate(employerId: EmployerId, checkDate: LocalDate): PayPeriod? {
+    override fun findPayPeriodByCheckDate(employerId: UtilityId, checkDate: LocalDate): PayPeriod? {
         val url = "${props.baseUrl}/employers/${employerId.value}/pay-periods/by-check-date?checkDate=$checkDate"
         return try {
             executeWithGuardrails("GET pay period by check date", url) {
@@ -101,7 +101,7 @@ class HttpHrClient(
         }
     }
 
-    override fun getGarnishmentOrders(employerId: EmployerId, employeeId: EmployeeId, asOfDate: LocalDate): List<GarnishmentOrder> {
+    override fun getGarnishmentOrders(employerId: UtilityId, employeeId: CustomerId, asOfDate: LocalDate): List<GarnishmentOrder> {
         val url = "${props.baseUrl}/employers/${employerId.value}/employees/${employeeId.value}/garnishments?asOf=$asOfDate"
 
         // Garnishments are important but not critical enough to fail the
@@ -115,7 +115,7 @@ class HttpHrClient(
         return dtoArray?.toList()?.map { it.toDomain() } ?: emptyList()
     }
 
-    override fun recordGarnishmentWithholding(employerId: EmployerId, employeeId: EmployeeId, request: GarnishmentWithholdingRequest) {
+    override fun recordGarnishmentWithholding(employerId: UtilityId, employeeId: CustomerId, request: GarnishmentWithholdingRequest) {
         val url = "${props.baseUrl}/employers/${employerId.value}/employees/${employeeId.value}/garnishments/withholdings"
 
         // Withholding callbacks must be fire-and-forget from the payroll

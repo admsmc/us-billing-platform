@@ -1,7 +1,7 @@
 package com.example.usbilling.hr.garnishment
 
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.jdbc.core.JdbcTemplate
@@ -19,8 +19,8 @@ import java.util.concurrent.ConcurrentHashMap
  * backed by a database.
  */
 data class GarnishmentLedgerEntry(
-    val employerId: EmployerId,
-    val employeeId: EmployeeId,
+    val employerId: UtilityId,
+    val employeeId: CustomerId,
     val orderId: String,
     /** Total amount withheld across all recorded events for this order. */
     val totalWithheld: Money,
@@ -38,12 +38,12 @@ interface GarnishmentLedgerRepository {
      * Apply a batch of withholding events for a single employee and employer,
      * updating per-order ledger entries.
      */
-    fun recordWithholdings(employerId: EmployerId, employeeId: EmployeeId, events: List<GarnishmentWithholdingEventView>)
+    fun recordWithholdings(employerId: UtilityId, employeeId: CustomerId, events: List<GarnishmentWithholdingEventView>)
 
     /**
      * Return the current ledger entries for an employee, keyed by order id.
      */
-    fun findByEmployee(employerId: EmployerId, employeeId: EmployeeId): Map<String, GarnishmentLedgerEntry>
+    fun findByEmployee(employerId: UtilityId, employeeId: CustomerId): Map<String, GarnishmentLedgerEntry>
 }
 
 /**
@@ -62,7 +62,7 @@ class JdbcGarnishmentLedgerRepository(
         }
     }
 
-    override fun recordWithholdings(employerId: EmployerId, employeeId: EmployeeId, events: List<GarnishmentWithholdingEventView>) {
+    override fun recordWithholdings(employerId: UtilityId, employeeId: CustomerId, events: List<GarnishmentWithholdingEventView>) {
         if (events.isEmpty()) return
 
         events.forEach { event ->
@@ -207,7 +207,7 @@ class JdbcGarnishmentLedgerRepository(
         }
     }
 
-    override fun findByEmployee(employerId: EmployerId, employeeId: EmployeeId): Map<String, GarnishmentLedgerEntry> {
+    override fun findByEmployee(employerId: UtilityId, employeeId: CustomerId): Map<String, GarnishmentLedgerEntry> {
         val sql =
             """
             SELECT employer_id, employee_id, order_id,
@@ -221,8 +221,8 @@ class JdbcGarnishmentLedgerRepository(
         val rows = jdbcTemplate.query(sql, LedgerRowMapper, employerId.value, employeeId.value)
         return rows.associateBy({ it.orderId }) { row ->
             GarnishmentLedgerEntry(
-                employerId = EmployerId(row.employerId),
-                employeeId = EmployeeId(row.employeeId),
+                employerId = UtilityId(row.employerId),
+                employeeId = CustomerId(row.employeeId),
                 orderId = row.orderId,
                 totalWithheld = Money(row.totalWithheldCents),
                 initialArrears = row.initialArrearsCents?.let { Money(it) },
@@ -284,7 +284,7 @@ class InMemoryGarnishmentLedgerRepository : GarnishmentLedgerRepository {
 
     private val store = ConcurrentHashMap<Key, GarnishmentLedgerEntry>()
 
-    override fun recordWithholdings(employerId: EmployerId, employeeId: EmployeeId, events: List<GarnishmentWithholdingEventView>) {
+    override fun recordWithholdings(employerId: UtilityId, employeeId: CustomerId, events: List<GarnishmentWithholdingEventView>) {
         events.forEach { event ->
             val key = Key(employerId.value, employeeId.value, event.orderId)
             val existing = store[key]
@@ -306,6 +306,6 @@ class InMemoryGarnishmentLedgerRepository : GarnishmentLedgerRepository {
         }
     }
 
-    override fun findByEmployee(employerId: EmployerId, employeeId: EmployeeId): Map<String, GarnishmentLedgerEntry> = store.filterKeys { it.employerId == employerId.value && it.employeeId == employeeId.value }
+    override fun findByEmployee(employerId: UtilityId, employeeId: CustomerId): Map<String, GarnishmentLedgerEntry> = store.filterKeys { it.employerId == employerId.value && it.employeeId == employeeId.value }
         .mapKeys { (key, _) -> key.orderId }
 }

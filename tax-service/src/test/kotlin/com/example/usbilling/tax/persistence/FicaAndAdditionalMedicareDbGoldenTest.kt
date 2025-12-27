@@ -2,11 +2,11 @@ package com.example.usbilling.tax.persistence
 
 import com.example.usbilling.payroll.engine.TaxesCalculator
 import com.example.usbilling.payroll.model.*
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.PayRunId
-import com.example.usbilling.shared.PaycheckId
+import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillId
 import com.example.usbilling.tax.impl.CachingTaxCatalog
 import com.example.usbilling.tax.impl.CatalogBackedTaxContextProvider
 import com.example.usbilling.tax.impl.DbTaxCatalog
@@ -46,7 +46,7 @@ class FicaAndAdditionalMedicareDbGoldenTest {
         val cachingCatalog = CachingTaxCatalog(dbCatalog)
         val provider = CatalogBackedTaxContextProvider(cachingCatalog)
 
-        val employerId = EmployerId("EMP-FICA-STRUCT")
+        val employerId = UtilityId("EMP-FICA-STRUCT")
         val asOfDate = LocalDate.of(2025, 6, 30)
 
         val taxContext = provider.getTaxContext(employerId, asOfDate)
@@ -80,7 +80,7 @@ class FicaAndAdditionalMedicareDbGoldenTest {
         val cachingCatalog = CachingTaxCatalog(dbCatalog)
         val provider = CatalogBackedTaxContextProvider(cachingCatalog)
 
-        val employerId = EmployerId("EMP-FICA-AMOUNTS")
+        val employerId = UtilityId("EMP-FICA-AMOUNTS")
         val asOfDate = LocalDate.of(2025, 6, 30)
 
         val taxContext = provider.getTaxContext(employerId, asOfDate)
@@ -106,7 +106,7 @@ class FicaAndAdditionalMedicareDbGoldenTest {
 
         val snapshot = EmployeeSnapshot(
             employerId = employerId,
-            employeeId = EmployeeId("EE-FICA-DB"),
+            employeeId = CustomerId("EE-FICA-DB"),
             homeState = "CA",
             workState = "CA",
             filingStatus = FilingStatus.SINGLE,
@@ -117,8 +117,8 @@ class FicaAndAdditionalMedicareDbGoldenTest {
         )
 
         val input = PaycheckInput(
-            paycheckId = PaycheckId("CHK-FICA-DB"),
-            payRunId = PayRunId("RUN-FICA-DB"),
+            paycheckId = BillId("CHK-FICA-DB"),
+            payRunId = BillRunId("RUN-FICA-DB"),
             employerId = employerId,
             employeeId = snapshot.employeeId,
             period = period,
@@ -154,7 +154,7 @@ class FicaAndAdditionalMedicareDbGoldenTest {
         val cachingCatalog = CachingTaxCatalog(dbCatalog)
         val provider = CatalogBackedTaxContextProvider(cachingCatalog)
 
-        val employerId = EmployerId("EMP-ADDL-MED-DB")
+        val employerId = UtilityId("EMP-ADDL-MED-DB")
         val asOfDate = LocalDate.of(2025, 6, 30)
 
         val taxContext = provider.getTaxContext(employerId, asOfDate)
@@ -179,7 +179,7 @@ class FicaAndAdditionalMedicareDbGoldenTest {
 
         val snapshot = EmployeeSnapshot(
             employerId = employerId,
-            employeeId = EmployeeId("EE-ADDL-MED-DB"),
+            employeeId = CustomerId("EE-ADDL-MED-DB"),
             homeState = "CA",
             workState = "CA",
             filingStatus = FilingStatus.SINGLE,
@@ -197,8 +197,8 @@ class FicaAndAdditionalMedicareDbGoldenTest {
         )
 
         val input = PaycheckInput(
-            paycheckId = PaycheckId("CHK-ADDL-MED-DB"),
-            payRunId = PayRunId("RUN-ADDL-MED-DB"),
+            paycheckId = BillId("CHK-ADDL-MED-DB"),
+            payRunId = BillRunId("RUN-ADDL-MED-DB"),
             employerId = employerId,
             employeeId = snapshot.employeeId,
             period = period,

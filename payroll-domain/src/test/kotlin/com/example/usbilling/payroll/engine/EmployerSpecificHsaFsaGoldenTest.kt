@@ -4,11 +4,11 @@ import com.example.usbilling.payroll.model.*
 import com.example.usbilling.payroll.model.config.DeductionConfigRepository
 import com.example.usbilling.payroll.model.config.DeductionKind
 import com.example.usbilling.payroll.model.config.DeductionPlan
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.PayRunId
-import com.example.usbilling.shared.PaycheckId
+import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillId
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -20,7 +20,7 @@ import kotlin.test.assertEquals
  */
 class EmployerSpecificHsaFsaGoldenTest {
 
-    private fun baseInput(employerId: EmployerId, employeeId: EmployeeId, taxRule: TaxRule.FlatRateTax): PaycheckInput {
+    private fun baseInput(employerId: UtilityId, employeeId: CustomerId, taxRule: TaxRule.FlatRateTax): PaycheckInput {
         val period = PayPeriod(
             id = "EMP-HSA-FSA-GOLDEN",
             employerId = employerId,
@@ -40,8 +40,8 @@ class EmployerSpecificHsaFsaGoldenTest {
             ),
         )
         return PaycheckInput(
-            paycheckId = PaycheckId("chk-hsa-fsa-${employerId.value}"),
-            payRunId = PayRunId("run-hsa-fsa"),
+            paycheckId = BillId("chk-hsa-fsa-${employerId.value}"),
+            payRunId = BillRunId("run-hsa-fsa"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,
@@ -59,7 +59,7 @@ class EmployerSpecificHsaFsaGoldenTest {
     }
 
     private class MultiEmployerHsaFsaRepo : DeductionConfigRepository {
-        override fun findPlansForEmployer(employerId: EmployerId): List<DeductionPlan> = when (employerId.value) {
+        override fun findPlansForEmployer(employerId: UtilityId): List<DeductionPlan> = when (employerId.value) {
             "emp-hsa" -> listOf(
                 DeductionPlan(
                     id = "PLAN_HSA",
@@ -83,9 +83,9 @@ class EmployerSpecificHsaFsaGoldenTest {
 
     @Test
     fun `HSA vs FSA vs none yield different federal tax bases and net pay`() {
-        val hsaEmployer = EmployerId("emp-hsa")
-        val fsaEmployer = EmployerId("emp-fsa")
-        val noneEmployer = EmployerId("emp-none")
+        val hsaEmployer = UtilityId("emp-hsa")
+        val fsaEmployer = UtilityId("emp-fsa")
+        val noneEmployer = UtilityId("emp-none")
 
         // Simple flat federal tax at 10% on FederalTaxable basis.
         val taxRuleId = "EE_HSA_FSA_BASELINE"
@@ -96,9 +96,9 @@ class EmployerSpecificHsaFsaGoldenTest {
             rate = Percent(0.10),
         )
 
-        val hsaInput = baseInput(hsaEmployer, EmployeeId("ee-hsa"), taxRule)
-        val fsaInput = baseInput(fsaEmployer, EmployeeId("ee-fsa"), taxRule)
-        val noneInput = baseInput(noneEmployer, EmployeeId("ee-none"), taxRule)
+        val hsaInput = baseInput(hsaEmployer, CustomerId("ee-hsa"), taxRule)
+        val fsaInput = baseInput(fsaEmployer, CustomerId("ee-fsa"), taxRule)
+        val noneInput = baseInput(noneEmployer, CustomerId("ee-none"), taxRule)
 
         val repo = MultiEmployerHsaFsaRepo()
 

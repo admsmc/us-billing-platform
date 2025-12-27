@@ -5,8 +5,8 @@ import com.example.usbilling.payroll.model.*
 import com.example.usbilling.payroll.model.garnishment.GarnishmentFormula
 import com.example.usbilling.payroll.model.garnishment.GarnishmentType
 import com.example.usbilling.payroll.model.garnishment.ProtectedEarningsRule
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
 import com.example.usbilling.worker.support.StubTaxLaborClientsTestConfig
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -80,7 +80,7 @@ class HrClientIntegrationTest {
 
     @Test
     fun `computes paycheck using HTTP-backed HR client`() {
-        val employerId = EmployerId("EMP-HR-HTTP")
+        val employerId = UtilityId("EMP-HR-HTTP")
         val payPeriodId = "2025-01-BW1"
         val checkDate = LocalDate.of(2025, 1, 15)
 
@@ -95,7 +95,7 @@ class HrClientIntegrationTest {
             frequency = PayFrequency.BIWEEKLY,
         )
 
-        val employeeId = EmployeeId("EE-HR-1")
+        val employeeId = CustomerId("EE-HR-1")
         val snapshot = EmployeeSnapshot(
             employerId = employerId,
             employeeId = employeeId,
@@ -143,7 +143,7 @@ class HrClientIntegrationTest {
 
     @Test
     fun `hr-backed flow wires garnishment orders into paycheck deductions`() {
-        val employerId = EmployerId("EMP-HR-GARN")
+        val employerId = UtilityId("EMP-HR-GARN")
         val payPeriodId = "2025-01-BW1"
         val checkDate = LocalDate.of(2025, 1, 15)
 
@@ -158,7 +158,7 @@ class HrClientIntegrationTest {
             frequency = PayFrequency.BIWEEKLY,
         )
 
-        val employeeId = EmployeeId("EE-HR-GARN-1")
+        val employeeId = CustomerId("EE-HR-GARN-1")
         val snapshot = EmployeeSnapshot(
             employerId = employerId,
             employeeId = employeeId,
@@ -251,7 +251,7 @@ class HrClientIntegrationTest {
 
     @Test
     fun `hr-backed flow applies child support protected earnings floor`() {
-        val employerId = EmployerId("EMP-HR-CS")
+        val employerId = UtilityId("EMP-HR-CS")
         val payPeriodId = "2025-01-BW1"
         val checkDate = LocalDate.of(2025, 1, 15)
 
@@ -266,7 +266,7 @@ class HrClientIntegrationTest {
             frequency = PayFrequency.BIWEEKLY,
         )
 
-        val employeeId = EmployeeId("EE-HR-CS-1")
+        val employeeId = CustomerId("EE-HR-CS-1")
         val snapshot = EmployeeSnapshot(
             employerId = employerId,
             employeeId = employeeId,
@@ -349,8 +349,8 @@ class HrClientIntegrationTest {
 
     @Test
     fun `http HR client maps 404 to null for snapshot and pay periods`() {
-        val employerId = EmployerId("EMP-HR-404")
-        val employeeId = EmployeeId("EE-HR-404")
+        val employerId = UtilityId("EMP-HR-404")
+        val employeeId = CustomerId("EE-HR-404")
         val payPeriodId = "2025-01-BW1"
         val checkDate = LocalDate.of(2025, 1, 15)
 
@@ -381,7 +381,7 @@ class HrClientIntegrationTest {
 
     @Test
     fun `hr-backed flow continues when garnishments endpoint is unavailable`() {
-        val employerId = EmployerId("EMP-HR-GARN-UNAVAILABLE")
+        val employerId = UtilityId("EMP-HR-GARN-UNAVAILABLE")
         val payPeriodId = "2025-01-BW1"
         val checkDate = LocalDate.of(2025, 1, 15)
 
@@ -396,7 +396,7 @@ class HrClientIntegrationTest {
             frequency = PayFrequency.BIWEEKLY,
         )
 
-        val employeeId = EmployeeId("EE-HR-GARN-UNAVAILABLE-1")
+        val employeeId = CustomerId("EE-HR-GARN-UNAVAILABLE-1")
         val snapshot = EmployeeSnapshot(
             employerId = employerId,
             employeeId = employeeId,
@@ -461,7 +461,7 @@ class HrClientIntegrationTest {
 
     @Test
     fun `hr-backed flow does not fail when garnishment withholdings callback fails`() {
-        val employerId = EmployerId("EMP-HR-GARN-CALLBACK-FAIL")
+        val employerId = UtilityId("EMP-HR-GARN-CALLBACK-FAIL")
         val payPeriodId = "2025-01-BW1"
         val checkDate = LocalDate.of(2025, 1, 15)
 
@@ -476,7 +476,7 @@ class HrClientIntegrationTest {
             frequency = PayFrequency.BIWEEKLY,
         )
 
-        val employeeId = EmployeeId("EE-HR-GARN-CALLBACK-FAIL-1")
+        val employeeId = CustomerId("EE-HR-GARN-CALLBACK-FAIL-1")
         val snapshot = EmployeeSnapshot(
             employerId = employerId,
             employeeId = employeeId,

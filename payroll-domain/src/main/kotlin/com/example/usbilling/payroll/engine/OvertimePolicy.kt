@@ -6,7 +6,7 @@ import com.example.usbilling.payroll.model.EarningCode
 import com.example.usbilling.payroll.model.EarningLine
 import com.example.usbilling.payroll.model.TimeSlice
 import com.example.usbilling.payroll.model.config.EarningConfigRepository
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
 
 /**
@@ -18,7 +18,7 @@ import com.example.usbilling.shared.Money
  * the core engine.
  */
 fun interface OvertimePolicy {
-    fun computeOvertimeLines(employerId: EmployerId, baseComp: BaseCompensation.Hourly, timeSlice: TimeSlice, earningConfig: EarningConfigRepository?): List<EarningLine>
+    fun computeOvertimeLines(employerId: UtilityId, baseComp: BaseCompensation.Hourly, timeSlice: TimeSlice, earningConfig: EarningConfigRepository?): List<EarningLine>
 
     companion object {
         /**

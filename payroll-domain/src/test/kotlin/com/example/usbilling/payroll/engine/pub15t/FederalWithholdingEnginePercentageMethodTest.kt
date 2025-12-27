@@ -2,11 +2,11 @@ package com.example.usbilling.payroll.engine.pub15t
 
 import com.example.usbilling.payroll.engine.BasisComputation
 import com.example.usbilling.payroll.model.*
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.PayRunId
-import com.example.usbilling.shared.PaycheckId
+import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillId
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -15,8 +15,8 @@ import kotlin.test.assertTrue
 class FederalWithholdingEnginePercentageMethodTest {
 
     private fun baseInput(federalTaxablePerPeriod: Long): Pair<PaycheckInput, BasisComputation> {
-        val employerId = EmployerId("emp-fw-pct")
-        val employeeId = EmployeeId("ee-fw-pct")
+        val employerId = UtilityId("emp-fw-pct")
+        val employeeId = CustomerId("ee-fw-pct")
         val period = PayPeriod(
             id = "2025-01-W1",
             employerId = employerId,
@@ -37,8 +37,8 @@ class FederalWithholdingEnginePercentageMethodTest {
         )
 
         val input = PaycheckInput(
-            paycheckId = PaycheckId("chk-fw-pct"),
-            payRunId = PayRunId("run-fw-pct"),
+            paycheckId = BillId("chk-fw-pct"),
+            payRunId = BillRunId("run-fw-pct"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,

@@ -1,11 +1,11 @@
 package com.example.usbilling.orchestrator.persistence
 
 import com.example.usbilling.payroll.model.PaycheckResult
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 
 interface PaycheckStoreRepository {
     fun insertFinalPaycheckIfAbsent(
-        employerId: EmployerId,
+        employerId: UtilityId,
         paycheckId: String,
         payRunId: String,
         employeeId: String,
@@ -19,12 +19,12 @@ interface PaycheckStoreRepository {
         payload: PaycheckResult,
     )
 
-    fun findPaycheck(employerId: EmployerId, paycheckId: String): PaycheckResult?
+    fun findPaycheck(employerId: UtilityId, paycheckId: String): PaycheckResult?
 
-    fun findCorrectionOfPaycheckId(employerId: EmployerId, paycheckId: String): String?
+    fun findCorrectionOfBillId(employerId: UtilityId, paycheckId: String): String?
 
     /**
      * Attach a correction linkage to a paycheck if unset.
      */
-    fun setCorrectionOfPaycheckIdIfNull(employerId: EmployerId, paycheckId: String, correctionOfPaycheckId: String): Boolean
+    fun setCorrectionOfPaycheckIdIfNull(employerId: UtilityId, paycheckId: String, correctionOfPaycheckId: String): Boolean
 }

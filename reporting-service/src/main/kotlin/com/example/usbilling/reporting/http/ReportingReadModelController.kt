@@ -176,12 +176,12 @@ class ReportingReadModelController(
         @PathVariable paycheckId: String,
         @RequestParam(name = "includePayload", defaultValue = "false") includePayload: Boolean,
     ): ResponseEntity<PaycheckLedgerEntryResponse> {
-        val summary = paycheckLedgerRepository.findLedgerSummaryByEmployerAndPaycheckId(employerId, paycheckId)
+        val summary = paycheckLedgerRepository.findLedgerSummaryByEmployerAndBillId(employerId, paycheckId)
             ?: return ResponseEntity.notFound().build()
 
         val payload =
             if (includePayload) {
-                val row = paycheckLedgerRepository.findLedgerPayloadByEmployerAndPaycheckId(employerId, paycheckId)
+                val row = paycheckLedgerRepository.findLedgerPayloadByEmployerAndBillId(employerId, paycheckId)
                     ?: return ResponseEntity.notFound().build()
                 objectMapper.readValue(row.payloadJson, PaycheckLedgerEvent::class.java)
             } else {

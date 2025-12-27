@@ -6,7 +6,7 @@ import com.example.usbilling.payroll.model.TaxJurisdictionType
 import com.example.usbilling.payroll.model.garnishment.GarnishmentFormula
 import com.example.usbilling.payroll.model.garnishment.GarnishmentType
 import com.example.usbilling.payroll.model.garnishment.ProtectedEarningsRule
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -28,7 +28,7 @@ data class GarnishmentRuleConfig(
 )
 
 interface GarnishmentRuleConfigRepository {
-    fun findRulesForEmployer(employerId: EmployerId): List<GarnishmentRuleConfig>
+    fun findRulesForEmployer(employerId: UtilityId): List<GarnishmentRuleConfig>
 }
 
 /**
@@ -173,7 +173,7 @@ class JsonGarnishmentRuleConfigRepository(
         }
     }
 
-    override fun findRulesForEmployer(employerId: EmployerId): List<GarnishmentRuleConfig> {
+    override fun findRulesForEmployer(employerId: UtilityId): List<GarnishmentRuleConfig> {
         val global = rules.filter { it.employerId == null }.map { it.config }
         val specific = rules.filter { it.employerId == employerId.value }.map { it.config }
 

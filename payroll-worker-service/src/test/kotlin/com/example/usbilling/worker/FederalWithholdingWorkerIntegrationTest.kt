@@ -1,8 +1,8 @@
 package com.example.usbilling.worker
 
 import com.example.usbilling.payroll.model.*
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
 import com.example.usbilling.tax.service.DefaultFederalWithholdingCalculator
 import com.example.usbilling.tax.service.FederalWithholdingInput
@@ -17,7 +17,7 @@ import kotlin.test.assertTrue
  */
 class FederalWithholdingWorkerIntegrationTest {
 
-    private fun basePeriod(employerId: EmployerId, checkDate: LocalDate, frequency: PayFrequency): PayPeriod = PayPeriod(
+    private fun basePeriod(employerId: UtilityId, checkDate: LocalDate, frequency: PayFrequency): PayPeriod = PayPeriod(
         id = "FW-WORKER-$frequency",
         employerId = employerId,
         dateRange = LocalDateRange(checkDate, checkDate),
@@ -27,7 +27,7 @@ class FederalWithholdingWorkerIntegrationTest {
 
     @Test
     fun `married filing status yields lower withholding than single for same annual wages`() {
-        val employerId = EmployerId("emp-fw-worker-married-vs-single")
+        val employerId = UtilityId("emp-fw-worker-married-vs-single")
         val checkDate = LocalDate.of(2025, 6, 30)
         val period = basePeriod(employerId, checkDate, PayFrequency.ANNUAL)
 
@@ -54,7 +54,7 @@ class FederalWithholdingWorkerIntegrationTest {
 
         fun snapshot(status: FilingStatus): EmployeeSnapshot = EmployeeSnapshot(
             employerId = employerId,
-            employeeId = EmployeeId("ee-fw-worker-$status"),
+            employeeId = CustomerId("ee-fw-worker-$status"),
             homeState = "CA",
             workState = "CA",
             filingStatus = status,
@@ -68,8 +68,8 @@ class FederalWithholdingWorkerIntegrationTest {
         fun inputFor(status: FilingStatus): PaycheckInput {
             val snap = snapshot(status)
             return PaycheckInput(
-                paycheckId = com.example.usbilling.shared.PaycheckId("chk-fw-worker-$status"),
-                payRunId = com.example.usbilling.shared.PayRunId("run-fw-worker"),
+                paycheckId = com.example.usbilling.shared.BillId("chk-fw-worker-$status"),
+                payRunId = com.example.usbilling.shared.BillRunId("run-fw-worker"),
                 employerId = employerId,
                 employeeId = snap.employeeId,
                 period = period,
@@ -95,7 +95,7 @@ class FederalWithholdingWorkerIntegrationTest {
 
     @Test
     fun `credits other income and deductions move worker-level FIT in expected directions`() {
-        val employerId = EmployerId("emp-fw-worker-w4-behavior")
+        val employerId = UtilityId("emp-fw-worker-w4-behavior")
         val checkDate = LocalDate.of(2025, 6, 30)
         val period = basePeriod(employerId, checkDate, PayFrequency.ANNUAL)
 
@@ -112,7 +112,7 @@ class FederalWithholdingWorkerIntegrationTest {
 
         fun snapshot(creditCents: Long? = null, otherIncomeCents: Long? = null, deductionsCents: Long? = null): EmployeeSnapshot = EmployeeSnapshot(
             employerId = employerId,
-            employeeId = EmployeeId("ee-fw-worker-w4"),
+            employeeId = CustomerId("ee-fw-worker-w4"),
             homeState = "CA",
             workState = "CA",
             filingStatus = FilingStatus.SINGLE,
@@ -129,8 +129,8 @@ class FederalWithholdingWorkerIntegrationTest {
         fun runWith(creditCents: Long? = null, otherIncomeCents: Long? = null, deductionsCents: Long? = null): Long {
             val snap = snapshot(creditCents, otherIncomeCents, deductionsCents)
             val input = PaycheckInput(
-                paycheckId = com.example.usbilling.shared.PaycheckId("chk-fw-worker-w4"),
-                payRunId = com.example.usbilling.shared.PayRunId("run-fw-worker-w4"),
+                paycheckId = com.example.usbilling.shared.BillId("chk-fw-worker-w4"),
+                payRunId = com.example.usbilling.shared.BillRunId("run-fw-worker-w4"),
                 employerId = employerId,
                 employeeId = snap.employeeId,
                 period = period,

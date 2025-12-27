@@ -8,11 +8,11 @@ import com.example.usbilling.payroll.model.garnishment.GarnishmentFormula
 import com.example.usbilling.payroll.model.garnishment.GarnishmentOrder
 import com.example.usbilling.payroll.model.garnishment.GarnishmentOrderId
 import com.example.usbilling.payroll.model.garnishment.GarnishmentType
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.PayRunId
-import com.example.usbilling.shared.PaycheckId
+import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillId
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -32,7 +32,7 @@ class GarnishmentsCalculatorTest {
     // "in" the top band.
     private val FTB_EWOT_PERCENT = Percent(0.25)
 
-    private fun baseInput(employerId: EmployerId, employeeId: EmployeeId, priorYtd: YtdSnapshot, garnishmentContext: GarnishmentContext, annualSalaryCents: Long = 260_000_00L): PaycheckInput {
+    private fun baseInput(employerId: UtilityId, employeeId: CustomerId, priorYtd: YtdSnapshot, garnishmentContext: GarnishmentContext, annualSalaryCents: Long = 260_000_00L): PaycheckInput {
         val period = PayPeriod(
             id = "GARN-CALC",
             employerId = employerId,
@@ -52,8 +52,8 @@ class GarnishmentsCalculatorTest {
             ),
         )
         return PaycheckInput(
-            paycheckId = PaycheckId("chk-garn-calc"),
-            payRunId = PayRunId("run-garn-calc"),
+            paycheckId = BillId("chk-garn-calc"),
+            payRunId = BillRunId("run-garn-calc"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,
@@ -71,8 +71,8 @@ class GarnishmentsCalculatorTest {
 
     @Test
     fun `percent of disposable via order uses GarnishmentFormula`() {
-        val employerId = EmployerId("emp-garn-order")
-        val employeeId = EmployeeId("ee-garn-order")
+        val employerId = UtilityId("emp-garn-order")
+        val employeeId = CustomerId("ee-garn-order")
 
         val orderId = GarnishmentOrderId("ORDER1")
         val planId = "GARN_PLAN_1"
@@ -126,8 +126,8 @@ class GarnishmentsCalculatorTest {
 
     @Test
     fun `multiple orders share disposable income according to priority`() {
-        val employerId = EmployerId("emp-garn-multi")
-        val employeeId = EmployeeId("ee-garn-multi")
+        val employerId = UtilityId("emp-garn-multi")
+        val employeeId = CustomerId("ee-garn-multi")
 
         val order1 = GarnishmentOrder(
             orderId = GarnishmentOrderId("ORDER1"),
@@ -191,8 +191,8 @@ class GarnishmentsCalculatorTest {
 
     @Test
     fun `order annualCap limits withholding based on YTD`() {
-        val employerId = EmployerId("emp-garn-annual")
-        val employeeId = EmployeeId("ee-garn-annual")
+        val employerId = UtilityId("emp-garn-annual")
+        val employeeId = CustomerId("ee-garn-annual")
 
         val orderId = GarnishmentOrderId("ORDER_CAP")
         val planId = "GARN_PLAN_CAP"
@@ -238,8 +238,8 @@ class GarnishmentsCalculatorTest {
 
     @Test
     fun `order lifetimeCap limits withholding regardless of plan cap`() {
-        val employerId = EmployerId("emp-garn-life")
-        val employeeId = EmployeeId("ee-garn-life")
+        val employerId = UtilityId("emp-garn-life")
+        val employeeId = CustomerId("ee-garn-life")
 
         val orderId = GarnishmentOrderId("ORDER_LIFE")
         val planId = "GARN_PLAN_LIFE"
@@ -285,8 +285,8 @@ class GarnishmentsCalculatorTest {
 
     @Test
     fun `protected earnings FixedFloor leaves required net cash`() {
-        val employerId = EmployerId("emp-garn-floor")
-        val employeeId = EmployeeId("ee-garn-floor")
+        val employerId = UtilityId("emp-garn-floor")
+        val employeeId = CustomerId("ee-garn-floor")
 
         val orderId = GarnishmentOrderId("ORDER_FLOOR")
         val planId = "GARN_PLAN_FLOOR"
@@ -328,8 +328,8 @@ class GarnishmentsCalculatorTest {
 
     @Test
     fun `protected earnings MultipleOfMinWage enforces minimum`() {
-        val employerId = EmployerId("emp-garn-minwage")
-        val employeeId = EmployeeId("ee-garn-minwage")
+        val employerId = UtilityId("emp-garn-minwage")
+        val employeeId = CustomerId("ee-garn-minwage")
 
         val orderId = GarnishmentOrderId("ORDER_MINWAGE")
         val planId = "GARN_PLAN_MINWAGE"
@@ -374,8 +374,8 @@ class GarnishmentsCalculatorTest {
 
     @Test
     fun `protected earnings floor can be more restrictive than support cap`() {
-        val employerId = EmployerId("emp-garn-support-floor")
-        val employeeId = EmployeeId("ee-garn-support-floor")
+        val employerId = UtilityId("emp-garn-support-floor")
+        val employeeId = CustomerId("ee-garn-support-floor")
 
         val orderId = GarnishmentOrderId("ORDER_CHILD_FLOOR")
         val planId = "GARN_PLAN_CHILD_FLOOR"
@@ -447,8 +447,8 @@ class GarnishmentsCalculatorTest {
 
     @Test
     fun `protected earnings considers pre tax and employee taxes`() {
-        val employerId = EmployerId("emp-garn-floor-tax")
-        val employeeId = EmployeeId("ee-garn-floor-tax")
+        val employerId = UtilityId("emp-garn-floor-tax")
+        val employeeId = CustomerId("ee-garn-floor-tax")
 
         val orderId = GarnishmentOrderId("ORDER_FLOOR_TAX")
         val planId = "GARN_PLAN_FLOOR_TAX"
@@ -531,8 +531,8 @@ class GarnishmentsCalculatorTest {
 
     @Test
     fun `federal tax levy uses Pub 1494 weekly exempt amount for single with 3 dependents`() {
-        val employerId = EmployerId("emp-garn-levy-irs-weekly")
-        val employeeId = EmployeeId("ee-garn-levy-irs-weekly")
+        val employerId = UtilityId("emp-garn-levy-irs-weekly")
+        val employeeId = CustomerId("ee-garn-levy-irs-weekly")
 
         val orderId = GarnishmentOrderId("ORDER_LEVY_IRS_WEEKLY")
         val planId = "GARN_PLAN_LEVY_IRS_WEEKLY"
@@ -580,8 +580,8 @@ class GarnishmentsCalculatorTest {
 
     @Test
     fun `federal tax levy uses Pub 1494 biweekly exempt amount for married filing jointly with 2 dependents`() {
-        val employerId = EmployerId("emp-garn-levy-irs-biweekly")
-        val employeeId = EmployeeId("ee-garn-levy-irs-biweekly")
+        val employerId = UtilityId("emp-garn-levy-irs-biweekly")
+        val employeeId = CustomerId("ee-garn-levy-irs-biweekly")
 
         val orderId = GarnishmentOrderId("ORDER_LEVY_IRS_BIWEEKLY")
         val planId = "GARN_PLAN_LEVY_IRS_BIWEEKLY"
@@ -627,8 +627,8 @@ class GarnishmentsCalculatorTest {
 
     @Test
     fun `federal tax levy yields zero when disposable is below Pub 1494 exempt amount`() {
-        val employerId = EmployerId("emp-garn-levy-low")
-        val employeeId = EmployeeId("ee-garn-levy-low")
+        val employerId = UtilityId("emp-garn-levy-low")
+        val employeeId = CustomerId("ee-garn-levy-low")
 
         val orderId = GarnishmentOrderId("ORDER_LEVY_LOW")
         val planId = "GARN_PLAN_LEVY_LOW"
@@ -671,8 +671,8 @@ class GarnishmentsCalculatorTest {
 
     @Test
     fun `state tax levy in top FTB EWOT band applies 25 percent of disposable`() {
-        val employerId = EmployerId("emp-garn-st-levy")
-        val employeeId = EmployeeId("ee-garn-st-levy")
+        val employerId = UtilityId("emp-garn-st-levy")
+        val employeeId = CustomerId("ee-garn-st-levy")
 
         val orderId = GarnishmentOrderId("ORDER_ST_LEVY")
         val planId = "GARN_PLAN_ST_LEVY"
@@ -717,8 +717,8 @@ class GarnishmentsCalculatorTest {
 
     @Test
     fun `student loan garnishment limited to 15 percent of disposable`() {
-        val employerId = EmployerId("emp-garn-student")
-        val employeeId = EmployeeId("ee-garn-student")
+        val employerId = UtilityId("emp-garn-student")
+        val employeeId = CustomerId("ee-garn-student")
 
         val orderId = GarnishmentOrderId("ORDER_STUDENT")
         val planId = "GARN_PLAN_STUDENT"
@@ -758,8 +758,8 @@ class GarnishmentsCalculatorTest {
 
     @Test
     fun `student loan disposable income subtracts pre tax and employee taxes`() {
-        val employerId = EmployerId("emp-garn-student-disposable")
-        val employeeId = EmployeeId("ee-garn-student-disposable")
+        val employerId = UtilityId("emp-garn-student-disposable")
+        val employeeId = CustomerId("ee-garn-student-disposable")
 
         val orderId = GarnishmentOrderId("ORDER_STUDENT_DISPOSABLE")
         val planId = "GARN_PLAN_STUDENT_DISPOSABLE"
@@ -822,8 +822,8 @@ class GarnishmentsCalculatorTest {
 
     @Test
     fun `federal levy runs before state levy and both respect protected earnings floor`() {
-        val employerId = EmployerId("emp-garn-multi-levy")
-        val employeeId = EmployeeId("ee-garn-multi-levy")
+        val employerId = UtilityId("emp-garn-multi-levy")
+        val employeeId = CustomerId("ee-garn-multi-levy")
 
         val fedOrder = GarnishmentOrder(
             orderId = GarnishmentOrderId("ORDER_FED_LEVY"),
@@ -898,8 +898,8 @@ class GarnishmentsCalculatorTest {
 
     @Test
     fun `support cap scaling is proportional across multiple child support orders`() {
-        val employerId = EmployerId("emp-garn-support-proportional")
-        val employeeId = EmployeeId("ee-garn-support-proportional")
+        val employerId = UtilityId("emp-garn-support-proportional")
+        val employeeId = CustomerId("ee-garn-support-proportional")
 
         val planIdA = "GARN_PLAN_CHILD_A"
         val planIdB = "GARN_PLAN_CHILD_B"
@@ -982,8 +982,8 @@ class GarnishmentsCalculatorTest {
 
     @Test
     fun `arrears-first allocation splits applied amount between arrears and current`() {
-        val employerId = EmployerId("emp-garn-arrears-split")
-        val employeeId = EmployeeId("ee-garn-arrears-split")
+        val employerId = UtilityId("emp-garn-arrears-split")
+        val employeeId = CustomerId("ee-garn-arrears-split")
 
         val orderId = GarnishmentOrderId("ORDER_CHILD_ARREARS")
         val planId = "GARN_PLAN_CHILD_ARREARS"
@@ -1035,8 +1035,8 @@ class GarnishmentsCalculatorTest {
 
     @Test
     fun `child support runs before creditor garnishment using different disposable bases`() {
-        val employerId = EmployerId("emp-garn-multi-types")
-        val employeeId = EmployeeId("ee-garn-multi-types")
+        val employerId = UtilityId("emp-garn-multi-types")
+        val employeeId = CustomerId("ee-garn-multi-types")
 
         val orderChild = GarnishmentOrder(
             orderId = GarnishmentOrderId("ORDER_CHILD"),
@@ -1129,8 +1129,8 @@ class GarnishmentsCalculatorTest {
 
     @Test
     fun `golden scenario - salary with pre tax, taxes, and mixed garnishments`() {
-        val employerId = EmployerId("emp-garn-golden-1")
-        val employeeId = EmployeeId("ee-garn-golden-1")
+        val employerId = UtilityId("emp-garn-golden-1")
+        val employeeId = CustomerId("ee-garn-golden-1")
 
         // Salary: 2,000 per period (simplified), with pre-tax and employee taxes
         val gross = Money(2_000_00L)
@@ -1241,8 +1241,8 @@ class GarnishmentsCalculatorTest {
 
     @Test
     fun `golden scenario - multiple levies with bands and filing status`() {
-        val employerId = EmployerId("emp-garn-golden-2")
-        val employeeId = EmployeeId("ee-garn-golden-2")
+        val employerId = UtilityId("emp-garn-golden-2")
+        val employeeId = CustomerId("ee-garn-golden-2")
 
         val planId = "GARN_PLAN_LEVY_GOLDEN_2"
 
@@ -1284,7 +1284,7 @@ class GarnishmentsCalculatorTest {
             )
             val snapshot = EmployeeSnapshot(
                 employerId = employerId,
-                employeeId = EmployeeId("EE-GOLDEN-2-$idSuffix"),
+                employeeId = CustomerId("EE-GOLDEN-2-$idSuffix"),
                 homeState = "CA",
                 workState = "CA",
                 filingStatus = status,
@@ -1295,8 +1295,8 @@ class GarnishmentsCalculatorTest {
             )
             val orders = if (status == FilingStatus.SINGLE) listOf(orderSingle) else listOf(orderMarried)
             return PaycheckInput(
-                paycheckId = PaycheckId("chk-garn-golden-2-$idSuffix"),
-                payRunId = PayRunId("run-garn-golden-2"),
+                paycheckId = BillId("chk-garn-golden-2-$idSuffix"),
+                payRunId = BillRunId("run-garn-golden-2"),
                 employerId = employerId,
                 employeeId = snapshot.employeeId,
                 period = period,
@@ -1344,8 +1344,8 @@ class GarnishmentsCalculatorTest {
 
     @Test
     fun `levy with multiple bands uses band-specific exemptions`() {
-        val employerId = EmployerId("emp-garn-levy-bands")
-        val employeeId = EmployeeId("ee-garn-levy-bands")
+        val employerId = UtilityId("emp-garn-levy-bands")
+        val employeeId = CustomerId("ee-garn-levy-bands")
 
         val orderId = GarnishmentOrderId("ORDER_LEVY_BANDS")
         val planId = "GARN_PLAN_LEVY_BANDS"
@@ -1404,8 +1404,8 @@ class GarnishmentsCalculatorTest {
 
     @Test
     fun `levy with no bands yields zero garnishment`() {
-        val employerId = EmployerId("emp-garn-levy-empty-bands")
-        val employeeId = EmployeeId("ee-garn-levy-empty-bands")
+        val employerId = UtilityId("emp-garn-levy-empty-bands")
+        val employeeId = CustomerId("ee-garn-levy-empty-bands")
 
         val orderId = GarnishmentOrderId("ORDER_LEVY_EMPTY_BANDS")
         val planId = "GARN_PLAN_LEVY_EMPTY_BANDS"
@@ -1444,7 +1444,7 @@ class GarnishmentsCalculatorTest {
 
     @Test
     fun `levy bands yield different exemptions by filing status`() {
-        val employerId = EmployerId("emp-garn-levy-status")
+        val employerId = UtilityId("emp-garn-levy-status")
         val planId = "GARN_PLAN_LEVY_STATUS"
         val orderId = GarnishmentOrderId("ORDER_LEVY_STATUS")
 
@@ -1472,7 +1472,7 @@ class GarnishmentsCalculatorTest {
             formula = formula,
         )
 
-        fun inputFor(status: FilingStatus, employeeId: EmployeeId): PaycheckInput {
+        fun inputFor(status: FilingStatus, employeeId: CustomerId): PaycheckInput {
             val period = PayPeriod(
                 id = "GARN-LEVY-STATUS",
                 employerId = employerId,
@@ -1492,8 +1492,8 @@ class GarnishmentsCalculatorTest {
                 ),
             )
             return PaycheckInput(
-                paycheckId = PaycheckId("chk-garn-levy-status-${'$'}{employeeId.value}"),
-                payRunId = PayRunId("run-garn-levy-status"),
+                paycheckId = BillId("chk-garn-levy-status-${'$'}{employeeId.value}"),
+                payRunId = BillRunId("run-garn-levy-status"),
                 employerId = employerId,
                 employeeId = employeeId,
                 period = period,
@@ -1517,7 +1517,7 @@ class GarnishmentsCalculatorTest {
         )
         val plansByCode = mapOf(DeductionCode(planId) to plan)
 
-        fun computeFor(status: FilingStatus, employeeId: EmployeeId): Long {
+        fun computeFor(status: FilingStatus, employeeId: CustomerId): Long {
             val input = inputFor(status, employeeId)
             val result = GarnishmentsCalculator.computeGarnishments(
                 input = input,
@@ -1529,8 +1529,8 @@ class GarnishmentsCalculatorTest {
             return result.garnishments.single().amount.amount
         }
 
-        val singleAmount = computeFor(FilingStatus.SINGLE, EmployeeId("EE-LEVY-SINGLE"))
-        val marriedAmount = computeFor(FilingStatus.MARRIED, EmployeeId("EE-LEVY-MARRIED"))
+        val singleAmount = computeFor(FilingStatus.SINGLE, CustomerId("EE-LEVY-SINGLE"))
+        val marriedAmount = computeFor(FilingStatus.MARRIED, CustomerId("EE-LEVY-MARRIED"))
 
         // Same disposable income, different filing status → married gets larger
         // exemption and therefore a smaller levy.
@@ -1540,7 +1540,7 @@ class GarnishmentsCalculatorTest {
 
     @Test
     fun `levy bands with no matching filing status yields zero garnishment`() {
-        val employerId = EmployerId("emp-garn-levy-status-none")
+        val employerId = UtilityId("emp-garn-levy-status-none")
         val planId = "GARN_PLAN_LEVY_STATUS_NONE"
         val orderId = GarnishmentOrderId("ORDER_LEVY_STATUS_NONE")
 
@@ -1563,7 +1563,7 @@ class GarnishmentsCalculatorTest {
             formula = formula,
         )
 
-        val employeeId = EmployeeId("EE-LEVY-HOH")
+        val employeeId = CustomerId("EE-LEVY-HOH")
         val period = PayPeriod(
             id = "GARN-LEVY-STATUS-NONE",
             employerId = employerId,
@@ -1583,8 +1583,8 @@ class GarnishmentsCalculatorTest {
             ),
         )
         val input = PaycheckInput(
-            paycheckId = PaycheckId("chk-garn-levy-status-none"),
-            payRunId = PayRunId("run-garn-levy-status-none"),
+            paycheckId = BillId("chk-garn-levy-status-none"),
+            payRunId = BillRunId("run-garn-levy-status-none"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,

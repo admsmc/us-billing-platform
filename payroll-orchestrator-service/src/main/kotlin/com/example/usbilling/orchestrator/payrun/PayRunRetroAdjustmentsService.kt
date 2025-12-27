@@ -19,11 +19,11 @@ import com.example.usbilling.payroll.model.PaycheckResult
 import com.example.usbilling.payroll.model.TaxLine
 import com.example.usbilling.payroll.model.YtdSnapshot
 import com.example.usbilling.payroll.model.audit.PaycheckAudit
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.PayRunId
-import com.example.usbilling.shared.PaycheckId
+import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillId
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -88,7 +88,7 @@ class PayRunRetroAdjustmentsService(
 
         val adjustmentRun = createOrGet.payRun
 
-        val acceptedLink = payRunRepository.acceptCorrectionOfPayRunId(
+        val acceptedLink = payRunRepository.acceptCorrectionOfBillRunId(
             employerId = employerId,
             payRunId = adjustmentRun.payRunId,
             correctionOfPayRunId = sourcePayRunId,
@@ -106,7 +106,7 @@ class PayRunRetroAdjustmentsService(
 
         val sourcePaycheckIdByEmployeeId = succeededSourcePaychecks.toMap()
         val now = Instant.now()
-        val employer = EmployerId(employerId)
+        val employer = UtilityId(employerId)
 
         employeeIds.forEach { employeeId ->
             val originalPaycheckId = sourcePaycheckIdByEmployeeId.getValue(employeeId)
@@ -131,7 +131,7 @@ class PayRunRetroAdjustmentsService(
                 return@forEach
             }
 
-            val newPaycheckId = payRunItemRepository.getOrAssignPaycheckId(
+            val newPaycheckId = payRunItemRepository.getOrAssignBillId(
                 employerId = employerId,
                 payRunId = adjustmentRun.payRunId,
                 employeeId = employeeId,
@@ -157,7 +157,7 @@ class PayRunRetroAdjustmentsService(
                     payPeriodId = source.payPeriodId,
                     runType = source.runType,
                     paycheckId = originalPaycheckId,
-                    employeeId = EmployeeId(employeeId),
+                    employeeId = CustomerId(employeeId),
                     earningOverrides = earningOverrides,
                 )
 
@@ -265,8 +265,8 @@ class PayRunRetroAdjustmentsService(
         val ytdAfterDelta = deltaYtd(original.ytdAfter, corrected.ytdAfter)
 
         return original.copy(
-            paycheckId = PaycheckId(newPaycheckId),
-            payRunId = PayRunId(newPayRunId),
+            paycheckId = BillId(newPaycheckId),
+            payRunId = BillRunId(newPayRunId),
             earnings = deltaEarnings,
             employeeTaxes = deltaEmployeeTaxes,
             employerTaxes = deltaEmployerTaxes,

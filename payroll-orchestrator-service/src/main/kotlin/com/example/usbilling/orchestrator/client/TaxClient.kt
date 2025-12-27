@@ -1,7 +1,7 @@
 package com.example.usbilling.orchestrator.client
 
 import com.example.usbilling.payroll.model.TaxContext
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.tax.http.TaxContextDto
 import com.example.usbilling.tax.http.toDomain
 import com.example.usbilling.web.client.DownstreamHttpClientProperties
@@ -19,7 +19,7 @@ import org.springframework.web.client.getForObject
 import java.time.LocalDate
 
 interface TaxClient {
-    fun getTaxContext(employerId: EmployerId, asOfDate: LocalDate, residentState: String? = null, workState: String? = null, localityCodes: List<String> = emptyList()): TaxContext
+    fun getTaxContext(employerId: UtilityId, asOfDate: LocalDate, residentState: String? = null, workState: String? = null, localityCodes: List<String> = emptyList()): TaxContext
 }
 
 @ConfigurationProperties(prefix = "downstreams.tax")
@@ -53,7 +53,7 @@ class HttpTaxClient(
         circuitBreakerPolicy = if (props.circuitBreakerEnabled) props.circuitBreaker else null,
     )
 
-    override fun getTaxContext(employerId: EmployerId, asOfDate: LocalDate, residentState: String?, workState: String?, localityCodes: List<String>): TaxContext {
+    override fun getTaxContext(employerId: UtilityId, asOfDate: LocalDate, residentState: String?, workState: String?, localityCodes: List<String>): TaxContext {
         val params = ArrayList<String>(3 + localityCodes.size)
         params.add("asOf=$asOfDate")
         if (!residentState.isNullOrBlank()) params.add("residentState=$residentState")

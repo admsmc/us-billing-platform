@@ -219,7 +219,7 @@ class PayRunItemRepository(
         }
     }
 
-    fun getOrAssignPaycheckId(employerId: String, payRunId: String, employeeId: String): String {
+    fun getOrAssignBillId(employerId: String, payRunId: String, employeeId: String): String {
         val existing = jdbcTemplate.query(
             """
             SELECT paycheck_id

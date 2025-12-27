@@ -15,7 +15,7 @@ import com.example.usbilling.orchestrator.payrun.persistence.PayRunItemRepositor
 import com.example.usbilling.orchestrator.payrun.persistence.PayRunRepository
 import com.example.usbilling.orchestrator.persistence.PaycheckAuditStoreRepository
 import com.example.usbilling.orchestrator.persistence.PaycheckStoreRepository
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -106,7 +106,7 @@ class PayRunOutboxEnqueuer(
     @Transactional
     fun enqueuePaycheckLedgerEventsForApprovedPayRun(employerId: String, payRunId: String) {
         val payRun = payRunRepository.findPayRun(employerId, payRunId) ?: return
-        val correctionOfPayRunId = payRunRepository.findCorrectionOfPayRunId(employerId, payRunId)
+        val correctionOfPayRunId = payRunRepository.findCorrectionOfBillRunId(employerId, payRunId)
 
         val action = when (payRun.runType) {
             PayRunType.VOID -> PaycheckLedgerAction.VOIDED
@@ -118,12 +118,12 @@ class PayRunOutboxEnqueuer(
         val succeededPaychecks = payRunItemRepository.listSucceededPaychecks(employerId, payRunId)
         if (succeededPaychecks.isEmpty()) return
 
-        val employer = EmployerId(employerId)
+        val employer = UtilityId(employerId)
         val now = Instant.now()
 
         val rows = succeededPaychecks.mapNotNull { (employeeId, paycheckId) ->
             val paycheck = paycheckStoreRepository.findPaycheck(employer, paycheckId) ?: return@mapNotNull null
-            val correctionOfPaycheckId = paycheckStoreRepository.findCorrectionOfPaycheckId(employer, paycheckId)
+            val correctionOfPaycheckId = paycheckStoreRepository.findCorrectionOfBillId(employer, paycheckId)
             val audit = paycheckAuditStoreRepository.findAudit(employer, paycheckId)
 
             val evt = PaycheckLedgerEvent(

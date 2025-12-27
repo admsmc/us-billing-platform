@@ -5,7 +5,7 @@ import com.example.usbilling.labor.api.LaborStandardsContextProvider
 import com.example.usbilling.labor.api.LaborStandardsQuery
 import com.example.usbilling.labor.api.StateLaborStandard
 import com.example.usbilling.payroll.model.LaborStandardsContext
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
 import java.time.LocalDate
 
@@ -59,7 +59,7 @@ class CatalogBackedLaborStandardsContextProvider(
     private val catalog: LaborStandardsCatalog,
 ) : LaborStandardsContextProvider {
 
-    override fun getLaborStandards(employerId: EmployerId, asOfDate: LocalDate, workState: String?, homeState: String?, localityCodes: List<String>): LaborStandardsContext? {
+    override fun getLaborStandards(employerId: UtilityId, asOfDate: LocalDate, workState: String?, homeState: String?, localityCodes: List<String>): LaborStandardsContext? {
         if (workState == null) return null
 
         val query = LaborStandardsQuery(

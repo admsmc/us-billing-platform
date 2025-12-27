@@ -1,18 +1,18 @@
 package com.example.usbilling.payroll.engine
 
 import com.example.usbilling.payroll.model.*
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.PayRunId
-import com.example.usbilling.shared.PaycheckId
+import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillId
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class SupplementalTaxTest {
 
-    private fun baseInputWithSupplemental(employerId: EmployerId, employeeId: EmployeeId): PaycheckInput {
+    private fun baseInputWithSupplemental(employerId: UtilityId, employeeId: CustomerId): PaycheckInput {
         val period = PayPeriod(
             id = "2025-01-BW-SUPP",
             employerId = employerId,
@@ -39,8 +39,8 @@ class SupplementalTaxTest {
         )
 
         return PaycheckInput(
-            paycheckId = PaycheckId("chk-supp"),
-            payRunId = PayRunId("run-supp"),
+            paycheckId = BillId("chk-supp"),
+            payRunId = BillRunId("run-supp"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,
@@ -58,8 +58,8 @@ class SupplementalTaxTest {
 
     @Test
     fun `flat supplemental tax applies only to supplemental wages`() {
-        val employerId = EmployerId("emp-supp")
-        val employeeId = EmployeeId("ee-supp")
+        val employerId = UtilityId("emp-supp")
+        val employeeId = CustomerId("ee-supp")
 
         val input = baseInputWithSupplemental(employerId, employeeId)
 
@@ -98,8 +98,8 @@ class SupplementalTaxTest {
 
     @Test
     fun `regular and supplemental rules both apply to their respective bases`() {
-        val employerId = EmployerId("emp-supp-combined")
-        val employeeId = EmployeeId("ee-supp-combined")
+        val employerId = UtilityId("emp-supp-combined")
+        val employeeId = CustomerId("ee-supp-combined")
 
         val input = baseInputWithSupplemental(employerId, employeeId)
 

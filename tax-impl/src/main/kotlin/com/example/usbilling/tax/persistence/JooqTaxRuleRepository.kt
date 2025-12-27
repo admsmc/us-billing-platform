@@ -2,7 +2,7 @@ package com.example.usbilling.tax.persistence
 
 import com.example.usbilling.payroll.model.TaxBasis
 import com.example.usbilling.payroll.model.TaxJurisdictionType
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.tax.api.TaxQuery
 import com.example.usbilling.tax.impl.TaxRuleRecord
 import com.example.usbilling.tax.impl.TaxRuleRepository
@@ -120,7 +120,7 @@ class JooqTaxRuleRepository(
                 bracketsJson = r.getCaseInsensitive("brackets_json", String::class.java),
                 standardDeductionCents = r.getCaseInsensitive("standard_deduction_cents", java.lang.Long::class.java)?.toLong(),
                 additionalWithholdingCents = r.getCaseInsensitive("additional_withholding_cents", java.lang.Long::class.java)?.toLong(),
-                employerId = r.getCaseInsensitive("employer_id", String::class.java)?.let(::EmployerId),
+                employerId = r.getCaseInsensitive("employer_id", String::class.java)?.let(::UtilityId),
                 effectiveFrom = r.getCaseInsensitive("effective_from", LocalDate::class.java),
                 effectiveTo = r.getCaseInsensitive("effective_to", LocalDate::class.java),
                 filingStatus = r.getCaseInsensitive("filing_status", String::class.java),

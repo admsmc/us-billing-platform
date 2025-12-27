@@ -2,7 +2,7 @@ package com.example.usbilling.tax.impl
 
 import com.example.usbilling.payroll.model.TaxContext
 import com.example.usbilling.payroll.model.TaxJurisdictionType
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.tax.api.TaxCatalog
 import com.example.usbilling.tax.api.TaxContextProvider
 import com.example.usbilling.tax.api.TaxQuery
@@ -20,7 +20,7 @@ class CatalogBackedTaxContextProvider(
     private val catalog: TaxCatalog,
 ) : TaxContextProvider {
 
-    override fun getTaxContext(employerId: EmployerId, asOfDate: LocalDate): TaxContext {
+    override fun getTaxContext(employerId: UtilityId, asOfDate: LocalDate): TaxContext {
         // In a later iteration, this query can be enriched with employee-level
         // state/locality and filing information.
         val query = TaxQuery(

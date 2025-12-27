@@ -27,11 +27,11 @@ import com.example.usbilling.payroll.model.garnishment.GarnishmentOrder
 import com.example.usbilling.payroll.model.garnishment.GarnishmentOrderId
 import com.example.usbilling.payroll.model.garnishment.GarnishmentType
 import com.example.usbilling.payroll.model.garnishment.ProtectedEarningsRule
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.PayRunId
-import com.example.usbilling.shared.PaycheckId
+import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillId
 import org.openjdk.jmh.annotations.Benchmark
 import org.openjdk.jmh.annotations.BenchmarkMode
 import org.openjdk.jmh.annotations.Fork
@@ -57,7 +57,7 @@ open class PaycheckComputationBenchmark {
         lateinit var withGarnishmentAndFloor: PaycheckInput
 
         val earningConfig: EarningConfigRepository = object : EarningConfigRepository {
-            override fun findByEmployerAndCode(employerId: EmployerId, code: EarningCode): EarningDefinition? = when (code.value) {
+            override fun findByEmployerAndCode(employerId: UtilityId, code: EarningCode): EarningDefinition? = when (code.value) {
                 "HOURLY" -> EarningDefinition(
                     code = code,
                     displayName = "Hourly Wages",
@@ -70,11 +70,11 @@ open class PaycheckComputationBenchmark {
         }
 
         val noDeductions: DeductionConfigRepository = object : DeductionConfigRepository {
-            override fun findPlansForEmployer(employerId: EmployerId): List<DeductionPlan> = emptyList()
+            override fun findPlansForEmployer(employerId: UtilityId): List<DeductionPlan> = emptyList()
         }
 
         val voluntaryDeduction: DeductionConfigRepository = object : DeductionConfigRepository {
-            override fun findPlansForEmployer(employerId: EmployerId): List<DeductionPlan> = listOf(
+            override fun findPlansForEmployer(employerId: UtilityId): List<DeductionPlan> = listOf(
                 DeductionPlan(
                     id = "PLAN_VOLUNTARY",
                     name = "Voluntary Post-Tax Deduction",
@@ -86,8 +86,8 @@ open class PaycheckComputationBenchmark {
 
         @Setup(Level.Trial)
         fun setup() {
-            val employerId = EmployerId("emp-bench")
-            val employeeId = EmployeeId("ee-bench")
+            val employerId = UtilityId("emp-bench")
+            val employeeId = CustomerId("ee-bench")
 
             val period = PayPeriod(
                 id = "2025-01-BW1",
@@ -110,8 +110,8 @@ open class PaycheckComputationBenchmark {
             )
 
             baseline = PaycheckInput(
-                paycheckId = PaycheckId("chk-bench-1"),
-                payRunId = PayRunId("run-bench"),
+                paycheckId = BillId("chk-bench-1"),
+                payRunId = BillRunId("run-bench"),
                 employerId = employerId,
                 employeeId = employeeId,
                 period = period,

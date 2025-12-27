@@ -4,17 +4,17 @@ import com.example.usbilling.payroll.model.*
 import com.example.usbilling.payroll.model.config.DeductionConfigRepository
 import com.example.usbilling.payroll.model.config.DeductionKind
 import com.example.usbilling.payroll.model.config.DeductionPlan
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.PayRunId
-import com.example.usbilling.shared.PaycheckId
+import com.example.usbilling.shared.BillRunId
+import com.example.usbilling.shared.BillId
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 private class TestDeductionConfigRepository : DeductionConfigRepository {
-    override fun findPlansForEmployer(employerId: EmployerId): List<DeductionPlan> = listOf(
+    override fun findPlansForEmployer(employerId: UtilityId): List<DeductionPlan> = listOf(
         DeductionPlan(
             id = "PLAN_VOLUNTARY",
             name = "Voluntary Post-Tax Deduction",
@@ -28,8 +28,8 @@ class DeductionsCalculatorTest {
 
     @Test
     fun `post tax voluntary deduction reduces net pay`() {
-        val employerId = EmployerId("emp-1")
-        val employeeId = EmployeeId("ee-4")
+        val employerId = UtilityId("emp-1")
+        val employeeId = CustomerId("ee-4")
         val period = PayPeriod(
             id = "2025-01-BW3",
             employerId = employerId,
@@ -49,8 +49,8 @@ class DeductionsCalculatorTest {
             ),
         )
         val input = PaycheckInput(
-            paycheckId = PaycheckId("chk-4"),
-            payRunId = PayRunId("run-3"),
+            paycheckId = BillId("chk-4"),
+            payRunId = BillRunId("run-3"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,
@@ -86,13 +86,13 @@ class DeductionsCalculatorTest {
     }
 
     private class EmptyDeductionConfigRepository : DeductionConfigRepository {
-        override fun findPlansForEmployer(employerId: EmployerId): List<DeductionPlan> = emptyList()
+        override fun findPlansForEmployer(employerId: UtilityId): List<DeductionPlan> = emptyList()
     }
 
     @Test
     fun `no voluntary plan means no deductions and net equals gross`() {
-        val employerId = EmployerId("emp-2")
-        val employeeId = EmployeeId("ee-5")
+        val employerId = UtilityId("emp-2")
+        val employeeId = CustomerId("ee-5")
         val period = PayPeriod(
             id = "2025-01-BW4",
             employerId = employerId,
@@ -112,8 +112,8 @@ class DeductionsCalculatorTest {
             ),
         )
         val input = PaycheckInput(
-            paycheckId = PaycheckId("chk-5"),
-            payRunId = PayRunId("run-4"),
+            paycheckId = BillId("chk-5"),
+            payRunId = BillRunId("run-4"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,

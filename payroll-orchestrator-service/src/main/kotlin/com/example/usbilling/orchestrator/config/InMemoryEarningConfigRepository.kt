@@ -4,7 +4,7 @@ import com.example.usbilling.payroll.model.EarningCategory
 import com.example.usbilling.payroll.model.EarningCode
 import com.example.usbilling.payroll.model.config.EarningConfigRepository
 import com.example.usbilling.payroll.model.config.EarningDefinition
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
 import org.springframework.stereotype.Component
 
@@ -16,8 +16,8 @@ import org.springframework.stereotype.Component
 @Component
 class InMemoryEarningConfigRepository : EarningConfigRepository {
 
-    private val data: Map<EmployerId, List<EarningDefinition>> = mapOf(
-        EmployerId("emp-1") to listOf(
+    private val data: Map<UtilityId, List<EarningDefinition>> = mapOf(
+        UtilityId("emp-1") to listOf(
             EarningDefinition(
                 code = EarningCode("BASE"),
                 displayName = "Base Salary",
@@ -39,5 +39,5 @@ class InMemoryEarningConfigRepository : EarningConfigRepository {
         ),
     )
 
-    override fun findByEmployerAndCode(employerId: EmployerId, code: EarningCode): EarningDefinition? = data[employerId]?.find { it.code == code }
+    override fun findByEmployerAndCode(employerId: UtilityId, code: EarningCode): EarningDefinition? = data[employerId]?.find { it.code == code }
 }

@@ -1,7 +1,7 @@
 package com.example.usbilling.tax.persistence
 
 import com.example.usbilling.payroll.model.*
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.tax.impl.CachingTaxCatalog
 import com.example.usbilling.tax.impl.CatalogBackedTaxContextProvider
 import com.example.usbilling.tax.impl.DbTaxCatalog
@@ -40,7 +40,7 @@ class Pub15TWageBracketBiweeklyGoldenTest {
         val cachingCatalog = CachingTaxCatalog(dbCatalog)
         val provider = CatalogBackedTaxContextProvider(cachingCatalog)
 
-        val employerId = EmployerId("EMP-PUB15T-WB")
+        val employerId = UtilityId("EMP-PUB15T-WB")
         val asOfDate = LocalDate.of(2025, 6, 30)
 
         val taxContext = provider.getTaxContext(employerId, asOfDate)

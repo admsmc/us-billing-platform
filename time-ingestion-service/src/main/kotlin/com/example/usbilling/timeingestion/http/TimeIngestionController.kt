@@ -1,7 +1,7 @@
 package com.example.usbilling.timeingestion.http
 
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.time.engine.TimeShaper
 import com.example.usbilling.time.model.OvertimeRuleSet
 import com.example.usbilling.time.model.TimeBuckets
@@ -163,8 +163,8 @@ class TimeIngestionController(
         require(reimbursementNonTaxableCents >= 0L) { "reimbursementNonTaxableCents must be >= 0" }
 
         val existed = repo.upsert(
-            employerId = EmployerId(employerId),
-            employeeId = EmployeeId(employeeId),
+            employerId = UtilityId(employerId),
+            employeeId = CustomerId(employeeId),
             entry = TimeEntryRepository.StoredTimeEntry(
                 entryId = entryId,
                 date = req.date,
@@ -208,8 +208,8 @@ class TimeIngestionController(
         }
 
         val existed = repo.upsertAll(
-            employerId = EmployerId(employerId),
-            employeeId = EmployeeId(employeeId),
+            employerId = UtilityId(employerId),
+            employeeId = CustomerId(employeeId),
             entries = req.entries.map { e ->
                 TimeEntryRepository.StoredTimeEntry(
                     entryId = e.entryId,
@@ -247,8 +247,8 @@ class TimeIngestionController(
     ): ResponseEntity<TimeSummaryResponse> {
         require(!end.isBefore(start)) { "end must be >= start" }
 
-        val employer = EmployerId(employerId)
-        val employee = EmployeeId(employeeId)
+        val employer = UtilityId(employerId)
+        val employee = CustomerId(employeeId)
 
         val stored = repo.findInRange(employer, employee, start, end)
         val entries = stored.map { s ->
@@ -363,8 +363,8 @@ class TimeIngestionController(
     }
 
     private fun computeAllocatedTipsByWorksite(
-        employer: EmployerId,
-        employee: EmployeeId,
+        employer: UtilityId,
+        employee: CustomerId,
         start: LocalDate,
         end: LocalDate,
         poolPercent: Double,
@@ -377,7 +377,7 @@ class TimeIngestionController(
         data class Acc(
             var chargedTipsTotalCents: Long = 0L,
             var eligibleHoursTotal: Double = 0.0,
-            val eligibleHoursByEmployee: MutableMap<EmployeeId, Double> = HashMap(),
+            val eligibleHoursByEmployee: MutableMap<CustomerId, Double> = HashMap(),
         )
 
         fun isTipEligible(e: TimeEntryRepository.StoredTimeEntry): Boolean {

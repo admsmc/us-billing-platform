@@ -1,8 +1,8 @@
 package com.example.usbilling.payroll.engine
 
 import com.example.usbilling.payroll.model.*
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
 import java.time.LocalDate
 import kotlin.test.Test
@@ -11,8 +11,8 @@ import kotlin.test.assertEquals
 class FicaGatingTest {
 
     private fun baseSnapshot(employmentType: EmploymentType, grossCents: Long): EmployeeSnapshot = EmployeeSnapshot(
-        employerId = EmployerId("EMP1"),
-        employeeId = EmployeeId("EE1"),
+        employerId = UtilityId("EMP1"),
+        employeeId = CustomerId("EE1"),
         homeState = "CA",
         workState = "CA",
         filingStatus = FilingStatus.SINGLE,
@@ -58,8 +58,8 @@ class FicaGatingTest {
         )
         val basisComputation = BasisBuilder.compute(basisContext)
         val input = PaycheckInput(
-            paycheckId = com.example.usbilling.shared.PaycheckId("CHK1"),
-            payRunId = com.example.usbilling.shared.PayRunId("RUN1"),
+            paycheckId = com.example.usbilling.shared.BillId("CHK1"),
+            payRunId = com.example.usbilling.shared.BillRunId("RUN1"),
             employerId = employerId,
             employeeId = snapshot.employeeId,
             period = period,

@@ -4,8 +4,8 @@ import com.example.usbilling.orchestrator.events.PayRunOutboxEnqueuer
 import com.example.usbilling.orchestrator.payrun.model.PayRunStatus
 import com.example.usbilling.orchestrator.payrun.persistence.PayRunItemRepository
 import com.example.usbilling.orchestrator.payrun.persistence.PayRunRepository
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import org.springframework.stereotype.Service
 import java.time.Duration
 import java.time.Instant
@@ -178,7 +178,7 @@ class PayRunExecutionService(
 
     private fun processOneEmployeeItem(employerId: String, payRun: com.example.usbilling.orchestrator.payrun.model.PayRunRecord, payRunId: String, employeeId: String) {
         try {
-            val paycheckId = payRunItemRepository.getOrAssignPaycheckId(
+            val paycheckId = payRunItemRepository.getOrAssignBillId(
                 employerId = employerId,
                 payRunId = payRunId,
                 employeeId = employeeId,
@@ -190,13 +190,13 @@ class PayRunExecutionService(
                 ?: emptyList()
 
             val paycheck = paycheckComputationService.computeAndPersistFinalPaycheckForEmployee(
-                employerId = EmployerId(employerId),
+                employerId = UtilityId(employerId),
                 payRunId = payRunId,
                 payPeriodId = payRun.payPeriodId,
                 runType = payRun.runType,
                 runSequence = payRun.runSequence,
                 paycheckId = paycheckId,
-                employeeId = EmployeeId(employeeId),
+                employeeId = CustomerId(employeeId),
                 earningOverrides = earningOverrides,
             )
 

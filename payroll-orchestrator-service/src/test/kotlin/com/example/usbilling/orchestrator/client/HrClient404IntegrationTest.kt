@@ -1,8 +1,8 @@
 package com.example.usbilling.orchestrator.client
 
 import com.example.usbilling.hr.client.HrClient
-import com.example.usbilling.shared.EmployeeId
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.UtilityId
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.jupiter.api.AfterAll
@@ -64,8 +64,8 @@ class HrClient404IntegrationTest {
 
     @Test
     fun `orchestrator HttpHrClient maps 404 to null for snapshot and pay periods`() {
-        val employerId = EmployerId("EMP-HR-404-ORCH")
-        val employeeId = EmployeeId("EE-HR-404-ORCH")
+        val employerId = UtilityId("EMP-HR-404-ORCH")
+        val employeeId = CustomerId("EE-HR-404-ORCH")
         val payPeriodId = "2025-01-BW1"
         val checkDate = LocalDate.of(2025, 1, 15)
 

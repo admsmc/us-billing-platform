@@ -1,7 +1,7 @@
 package com.example.usbilling.worker.benchmarks
 
 import com.example.usbilling.payroll.model.PaycheckResult
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import org.springframework.stereotype.Component
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentHashMap
 class PaycheckRunStore {
 
     data class StoredRun(
-        val employerId: EmployerId,
+        val employerId: UtilityId,
         val payPeriodId: String,
         val runId: String,
         val createdAt: Instant,
@@ -56,12 +56,12 @@ class PaycheckRunStore {
         trimToMaxRuns(employerId = run.employerId.value)
     }
 
-    fun get(employerId: EmployerId, runId: String): StoredRun? {
+    fun get(employerId: UtilityId, runId: String): StoredRun? {
         cleanupExpired(now = Instant.now())
         return runs[Key(employerId.value, runId)]
     }
 
-    fun list(employerId: EmployerId): List<StoredRunSummary> {
+    fun list(employerId: UtilityId): List<StoredRunSummary> {
         cleanupExpired(now = Instant.now())
         return runs.values
             .asSequence()

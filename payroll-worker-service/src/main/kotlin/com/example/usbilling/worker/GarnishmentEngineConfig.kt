@@ -1,6 +1,6 @@
 package com.example.usbilling.worker
 
-import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.UtilityId
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Configuration
@@ -14,7 +14,7 @@ data class GarnishmentEngineProperties(
      */
     var enabledEmployers: Set<String> = emptySet(),
 ) {
-    fun isEnabledFor(employerId: EmployerId): Boolean = enabledEmployers.isEmpty() || enabledEmployers.contains(employerId.value)
+    fun isEnabledFor(employerId: UtilityId): Boolean = enabledEmployers.isEmpty() || enabledEmployers.contains(employerId.value)
 }
 
 @Configuration
