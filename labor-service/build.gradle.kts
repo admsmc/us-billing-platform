@@ -70,7 +70,7 @@ tasks.withType<JavaCompile> {
 }
 
 application {
-    mainClass.set("com.example.uspayroll.labor.LaborServiceApplicationKt")
+    mainClass.set("com.example.usbilling.labor.LaborServiceApplicationKt")
 }
 
 // Convenience task to run the LaborStandardsImporter CLI via Gradle.
@@ -79,7 +79,7 @@ tasks.register<JavaExec>("runLaborStandardsImporter") {
     description = "Regenerate labor-standards JSON and SQL from the CSV. Use -PlaborYear=YYYY to override the default year."
 
     classpath = sourceSets.getByName("main").runtimeClasspath
-    mainClass.set("com.example.uspayroll.labor.tools.LaborStandardsImporter")
+    mainClass.set("com.example.usbilling.labor.tools.LaborStandardsImporter")
 
     val yearProp = project.findProperty("laborYear") as? String
         ?: System.getenv("LABOR_YEAR")
@@ -95,7 +95,7 @@ tasks.register<JavaExec>("validateLaborContentMetadata") {
     workingDir = rootProject.projectDir
 
     classpath = sourceSets.getByName("main").runtimeClasspath
-    mainClass.set("com.example.uspayroll.labor.tools.LaborContentMetadataValidatorCli")
+    mainClass.set("com.example.usbilling.labor.tools.LaborContentMetadataValidatorCli")
 }
 
 tasks.register<JavaExec>("validateGeneratedLaborArtifacts") {
@@ -106,7 +106,7 @@ tasks.register<JavaExec>("validateGeneratedLaborArtifacts") {
     workingDir = rootProject.projectDir
 
     classpath = sourceSets.getByName("main").runtimeClasspath
-    mainClass.set("com.example.uspayroll.labor.tools.LaborGeneratedArtifactsValidatorCli")
+    mainClass.set("com.example.usbilling.labor.tools.LaborGeneratedArtifactsValidatorCli")
 
     val yearProp = project.findProperty("laborYear") as? String
         ?: System.getenv("LABOR_YEAR")

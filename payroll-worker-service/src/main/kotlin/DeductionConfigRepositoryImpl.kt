@@ -1,11 +1,11 @@
-package com.example.uspayroll.worker
+package com.example.usbilling.worker
 
-import com.example.uspayroll.payroll.model.Percent
-import com.example.uspayroll.payroll.model.config.DeductionConfigRepository
-import com.example.uspayroll.payroll.model.config.DeductionKind
-import com.example.uspayroll.payroll.model.config.DeductionPlan
-import com.example.uspayroll.shared.EmployerId
-import com.example.uspayroll.shared.Money
+import com.example.usbilling.payroll.model.Percent
+import com.example.usbilling.payroll.model.config.DeductionConfigRepository
+import com.example.usbilling.payroll.model.config.DeductionKind
+import com.example.usbilling.payroll.model.config.DeductionPlan
+import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.Money
 
 /**
  * Temporary in-memory deduction config implementation for demo purposes.

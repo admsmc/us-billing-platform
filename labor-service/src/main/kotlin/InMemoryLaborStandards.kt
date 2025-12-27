@@ -1,12 +1,12 @@
-package com.example.uspayroll.labor.impl
+package com.example.usbilling.labor.impl
 
-import com.example.uspayroll.labor.api.LaborStandardsCatalog
-import com.example.uspayroll.labor.api.LaborStandardsContextProvider
-import com.example.uspayroll.labor.api.LaborStandardsQuery
-import com.example.uspayroll.labor.api.StateLaborStandard
-import com.example.uspayroll.payroll.model.LaborStandardsContext
-import com.example.uspayroll.shared.EmployerId
-import com.example.uspayroll.shared.Money
+import com.example.usbilling.labor.api.LaborStandardsCatalog
+import com.example.usbilling.labor.api.LaborStandardsContextProvider
+import com.example.usbilling.labor.api.LaborStandardsQuery
+import com.example.usbilling.labor.api.StateLaborStandard
+import com.example.usbilling.payroll.model.LaborStandardsContext
+import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.Money
 import java.time.LocalDate
 
 class InMemoryLaborStandardsCatalog : LaborStandardsCatalog {

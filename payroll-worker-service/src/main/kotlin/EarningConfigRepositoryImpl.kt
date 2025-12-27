@@ -1,11 +1,11 @@
-package com.example.uspayroll.worker
+package com.example.usbilling.worker
 
-import com.example.uspayroll.payroll.model.EarningCategory
-import com.example.uspayroll.payroll.model.EarningCode
-import com.example.uspayroll.payroll.model.config.EarningConfigRepository
-import com.example.uspayroll.payroll.model.config.EarningDefinition
-import com.example.uspayroll.shared.EmployerId
-import com.example.uspayroll.shared.Money
+import com.example.usbilling.payroll.model.EarningCategory
+import com.example.usbilling.payroll.model.EarningCode
+import com.example.usbilling.payroll.model.config.EarningConfigRepository
+import com.example.usbilling.payroll.model.config.EarningDefinition
+import com.example.usbilling.shared.EmployerId
+import com.example.usbilling.shared.Money
 
 /**
  * Temporary in-memory earning config implementation for demo purposes.

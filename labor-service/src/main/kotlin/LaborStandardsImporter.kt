@@ -1,6 +1,6 @@
-package com.example.uspayroll.labor.tools
+package com.example.usbilling.labor.tools
 
-import com.example.uspayroll.labor.api.StateLaborStandard
+import com.example.usbilling.labor.api.StateLaborStandard
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths

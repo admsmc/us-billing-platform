@@ -55,5 +55,5 @@ tasks.withType<JavaCompile> {
 }
 
 application {
-    mainClass.set("com.example.uspayroll.timeingestion.TimeIngestionServiceApplicationKt")
+    mainClass.set("com.example.usbilling.timeingestion.TimeIngestionServiceApplicationKt")
 }

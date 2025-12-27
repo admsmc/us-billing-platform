@@ -1,8 +1,8 @@
-package com.example.uspayroll.labor.persistence
+package com.example.usbilling.labor.persistence
 
-import com.example.uspayroll.labor.api.LaborStandardsCatalog
-import com.example.uspayroll.labor.api.LaborStandardsQuery
-import com.example.uspayroll.labor.api.StateLaborStandard
+import com.example.usbilling.labor.api.LaborStandardsCatalog
+import com.example.usbilling.labor.api.LaborStandardsQuery
+import com.example.usbilling.labor.api.StateLaborStandard
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL

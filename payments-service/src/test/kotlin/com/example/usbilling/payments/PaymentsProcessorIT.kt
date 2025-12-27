@@ -1,0 +1,80 @@
+package com.example.usbilling.payments
+
+import com.example.usbilling.messaging.events.payments.PaycheckPaymentRequestedEvent
+import com.example.usbilling.payments.processor.PaymentsProcessor
+import com.example.usbilling.payments.service.PaymentIntakeService
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.test.context.TestConstructor
+import org.springframework.test.context.TestPropertySource
+import java.time.Instant
+
+@SpringBootTest
+@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
+@TestPropertySource(
+    properties = [
+        "spring.task.scheduling.enabled=false",
+        "spring.datasource.url=jdbc:h2:mem:payments_processor_it;DB_CLOSE_DELAY=-1",
+
+        "payments.processor.enabled=true",
+        "payments.provider.type=sandbox",
+        "payments.provider.sandbox.auto-settle=true",
+        "payments.kafka.enabled=false",
+        "payments.outbox.relay.enabled=false",
+    ],
+)
+class PaymentsProcessorIT(
+    private val intake: PaymentIntakeService,
+    private val processor: PaymentsProcessor,
+    private val jdbcTemplate: JdbcTemplate,
+) {
+    @Test
+    fun `processor submits and settles payments and emits status events`() {
+        val employerId = "emp-1"
+        val payRunId = "run-1"
+        val paycheckId = "chk-2"
+
+        val evt = PaycheckPaymentRequestedEvent(
+            eventId = "paycheck-payment-requested:$employerId:$paycheckId",
+            occurredAt = Instant.now(),
+            employerId = employerId,
+            payRunId = payRunId,
+            payPeriodId = "pp-1",
+            employeeId = "e-1",
+            paycheckId = paycheckId,
+            currency = "USD",
+            netCents = 2_000_00L,
+        )
+
+        intake.handlePaymentRequested(evt)
+
+        processor.tickOnce(now = Instant.parse("2025-01-01T00:00:00Z"))
+
+        val status = jdbcTemplate.queryForObject(
+            "SELECT status FROM paycheck_payment WHERE employer_id = ? AND paycheck_id = ?",
+            String::class.java,
+            employerId,
+            paycheckId,
+        )
+        assertEquals("SETTLED", status)
+
+        val submittedEventId = "paycheck-payment-status-changed:$employerId:$paycheckId:SUBMITTED"
+        val settledEventId = "paycheck-payment-status-changed:$employerId:$paycheckId:SETTLED"
+
+        val submittedCount = jdbcTemplate.queryForObject(
+            "SELECT COUNT(*) FROM outbox_event WHERE event_id = ?",
+            Long::class.java,
+            submittedEventId,
+        ) ?: 0L
+        val settledCount = jdbcTemplate.queryForObject(
+            "SELECT COUNT(*) FROM outbox_event WHERE event_id = ?",
+            Long::class.java,
+            settledEventId,
+        ) ?: 0L
+
+        assertEquals(1L, submittedCount)
+        assertEquals(1L, settledCount)
+    }
+}

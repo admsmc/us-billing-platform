@@ -54,5 +54,5 @@ tasks.withType<JavaCompile> {
 }
 
 application {
-    mainClass.set("com.example.uspayroll.payments.PaymentsApplicationKt")
+    mainClass.set("com.example.usbilling.payments.PaymentsApplicationKt")
 }

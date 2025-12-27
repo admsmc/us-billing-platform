@@ -53,5 +53,5 @@ tasks.withType<JavaCompile> {
 }
 
 application {
-    mainClass.set("com.example.uspayroll.edge.EdgeServiceApplicationKt")
+    mainClass.set("com.example.usbilling.edge.EdgeServiceApplicationKt")
 }

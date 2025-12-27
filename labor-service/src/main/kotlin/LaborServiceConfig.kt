@@ -1,11 +1,11 @@
-package com.example.uspayroll.labor.config
+package com.example.usbilling.labor.config
 
-import com.example.uspayroll.labor.api.LaborStandardsCatalog
-import com.example.uspayroll.labor.api.LaborStandardsContextProvider
-import com.example.uspayroll.labor.impl.CatalogBackedLaborStandardsContextProvider
-import com.example.uspayroll.labor.persistence.JooqLaborStandardsCatalog
-import com.example.uspayroll.tenancy.db.TenantDataSourceFactory
-import com.example.uspayroll.tenancy.db.TenantDbConfig
+import com.example.usbilling.labor.api.LaborStandardsCatalog
+import com.example.usbilling.labor.api.LaborStandardsContextProvider
+import com.example.usbilling.labor.impl.CatalogBackedLaborStandardsContextProvider
+import com.example.usbilling.labor.persistence.JooqLaborStandardsCatalog
+import com.example.usbilling.tenancy.db.TenantDataSourceFactory
+import com.example.usbilling.tenancy.db.TenantDbConfig
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Value

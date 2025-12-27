@@ -1,4 +1,4 @@
-package com.example.uspayroll.shared
+package com.example.usbilling.shared
 
 @JvmInline
 value class EmployerId(val value: String)

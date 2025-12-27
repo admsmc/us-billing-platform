@@ -82,7 +82,7 @@ tasks.withType<JavaCompile> {
 }
 
 application {
-    mainClass.set("com.example.uspayroll.tax.TaxServiceApplicationKt")
+    mainClass.set("com.example.usbilling.tax.TaxServiceApplicationKt")
 }
 // Convenience task to run the StateIncomeTaxImporter CLI via Gradle.
 tasks.register<JavaExec>("runStateIncomeTaxImporter") {
@@ -93,7 +93,7 @@ tasks.register<JavaExec>("runStateIncomeTaxImporter") {
     workingDir = rootProject.projectDir
 
     classpath = sourceSets.getByName("main").runtimeClasspath
-    mainClass.set("com.example.uspayroll.tax.tools.StateIncomeTaxImporter")
+    mainClass.set("com.example.usbilling.tax.tools.StateIncomeTaxImporter")
 
     val yearProp = project.findProperty("taxYear") as? String
         ?: System.getenv("TAX_YEAR")
@@ -109,7 +109,7 @@ tasks.register<JavaExec>("importTaxConfigToDb") {
     workingDir = rootProject.projectDir
 
     classpath = sourceSets.getByName("main").runtimeClasspath
-    mainClass.set("com.example.uspayroll.tax.tools.TaxConfigDbImporterCli")
+    mainClass.set("com.example.usbilling.tax.tools.TaxConfigDbImporterCli")
 
     val yearProp = project.findProperty("taxYear") as? String
         ?: System.getenv("TAX_YEAR")
@@ -131,7 +131,7 @@ tasks.register<JavaExec>("validateTaxConfig") {
     workingDir = rootProject.projectDir
 
     classpath = sourceSets.getByName("main").runtimeClasspath
-    mainClass.set("com.example.uspayroll.tax.tools.TaxConfigValidatorCli")
+    mainClass.set("com.example.usbilling.tax.tools.TaxConfigValidatorCli")
 }
 
 // Validate metadata sidecars for curated tax-content CSV inputs.
@@ -143,7 +143,7 @@ tasks.register<JavaExec>("validateTaxContentMetadata") {
     workingDir = rootProject.projectDir
 
     classpath = sourceSets.getByName("main").runtimeClasspath
-    mainClass.set("com.example.uspayroll.tax.tools.TaxContentMetadataValidatorCli")
+    mainClass.set("com.example.usbilling.tax.tools.TaxContentMetadataValidatorCli")
 }
 
 tasks.register<JavaExec>("validateGeneratedTaxArtifacts") {
@@ -153,7 +153,7 @@ tasks.register<JavaExec>("validateGeneratedTaxArtifacts") {
     workingDir = rootProject.projectDir
 
     classpath = sourceSets.getByName("main").runtimeClasspath
-    mainClass.set("com.example.uspayroll.tax.tools.GeneratedTaxArtifactsValidatorCli")
+    mainClass.set("com.example.usbilling.tax.tools.GeneratedTaxArtifactsValidatorCli")
 
     val yearProp = project.findProperty("taxYear") as? String
         ?: System.getenv("TAX_YEAR")
@@ -179,7 +179,7 @@ tasks.register<JavaExec>("generateFederalPub15TWageBracketBiweekly") {
     workingDir = rootProject.projectDir
 
     classpath = sourceSets.getByName("main").runtimeClasspath
-    mainClass.set("com.example.uspayroll.tax.tools.WageBracketCsvImporter")
+    mainClass.set("com.example.usbilling.tax.tools.WageBracketCsvImporter")
 
     val yearProp = project.findProperty("taxYear") as? String
         ?: System.getenv("TAX_YEAR")
@@ -202,7 +202,7 @@ tasks.register<JavaExec>("generateFederal2025BiweeklyWageBrackets") {
     workingDir = rootProject.projectDir
 
     classpath = sourceSets.getByName("main").runtimeClasspath
-    mainClass.set("com.example.uspayroll.tax.tools.WageBracketCsvImporter")
+    mainClass.set("com.example.usbilling.tax.tools.WageBracketCsvImporter")
 
     args(
         "--wageBracketCsv=wage-bracket-2025-biweekly.csv",

@@ -26,7 +26,7 @@ plugins {
 }
 
 allprojects {
-    group = "com.example.uspayroll"
+    group = "com.example.usbilling"
     version = "0.0.1-SNAPSHOT"
 
     repositories {
