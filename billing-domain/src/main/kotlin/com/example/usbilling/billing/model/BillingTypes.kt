@@ -189,7 +189,7 @@ sealed class RateTariff {
      * Simple flat rate per unit.
      */
     data class FlatRate(
-        val customerCharge: Money,
+        val readinessToServeCharge: Money,
         val ratePerUnit: Money,
         val unit: String,
         val regulatorySurcharges: List<RegulatoryCharge> = emptyList()
@@ -199,7 +199,7 @@ sealed class RateTariff {
      * Tiered rate structure with progressive blocks.
      */
     data class TieredRate(
-        val customerCharge: Money,
+        val readinessToServeCharge: Money,
         val tiers: List<RateTier>,
         val unit: String,
         val regulatorySurcharges: List<RegulatoryCharge> = emptyList()
@@ -209,7 +209,7 @@ sealed class RateTariff {
      * Time-of-use rate with different rates for peak/off-peak periods.
      */
     data class TimeOfUseRate(
-        val customerCharge: Money,
+        val readinessToServeCharge: Money,
         val peakRate: Money,
         val offPeakRate: Money,
         val shoulderRate: Money?,
@@ -222,7 +222,7 @@ sealed class RateTariff {
      * Includes both energy (usage) charges and demand (capacity) charges.
      */
     data class DemandRate(
-        val customerCharge: Money,
+        val readinessToServeCharge: Money,
         val energyRatePerUnit: Money,
         val demandRatePerKw: Money,
         val unit: String,

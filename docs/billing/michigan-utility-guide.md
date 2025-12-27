@@ -174,7 +174,7 @@ val electricReads = ServiceMeterReads(
 
 // Electric tariff: Tiered residential rate
 val electricTariff = RateTariff.TieredRate(
-    customerCharge = Money(1500),  // $15.00/month
+    readinessToServeCharge = Money(1500),  // $15.00/month
     tiers = listOf(
         RateTier(maxUsage = 500.0, ratePerUnit = Money(10)),  // $0.10/kWh ≤ 500
         RateTier(maxUsage = null, ratePerUnit = Money(12))     // $0.12/kWh > 500
@@ -225,7 +225,7 @@ val result = BillingEngine.calculateMultiServiceBill(input)
 
 ```
 Electric Service:
-  Customer Charge              $15.00
+  Readiness to Serve              $15.00
   Usage (500 kWh @ $0.10)     $50.00
   Usage (300 kWh @ $0.12)     $36.00
   PSCR (800 kWh @ $0.00125)    $1.00
@@ -235,7 +235,7 @@ Electric Service:
   Electric Subtotal          $109.43
 
 Water Service:
-  Customer Charge              $8.00
+  Readiness to Serve              $8.00
   Usage (15 CCF @ $3.50)      $52.50
   INFRA (2% of subtotal)       $1.21
   LSLR                         $3.00
@@ -243,7 +243,7 @@ Water Service:
   Water Subtotal              $64.71
 
 Wastewater Service:
-  Customer Charge              $8.00
+  Readiness to Serve              $8.00
   Usage (15 CCF @ $4.00)      $60.00
   INFRA (2% of subtotal)       $1.36
   STORM                        $5.00

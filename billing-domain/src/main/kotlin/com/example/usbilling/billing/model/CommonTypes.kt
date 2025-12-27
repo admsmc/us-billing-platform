@@ -93,8 +93,8 @@ data class ChargeLineItem(
  * Categories of charges for bill presentation.
  */
 enum class ChargeCategory {
-    /** Fixed monthly customer/service charge */
-    CUSTOMER_CHARGE,
+    /** Fixed monthly readiness-to-serve charge */
+    READINESS_TO_SERVE,
     
     /** Usage-based charges (consumption × rate) */
     USAGE_CHARGE,

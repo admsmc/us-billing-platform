@@ -121,7 +121,7 @@ class MichiganUtilityDemoController {
         
         // Electric tariff: Tiered residential rate
         val electricTariff = RateTariff.TieredRate(
-            customerCharge = Money(1500),  // $15.00/month
+            readinessToServeCharge = Money(1500),  // $15.00/month
             tiers = listOf(
                 RateTier(maxUsage = 500.0, ratePerUnit = Money(10)),     // $0.10/kWh for first 500 kWh
                 RateTier(maxUsage = null, ratePerUnit = Money(12))        // $0.12/kWh above 500 kWh
@@ -131,21 +131,21 @@ class MichiganUtilityDemoController {
         
         // Water tariff: Flat rate
         val waterTariff = RateTariff.FlatRate(
-            customerCharge = Money(800),  // $8.00/month
+            readinessToServeCharge = Money(800),  // $8.00/month
             ratePerUnit = Money(350),      // $3.50/CCF
             unit = "CCF"
         )
         
         // Wastewater tariff: Flat rate
         val wastewaterTariff = RateTariff.FlatRate(
-            customerCharge = Money(800),  // $8.00/month
+            readinessToServeCharge = Money(800),  // $8.00/month
             ratePerUnit = Money(400),      // $4.00/CCF
             unit = "CCF"
         )
         
         // Broadband tariff: Flat monthly rate
         val broadbandTariff = RateTariff.FlatRate(
-            customerCharge = Money(4999),  // $49.99/month for 100 Mbps
+            readinessToServeCharge = Money(4999),  // $49.99/month for 100 Mbps
             ratePerUnit = Money(0),         // No per-unit charge
             unit = ""
         )

@@ -25,23 +25,23 @@ object BillingEngine {
     fun calculateBill(input: BillInput, computedAt: Instant = Instant.now()): BillResult {
         val charges = mutableListOf<ChargeLineItem>()
         
-        // Step 1: Add customer charge (fixed monthly fee)
-        val customerCharge = when (val tariff = input.rateTariff) {
-            is RateTariff.FlatRate -> tariff.customerCharge
-            is RateTariff.TieredRate -> tariff.customerCharge
-            is RateTariff.TimeOfUseRate -> tariff.customerCharge
-            is RateTariff.DemandRate -> tariff.customerCharge
+        // Step 1: Add readiness-to-serve charge (fixed monthly fee)
+        val readinessToServeCharge = when (val tariff = input.rateTariff) {
+            is RateTariff.FlatRate -> tariff.readinessToServeCharge
+            is RateTariff.TieredRate -> tariff.readinessToServeCharge
+            is RateTariff.TimeOfUseRate -> tariff.readinessToServeCharge
+            is RateTariff.DemandRate -> tariff.readinessToServeCharge
         }
         
         charges.add(
             ChargeLineItem(
-                code = "CUSTOMER_CHARGE",
-                description = "Customer Service Charge",
-                amount = customerCharge,
+                code = "READINESS_TO_SERVE",
+                description = "Readiness to Serve Charge",
+                amount = readinessToServeCharge,
                 usageAmount = null,
                 usageUnit = null,
                 rate = null,
-                category = ChargeCategory.CUSTOMER_CHARGE
+                category = ChargeCategory.READINESS_TO_SERVE
             )
         )
         
@@ -105,23 +105,23 @@ object BillingEngine {
             val serviceTariff = input.serviceTariffs[serviceReads.serviceType]
                 ?: error("No tariff configured for ${serviceReads.serviceType}")
             
-            // Add customer charge per service
-            val customerCharge = when (serviceTariff) {
-                is RateTariff.FlatRate -> serviceTariff.customerCharge
-                is RateTariff.TieredRate -> serviceTariff.customerCharge
-                is RateTariff.TimeOfUseRate -> serviceTariff.customerCharge
-                is RateTariff.DemandRate -> serviceTariff.customerCharge
+            // Add readiness-to-serve charge per service
+            val readinessToServeCharge = when (serviceTariff) {
+                is RateTariff.FlatRate -> serviceTariff.readinessToServeCharge
+                is RateTariff.TieredRate -> serviceTariff.readinessToServeCharge
+                is RateTariff.TimeOfUseRate -> serviceTariff.readinessToServeCharge
+                is RateTariff.DemandRate -> serviceTariff.readinessToServeCharge
             }
             
             charges.add(
                 ChargeLineItem(
-                    code = "${serviceReads.serviceType}_CUSTOMER",
-                    description = "${serviceReads.serviceType.displayName()} Customer Charge",
-                    amount = customerCharge,
+                    code = "${serviceReads.serviceType}_READINESS_TO_SERVE",
+                    description = "${serviceReads.serviceType.displayName()} Readiness to Serve",
+                    amount = readinessToServeCharge,
                     usageAmount = null,
                     usageUnit = null,
                     rate = null,
-                    category = ChargeCategory.CUSTOMER_CHARGE,
+                    category = ChargeCategory.READINESS_TO_SERVE,
                     serviceType = serviceReads.serviceType
                 )
             )

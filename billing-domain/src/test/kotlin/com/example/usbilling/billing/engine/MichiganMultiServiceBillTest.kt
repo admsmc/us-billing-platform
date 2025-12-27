@@ -56,13 +56,13 @@ class MichiganMultiServiceBillTest {
         )
         
         val electricTariff = RateTariff.FlatRate(
-            customerCharge = Money(1000),
+            readinessToServeCharge = Money(1000),
             ratePerUnit = Money(12),
             unit = "kWh"
         )
         
         val waterTariff = RateTariff.FlatRate(
-            customerCharge = Money(800),
+            readinessToServeCharge = Money(800),
             ratePerUnit = Money(300),
             unit = "CCF"
         )
@@ -133,7 +133,7 @@ class MichiganMultiServiceBillTest {
         )
         
         val electricTariff = RateTariff.FlatRate(
-            customerCharge = Money(1000),
+            readinessToServeCharge = Money(1000),
             ratePerUnit = Money(10),
             unit = "kWh"
         )
@@ -202,7 +202,7 @@ class MichiganMultiServiceBillTest {
         )
         
         val electricTariff = RateTariff.FlatRate(
-            customerCharge = Money(1000),
+            readinessToServeCharge = Money(1000),
             ratePerUnit = Money(10),
             unit = "kWh"
         )
@@ -276,7 +276,7 @@ class MichiganMultiServiceBillTest {
         )
         
         val broadbandTariff = RateTariff.FlatRate(
-            customerCharge = Money(4999),  // $49.99/month
+            readinessToServeCharge = Money(4999),  // $49.99/month
             ratePerUnit = Money(0),
             unit = ""
         )

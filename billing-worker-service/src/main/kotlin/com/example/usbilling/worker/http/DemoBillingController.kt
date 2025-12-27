@@ -58,7 +58,7 @@ class DemoBillingController {
                 )
             ),
             rateTariff = RateTariff.FlatRate(
-                customerCharge = Money(1500), // $15.00
+                readinessToServeCharge = Money(1500), // $15.00
                 ratePerUnit = Money(12), // $0.12/kWh
                 unit = "kWh"
             ),
