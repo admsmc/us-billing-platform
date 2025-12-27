@@ -39,20 +39,21 @@ class DemoBillingController {
             meterReads = listOf(
                 MeterReadPair(
                     meterId = "MTR-DEMO-001",
-                    usageType = UsageType.ELECTRIC,
+                    serviceType = ServiceType.ELECTRIC,
+                    usageType = UsageUnit.KWH,
                     startRead = MeterRead(
                         meterId = "MTR-DEMO-001",
-                        usageType = UsageType.ELECTRIC,
+                        serviceType = ServiceType.ELECTRIC,
                         readingValue = 10000.0,
-                        timestamp = Instant.parse("2025-01-01T00:00:00Z"),
-                        unit = "kWh"
+                        readDate = LocalDate.of(2025, 1, 1),
+                        usageUnit = UsageUnit.KWH
                     ),
                     endRead = MeterRead(
                         meterId = "MTR-DEMO-001",
-                        usageType = UsageType.ELECTRIC,
+                        serviceType = ServiceType.ELECTRIC,
                         readingValue = 10750.0, // 750 kWh usage
-                        timestamp = Instant.parse("2025-01-31T23:59:59Z"),
-                        unit = "kWh"
+                        readDate = LocalDate.of(2025, 1, 31),
+                        usageUnit = UsageUnit.KWH
                     )
                 )
             ),

@@ -15,23 +15,23 @@ class BillingEdgeCasesTest {
         // Meter reading rolls over from 99999 to 00050
         val startRead = MeterRead(
             meterId = "MTR-001",
-            usageType = UsageType.ELECTRIC,
+            serviceType = ServiceType.ELECTRIC,
             readingValue = 99950.0,
-            timestamp = Instant.parse("2025-01-01T00:00:00Z"),
-            unit = "kWh"
+            readDate = LocalDate.parse("2025-01-01T00:00:00Z"),
+            usageUnit = UsageUnit.KWH
         )
         
         val endRead = MeterRead(
             meterId = "MTR-001",
-            usageType = UsageType.ELECTRIC,
+            serviceType = ServiceType.ELECTRIC,
             readingValue = 50.0, // Rolled over
-            timestamp = Instant.parse("2025-01-31T23:59:59Z"),
-            unit = "kWh"
+            readDate = LocalDate.parse("2025-01-31T23:59:59Z"),
+            usageUnit = UsageUnit.KWH
         )
         
         val meterPair = MeterReadPair(
             meterId = "MTR-001",
-            usageType = UsageType.ELECTRIC,
+            serviceType = ServiceType.ELECTRIC,
             startRead = startRead,
             endRead = endRead
         )
@@ -46,20 +46,20 @@ class BillingEdgeCasesTest {
     fun `negative consumption is handled as meter rollover`() {
         val meterPair = MeterReadPair(
             meterId = "MTR-001",
-            usageType = UsageType.ELECTRIC,
+            serviceType = ServiceType.ELECTRIC,
             startRead = MeterRead(
                 meterId = "MTR-001",
-                usageType = UsageType.ELECTRIC,
+                serviceType = ServiceType.ELECTRIC,
                 readingValue = 1000.0,
-                timestamp = Instant.now(),
-                unit = "kWh"
+                readDate = LocalDate.now(),
+                usageUnit = UsageUnit.KWH
             ),
             endRead = MeterRead(
                 meterId = "MTR-001",
-                usageType = UsageType.ELECTRIC,
+                serviceType = ServiceType.ELECTRIC,
                 readingValue = 100.0, // Lower than start
-                timestamp = Instant.now(),
-                unit = "kWh"
+                readDate = LocalDate.now(),
+                usageUnit = UsageUnit.KWH
             )
         )
         
@@ -75,20 +75,20 @@ class BillingEdgeCasesTest {
         val tariff = RateTariff.FlatRate(
             customerCharge = Money(2000),
             ratePerUnit = Money(15),
-            unit = "kWh"
+            usageUnit = UsageUnit.KWH
         )
         
         // Customer has two electric meters
         val meterReads = listOf(
             MeterReadPair(
                 meterId = "MTR-001",
-                usageType = UsageType.ELECTRIC,
+                serviceType = ServiceType.ELECTRIC,
                 startRead = createRead("MTR-001", 1000.0),
                 endRead = createRead("MTR-001", 1500.0) // 500 kWh
             ),
             MeterReadPair(
                 meterId = "MTR-002",
-                usageType = UsageType.ELECTRIC,
+                serviceType = ServiceType.ELECTRIC,
                 startRead = createRead("MTR-002", 2000.0),
                 endRead = createRead("MTR-002", 2300.0) // 300 kWh
             )
@@ -145,7 +145,7 @@ class BillingEdgeCasesTest {
         val tariff = RateTariff.FlatRate(
             customerCharge = Money(1500),
             ratePerUnit = Money(10),
-            unit = "kWh"
+            usageUnit = UsageUnit.KWH
         )
         
         val input = BillInput(
@@ -157,7 +157,7 @@ class BillingEdgeCasesTest {
             meterReads = listOf(
                 MeterReadPair(
                     meterId = "MTR-001",
-                    usageType = UsageType.ELECTRIC,
+                    serviceType = ServiceType.ELECTRIC,
                     startRead = createRead("MTR-001", 1000.0),
                     endRead = createRead("MTR-001", 1000.0) // No usage
                 )
@@ -184,14 +184,14 @@ class BillingEdgeCasesTest {
             customerCharge = Money(5000), // $50
             energyRatePerUnit = Money(8), // $0.08/kWh
             demandRatePerKw = Money(1200), // $12/kW
-            unit = "kWh"
+            usageUnit = UsageUnit.KWH
         )
         
         val demandReadings = listOf(
             DemandReading(
                 meterId = "MTR-001",
                 peakDemandKw = 150.0, // 150 kW peak
-                timestamp = Instant.parse("2025-01-15T14:30:00Z")
+                readDate = LocalDate.parse("2025-01-15T14:30:00Z")
             )
         )
         
@@ -204,7 +204,7 @@ class BillingEdgeCasesTest {
             meterReads = listOf(
                 MeterReadPair(
                     meterId = "MTR-001",
-                    usageType = UsageType.ELECTRIC,
+                    serviceType = ServiceType.ELECTRIC,
                     startRead = createRead("MTR-001", 10000.0),
                     endRead = createRead("MTR-001", 15000.0) // 5,000 kWh
                 )
@@ -240,7 +240,7 @@ class BillingEdgeCasesTest {
         val tariff = RateTariff.FlatRate(
             customerCharge = Money(1500),
             ratePerUnit = Money(10),
-            unit = "kWh",
+            usageUnit = UsageUnit.KWH,
             regulatorySurcharges = surcharges
         )
         
@@ -253,7 +253,7 @@ class BillingEdgeCasesTest {
             meterReads = listOf(
                 MeterReadPair(
                     meterId = "MTR-001",
-                    usageType = UsageType.ELECTRIC,
+                    serviceType = ServiceType.ELECTRIC,
                     startRead = createRead("MTR-001", 1000.0),
                     endRead = createRead("MTR-001", 1500.0)
                 )
@@ -273,10 +273,10 @@ class BillingEdgeCasesTest {
     private fun createRead(meterId: String, value: Double): MeterRead {
         return MeterRead(
             meterId = meterId,
-            usageType = UsageType.ELECTRIC,
+            serviceType = ServiceType.ELECTRIC,
             readingValue = value,
-            timestamp = Instant.now(),
-            unit = "kWh"
+            readDate = LocalDate.now(),
+            usageUnit = UsageUnit.KWH
         )
     }
     

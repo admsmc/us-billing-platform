@@ -33,18 +33,18 @@ class BillingEngineTest {
         
         val startRead = MeterRead(
             meterId = "MTR-001",
-            usageType = UsageType.ELECTRIC,
+            serviceType = ServiceType.ELECTRIC,
             readingValue = 10000.0,
-            timestamp = Instant.parse("2025-01-01T00:00:00Z"),
-            unit = "kWh"
+            readDate = LocalDate.of(2025, 1, 1),
+            usageUnit = UsageUnit.KWH
         )
         
         val endRead = MeterRead(
             meterId = "MTR-001",
-            usageType = UsageType.ELECTRIC,
+            serviceType = ServiceType.ELECTRIC,
             readingValue = 10500.0, // 500 kWh consumed
-            timestamp = Instant.parse("2025-01-31T23:59:59Z"),
-            unit = "kWh"
+            readDate = LocalDate.of(2025, 1, 31),
+            usageUnit = UsageUnit.KWH
         )
         
         val input = BillInput(
@@ -56,7 +56,8 @@ class BillingEngineTest {
             meterReads = listOf(
                 MeterReadPair(
                     meterId = "MTR-001",
-                    usageType = UsageType.ELECTRIC,
+                    serviceType = ServiceType.ELECTRIC,
+                    usageType = UsageUnit.KWH,
                     startRead = startRead,
                     endRead = endRead
                 )
@@ -141,20 +142,21 @@ class BillingEngineTest {
             meterReads = listOf(
                 MeterReadPair(
                     meterId = "MTR-TEST",
-                    usageType = UsageType.ELECTRIC,
+                    serviceType = ServiceType.ELECTRIC,
+                    usageType = UsageUnit.KWH,
                     startRead = MeterRead(
                         meterId = "MTR-TEST",
-                        usageType = UsageType.ELECTRIC,
+                        serviceType = ServiceType.ELECTRIC,
                         readingValue = 10000.0,
-                        timestamp = Instant.now(),
-                        unit = "kWh"
+                        readDate = LocalDate.now(),
+                        usageUnit = UsageUnit.KWH
                     ),
                     endRead = MeterRead(
                         meterId = "MTR-TEST",
-                        usageType = UsageType.ELECTRIC,
+                        serviceType = ServiceType.ELECTRIC,
                         readingValue = 10000.0 + consumption,
-                        timestamp = Instant.now(),
-                        unit = "kWh"
+                        readDate = LocalDate.now(),
+                        usageUnit = UsageUnit.KWH
                     )
                 )
             ),
