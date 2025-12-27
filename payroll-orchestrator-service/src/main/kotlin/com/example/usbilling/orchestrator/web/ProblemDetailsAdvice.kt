@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 
 @RestControllerAdvice
 @Component("orchestratorProblemDetailsAdvice")
-class ProblemDetailsAdvice : com.example.uspayroll.web.ProblemDetailsExceptionHandler() {
+class ProblemDetailsAdvice : com.example.usbilling.web.ProblemDetailsExceptionHandler() {
 
     private val logger = LoggerFactory.getLogger(ProblemDetailsAdvice::class.java)
 

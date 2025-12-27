@@ -7,4 +7,4 @@ import org.springframework.stereotype.Component
 /** labor-service correlation ID filter (shared implementation lives in web-core). */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
-class CorrelationIdFilter : com.example.uspayroll.web.CorrelationIdFilter()
+class CorrelationIdFilter : com.example.usbilling.web.CorrelationIdFilter()

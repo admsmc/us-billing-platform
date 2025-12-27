@@ -67,8 +67,8 @@ class WorkerHrGarnishmentParamE2ETest {
         val protectedMinWageHours: Double? = null,
         val protectedMinWageMultiplier: Double? = null,
         // JSON escape hatch (still supported)
-        val formulaOverride: com.example.uspayroll.payroll.model.garnishment.GarnishmentFormula? = null,
-        val protectedEarningsRuleOverride: com.example.uspayroll.payroll.model.garnishment.ProtectedEarningsRule? = null,
+        val formulaOverride: com.example.usbilling.payroll.model.garnishment.GarnishmentFormula? = null,
+        val protectedEarningsRuleOverride: com.example.usbilling.payroll.model.garnishment.ProtectedEarningsRule? = null,
     )
 
     data class Scenario(

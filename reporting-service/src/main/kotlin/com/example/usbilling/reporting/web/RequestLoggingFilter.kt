@@ -7,4 +7,4 @@ import org.springframework.stereotype.Component
 /** reporting-service request logging filter (shared implementation lives in web-core). */
 @Component
 @Order(Ordered.LOWEST_PRECEDENCE)
-class RequestLoggingFilter : com.example.uspayroll.web.RequestLoggingFilter()
+class RequestLoggingFilter : com.example.usbilling.web.RequestLoggingFilter()

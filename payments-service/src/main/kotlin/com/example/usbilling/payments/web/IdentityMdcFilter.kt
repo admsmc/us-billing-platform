@@ -7,4 +7,4 @@ import org.springframework.stereotype.Component
 /** payments-service identity MDC filter (shared implementation lives in web-core). */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 1)
-class IdentityMdcFilter : com.example.uspayroll.web.IdentityMdcFilter()
+class IdentityMdcFilter : com.example.usbilling.web.IdentityMdcFilter()

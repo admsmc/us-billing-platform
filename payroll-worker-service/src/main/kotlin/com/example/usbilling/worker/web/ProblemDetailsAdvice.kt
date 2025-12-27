@@ -5,4 +5,4 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 
 @RestControllerAdvice
 @Component("workerProblemDetailsAdvice")
-class ProblemDetailsAdvice : com.example.uspayroll.web.ProblemDetailsExceptionHandler()
+class ProblemDetailsAdvice : com.example.usbilling.web.ProblemDetailsExceptionHandler()

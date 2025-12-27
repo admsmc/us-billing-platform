@@ -26,7 +26,7 @@ class PayRunService(
     private val paymentRequestService: PaymentRequestService,
     private val jobProducer: PayRunFinalizeJobProducer,
     private val earningOverridesCodec: PayRunEarningOverridesCodec,
-    private val outboxEnqueuer: com.example.uspayroll.orchestrator.events.PayRunOutboxEnqueuer,
+    private val outboxEnqueuer: com.example.usbilling.orchestrator.events.PayRunOutboxEnqueuer,
 ) {
 
     data class StartPayRunResult(
@@ -106,10 +106,10 @@ class PayRunService(
             employeeIds = distinctEmployeeIds,
         )
 
-        val overridesByEmployee: Map<String, List<com.example.uspayroll.messaging.jobs.PayRunEarningOverrideJob>> =
+        val overridesByEmployee: Map<String, List<com.example.usbilling.messaging.jobs.PayRunEarningOverrideJob>> =
             earningOverridesByEmployeeId.mapValues { (_, overrides) ->
                 overrides.map { o ->
-                    com.example.uspayroll.messaging.jobs.PayRunEarningOverrideJob(
+                    com.example.usbilling.messaging.jobs.PayRunEarningOverrideJob(
                         code = o.code,
                         units = o.units,
                         rateCents = o.rateCents,
@@ -190,10 +190,10 @@ class PayRunService(
         val payRun = createOrGet.payRun
 
         // Convert overrides to messaging format.
-        val overridesByEmployee: Map<String, List<com.example.uspayroll.messaging.jobs.PayRunEarningOverrideJob>> =
+        val overridesByEmployee: Map<String, List<com.example.usbilling.messaging.jobs.PayRunEarningOverrideJob>> =
             earningOverridesByEmployeeId.mapValues { (_, overrides) ->
                 overrides.map { o ->
-                    com.example.uspayroll.messaging.jobs.PayRunEarningOverrideJob(
+                    com.example.usbilling.messaging.jobs.PayRunEarningOverrideJob(
                         code = o.code,
                         units = o.units,
                         rateCents = o.rateCents,
@@ -312,7 +312,7 @@ class PayRunService(
         }
 
         val payRun = view.payRun
-        if (payRun.runType == com.example.uspayroll.orchestrator.payrun.model.PayRunType.VOID) {
+        if (payRun.runType == com.example.usbilling.orchestrator.payrun.model.PayRunType.VOID) {
             conflict("cannot initiate payments for VOID payrun")
         }
         if (payRun.approvalStatus != ApprovalStatus.APPROVED) {

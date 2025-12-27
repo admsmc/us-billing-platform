@@ -85,7 +85,7 @@ class OrchestratorClientRetryIT {
 
     @Test
     fun `retries transient 5xx and succeeds`() {
-        val result = client.getStatus(employerId = com.example.uspayroll.shared.EmployerId("EMP"), payRunId = "PR")
+        val result = client.getStatus(employerId = com.example.usbilling.shared.EmployerId("EMP"), payRunId = "PR")
         assertEquals("PR", result.payRunId)
 
         val first = server.takeRequest(1, TimeUnit.SECONDS)
@@ -140,11 +140,11 @@ class OrchestratorClientCircuitBreakerIT {
     @Test
     fun `opens circuit after failures and fails fast`() {
         assertFailsWith<Exception> {
-            client.getStatus(employerId = com.example.uspayroll.shared.EmployerId("EMP"), payRunId = "PR")
+            client.getStatus(employerId = com.example.usbilling.shared.EmployerId("EMP"), payRunId = "PR")
         }
 
         assertFailsWith<CircuitBreakerOpenException> {
-            client.getStatus(employerId = com.example.uspayroll.shared.EmployerId("EMP"), payRunId = "PR")
+            client.getStatus(employerId = com.example.usbilling.shared.EmployerId("EMP"), payRunId = "PR")
         }
 
         val first = server.takeRequest(1, TimeUnit.SECONDS)

@@ -12,7 +12,7 @@ import java.nio.file.Path
  * callbacks to HR.
  *
  * Usage:
- *   kotlin -classpath ... com.example.uspayroll.worker.tools.GarnishmentWithholdingReplayCli \
+ *   kotlin -classpath ... com.example.usbilling.worker.tools.GarnishmentWithholdingReplayCli \
  *     <hrBaseUrl> <employerId> <employeeId> <jsonFilePath>
  *
  * Where <jsonFilePath> contains a JSON body compatible with

@@ -62,14 +62,14 @@ class FederalWithholdingWorkerIntegrationTest {
                 annualSalary = Money(60_000_00L),
                 frequency = period.frequency,
             ),
-            w4Version = com.example.uspayroll.payroll.engine.pub15t.W4Version.MODERN_2020_PLUS,
+            w4Version = com.example.usbilling.payroll.engine.pub15t.W4Version.MODERN_2020_PLUS,
         )
 
         fun inputFor(status: FilingStatus): PaycheckInput {
             val snap = snapshot(status)
             return PaycheckInput(
-                paycheckId = com.example.uspayroll.shared.PaycheckId("chk-fw-worker-$status"),
-                payRunId = com.example.uspayroll.shared.PayRunId("run-fw-worker"),
+                paycheckId = com.example.usbilling.shared.PaycheckId("chk-fw-worker-$status"),
+                payRunId = com.example.usbilling.shared.PayRunId("run-fw-worker"),
                 employerId = employerId,
                 employeeId = snap.employeeId,
                 period = period,
@@ -123,14 +123,14 @@ class FederalWithholdingWorkerIntegrationTest {
             w4AnnualCreditAmount = creditCents?.let { Money(it) },
             w4OtherIncomeAnnual = otherIncomeCents?.let { Money(it) },
             w4DeductionsAnnual = deductionsCents?.let { Money(it) },
-            w4Version = com.example.uspayroll.payroll.engine.pub15t.W4Version.MODERN_2020_PLUS,
+            w4Version = com.example.usbilling.payroll.engine.pub15t.W4Version.MODERN_2020_PLUS,
         )
 
         fun runWith(creditCents: Long? = null, otherIncomeCents: Long? = null, deductionsCents: Long? = null): Long {
             val snap = snapshot(creditCents, otherIncomeCents, deductionsCents)
             val input = PaycheckInput(
-                paycheckId = com.example.uspayroll.shared.PaycheckId("chk-fw-worker-w4"),
-                payRunId = com.example.uspayroll.shared.PayRunId("run-fw-worker-w4"),
+                paycheckId = com.example.usbilling.shared.PaycheckId("chk-fw-worker-w4"),
+                payRunId = com.example.usbilling.shared.PayRunId("run-fw-worker-w4"),
                 employerId = employerId,
                 employeeId = snap.employeeId,
                 period = period,

@@ -128,7 +128,7 @@ object GarnishmentsCalculator {
             }
         }
 
-        fun rawFromFormula(order: GarnishmentOrder, disposableBefore: Long, filingStatus: com.example.uspayroll.payroll.model.FilingStatus?): Long {
+        fun rawFromFormula(order: GarnishmentOrder, disposableBefore: Long, filingStatus: com.example.usbilling.payroll.model.FilingStatus?): Long {
             return when (val f = order.formula) {
                 is GarnishmentFormula.PercentOfDisposable -> (disposableBefore * f.percent.value).toLong()
                 is GarnishmentFormula.FixedAmountPerPeriod -> f.amount.amount
@@ -168,7 +168,7 @@ object GarnishmentsCalculator {
 
             val grossCents = gross.amount
             val baseDisposableCents = when (order.type) {
-                com.example.uspayroll.payroll.model.garnishment.GarnishmentType.STUDENT_LOAN ->
+                com.example.usbilling.payroll.model.garnishment.GarnishmentType.STUDENT_LOAN ->
                     grossCents - mandatoryPreTaxCents - totalEmployeeTaxCents
                 else -> grossCents - mandatoryPreTaxCents
             }
@@ -178,7 +178,7 @@ object GarnishmentsCalculator {
                 // For now, model student loan garnishments using a disposable
                 // base that subtracts both pre-tax deductions and employee
                 // taxes before applying the 15% ceiling.
-                com.example.uspayroll.payroll.model.garnishment.GarnishmentType.STUDENT_LOAN -> {
+                com.example.usbilling.payroll.model.garnishment.GarnishmentType.STUDENT_LOAN -> {
                     val base = gross.amount - mandatoryPreTaxCents - totalEmployeeTaxCents
                     DisposableIncome(
                         baseDisposableCents = base,
@@ -215,9 +215,9 @@ object GarnishmentsCalculator {
 
         fun protectedEarningsFloorCents(order: GarnishmentOrder): Long? = when (val rule = order.protectedEarningsRule) {
             null -> null
-            is com.example.uspayroll.payroll.model.garnishment.ProtectedEarningsRule.FixedFloor ->
+            is com.example.usbilling.payroll.model.garnishment.ProtectedEarningsRule.FixedFloor ->
                 rule.amount.amount
-            is com.example.uspayroll.payroll.model.garnishment.ProtectedEarningsRule.MultipleOfMinWage -> {
+            is com.example.usbilling.payroll.model.garnishment.ProtectedEarningsRule.MultipleOfMinWage -> {
                 val raw = rule.hourlyRate.amount.toDouble() * rule.hours * rule.multiplier
                 raw.toLong().coerceAtLeast(0L)
             }

@@ -68,8 +68,8 @@ class PaycheckLedgerAdjustmentEventsIT(
         val adjustmentPayRunId = "run-ledger-adj-1"
         val retro = rest.exchange(
             RequestEntity.post(URI.create("/employers/$employerId/payruns/$sourcePayRunId/retro"))
-                .body(com.example.uspayroll.orchestrator.http.PayRunController.StartCorrectionRequest(requestedPayRunId = adjustmentPayRunId)),
-            com.example.uspayroll.orchestrator.http.PayRunController.StartRetroAdjustmentResponse::class.java,
+                .body(com.example.usbilling.orchestrator.http.PayRunController.StartCorrectionRequest(requestedPayRunId = adjustmentPayRunId)),
+            com.example.usbilling.orchestrator.http.PayRunController.StartRetroAdjustmentResponse::class.java,
         )
         assertEquals(HttpStatus.ACCEPTED, retro.statusCode)
 
@@ -102,13 +102,13 @@ class PaycheckLedgerAdjustmentEventsIT(
         val start = rest.exchange(
             RequestEntity.post(URI.create("/employers/$employerId/payruns/finalize"))
                 .body(
-                    com.example.uspayroll.orchestrator.http.PayRunController.StartFinalizeRequest(
+                    com.example.usbilling.orchestrator.http.PayRunController.StartFinalizeRequest(
                         payPeriodId = "pp-1",
                         employeeIds = listOf("e-1"),
                         requestedPayRunId = payRunId,
                     ),
                 ),
-            com.example.uspayroll.orchestrator.http.PayRunController.StartFinalizeResponse::class.java,
+            com.example.usbilling.orchestrator.http.PayRunController.StartFinalizeResponse::class.java,
         )
         assertEquals(HttpStatus.ACCEPTED, start.statusCode)
 
@@ -123,16 +123,16 @@ class PaycheckLedgerAdjustmentEventsIT(
 
         val status = rest.getForEntity(
             "/employers/$employerId/payruns/$payRunId",
-            com.example.uspayroll.orchestrator.http.PayRunController.PayRunStatusResponse::class.java,
+            com.example.usbilling.orchestrator.http.PayRunController.PayRunStatusResponse::class.java,
         )
         assertEquals(HttpStatus.OK, status.statusCode)
-        assertEquals(com.example.uspayroll.orchestrator.payrun.model.PayRunStatus.FINALIZED, status.body!!.status)
+        assertEquals(com.example.usbilling.orchestrator.payrun.model.PayRunStatus.FINALIZED, status.body!!.status)
     }
 
     private fun approvePayRun(employerId: String, payRunId: String) {
         val approve = rest.exchange(
             RequestEntity.post(URI.create("/employers/$employerId/payruns/$payRunId/approve")).build(),
-            com.example.uspayroll.orchestrator.http.PayRunController.ApprovePayRunResponse::class.java,
+            com.example.usbilling.orchestrator.http.PayRunController.ApprovePayRunResponse::class.java,
         )
         assertEquals(HttpStatus.OK, approve.statusCode)
     }

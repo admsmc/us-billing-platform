@@ -67,7 +67,7 @@ data class EmployeeSnapshot(
      * Optional additional withholding per paycheck on top of rule-based tax.
      * This is intended for employee-elected extra withholding.
      */
-    val additionalWithholdingPerPeriod: com.example.uspayroll.shared.Money? = null,
+    val additionalWithholdingPerPeriod: com.example.usbilling.shared.Money? = null,
     /** Simple dependent count hook for future use; currently informational. */
     val dependents: Int? = null,
     /**

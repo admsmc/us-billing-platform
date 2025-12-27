@@ -45,10 +45,10 @@ class TaxHttpController(
         val rules = taxCatalog.loadRules(query)
 
         val context = TaxContext(
-            federal = rules.filter { it.jurisdiction.type == com.example.uspayroll.payroll.model.TaxJurisdictionType.FEDERAL },
-            state = rules.filter { it.jurisdiction.type == com.example.uspayroll.payroll.model.TaxJurisdictionType.STATE },
-            local = rules.filter { it.jurisdiction.type == com.example.uspayroll.payroll.model.TaxJurisdictionType.LOCAL },
-            employerSpecific = rules.filter { it.jurisdiction.type == com.example.uspayroll.payroll.model.TaxJurisdictionType.OTHER },
+            federal = rules.filter { it.jurisdiction.type == com.example.usbilling.payroll.model.TaxJurisdictionType.FEDERAL },
+            state = rules.filter { it.jurisdiction.type == com.example.usbilling.payroll.model.TaxJurisdictionType.STATE },
+            local = rules.filter { it.jurisdiction.type == com.example.usbilling.payroll.model.TaxJurisdictionType.LOCAL },
+            employerSpecific = rules.filter { it.jurisdiction.type == com.example.usbilling.payroll.model.TaxJurisdictionType.OTHER },
         )
 
         return context.toDto()

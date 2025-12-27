@@ -43,7 +43,7 @@ object LegacyW4Bridge {
             4_300_00L
         } else {
             when (filingStatus) {
-                com.example.uspayroll.payroll.model.FilingStatus.MARRIED -> 12_900_00L
+                com.example.usbilling.payroll.model.FilingStatus.MARRIED -> 12_900_00L
                 else -> 8_600_00L
             }
         }
@@ -58,8 +58,8 @@ object LegacyW4Bridge {
             // values; we leave credits null here.
             step3AnnualCredit = null,
             // Synthetic Step 4(a) and 4(b) per Pub. 15-T bridge for pre-2020 W-4s.
-            step4OtherIncomeAnnual = com.example.uspayroll.shared.Money(step4aCents),
-            step4DeductionsAnnual = if (step4bCents > 0L) com.example.uspayroll.shared.Money(step4bCents) else null,
+            step4OtherIncomeAnnual = com.example.usbilling.shared.Money(step4aCents),
+            step4DeductionsAnnual = if (step4bCents > 0L) com.example.usbilling.shared.Money(step4bCents) else null,
             extraWithholdingPerPeriod =
             employee.legacyAdditionalWithholdingPerPeriod
                 ?: employee.additionalWithholdingPerPeriod,

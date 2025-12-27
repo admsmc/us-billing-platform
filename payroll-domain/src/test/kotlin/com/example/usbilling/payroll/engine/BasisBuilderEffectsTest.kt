@@ -32,15 +32,15 @@ class BasisBuilderEffectsTest {
         )
 
         val plansByCode = mapOf(
-            DeductionCode("PRETAX_RET") to com.example.uspayroll.payroll.model.config.DeductionPlan(
+            DeductionCode("PRETAX_RET") to com.example.usbilling.payroll.model.config.DeductionPlan(
                 id = "PRETAX_RET",
                 name = "Pre-tax retirement",
-                kind = com.example.uspayroll.payroll.model.config.DeductionKind.PRETAX_RETIREMENT_EMPLOYEE,
+                kind = com.example.usbilling.payroll.model.config.DeductionKind.PRETAX_RETIREMENT_EMPLOYEE,
             ),
-            DeductionCode("ROTH_RET") to com.example.uspayroll.payroll.model.config.DeductionPlan(
+            DeductionCode("ROTH_RET") to com.example.usbilling.payroll.model.config.DeductionPlan(
                 id = "ROTH_RET",
                 name = "Roth retirement",
-                kind = com.example.uspayroll.payroll.model.config.DeductionKind.ROTH_RETIREMENT_EMPLOYEE,
+                kind = com.example.usbilling.payroll.model.config.DeductionKind.ROTH_RETIREMENT_EMPLOYEE,
             ),
         )
 

@@ -24,10 +24,10 @@ import java.time.Instant
 @RequestMapping("/employers/{employerId}/payruns")
 class PayRunController(
     private val payRunService: PayRunService,
-    private val itemFinalizationService: com.example.uspayroll.orchestrator.payrun.PayRunItemFinalizationService,
-    private val correctionsService: com.example.uspayroll.orchestrator.payrun.PayRunCorrectionsService,
-    private val retroAdjustmentsService: com.example.uspayroll.orchestrator.payrun.PayRunRetroAdjustmentsService,
-    private val props: com.example.uspayroll.orchestrator.jobs.OrchestratorRabbitJobsProperties,
+    private val itemFinalizationService: com.example.usbilling.orchestrator.payrun.PayRunItemFinalizationService,
+    private val correctionsService: com.example.usbilling.orchestrator.payrun.PayRunCorrectionsService,
+    private val retroAdjustmentsService: com.example.usbilling.orchestrator.payrun.PayRunRetroAdjustmentsService,
+    private val props: com.example.usbilling.orchestrator.jobs.OrchestratorRabbitJobsProperties,
 ) {
 
     data class StartFinalizeRequest(
@@ -42,7 +42,7 @@ class PayRunController(
          *
          * Intended for off-cycle runs (bonuses/commissions) where base earnings are suppressed.
          */
-        val earningOverridesByEmployeeId: Map<String, List<com.example.uspayroll.orchestrator.payrun.PayRunEarningOverride>>? = null,
+        val earningOverridesByEmployeeId: Map<String, List<com.example.usbilling.orchestrator.payrun.PayRunEarningOverride>>? = null,
         val requestedPayRunId: String? = null,
         val idempotencyKey: String? = null,
     )
@@ -61,8 +61,8 @@ class PayRunController(
         @RequestHeader(name = WebHeaders.IDEMPOTENCY_KEY, required = false) headerIdempotencyKey: String?,
         @RequestBody request: StartFinalizeRequest,
     ): ResponseEntity<StartFinalizeResponse> {
-        val runType = request.runType?.let { com.example.uspayroll.orchestrator.payrun.model.PayRunType.valueOf(it) }
-            ?: com.example.uspayroll.orchestrator.payrun.model.PayRunType.REGULAR
+        val runType = request.runType?.let { com.example.usbilling.orchestrator.payrun.model.PayRunType.valueOf(it) }
+            ?: com.example.usbilling.orchestrator.payrun.model.PayRunType.REGULAR
         val runSequence = request.runSequence ?: 1
 
         val resolvedIdempotencyKey = Idempotency.resolveIdempotencyKey(
@@ -134,8 +134,8 @@ class PayRunController(
         val payRunId: String,
         val payPeriodId: String,
         val status: PayRunStatus,
-        val approvalStatus: com.example.uspayroll.orchestrator.payrun.model.ApprovalStatus,
-        val paymentStatus: com.example.uspayroll.orchestrator.payrun.model.PaymentStatus,
+        val approvalStatus: com.example.usbilling.orchestrator.payrun.model.ApprovalStatus,
+        val paymentStatus: com.example.usbilling.orchestrator.payrun.model.PaymentStatus,
         val counts: Counts,
         val failures: List<FailureItem>,
         // Server-side timestamps for finalize timing.
@@ -210,8 +210,8 @@ class PayRunController(
         val employerId: String,
         val payRunId: String,
         val status: PayRunStatus,
-        val approvalStatus: com.example.uspayroll.orchestrator.payrun.model.ApprovalStatus,
-        val paymentStatus: com.example.uspayroll.orchestrator.payrun.model.PaymentStatus,
+        val approvalStatus: com.example.usbilling.orchestrator.payrun.model.ApprovalStatus,
+        val paymentStatus: com.example.usbilling.orchestrator.payrun.model.PaymentStatus,
     )
 
     @PostMapping("/{payRunId}/approve")
@@ -270,8 +270,8 @@ class PayRunController(
         val employerId: String,
         val payRunId: String,
         val status: PayRunStatus,
-        val approvalStatus: com.example.uspayroll.orchestrator.payrun.model.ApprovalStatus,
-        val paymentStatus: com.example.uspayroll.orchestrator.payrun.model.PaymentStatus,
+        val approvalStatus: com.example.usbilling.orchestrator.payrun.model.ApprovalStatus,
+        val paymentStatus: com.example.usbilling.orchestrator.payrun.model.PaymentStatus,
         val candidates: Int,
         val enqueuedEvents: Int,
     )
@@ -440,7 +440,7 @@ class PayRunController(
             employerId = employerId,
             sourcePayRunId = result.sourcePayRunId,
             adjustmentPayRunId = result.adjustmentPayRunId,
-            runType = com.example.uspayroll.orchestrator.payrun.model.PayRunType.ADJUSTMENT.name,
+            runType = com.example.usbilling.orchestrator.payrun.model.PayRunType.ADJUSTMENT.name,
             runSequence = result.runSequence,
             status = result.status,
             totalItems = result.totalItems,
@@ -502,8 +502,8 @@ class PayRunController(
 
     data class CompleteEmployeeItemRequest(
         val paycheckId: String,
-        val paycheck: com.example.uspayroll.payroll.model.PaycheckResult? = null,
-        val audit: com.example.uspayroll.payroll.model.audit.PaycheckAudit? = null,
+        val paycheck: com.example.usbilling.payroll.model.PaycheckResult? = null,
+        val audit: com.example.usbilling.payroll.model.audit.PaycheckAudit? = null,
         val error: String? = null,
     )
 
@@ -511,7 +511,7 @@ class PayRunController(
         val employerId: String,
         val payRunId: String,
         val employeeId: String,
-        val itemStatus: com.example.uspayroll.orchestrator.payrun.model.PayRunItemStatus,
+        val itemStatus: com.example.usbilling.orchestrator.payrun.model.PayRunItemStatus,
         val attemptCount: Int,
         val paycheckId: String?,
         val retryable: Boolean,
@@ -536,7 +536,7 @@ class PayRunController(
             employerId = EmployerId(employerId).value,
             payRunId = payRunId,
             employeeId = employeeId,
-            request = com.example.uspayroll.orchestrator.payrun.PayRunItemFinalizationService.CompleteItemRequest(
+            request = com.example.usbilling.orchestrator.payrun.PayRunItemFinalizationService.CompleteItemRequest(
                 paycheckId = request.paycheckId,
                 paycheck = request.paycheck,
                 audit = request.audit,

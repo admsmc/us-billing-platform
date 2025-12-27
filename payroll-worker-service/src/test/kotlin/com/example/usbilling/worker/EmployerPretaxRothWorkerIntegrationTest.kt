@@ -43,8 +43,8 @@ class EmployerPretaxRothWorkerIntegrationTest {
             ),
         )
         return PaycheckInput(
-            paycheckId = com.example.uspayroll.shared.PaycheckId("chk-worker-pre-roth-${employerId.value}"),
-            payRunId = com.example.uspayroll.shared.PayRunId("run-worker-pre-roth"),
+            paycheckId = com.example.usbilling.shared.PaycheckId("chk-worker-pre-roth-${employerId.value}"),
+            payRunId = com.example.usbilling.shared.PayRunId("run-worker-pre-roth"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,
@@ -108,14 +108,14 @@ class EmployerPretaxRothWorkerIntegrationTest {
         val pretaxResult = PayrollEngine.calculatePaycheckComputation(
             input = pretaxInput,
             computedAt = java.time.Instant.EPOCH,
-            traceLevel = com.example.uspayroll.payroll.model.audit.TraceLevel.DEBUG,
+            traceLevel = com.example.usbilling.payroll.model.audit.TraceLevel.DEBUG,
             earningConfig = null,
             deductionConfig = repo,
         ).paycheck
         val rothResult = PayrollEngine.calculatePaycheckComputation(
             input = rothInput,
             computedAt = java.time.Instant.EPOCH,
-            traceLevel = com.example.uspayroll.payroll.model.audit.TraceLevel.DEBUG,
+            traceLevel = com.example.usbilling.payroll.model.audit.TraceLevel.DEBUG,
             earningConfig = null,
             deductionConfig = repo,
         ).paycheck

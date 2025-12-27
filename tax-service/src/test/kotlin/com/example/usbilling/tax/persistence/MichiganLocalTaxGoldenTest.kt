@@ -48,7 +48,7 @@ class MichiganLocalTaxGoldenTest {
         // In this test we bypass CatalogBackedTaxContextProvider's internal
         // TaxQuery construction and instead directly call the repository via
         // a synthetic TaxQuery.
-        val query = com.example.uspayroll.tax.api.TaxQuery(
+        val query = com.example.usbilling.tax.api.TaxQuery(
             employerId = employerId,
             asOfDate = asOfDate,
             residentState = residentState,

@@ -47,8 +47,8 @@ class Pub15TWageBracketBiweeklyExactValuesTest {
         importConfig(dsl)
 
         val repository = H2TaxRuleRepository(dsl)
-        val dbCatalog = com.example.uspayroll.tax.impl.DbTaxCatalog(repository)
-        val provider = com.example.uspayroll.tax.impl.CatalogBackedTaxContextProvider(dbCatalog)
+        val dbCatalog = com.example.usbilling.tax.impl.DbTaxCatalog(repository)
+        val provider = com.example.usbilling.tax.impl.CatalogBackedTaxContextProvider(dbCatalog)
 
         val employerId = EmployerId("EMP-PUB15T-WB-EXACT")
         val asOfDate = LocalDate.of(2025, 6, 30)

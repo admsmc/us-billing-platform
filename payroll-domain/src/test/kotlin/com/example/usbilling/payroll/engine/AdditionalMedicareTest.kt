@@ -59,8 +59,8 @@ class AdditionalMedicareTest {
         val bases = BasisBuilder.compute(basisContext)
 
         val input = PaycheckInput(
-            paycheckId = com.example.uspayroll.shared.PaycheckId("CHK-MED"),
-            payRunId = com.example.uspayroll.shared.PayRunId("RUN-MED"),
+            paycheckId = com.example.usbilling.shared.PaycheckId("CHK-MED"),
+            payRunId = com.example.usbilling.shared.PayRunId("RUN-MED"),
             employerId = employerId,
             employeeId = employeeId,
             period = period,

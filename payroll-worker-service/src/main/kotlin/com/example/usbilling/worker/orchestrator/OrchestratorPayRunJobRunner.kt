@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service
 class OrchestratorPayRunJobRunner(
     private val orchestratorClient: OrchestratorClient,
     private val props: OrchestratorPayRunJobProperties,
-    private val workerInstance: com.example.uspayroll.worker.support.WorkerInstance,
+    private val workerInstance: com.example.usbilling.worker.support.WorkerInstance,
 ) {
 
     private val logger = LoggerFactory.getLogger(OrchestratorPayRunJobRunner::class.java)

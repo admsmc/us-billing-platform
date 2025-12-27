@@ -227,7 +227,7 @@ class PayRunRetroAdjustmentWorkflowIT(
             PayRunController.PayRunStatusResponse::class.java,
         )
         assertEquals(HttpStatus.OK, status.statusCode)
-        assertEquals(com.example.uspayroll.orchestrator.payrun.model.PayRunStatus.FINALIZED, status.body!!.status)
+        assertEquals(com.example.usbilling.orchestrator.payrun.model.PayRunStatus.FINALIZED, status.body!!.status)
     }
 
     private fun approvePayRun(employerId: String, payRunId: String) {

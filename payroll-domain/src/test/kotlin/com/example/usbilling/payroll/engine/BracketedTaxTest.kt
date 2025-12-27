@@ -168,12 +168,12 @@ class BracketedTaxTest {
         )
 
         // Pre-tax 401k plan: 10% of gross (10,000) = 1,000, so FederalTaxable = 9,000
-        val deductionRepo = object : com.example.uspayroll.payroll.model.config.DeductionConfigRepository {
-            override fun findPlansForEmployer(employerId: EmployerId): List<com.example.uspayroll.payroll.model.config.DeductionPlan> = listOf(
-                com.example.uspayroll.payroll.model.config.DeductionPlan(
+        val deductionRepo = object : com.example.usbilling.payroll.model.config.DeductionConfigRepository {
+            override fun findPlansForEmployer(employerId: EmployerId): List<com.example.usbilling.payroll.model.config.DeductionPlan> = listOf(
+                com.example.usbilling.payroll.model.config.DeductionPlan(
                     id = "PLAN_401K_BR",
                     name = "401k Employee",
-                    kind = com.example.uspayroll.payroll.model.config.DeductionKind.PRETAX_RETIREMENT_EMPLOYEE,
+                    kind = com.example.usbilling.payroll.model.config.DeductionKind.PRETAX_RETIREMENT_EMPLOYEE,
                     employeeRate = Percent(0.10),
                 ),
             )

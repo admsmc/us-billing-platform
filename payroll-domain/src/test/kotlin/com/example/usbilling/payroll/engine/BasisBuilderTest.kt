@@ -9,7 +9,7 @@ class BasisBuilderTest {
 
     @Test
     fun `gross and federal taxable bases computed from earnings and pre tax deductions`() {
-        val employerId = com.example.uspayroll.shared.EmployerId("emp-basis")
+        val employerId = com.example.usbilling.shared.EmployerId("emp-basis")
         val period = PayPeriod(
             id = "PERIOD-1",
             employerId = employerId,

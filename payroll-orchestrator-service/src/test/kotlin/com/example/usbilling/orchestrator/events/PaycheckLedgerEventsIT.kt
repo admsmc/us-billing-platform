@@ -135,8 +135,8 @@ class PaycheckLedgerEventsIT(
         // 2) VOID + approve
         val voidResp = rest.exchange(
             RequestEntity.post(URI.create("/employers/$employerId/payruns/$payRunId/void"))
-                .body(com.example.uspayroll.orchestrator.http.PayRunController.StartCorrectionRequest()),
-            com.example.uspayroll.orchestrator.http.PayRunController.StartCorrectionResponse::class.java,
+                .body(com.example.usbilling.orchestrator.http.PayRunController.StartCorrectionRequest()),
+            com.example.usbilling.orchestrator.http.PayRunController.StartCorrectionResponse::class.java,
         )
         assertEquals(HttpStatus.ACCEPTED, voidResp.statusCode)
         val voidPayRunId = voidResp.body!!.correctionPayRunId
@@ -174,13 +174,13 @@ class PaycheckLedgerEventsIT(
         val start = rest.exchange(
             RequestEntity.post(URI.create("/employers/$employerId/payruns/finalize"))
                 .body(
-                    com.example.uspayroll.orchestrator.http.PayRunController.StartFinalizeRequest(
+                    com.example.usbilling.orchestrator.http.PayRunController.StartFinalizeRequest(
                         payPeriodId = "pp-1",
                         employeeIds = employeeIds,
                         requestedPayRunId = payRunId,
                     ),
                 ),
-            com.example.uspayroll.orchestrator.http.PayRunController.StartFinalizeResponse::class.java,
+            com.example.usbilling.orchestrator.http.PayRunController.StartFinalizeResponse::class.java,
         )
         assertEquals(HttpStatus.ACCEPTED, start.statusCode)
 

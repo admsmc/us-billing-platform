@@ -208,10 +208,10 @@ class MichiganLocalityHrTaxIntegrationTest {
 
         @Bean
         @Primary
-        fun h2BackedTaxClient(): com.example.uspayroll.worker.client.TaxClient = H2CatalogTaxClient()
+        fun h2BackedTaxClient(): com.example.usbilling.worker.client.TaxClient = H2CatalogTaxClient()
     }
 
-    class H2CatalogTaxClient : com.example.uspayroll.worker.client.TaxClient {
+    class H2CatalogTaxClient : com.example.usbilling.worker.client.TaxClient {
 
         private val dsl: DSLContext
         private val catalog: TaxCatalog

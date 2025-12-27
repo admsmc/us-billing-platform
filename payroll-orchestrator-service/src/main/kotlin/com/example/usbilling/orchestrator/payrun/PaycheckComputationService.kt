@@ -32,7 +32,7 @@ class PaycheckComputationService(
     private val hrClient: HrClient,
     private val taxClient: TaxClient,
     private val laborStandardsClient: LaborStandardsClient,
-    private val timeClient: com.example.uspayroll.orchestrator.client.TimeClient,
+    private val timeClient: com.example.usbilling.orchestrator.client.TimeClient,
     private val localityResolver: LocalityResolver,
     private val earningConfigRepository: EarningConfigRepository,
     private val deductionConfigRepository: DeductionConfigRepository,
@@ -51,7 +51,7 @@ class PaycheckComputationService(
         employerId: EmployerId,
         payRunId: String,
         payPeriodId: String,
-        runType: com.example.uspayroll.orchestrator.payrun.model.PayRunType,
+        runType: com.example.usbilling.orchestrator.payrun.model.PayRunType,
         runSequence: Int,
         paycheckId: String,
         employeeId: EmployeeId,
@@ -93,7 +93,7 @@ class PaycheckComputationService(
         employerId: EmployerId,
         payRunId: String,
         payPeriodId: String,
-        runType: com.example.uspayroll.orchestrator.payrun.model.PayRunType,
+        runType: com.example.usbilling.orchestrator.payrun.model.PayRunType,
         paycheckId: String,
         employeeId: EmployeeId,
         earningOverrides: List<EarningInput> = emptyList(),
@@ -141,10 +141,10 @@ class PaycheckComputationService(
             orders = garnishmentOrders,
         )
 
-        val includeBaseEarnings = runType != com.example.uspayroll.orchestrator.payrun.model.PayRunType.OFF_CYCLE
+        val includeBaseEarnings = runType != com.example.usbilling.orchestrator.payrun.model.PayRunType.OFF_CYCLE
 
         val baseComp = snapshot.baseCompensation
-        val hourlyBaseComp = baseComp as? com.example.uspayroll.payroll.model.BaseCompensation.Hourly
+        val hourlyBaseComp = baseComp as? com.example.usbilling.payroll.model.BaseCompensation.Hourly
 
         val timeSummary = if (includeBaseEarnings && hourlyBaseComp != null) {
             timeClient.getTimeSummary(
@@ -166,9 +166,9 @@ class PaycheckComputationService(
             val dtRateCents = (hourlyBaseComp.hourlyRate.amount * 2.0).toLong()
             listOf(
                 EarningInput(
-                    code = com.example.uspayroll.payroll.model.EarningCode("HOURLY_DT"),
+                    code = com.example.usbilling.payroll.model.EarningCode("HOURLY_DT"),
                     units = timeSummary!!.doubleTimeHours,
-                    rate = com.example.uspayroll.shared.Money(dtRateCents),
+                    rate = com.example.usbilling.shared.Money(dtRateCents),
                     amount = null,
                 ),
             )

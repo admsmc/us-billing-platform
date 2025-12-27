@@ -8,7 +8,7 @@ import com.example.usbilling.tax.impl.TaxRuleRepository
  * Temporary stub implementation of [TaxRuleRepository].
  *
  * This is intentionally *not* a Spring bean anymore (the real implementation
- * is wired via [com.example.uspayroll.tax.config.TaxServiceConfig]).
+ * is wired via [com.example.usbilling.tax.config.TaxServiceConfig]).
  */
 @Deprecated("Replaced by JooqTaxRuleRepository; kept temporarily for reference.")
 class StubTaxRuleRepository : TaxRuleRepository {

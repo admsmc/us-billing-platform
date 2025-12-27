@@ -62,7 +62,7 @@ class TaxHttpControllerIntegrationTest {
                             code = "US",
                         ),
                         basis = TaxBasis.Gross,
-                        rate = com.example.uspayroll.payroll.model.Percent(0.1),
+                        rate = com.example.usbilling.payroll.model.Percent(0.1),
                     ),
                 )
             }

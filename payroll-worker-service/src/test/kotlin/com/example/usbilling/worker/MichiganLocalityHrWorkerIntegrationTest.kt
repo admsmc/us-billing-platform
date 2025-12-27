@@ -176,7 +176,7 @@ class MichiganLocalityHrWorkerIntegrationTest {
         }
     }
 
-    class CapturingTaxClient : com.example.uspayroll.worker.client.TaxClient {
+    class CapturingTaxClient : com.example.usbilling.worker.client.TaxClient {
         val capturedLocalityCodes = mutableListOf<List<String>>()
 
         override fun getTaxContext(employerId: EmployerId, asOfDate: LocalDate, residentState: String?, workState: String?, localityCodes: List<String>): TaxContext {

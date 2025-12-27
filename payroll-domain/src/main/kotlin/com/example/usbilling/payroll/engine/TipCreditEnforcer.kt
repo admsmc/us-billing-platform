@@ -19,7 +19,7 @@ object TipCreditEnforcer {
     fun applyTipCreditMakeup(input: PaycheckInput, laborStandards: LaborStandardsContext?, earnings: List<EarningLine>): List<EarningLine> {
         val snapshot = input.employeeSnapshot
         val baseComp = snapshot.baseCompensation
-        if (baseComp !is com.example.uspayroll.payroll.model.BaseCompensation.Hourly) return earnings
+        if (baseComp !is com.example.usbilling.payroll.model.BaseCompensation.Hourly) return earnings
         if (!snapshot.flsaEnterpriseCovered) return earnings
         if (snapshot.flsaExemptStatus != FlsaExemptStatus.NON_EXEMPT) return earnings
         if (!snapshot.isTippedEmployee) return earnings

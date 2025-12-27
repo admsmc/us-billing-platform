@@ -99,8 +99,8 @@ object TaxesCalculator {
             // Special thresholds for household and election workers; below
             // these amounts in the year, FICA/Medicare should not apply.
             val thresholdCents: Long? = when (employmentType) {
-                com.example.uspayroll.payroll.model.EmploymentType.HOUSEHOLD -> 2_800_00L
-                com.example.uspayroll.payroll.model.EmploymentType.ELECTION_WORKER -> 2_400_00L
+                com.example.usbilling.payroll.model.EmploymentType.HOUSEHOLD -> 2_800_00L
+                com.example.usbilling.payroll.model.EmploymentType.ELECTION_WORKER -> 2_400_00L
                 else -> null
             }
 

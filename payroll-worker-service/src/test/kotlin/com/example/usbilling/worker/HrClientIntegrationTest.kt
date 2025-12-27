@@ -56,7 +56,7 @@ class HrClientIntegrationTest {
     }
 
     @Autowired
-    lateinit var payrollRunService: com.example.uspayroll.worker.PayrollRunService
+    lateinit var payrollRunService: com.example.usbilling.worker.PayrollRunService
 
     @Autowired
     lateinit var meterRegistry: MeterRegistry
@@ -173,7 +173,7 @@ class HrClientIntegrationTest {
         )
 
         // Simple percent-of-disposable garnishment order DTO
-        val garnDto = com.example.uspayroll.hr.http.GarnishmentOrderDto(
+        val garnDto = com.example.usbilling.hr.http.GarnishmentOrderDto(
             orderId = "ORDER-HR-1",
             planId = "GARN_PLAN_HR",
             type = GarnishmentType.CREDITOR_GARNISHMENT,
@@ -285,7 +285,7 @@ class HrClientIntegrationTest {
         // CHILD_SUPPORT order that wants 60% of disposable income but is
         // subject to a protected earnings floor. Given the relatively modest
         // salary here, the floor should bind and reduce the requested amount.
-        val garnDto = com.example.uspayroll.hr.http.GarnishmentOrderDto(
+        val garnDto = com.example.usbilling.hr.http.GarnishmentOrderDto(
             orderId = "ORDER-CS-1",
             planId = "GARN_PLAN_CHILD_SUPPORT",
             type = GarnishmentType.CHILD_SUPPORT,
@@ -490,7 +490,7 @@ class HrClientIntegrationTest {
             ),
         )
 
-        val garnDto = com.example.uspayroll.hr.http.GarnishmentOrderDto(
+        val garnDto = com.example.usbilling.hr.http.GarnishmentOrderDto(
             orderId = "ORDER-CB-FAIL-1",
             planId = "GARN_PLAN_CB_FAIL",
             type = GarnishmentType.CREDITOR_GARNISHMENT,

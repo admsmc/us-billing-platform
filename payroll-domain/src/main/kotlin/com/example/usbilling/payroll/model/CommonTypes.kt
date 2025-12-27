@@ -39,12 +39,12 @@ enum class EarningCategory {
  */
 data class LaborStandardsContext(
     /** Federal minimum wage floor per hour (e.g., $7.25). */
-    val federalMinimumWage: com.example.uspayroll.shared.Money,
+    val federalMinimumWage: com.example.usbilling.shared.Money,
     /**
      * Youth minimum wage cash rate per hour, if allowed (e.g., $4.25), or
      * null if not in effect.
      */
-    val youthMinimumWage: com.example.uspayroll.shared.Money? = null,
+    val youthMinimumWage: com.example.usbilling.shared.Money? = null,
     /** Maximum age in whole years for youth minimum wage eligibility. */
     val youthMaxAgeYears: Int? = null,
     /** Maximum number of consecutive calendar days from hire for youth wage. */
@@ -53,7 +53,7 @@ data class LaborStandardsContext(
      * Federal tipped-employee cash minimum per hour (e.g., $2.13) for
      * employees who customarily and regularly receive tips.
      */
-    val federalTippedCashMinimum: com.example.uspayroll.shared.Money? = null,
+    val federalTippedCashMinimum: com.example.usbilling.shared.Money? = null,
     /** Monthly tip threshold for classification as a tipped employee. */
-    val tippedMonthlyThreshold: com.example.uspayroll.shared.Money? = null,
+    val tippedMonthlyThreshold: com.example.usbilling.shared.Money? = null,
 )

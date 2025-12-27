@@ -43,7 +43,7 @@ class RabbitFinalizeEmployeeItemConsumerTest {
             .`when`(computationService)
             .computeForFinalizeJob(job)
 
-        val expectedReq = com.example.uspayroll.worker.client.CompleteEmployeeItemRequest(
+        val expectedReq = com.example.usbilling.worker.client.CompleteEmployeeItemRequest(
             paycheckId = "CHK-1",
             paycheck = null,
             audit = null,
@@ -108,7 +108,7 @@ class RabbitFinalizeEmployeeItemConsumerTest {
             .`when`(computationService)
             .computeForFinalizeJob(job)
 
-        val expectedReq = com.example.uspayroll.worker.client.CompleteEmployeeItemRequest(
+        val expectedReq = com.example.usbilling.worker.client.CompleteEmployeeItemRequest(
             paycheckId = "CHK-1",
             paycheck = null,
             audit = null,
@@ -176,7 +176,7 @@ class RabbitFinalizeEmployeeItemConsumerTest {
             .`when`(computationService)
             .computeForFinalizeJob(job)
 
-        val expectedReq = com.example.uspayroll.worker.client.CompleteEmployeeItemRequest(
+        val expectedReq = com.example.usbilling.worker.client.CompleteEmployeeItemRequest(
             paycheckId = "CHK-1",
             paycheck = null,
             audit = null,

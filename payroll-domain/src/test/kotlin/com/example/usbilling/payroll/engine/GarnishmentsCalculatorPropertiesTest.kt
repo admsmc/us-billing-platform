@@ -32,9 +32,9 @@ class GarnishmentsCalculatorPropertiesTest {
         val employer = EmployerId("EMP-PROP")
         val orderId = GarnishmentOrderId("ORDER-PROP-$idSuffix")
         val type = if (rng.nextBoolean()) {
-            com.example.uspayroll.payroll.model.garnishment.GarnishmentType.CREDITOR_GARNISHMENT
+            com.example.usbilling.payroll.model.garnishment.GarnishmentType.CREDITOR_GARNISHMENT
         } else {
-            com.example.uspayroll.payroll.model.garnishment.GarnishmentType.CHILD_SUPPORT
+            com.example.usbilling.payroll.model.garnishment.GarnishmentType.CHILD_SUPPORT
         }
 
         val formula = if (rng.nextBoolean()) {
@@ -125,7 +125,7 @@ class GarnishmentsCalculatorPropertiesTest {
                 if (rng.nextBoolean()) {
                     val floor = randomMoney(rng, maxCents = 5_000_00L)
                     order.copy(
-                        protectedEarningsRule = com.example.uspayroll.payroll.model.garnishment.ProtectedEarningsRule.FixedFloor(
+                        protectedEarningsRule = com.example.usbilling.payroll.model.garnishment.ProtectedEarningsRule.FixedFloor(
                             floor,
                         ),
                     )

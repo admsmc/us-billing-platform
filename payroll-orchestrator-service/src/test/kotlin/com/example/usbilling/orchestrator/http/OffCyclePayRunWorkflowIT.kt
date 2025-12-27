@@ -49,7 +49,7 @@ class OffCyclePayRunWorkflowIT(
                         requestedPayRunId = "run-offcycle-1",
                         earningOverridesByEmployeeId = mapOf(
                             "e-1" to listOf(
-                                com.example.uspayroll.orchestrator.payrun.PayRunEarningOverride(
+                                com.example.usbilling.orchestrator.payrun.PayRunEarningOverride(
                                     code = "BONUS",
                                     units = 1.0,
                                     amountCents = 1_000_00L,

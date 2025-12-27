@@ -97,7 +97,7 @@ class GarnishmentFeatureFlagIntegrationTest {
             ),
         )
 
-        val garnDto = com.example.uspayroll.hr.http.GarnishmentOrderDto(
+        val garnDto = com.example.usbilling.hr.http.GarnishmentOrderDto(
             orderId = "ORDER-FF-1",
             planId = "GARN_PLAN_FF",
             type = GarnishmentType.CREDITOR_GARNISHMENT,

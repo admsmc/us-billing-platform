@@ -128,15 +128,15 @@ class EmployerContributionsAndImputedIncomeTest {
         )
 
         // Config repository that marks IMPUTED_GTL as imputed income
-        val earningConfig = object : com.example.uspayroll.payroll.model.config.EarningConfigRepository {
-            override fun findByEmployerAndCode(employerId: EmployerId, code: EarningCode): com.example.uspayroll.payroll.model.config.EarningDefinition? = when (code.value) {
-                "HOURLY" -> com.example.uspayroll.payroll.model.config.EarningDefinition(
+        val earningConfig = object : com.example.usbilling.payroll.model.config.EarningConfigRepository {
+            override fun findByEmployerAndCode(employerId: EmployerId, code: EarningCode): com.example.usbilling.payroll.model.config.EarningDefinition? = when (code.value) {
+                "HOURLY" -> com.example.usbilling.payroll.model.config.EarningDefinition(
                     code = code,
                     displayName = "Hourly Wages",
                     category = EarningCategory.REGULAR,
                     defaultRate = Money(50_00L),
                 )
-                "IMPUTED_GTL" -> com.example.uspayroll.payroll.model.config.EarningDefinition(
+                "IMPUTED_GTL" -> com.example.usbilling.payroll.model.config.EarningDefinition(
                     code = code,
                     displayName = "Imputed GTL",
                     category = EarningCategory.IMPUTED,

@@ -71,8 +71,8 @@ class EmployerSpecificConfigWorkerIntegrationTest {
             val taxContext = TaxContext(federal = listOf(rule))
 
             val input = PaycheckInput(
-                paycheckId = com.example.uspayroll.shared.PaycheckId("chk-worker-${employerId.value}"),
-                payRunId = com.example.uspayroll.shared.PayRunId("run-worker-demo"),
+                paycheckId = com.example.usbilling.shared.PaycheckId("chk-worker-${employerId.value}"),
+                payRunId = com.example.usbilling.shared.PayRunId("run-worker-demo"),
                 employerId = employerId,
                 employeeId = employeeId,
                 period = period,
@@ -86,18 +86,18 @@ class EmployerSpecificConfigWorkerIntegrationTest {
                 priorYtd = YtdSnapshot(year = checkDate.year),
             )
 
-            return com.example.uspayroll.payroll.engine.PayrollEngine.calculatePaycheck(
+            return com.example.usbilling.payroll.engine.PayrollEngine.calculatePaycheck(
                 input = input,
                 earningConfig = payrollRunService.let {
                     it.javaClass.getDeclaredField("earningConfigRepository").let { f ->
                         f.isAccessible = true
-                        f.get(it) as com.example.uspayroll.payroll.model.config.EarningConfigRepository
+                        f.get(it) as com.example.usbilling.payroll.model.config.EarningConfigRepository
                     }
                 },
                 deductionConfig = payrollRunService.let {
                     it.javaClass.getDeclaredField("deductionConfigRepository").let { f ->
                         f.isAccessible = true
-                        f.get(it) as com.example.uspayroll.payroll.model.config.DeductionConfigRepository
+                        f.get(it) as com.example.usbilling.payroll.model.config.DeductionConfigRepository
                     }
                 },
             )

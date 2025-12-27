@@ -178,7 +178,7 @@ class JdbcGarnishmentOrderRepository(
                     null
                 } else {
                     GarnishmentFormula.PercentOfDisposable(
-                        com.example.uspayroll.payroll.model.Percent(percentRaw),
+                        com.example.usbilling.payroll.model.Percent(percentRaw),
                     )
                 }
             }
@@ -196,7 +196,7 @@ class JdbcGarnishmentOrderRepository(
                     null
                 } else {
                     GarnishmentFormula.LesserOfPercentOrAmount(
-                        percent = com.example.uspayroll.payroll.model.Percent(percentRaw),
+                        percent = com.example.usbilling.payroll.model.Percent(percentRaw),
                         amount = Money(fixedAmountRaw),
                     )
                 }

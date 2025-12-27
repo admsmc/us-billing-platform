@@ -86,9 +86,9 @@ class DeductionBehaviorTest {
             .first { it.description == "HSA" }
         val effects1 = hsaStep1.effects
         // HSA default effects include FICA bases
-        assert(effects1.contains(com.example.uspayroll.payroll.model.config.DeductionEffect.REDUCES_FEDERAL_TAXABLE))
-        assert(effects1.contains(com.example.uspayroll.payroll.model.config.DeductionEffect.REDUCES_SOCIAL_SECURITY_WAGES))
-        assert(effects1.contains(com.example.uspayroll.payroll.model.config.DeductionEffect.REDUCES_MEDICARE_WAGES))
+        assert(effects1.contains(com.example.usbilling.payroll.model.config.DeductionEffect.REDUCES_FEDERAL_TAXABLE))
+        assert(effects1.contains(com.example.usbilling.payroll.model.config.DeductionEffect.REDUCES_SOCIAL_SECURITY_WAGES))
+        assert(effects1.contains(com.example.usbilling.payroll.model.config.DeductionEffect.REDUCES_MEDICARE_WAGES))
 
         // Second check, prior YTD already 2,000 -> only 1,000 remaining to hit 3,000 cap
         val priorYtd2 = result1.ytdAfter

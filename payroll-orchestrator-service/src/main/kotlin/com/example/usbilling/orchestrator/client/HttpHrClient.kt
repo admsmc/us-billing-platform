@@ -165,7 +165,7 @@ class HttpHrClient(
         }
     }
 
-    override fun getGarnishmentOrders(employerId: EmployerId, employeeId: EmployeeId, asOfDate: LocalDate): List<com.example.uspayroll.payroll.model.garnishment.GarnishmentOrder> {
+    override fun getGarnishmentOrders(employerId: EmployerId, employeeId: EmployeeId, asOfDate: LocalDate): List<com.example.usbilling.payroll.model.garnishment.GarnishmentOrder> {
         val url = "${props.baseUrl}/employers/${employerId.value}/employees/${employeeId.value}/garnishments?asOf=$asOfDate"
         val dtoArray = guardrails.execute(
             isRetryable = RestTemplateRetryClassifier::isRetryable,

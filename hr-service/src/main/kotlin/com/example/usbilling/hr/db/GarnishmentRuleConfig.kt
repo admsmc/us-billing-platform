@@ -84,7 +84,7 @@ class JsonGarnishmentRuleConfigRepository(
         val config: GarnishmentRuleConfig,
     )
 
-    private val levyBandsByKey: Map<Pair<GarnishmentType, TaxJurisdiction>, List<com.example.uspayroll.payroll.model.garnishment.LevyBand>> by lazy {
+    private val levyBandsByKey: Map<Pair<GarnishmentType, TaxJurisdiction>, List<com.example.usbilling.payroll.model.garnishment.LevyBand>> by lazy {
         val resource = ClassPathResource("garnishment-levy-bands.json")
         if (!resource.exists()) return@lazy emptyMap()
 
@@ -99,8 +99,8 @@ class JsonGarnishmentRuleConfigRepository(
                     ?.trim()
                     ?.takeIf { it.isNotEmpty() }
                     ?.uppercase()
-                    ?.let { com.example.uspayroll.payroll.model.FilingStatus.valueOf(it) }
-                com.example.uspayroll.payroll.model.garnishment.LevyBand(
+                    ?.let { com.example.usbilling.payroll.model.FilingStatus.valueOf(it) }
+                com.example.usbilling.payroll.model.garnishment.LevyBand(
                     upToCents = band.upToCents,
                     exemptCents = band.exemptCents,
                     filingStatus = statusEnum,

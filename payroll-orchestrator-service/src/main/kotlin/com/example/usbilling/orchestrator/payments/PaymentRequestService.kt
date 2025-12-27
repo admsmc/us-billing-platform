@@ -33,7 +33,7 @@ class PaymentRequestService(
      * - outbox_event should have a unique constraint on event_id so duplicates are a no-op
      */
     @Transactional
-    fun requestPaymentsForPayRun(employerId: String, payRunId: String, paymentStatus: com.example.uspayroll.orchestrator.payrun.model.PaymentStatus): Result {
+    fun requestPaymentsForPayRun(employerId: String, payRunId: String, paymentStatus: com.example.usbilling.orchestrator.payrun.model.PaymentStatus): Result {
         // Reflect that we are now in-flight on paychecks (projection only; payments-service is system of record).
         paycheckLifecycleRepository.setPaymentStatusForPayRun(
             employerId = employerId,

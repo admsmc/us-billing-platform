@@ -43,11 +43,11 @@ class PayRunRepository(
                     employerId = rs.getString("employer_id"),
                     payRunId = rs.getString("pay_run_id"),
                     payPeriodId = rs.getString("pay_period_id"),
-                    runType = com.example.uspayroll.orchestrator.payrun.model.PayRunType.valueOf(rs.getString("run_type")),
+                    runType = com.example.usbilling.orchestrator.payrun.model.PayRunType.valueOf(rs.getString("run_type")),
                     runSequence = rs.getInt("run_sequence"),
                     status = PayRunStatus.valueOf(rs.getString("status")),
-                    approvalStatus = com.example.uspayroll.orchestrator.payrun.model.ApprovalStatus.valueOf(rs.getString("approval_status")),
-                    paymentStatus = com.example.uspayroll.orchestrator.payrun.model.PaymentStatus.valueOf(rs.getString("payment_status")),
+                    approvalStatus = com.example.usbilling.orchestrator.payrun.model.ApprovalStatus.valueOf(rs.getString("approval_status")),
+                    paymentStatus = com.example.usbilling.orchestrator.payrun.model.PaymentStatus.valueOf(rs.getString("payment_status")),
                     requestedIdempotencyKey = rs.getString("requested_idempotency_key"),
                     leaseOwner = rs.getString("lease_owner"),
                     leaseExpiresAt = leaseInstant,
@@ -86,11 +86,11 @@ class PayRunRepository(
                     employerId = rs.getString("employer_id"),
                     payRunId = rs.getString("pay_run_id"),
                     payPeriodId = rs.getString("pay_period_id"),
-                    runType = com.example.uspayroll.orchestrator.payrun.model.PayRunType.valueOf(rs.getString("run_type")),
+                    runType = com.example.usbilling.orchestrator.payrun.model.PayRunType.valueOf(rs.getString("run_type")),
                     runSequence = rs.getInt("run_sequence"),
                     status = PayRunStatus.valueOf(rs.getString("status")),
-                    approvalStatus = com.example.uspayroll.orchestrator.payrun.model.ApprovalStatus.valueOf(rs.getString("approval_status")),
-                    paymentStatus = com.example.uspayroll.orchestrator.payrun.model.PaymentStatus.valueOf(rs.getString("payment_status")),
+                    approvalStatus = com.example.usbilling.orchestrator.payrun.model.ApprovalStatus.valueOf(rs.getString("approval_status")),
+                    paymentStatus = com.example.usbilling.orchestrator.payrun.model.PaymentStatus.valueOf(rs.getString("payment_status")),
                     requestedIdempotencyKey = rs.getString("requested_idempotency_key"),
                     leaseOwner = rs.getString("lease_owner"),
                     leaseExpiresAt = leaseInstant,
@@ -107,7 +107,7 @@ class PayRunRepository(
         employerId: String,
         payRunId: String,
         payPeriodId: String,
-        runType: com.example.uspayroll.orchestrator.payrun.model.PayRunType,
+        runType: com.example.usbilling.orchestrator.payrun.model.PayRunType,
         runSequence: Int,
         requestedIdempotencyKey: String?,
         initialStatus: PayRunStatus = PayRunStatus.QUEUED,
@@ -135,8 +135,8 @@ class PayRunRepository(
             runType.name,
             runSequence,
             initialStatus.name,
-            com.example.uspayroll.orchestrator.payrun.model.ApprovalStatus.PENDING.name,
-            com.example.uspayroll.orchestrator.payrun.model.PaymentStatus.UNPAID.name,
+            com.example.usbilling.orchestrator.payrun.model.ApprovalStatus.PENDING.name,
+            com.example.usbilling.orchestrator.payrun.model.PaymentStatus.UNPAID.name,
             requestedIdempotencyKey,
         )
 
@@ -189,11 +189,11 @@ class PayRunRepository(
                 employerId = rs.getString("employer_id"),
                 payRunId = rs.getString("pay_run_id"),
                 payPeriodId = rs.getString("pay_period_id"),
-                runType = com.example.uspayroll.orchestrator.payrun.model.PayRunType.valueOf(rs.getString("run_type")),
+                runType = com.example.usbilling.orchestrator.payrun.model.PayRunType.valueOf(rs.getString("run_type")),
                 runSequence = rs.getInt("run_sequence"),
                 status = PayRunStatus.valueOf(rs.getString("status")),
-                approvalStatus = com.example.uspayroll.orchestrator.payrun.model.ApprovalStatus.valueOf(rs.getString("approval_status")),
-                paymentStatus = com.example.uspayroll.orchestrator.payrun.model.PaymentStatus.valueOf(rs.getString("payment_status")),
+                approvalStatus = com.example.usbilling.orchestrator.payrun.model.ApprovalStatus.valueOf(rs.getString("approval_status")),
+                paymentStatus = com.example.usbilling.orchestrator.payrun.model.PaymentStatus.valueOf(rs.getString("payment_status")),
                 requestedIdempotencyKey = rs.getString("requested_idempotency_key"),
                 leaseOwner = rs.getString("lease_owner"),
                 leaseExpiresAt = leaseInstant,
@@ -205,7 +205,7 @@ class PayRunRepository(
         payRunId,
     ).firstOrNull()
 
-    fun findPayRunByBusinessKey(employerId: String, payPeriodId: String, runType: com.example.uspayroll.orchestrator.payrun.model.PayRunType, runSequence: Int): PayRunRecord? = jdbcTemplate.query(
+    fun findPayRunByBusinessKey(employerId: String, payPeriodId: String, runType: com.example.usbilling.orchestrator.payrun.model.PayRunType, runSequence: Int): PayRunRecord? = jdbcTemplate.query(
         """
             SELECT employer_id, pay_run_id, pay_period_id, run_type, run_sequence, status,
                    approval_status, payment_status,
@@ -227,11 +227,11 @@ class PayRunRepository(
                 employerId = rs.getString("employer_id"),
                 payRunId = rs.getString("pay_run_id"),
                 payPeriodId = rs.getString("pay_period_id"),
-                runType = com.example.uspayroll.orchestrator.payrun.model.PayRunType.valueOf(rs.getString("run_type")),
+                runType = com.example.usbilling.orchestrator.payrun.model.PayRunType.valueOf(rs.getString("run_type")),
                 runSequence = rs.getInt("run_sequence"),
                 status = PayRunStatus.valueOf(rs.getString("status")),
-                approvalStatus = com.example.uspayroll.orchestrator.payrun.model.ApprovalStatus.valueOf(rs.getString("approval_status")),
-                paymentStatus = com.example.uspayroll.orchestrator.payrun.model.PaymentStatus.valueOf(rs.getString("payment_status")),
+                approvalStatus = com.example.usbilling.orchestrator.payrun.model.ApprovalStatus.valueOf(rs.getString("approval_status")),
+                paymentStatus = com.example.usbilling.orchestrator.payrun.model.PaymentStatus.valueOf(rs.getString("payment_status")),
                 requestedIdempotencyKey = rs.getString("requested_idempotency_key"),
                 leaseOwner = rs.getString("lease_owner"),
                 leaseExpiresAt = leaseInstant,
@@ -266,11 +266,11 @@ class PayRunRepository(
                 employerId = rs.getString("employer_id"),
                 payRunId = rs.getString("pay_run_id"),
                 payPeriodId = rs.getString("pay_period_id"),
-                runType = com.example.uspayroll.orchestrator.payrun.model.PayRunType.valueOf(rs.getString("run_type")),
+                runType = com.example.usbilling.orchestrator.payrun.model.PayRunType.valueOf(rs.getString("run_type")),
                 runSequence = rs.getInt("run_sequence"),
                 status = PayRunStatus.valueOf(rs.getString("status")),
-                approvalStatus = com.example.uspayroll.orchestrator.payrun.model.ApprovalStatus.valueOf(rs.getString("approval_status")),
-                paymentStatus = com.example.uspayroll.orchestrator.payrun.model.PaymentStatus.valueOf(rs.getString("payment_status")),
+                approvalStatus = com.example.usbilling.orchestrator.payrun.model.ApprovalStatus.valueOf(rs.getString("approval_status")),
+                paymentStatus = com.example.usbilling.orchestrator.payrun.model.PaymentStatus.valueOf(rs.getString("payment_status")),
                 requestedIdempotencyKey = rs.getString("requested_idempotency_key"),
                 leaseOwner = rs.getString("lease_owner"),
                 leaseExpiresAt = leaseInstant,
@@ -470,7 +470,7 @@ class PayRunRepository(
         return updated == 1
     }
 
-    fun setPaymentStatus(employerId: String, payRunId: String, paymentStatus: com.example.uspayroll.orchestrator.payrun.model.PaymentStatus): Boolean {
+    fun setPaymentStatus(employerId: String, payRunId: String, paymentStatus: com.example.usbilling.orchestrator.payrun.model.PaymentStatus): Boolean {
         // Enforce monotonic-ish transitions to avoid accidental regressions, but allow
         // PARTIALLY_PAID updates from projections.
         val updated = jdbcTemplate.update(

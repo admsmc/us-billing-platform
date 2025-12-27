@@ -176,7 +176,7 @@ class PayRunExecutionService(
         )
     }
 
-    private fun processOneEmployeeItem(employerId: String, payRun: com.example.uspayroll.orchestrator.payrun.model.PayRunRecord, payRunId: String, employeeId: String) {
+    private fun processOneEmployeeItem(employerId: String, payRun: com.example.usbilling.orchestrator.payrun.model.PayRunRecord, payRunId: String, employeeId: String) {
         try {
             val paycheckId = payRunItemRepository.getOrAssignPaycheckId(
                 employerId = employerId,

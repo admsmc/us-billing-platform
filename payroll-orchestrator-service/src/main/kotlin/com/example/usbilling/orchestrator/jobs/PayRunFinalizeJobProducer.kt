@@ -42,7 +42,7 @@ class PayRunFinalizeJobProducer(
         runType: String,
         runSequence: Int,
         paycheckIdsByEmployeeId: Map<String, String>,
-        earningOverridesByEmployeeId: Map<String, List<com.example.uspayroll.messaging.jobs.PayRunEarningOverrideJob>> = emptyMap(),
+        earningOverridesByEmployeeId: Map<String, List<com.example.usbilling.messaging.jobs.PayRunEarningOverrideJob>> = emptyMap(),
         now: Instant = Instant.now(),
     ): Int {
         if (!props.enabled) return 0
@@ -116,7 +116,7 @@ class PayRunFinalizeJobProducer(
         runType: String,
         runSequence: Int,
         employeeIds: List<String>,
-        earningOverridesByEmployeeId: Map<String, List<com.example.uspayroll.messaging.jobs.PayRunEarningOverrideJob>> = emptyMap(),
+        earningOverridesByEmployeeId: Map<String, List<com.example.usbilling.messaging.jobs.PayRunEarningOverrideJob>> = emptyMap(),
         chunkSize: Int = 2000,
         now: Instant = Instant.now(),
     ): Boolean {

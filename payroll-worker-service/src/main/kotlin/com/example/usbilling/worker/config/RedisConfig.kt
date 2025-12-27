@@ -16,7 +16,7 @@ import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.data.redis.serializer.StringRedisSerializer
 
 @Configuration
-@EnableConfigurationProperties(com.example.uspayroll.worker.client.CacheProperties::class)
+@EnableConfigurationProperties(com.example.usbilling.worker.client.CacheProperties::class)
 class RedisConfig {
 
     /**
@@ -72,7 +72,7 @@ class RedisConfig {
 
         // Enable polymorphic type handling for sealed classes
         val ptv = BasicPolymorphicTypeValidator.builder()
-            .allowIfSubType("com.example.uspayroll")
+            .allowIfSubType("com.example.usbilling")
             .allowIfSubType("java.util")
             .build()
         activateDefaultTyping(ptv, ObjectMapper.DefaultTyping.NON_FINAL)

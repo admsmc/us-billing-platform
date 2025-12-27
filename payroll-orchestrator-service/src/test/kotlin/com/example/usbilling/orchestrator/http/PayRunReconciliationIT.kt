@@ -39,7 +39,7 @@ import java.time.Instant
 class PayRunReconciliationIT(
     private val rest: TestRestTemplate,
     private val jdbcTemplate: JdbcTemplate,
-    private val paycheckComputationService: com.example.uspayroll.orchestrator.payrun.PaycheckComputationService,
+    private val paycheckComputationService: com.example.usbilling.orchestrator.payrun.PaycheckComputationService,
 ) {
 
     @BeforeEach
@@ -67,12 +67,12 @@ class PayRunReconciliationIT(
         )!!
 
         val computation = paycheckComputationService.computePaycheckComputationForEmployee(
-            employerId = com.example.uspayroll.shared.EmployerId(employerId),
+            employerId = com.example.usbilling.shared.EmployerId(employerId),
             payRunId = payRunId,
             payPeriodId = payPeriodId,
-            runType = com.example.uspayroll.orchestrator.payrun.model.PayRunType.REGULAR,
+            runType = com.example.usbilling.orchestrator.payrun.model.PayRunType.REGULAR,
             paycheckId = paycheckId,
-            employeeId = com.example.uspayroll.shared.EmployeeId(employeeId),
+            employeeId = com.example.usbilling.shared.EmployeeId(employeeId),
         )
 
         rest.exchange(
@@ -259,12 +259,12 @@ class PayRunReconciliationIT(
         )
 
         val computation = paycheckComputationService.computePaycheckComputationForEmployee(
-            employerId = com.example.uspayroll.shared.EmployerId(employerId),
+            employerId = com.example.usbilling.shared.EmployerId(employerId),
             payRunId = payRunId,
             payPeriodId = "pp-1",
-            runType = com.example.uspayroll.orchestrator.payrun.model.PayRunType.REGULAR,
+            runType = com.example.usbilling.orchestrator.payrun.model.PayRunType.REGULAR,
             paycheckId = paycheckId!!,
-            employeeId = com.example.uspayroll.shared.EmployeeId("e-1"),
+            employeeId = com.example.usbilling.shared.EmployeeId("e-1"),
         )
 
         val headers = internalHeaders()

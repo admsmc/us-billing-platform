@@ -379,7 +379,7 @@ class PayRunReconciliationController(
         val failed: Int,
     )
 
-    private fun computeStatusFromCounts(counts: com.example.uspayroll.orchestrator.payrun.model.PayRunStatusCounts): PayRunStatus = when {
+    private fun computeStatusFromCounts(counts: com.example.usbilling.orchestrator.payrun.model.PayRunStatusCounts): PayRunStatus = when {
         counts.total == 0 -> PayRunStatus.FAILED
         counts.failed == 0 && counts.succeeded == counts.total -> PayRunStatus.FINALIZED
         counts.succeeded > 0 && counts.failed > 0 -> PayRunStatus.PARTIALLY_FINALIZED

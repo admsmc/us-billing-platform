@@ -13,7 +13,7 @@ import java.time.LocalDate
  *
  * This forms the adapter layer between the tax-service's catalog/persistence
  * and the payroll-domain tax engine. The catalog is responsible for loading all
- * applicable [com.example.uspayroll.payroll.model.TaxRule]s given a [TaxQuery];
+ * applicable [com.example.usbilling.payroll.model.TaxRule]s given a [TaxQuery];
  * here we simply partition them into the existing [TaxContext] buckets.
  */
 class CatalogBackedTaxContextProvider(

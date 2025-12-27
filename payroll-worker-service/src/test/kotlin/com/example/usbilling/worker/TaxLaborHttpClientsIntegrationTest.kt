@@ -139,10 +139,10 @@ class TaxLaborHttpClientsIntegrationTest {
     }
 
     @Autowired
-    lateinit var taxClient: com.example.uspayroll.worker.client.TaxClient
+    lateinit var taxClient: com.example.usbilling.worker.client.TaxClient
 
     @Autowired
-    lateinit var laborClient: com.example.uspayroll.worker.client.LaborStandardsClient
+    lateinit var laborClient: com.example.usbilling.worker.client.LaborStandardsClient
 
     @AfterAll
     fun tearDown() {

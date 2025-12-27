@@ -298,7 +298,7 @@ class GarnishmentsCalculatorTest {
             priorityClass = 0,
             sequenceWithinClass = 0,
             formula = GarnishmentFormula.PercentOfDisposable(Percent(1.0)), // wants all disposable
-            protectedEarningsRule = com.example.uspayroll.payroll.model.garnishment.ProtectedEarningsRule.FixedFloor(Money(3_000_00L)),
+            protectedEarningsRule = com.example.usbilling.payroll.model.garnishment.ProtectedEarningsRule.FixedFloor(Money(3_000_00L)),
         )
 
         val garnContext = GarnishmentContext(orders = listOf(order))
@@ -341,7 +341,7 @@ class GarnishmentsCalculatorTest {
             priorityClass = 0,
             sequenceWithinClass = 0,
             formula = GarnishmentFormula.PercentOfDisposable(Percent(1.0)),
-            protectedEarningsRule = com.example.uspayroll.payroll.model.garnishment.ProtectedEarningsRule.MultipleOfMinWage(
+            protectedEarningsRule = com.example.usbilling.payroll.model.garnishment.ProtectedEarningsRule.MultipleOfMinWage(
                 hourlyRate = Money(10_00L), // $10/hour
                 hours = 40.0,
                 multiplier = 1.0,
@@ -388,7 +388,7 @@ class GarnishmentsCalculatorTest {
             sequenceWithinClass = 0,
             // Wants 80% of disposable to ensure the cap binds before the floor.
             formula = GarnishmentFormula.PercentOfDisposable(Percent(0.80)),
-            protectedEarningsRule = com.example.uspayroll.payroll.model.garnishment.ProtectedEarningsRule.FixedFloor(
+            protectedEarningsRule = com.example.usbilling.payroll.model.garnishment.ProtectedEarningsRule.FixedFloor(
                 Money(6_000_00L),
             ),
         )
@@ -406,8 +406,8 @@ class GarnishmentsCalculatorTest {
 
         // MI-style support cap: 60% CCPA (no arrears, no other dependents) overlaid
         // with a 50% state aggregate cap.
-        val supportCapContext = com.example.uspayroll.payroll.model.garnishment.SupportCapContext(
-            params = com.example.uspayroll.payroll.model.garnishment.SupportCapParams(
+        val supportCapContext = com.example.usbilling.payroll.model.garnishment.SupportCapContext(
+            params = com.example.usbilling.payroll.model.garnishment.SupportCapParams(
                 maxRateWhenSupportingOthers = Percent(0.50),
                 maxRateWhenNotSupportingOthers = Percent(0.60),
                 arrearsBonusRate = Percent(0.05),
@@ -460,7 +460,7 @@ class GarnishmentsCalculatorTest {
             priorityClass = 0,
             sequenceWithinClass = 0,
             formula = GarnishmentFormula.PercentOfDisposable(Percent(1.0)),
-            protectedEarningsRule = com.example.uspayroll.payroll.model.garnishment.ProtectedEarningsRule.FixedFloor(Money(3_000_00L)),
+            protectedEarningsRule = com.example.usbilling.payroll.model.garnishment.ProtectedEarningsRule.FixedFloor(Money(3_000_00L)),
         )
 
         val garnContext = GarnishmentContext(orders = listOf(order))
@@ -546,7 +546,7 @@ class GarnishmentsCalculatorTest {
             formula = GarnishmentFormula.PercentOfDisposable(Percent(1.0)),
             // For this test, model Pub. 1494's exempt amount as a protected
             // earnings floor on take-home pay.
-            protectedEarningsRule = com.example.uspayroll.payroll.model.garnishment.ProtectedEarningsRule.FixedFloor(
+            protectedEarningsRule = com.example.usbilling.payroll.model.garnishment.ProtectedEarningsRule.FixedFloor(
                 IRS_2026_PUB1494_WEEKLY_SINGLE_3,
             ),
         )
@@ -593,7 +593,7 @@ class GarnishmentsCalculatorTest {
             priorityClass = 0,
             sequenceWithinClass = 0,
             formula = GarnishmentFormula.PercentOfDisposable(Percent(1.0)),
-            protectedEarningsRule = com.example.uspayroll.payroll.model.garnishment.ProtectedEarningsRule.FixedFloor(
+            protectedEarningsRule = com.example.usbilling.payroll.model.garnishment.ProtectedEarningsRule.FixedFloor(
                 IRS_2026_PUB1494_BIWEEKLY_MFJ_2,
             ),
         )
@@ -640,7 +640,7 @@ class GarnishmentsCalculatorTest {
             priorityClass = 0,
             sequenceWithinClass = 0,
             formula = GarnishmentFormula.PercentOfDisposable(Percent(1.0)),
-            protectedEarningsRule = com.example.uspayroll.payroll.model.garnishment.ProtectedEarningsRule.FixedFloor(
+            protectedEarningsRule = com.example.usbilling.payroll.model.garnishment.ProtectedEarningsRule.FixedFloor(
                 IRS_2026_PUB1494_WEEKLY_SINGLE_3,
             ),
         )
@@ -834,7 +834,7 @@ class GarnishmentsCalculatorTest {
             sequenceWithinClass = 0,
             // Take 100% of disposable above the Pub. 1494 floor.
             formula = GarnishmentFormula.PercentOfDisposable(Percent(1.0)),
-            protectedEarningsRule = com.example.uspayroll.payroll.model.garnishment.ProtectedEarningsRule.FixedFloor(
+            protectedEarningsRule = com.example.usbilling.payroll.model.garnishment.ProtectedEarningsRule.FixedFloor(
                 IRS_2026_PUB1494_WEEKLY_SINGLE_3,
             ),
         )
@@ -943,8 +943,8 @@ class GarnishmentsCalculatorTest {
         )
 
         // Configure a support cap that is below the combined requested amount.
-        val supportCapContext = com.example.uspayroll.payroll.model.garnishment.SupportCapContext(
-            params = com.example.uspayroll.payroll.model.garnishment.SupportCapParams(
+        val supportCapContext = com.example.usbilling.payroll.model.garnishment.SupportCapContext(
+            params = com.example.usbilling.payroll.model.garnishment.SupportCapParams(
                 maxRateWhenSupportingOthers = Percent(0.50),
                 maxRateWhenNotSupportingOthers = Percent(0.60),
                 arrearsBonusRate = Percent(0.05),
@@ -1179,7 +1179,7 @@ class GarnishmentsCalculatorTest {
             priorityClass = 1,
             sequenceWithinClass = 0,
             formula = GarnishmentFormula.PercentOfDisposable(Percent(1.0)),
-            protectedEarningsRule = com.example.uspayroll.payroll.model.garnishment.ProtectedEarningsRule.FixedFloor(
+            protectedEarningsRule = com.example.usbilling.payroll.model.garnishment.ProtectedEarningsRule.FixedFloor(
                 Money(1_000_00L),
             ),
         )
@@ -1248,12 +1248,12 @@ class GarnishmentsCalculatorTest {
 
         val formula = GarnishmentFormula.LevyWithBands(
             bands = listOf(
-                com.example.uspayroll.payroll.model.garnishment.LevyBand(
+                com.example.usbilling.payroll.model.garnishment.LevyBand(
                     upToCents = 50_000_00L,
                     exemptCents = 10_000_00L,
                     filingStatus = FilingStatus.SINGLE,
                 ),
-                com.example.uspayroll.payroll.model.garnishment.LevyBand(
+                com.example.usbilling.payroll.model.garnishment.LevyBand(
                     upToCents = null,
                     exemptCents = 20_000_00L,
                     filingStatus = FilingStatus.MARRIED,
@@ -1352,11 +1352,11 @@ class GarnishmentsCalculatorTest {
 
         val formula = GarnishmentFormula.LevyWithBands(
             bands = listOf(
-                com.example.uspayroll.payroll.model.garnishment.LevyBand(
+                com.example.usbilling.payroll.model.garnishment.LevyBand(
                     upToCents = 5_000_00L,
                     exemptCents = 500_00L,
                 ),
-                com.example.uspayroll.payroll.model.garnishment.LevyBand(
+                com.example.usbilling.payroll.model.garnishment.LevyBand(
                     upToCents = null,
                     exemptCents = 1_000_00L,
                 ),
@@ -1450,12 +1450,12 @@ class GarnishmentsCalculatorTest {
 
         val formula = GarnishmentFormula.LevyWithBands(
             bands = listOf(
-                com.example.uspayroll.payroll.model.garnishment.LevyBand(
+                com.example.usbilling.payroll.model.garnishment.LevyBand(
                     upToCents = null,
                     exemptCents = 40_000_00L,
                     filingStatus = FilingStatus.SINGLE,
                 ),
-                com.example.uspayroll.payroll.model.garnishment.LevyBand(
+                com.example.usbilling.payroll.model.garnishment.LevyBand(
                     upToCents = null,
                     exemptCents = 80_000_00L,
                     filingStatus = FilingStatus.MARRIED,
@@ -1546,7 +1546,7 @@ class GarnishmentsCalculatorTest {
 
         val formula = GarnishmentFormula.LevyWithBands(
             bands = listOf(
-                com.example.uspayroll.payroll.model.garnishment.LevyBand(
+                com.example.usbilling.payroll.model.garnishment.LevyBand(
                     upToCents = null,
                     exemptCents = 40_000_00L,
                     filingStatus = FilingStatus.SINGLE,

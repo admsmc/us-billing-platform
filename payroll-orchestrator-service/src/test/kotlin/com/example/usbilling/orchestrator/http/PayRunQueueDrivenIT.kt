@@ -33,7 +33,7 @@ import java.net.URI
 class PayRunQueueDrivenIT(
     private val rest: TestRestTemplate,
     private val jdbcTemplate: JdbcTemplate,
-    private val paycheckComputationService: com.example.uspayroll.orchestrator.payrun.PaycheckComputationService,
+    private val paycheckComputationService: com.example.usbilling.orchestrator.payrun.PaycheckComputationService,
 ) {
 
     @BeforeEach
@@ -183,12 +183,12 @@ class PayRunQueueDrivenIT(
         assertNotNull(paycheckId)
 
         val computation = paycheckComputationService.computePaycheckComputationForEmployee(
-            employerId = com.example.uspayroll.shared.EmployerId(employerId),
+            employerId = com.example.usbilling.shared.EmployerId(employerId),
             payRunId = "run-queue-2",
             payPeriodId = "pp-1",
-            runType = com.example.uspayroll.orchestrator.payrun.model.PayRunType.REGULAR,
+            runType = com.example.usbilling.orchestrator.payrun.model.PayRunType.REGULAR,
             paycheckId = paycheckId!!,
-            employeeId = com.example.uspayroll.shared.EmployeeId("e-1"),
+            employeeId = com.example.usbilling.shared.EmployeeId("e-1"),
         )
 
         val headers = InternalAuthTestSupport.internalAuthHeaders()

@@ -51,12 +51,12 @@ object BasisBuilder {
             grossAmount += cents
 
             when (line.category) {
-                com.example.uspayroll.payroll.model.EarningCategory.SUPPLEMENTAL,
-                com.example.uspayroll.payroll.model.EarningCategory.BONUS,
+                com.example.usbilling.payroll.model.EarningCategory.SUPPLEMENTAL,
+                com.example.usbilling.payroll.model.EarningCategory.BONUS,
                 -> supplementalAmount += cents
 
-                com.example.uspayroll.payroll.model.EarningCategory.HOLIDAY -> holidayAmount += cents
-                com.example.uspayroll.payroll.model.EarningCategory.IMPUTED -> imputedAmount += cents
+                com.example.usbilling.payroll.model.EarningCategory.HOLIDAY -> holidayAmount += cents
+                com.example.usbilling.payroll.model.EarningCategory.IMPUTED -> imputedAmount += cents
                 else -> {
                     // ignore
                 }
