@@ -238,9 +238,9 @@ val sbomProjects = listOf(
     project(":edge-service"),
     project(":billing-worker-service"),
     project(":billing-orchestrator-service"),
-    project(":hr-service"),
-    project(":tax-service"),
-    project(":labor-service"),
+    project(":customer-service"),
+    project(":rate-service"),
+    project(":regulatory-service"),
     project(":payments-service"),
     project(":reporting-service"),
 )

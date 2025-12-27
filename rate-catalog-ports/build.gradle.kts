@@ -15,7 +15,7 @@ kotlin {
 dependencies {
     implementation(project(":shared-kernel"))
     implementation(project(":payroll-domain"))
-    implementation(project(":tax-api"))
+    implementation(project(":rate-api"))
 
     testImplementation(kotlin("test"))
 }

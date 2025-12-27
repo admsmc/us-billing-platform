@@ -23,11 +23,11 @@ dependencies {
     implementation(project(":messaging-core"))
     implementation(project(":web-core"))
     implementation(project(":tenancy-core"))
-    implementation(project(":hr-api"))
-    implementation(project(":hr-client"))
+    implementation(project(":customer-api"))
+    implementation(project(":customer-client"))
     // Reuse stable wire DTOs for tax/labor service calls.
-    implementation(project(":tax-api"))
-    implementation(project(":labor-api"))
+    implementation(project(":rate-api"))
+    implementation(project(":regulatory-api"))
 
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")

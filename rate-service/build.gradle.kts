@@ -22,11 +22,11 @@ dependencies {
     implementation(project(":payroll-domain"))
     implementation(project(":web-core"))
     implementation(project(":tenancy-core"))
-    implementation(project(":tax-api"))
-    implementation(project(":tax-config"))
-    implementation(project(":tax-catalog-ports"))
-    implementation(project(":tax-impl"))
-    implementation(project(":tax-content"))
+    implementation(project(":rate-api"))
+    implementation(project(":rate-config"))
+    implementation(project(":rate-catalog-ports"))
+    implementation(project(":rate-impl"))
+    implementation(project(":rate-content"))
 
     // Spring Boot web + JDBC for tax-service HTTP API and DB access.
     implementation("org.springframework.boot:spring-boot-starter-web")

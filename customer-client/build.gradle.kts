@@ -15,7 +15,7 @@ kotlin {
 dependencies {
     implementation(project(":shared-kernel"))
     implementation(project(":payroll-domain"))
-    implementation(project(":hr-api"))
+    implementation(project(":customer-api"))
     implementation(project(":web-core"))
 
     // For @ConfigurationProperties

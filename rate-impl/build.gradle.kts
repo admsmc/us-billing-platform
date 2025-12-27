@@ -15,9 +15,9 @@ kotlin {
 dependencies {
     implementation(project(":shared-kernel"))
     implementation(project(":payroll-domain"))
-    implementation(project(":tax-api"))
-    implementation(project(":tax-config"))
-    implementation(project(":tax-catalog-ports"))
+    implementation(project(":rate-api"))
+    implementation(project(":rate-config"))
+    implementation(project(":rate-catalog-ports"))
 
     implementation("org.jooq:jooq:3.19.11")
     implementation("org.slf4j:slf4j-api:2.0.16")
