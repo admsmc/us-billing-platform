@@ -34,21 +34,23 @@ These patterns are **70-80% transferable** to utility billing:
 - [x] Update root project name: `us-billing-platform`
 - [x] Update README.md with fork status
 
-### Phase 2: Core Renames 🚧 IN PROGRESS
-- [ ] Rename all packages: `com.example.uspayroll` → `com.example.usbilling`
-- [ ] Rename identifiers in shared-kernel:
+### Phase 2: Core Renames ✅ COMPLETE (2025-12-27)
+- [x] Rename all packages: `com.example.uspayroll` → `com.example.usbilling`
+- [x] Rename identifiers in shared-kernel:
   - `EmployerId` → `UtilityId`
   - `EmployeeId` → `CustomerId`
   - `PayRunId` → `BillRunId`
   - `PaycheckId` → `BillId`
-- [ ] Rename module directories:
+- [x] Updated all imports, build files, YAML configurations
+- [x] Build compiles successfully
+- [ ] Rename module directories (deferred to Phase 2.5):
   - `payroll-orchestrator-service` → `billing-orchestrator-service`
   - `payroll-worker-service` → `billing-worker-service`
   - `hr-service` → `customer-service`
   - `tax-service` → `rate-service`
   - `labor-service` → `regulatory-service`
 
-### Phase 3: Domain Replacement ⏳ PLANNED
+### Phase 3: Domain Replacement 🚧 IN PROGRESS (2025-12-27)
 - [ ] Delete `payroll-domain` module
 - [ ] Create `billing-domain` module with:
   - Meter reading models (`MeterRead`, `UsageType`)
