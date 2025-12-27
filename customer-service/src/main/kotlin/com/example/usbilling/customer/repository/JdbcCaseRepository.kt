@@ -203,6 +203,109 @@ class JdbcCaseRepository(
         )
     }
     
+    /**
+     * Find cases assigned to a specific CSR.
+     */
+    fun findByCsrId(
+        csrId: String,
+        statuses: List<CaseStatus> = listOf(CaseStatus.OPEN, CaseStatus.IN_PROGRESS),
+        limit: Int = 100
+    ): List<CaseRecord> {
+        val statusPlaceholders = statuses.joinToString(",") { "?" }
+        return jdbcTemplate.query(
+            """
+            SELECT * FROM case_record
+            WHERE assigned_to = ?
+              AND status IN ($statusPlaceholders)
+            ORDER BY 
+                CASE priority
+                    WHEN 'CRITICAL' THEN 1
+                    WHEN 'HIGH' THEN 2
+                    WHEN 'MEDIUM' THEN 3
+                    WHEN 'LOW' THEN 4
+                END,
+                created_at ASC
+            LIMIT ?
+            """.trimIndent(),
+            { rs, _ -> mapToCase(rs) },
+            *(listOf(csrId) + statuses.map { it.name } + limit).toTypedArray(),
+        )
+    }
+    
+    /**
+     * Find cases assigned to a specific team.
+     */
+    fun findByTeamId(
+        teamId: String,
+        statuses: List<CaseStatus> = listOf(CaseStatus.OPEN, CaseStatus.IN_PROGRESS),
+        limit: Int = 100
+    ): List<CaseRecord> {
+        val statusPlaceholders = statuses.joinToString(",") { "?" }
+        return jdbcTemplate.query(
+            """
+            SELECT * FROM case_record
+            WHERE assigned_team = ?
+              AND status IN ($statusPlaceholders)
+            ORDER BY 
+                CASE priority
+                    WHEN 'CRITICAL' THEN 1
+                    WHEN 'HIGH' THEN 2
+                    WHEN 'MEDIUM' THEN 3
+                    WHEN 'LOW' THEN 4
+                END,
+                created_at ASC
+            LIMIT ?
+            """.trimIndent(),
+            { rs, _ -> mapToCase(rs) },
+            *(listOf(teamId) + statuses.map { it.name } + limit).toTypedArray(),
+        )
+    }
+    
+    /**
+     * Find cases breaching SLA thresholds for auto-escalation.
+     */
+    fun findCasesBreachingSla(
+        utilityId: UtilityId,
+        minutesThreshold: Int
+    ): List<CaseRecord> {
+        return jdbcTemplate.query(
+            """
+            SELECT * FROM case_record
+            WHERE utility_id = ?
+              AND status IN ('OPEN', 'IN_PROGRESS')
+              AND EXTRACT(EPOCH FROM (NOW() - created_at))/60 > ?
+              AND priority != 'CRITICAL'
+            ORDER BY created_at ASC
+            """.trimIndent(),
+            { rs, _ -> mapToCase(rs) },
+            utilityId.value,
+            minutesThreshold,
+        )
+    }
+    
+    /**
+     * Add case assignment record.
+     */
+    fun addAssignment(assignment: CaseAssignment) {
+        jdbcTemplate.update(
+            """
+            INSERT INTO case_assignment_history (
+                assignment_id, case_id, assigned_to_csr_id, assigned_to_team_id,
+                assigned_by, assigned_at, unassigned_at, unassigned_by, reason
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """.trimIndent(),
+            assignment.assignmentId,
+            assignment.caseId,
+            assignment.assignedToCsrId,
+            assignment.assignedToTeamId,
+            assignment.assignedBy,
+            Timestamp.from(assignment.assignedAt),
+            assignment.unassignedAt?.let { Timestamp.from(it) },
+            assignment.unassignedBy,
+            assignment.reason,
+        )
+    }
+    
     private fun mapToCase(rs: ResultSet): CaseRecord {
         val tagsArray = rs.getArray("tags")
         val tags = if (tagsArray != null) {

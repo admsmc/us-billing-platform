@@ -394,3 +394,175 @@ enum class CaseNoteType {
     STATUS_UPDATE,
     ESCALATION_REASON,
 }
+
+/**
+ * CSR (Customer Service Representative) identity.
+ */
+data class CsrIdentity(
+    val csrId: String,
+    val utilityId: UtilityId,
+    val employeeId: String,
+    val firstName: String,
+    val lastName: String,
+    val email: String,
+    val teamId: String?,
+    val role: CsrRole,
+    val isActive: Boolean,
+    val hireDate: LocalDate,
+    val terminationDate: LocalDate?,
+    val skillSet: Set<CaseCategory> = emptySet(),
+    val maxConcurrentCases: Int = 20,
+)
+
+enum class CsrRole {
+    CSR, // Standard customer service rep
+    SENIOR_CSR, // Senior CSR with elevated permissions
+    SUPERVISOR, // Team supervisor
+    MANAGER, // Department manager
+    SPECIALIST, // Domain specialist (billing, technical, etc.)
+}
+
+/**
+ * Team - organizational unit for CSRs.
+ */
+data class Team(
+    val teamId: String,
+    val utilityId: UtilityId,
+    val teamName: String,
+    val teamType: TeamType,
+    val supervisorId: String?,
+    val isActive: Boolean,
+    val specialization: Set<CaseCategory> = emptySet(),
+)
+
+enum class TeamType {
+    TIER_1, // First line support
+    TIER_2, // Escalated/complex cases
+    TIER_3, // Technical specialists
+    BILLING, // Billing specialist team
+    TECHNICAL, // Technical support
+    FIELD_SERVICES, // Field operations coordination
+    EMERGENCY, // Emergency response
+    BACK_OFFICE, // Administrative support
+}
+
+/**
+ * Case assignment - tracks CSR/team assignment with history.
+ */
+data class CaseAssignment(
+    val assignmentId: String,
+    val caseId: String,
+    val assignedToCsrId: String?,
+    val assignedToTeamId: String?,
+    val assignedBy: String,
+    val assignedAt: Instant,
+    val unassignedAt: Instant?,
+    val unassignedBy: String?,
+    val reason: String?,
+)
+
+/**
+ * SLA (Service Level Agreement) configuration for case types.
+ */
+data class SlaConfiguration(
+    val slaId: String,
+    val utilityId: UtilityId,
+    val caseType: CaseType,
+    val casePriority: CasePriority,
+    val responseTimeMinutes: Int, // Time to first response
+    val resolutionTimeMinutes: Int, // Time to resolution
+    val escalationThresholdMinutes: Int, // Auto-escalate after this time
+    val isActive: Boolean,
+)
+
+/**
+ * Customer 360 view - comprehensive customer snapshot for CSR workbench.
+ */
+data class Customer360View(
+    val customerId: CustomerId,
+    val accountSummary: AccountSummary,
+    val recentInteractions: List<CustomerInteraction>,
+    val openCases: List<CaseRecord>,
+    val recentBills: List<BillSummary>,
+    val servicePoints: List<ServicePointSummary>,
+    val paymentHistory: List<PaymentSummary>,
+    val alerts: List<CustomerAlert>,
+    val lifetimeValue: CustomerLifetimeValue,
+)
+
+data class AccountSummary(
+    val accountId: String,
+    val accountNumber: String,
+    val accountStatus: String,
+    val accountType: String,
+    val currentBalance: String, // Money as string for display
+    val daysDelinquent: Int?,
+    val serviceAddress: String,
+    val billingAddress: String,
+    val primaryContactName: String,
+    val primaryContactPhone: String?,
+    val primaryContactEmail: String?,
+    val accountOpenDate: LocalDate,
+)
+
+data class BillSummary(
+    val billId: String,
+    val billDate: LocalDate,
+    val dueDate: LocalDate,
+    val amount: String, // Money as string
+    val isPaid: Boolean,
+    val paidDate: LocalDate?,
+)
+
+data class ServicePointSummary(
+    val servicePointId: String,
+    val serviceType: String,
+    val address: String,
+    val meterSerial: String?,
+    val lastReadingDate: LocalDate?,
+    val lastReadingValue: String?,
+)
+
+data class PaymentSummary(
+    val paymentId: String,
+    val paymentDate: LocalDate,
+    val amount: String, // Money as string
+    val paymentMethod: String,
+    val status: String,
+)
+
+data class CustomerAlert(
+    val alertType: AlertType,
+    val severity: AlertSeverity,
+    val message: String,
+    val actionRequired: Boolean,
+    val createdAt: Instant,
+)
+
+enum class AlertType {
+    PAST_DUE,
+    DISCONNECTION_PENDING,
+    HIGH_USAGE,
+    PAYMENT_ARRANGEMENT_DUE,
+    CASE_SLA_BREACH,
+    METER_READ_FAILURE,
+    FRAUD_SUSPECTED,
+    VIP_CUSTOMER,
+}
+
+enum class AlertSeverity {
+    INFO,
+    WARNING,
+    ERROR,
+    CRITICAL,
+}
+
+data class CustomerLifetimeValue(
+    val totalRevenue: String, // Money as string
+    val averageMonthlyRevenue: String,
+    val customerTenureMonths: Int,
+    val paymentReliabilityScore: Double, // 0.0 to 1.0
+    val interactionCount: Int,
+    val caseCount: Int,
+    val escalationRate: Double, // Percentage
+)

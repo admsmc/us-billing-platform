@@ -111,6 +111,16 @@ class JdbcInteractionRepository(
         ).firstOrNull()
     }
     
+    /**
+     * Query interactions by customer ID with limit.
+     */
+    fun queryInteractions(
+        customerId: CustomerId,
+        limit: Int = 100
+    ): List<CustomerInteraction> {
+        return findByCustomer(customerId, limit)
+    }
+    
     private fun mapToInteraction(rs: ResultSet): CustomerInteraction {
         val tagsArray = rs.getArray("tags")
         val tags = if (tagsArray != null) {

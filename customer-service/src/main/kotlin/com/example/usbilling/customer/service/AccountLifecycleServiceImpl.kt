@@ -148,9 +148,10 @@ class AccountLifecycleServiceImpl(
         val current = accountRepository.getCurrentVersion(accountId, updates.effectiveFrom)
             ?: throw IllegalArgumentException("Account $accountId not found")
         
+        val updatedHolderName = updates.holderName
         val updated = current.copy(
-            holder = if (updates.holderName != null) {
-                current.holder.copy(holderName = updates.holderName)
+            holder = if (updatedHolderName != null) {
+                current.holder.copy(holderName = updatedHolderName)
             } else {
                 current.holder
             },
