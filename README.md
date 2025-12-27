@@ -6,7 +6,7 @@ Enterprise-focused, Kotlin-based utility billing platform with a functional-core
 
 This platform adapts the proven architecture from us-payroll-platform for utility customer information management and billing cycles.
 
-Status: **Phase 2 complete**. Ready for Phase 3 billing domain migration.
+Status: **Phase 3B complete** (Billing domain ready, services await migration). See `MIGRATION_GUIDE.md` for Phase 3C execution plan.
 
 ## Refactoring Status
 
@@ -19,21 +19,36 @@ Status: **Phase 2 complete**. Ready for Phase 3 billing domain migration.
 - ✅ Identifiers: `UtilityId`, `CustomerId`, `BillingCycleId`, `BillId`
 - ✅ Application classes: `BillingOrchestratorApplication`, `BillingWorkerApplication`
 - ✅ Service classes: `BillingComputationService` (marked deprecated, uses legacy payroll engine)
-- ⚠️ Note: `payroll-domain` temporarily preserved for Phase 3 migration
 
-**Phase 3: Domain Migration** 🚧 In Progress
-- Build out `billing-domain` with utility billing logic:
-  - Complete `BillingEngine.calculateBill()` implementation
-  - Implement tariff application (tiered, TOU, demand charges)
-  - Add regulatory fee calculators for different PUC jurisdictions
-- Migrate `billing-orchestrator-service` to use `BillingEngine` (replace PayrollEngine)
-- Migrate `billing-worker-service` to use billing domain (replace payroll computation)
-- Remove legacy modules:
-  - Delete `payroll-domain/`
-  - Delete `payroll-jackson/`, `payroll-jackson-spring/`
-  - Clean up payroll-specific packages (garnishment, withholding, etc.)
+**Phase 3A: Billing Engine Demo** ✅ Complete (Commit 2807ba0)
+- ✅ BillingEngine with calculateBill() and calculateMultiServiceBill()
+- ✅ RateApplier for flat, tiered, TOU, and demand rates
+- ✅ Demo endpoints functional (/demo-utility-bill, /demo-multi-service-bill)
+- ✅ Unit tests passing (BillingEngineTest with 5 test cases)
+- ✅ Fixed account balance calculation bug
 
-See `billing-domain/README.md` for detailed Phase 3 migration plan.
+**Phase 3B: Production-Grade Billing Features** ✅ Complete (Commit f4e68af)
+- ✅ Hourly TOU support: HourlyUsageProfile, TouPeriodSchedule, SeasonalTouSchedule
+- ✅ Enhanced RateApplier with applyTimeOfUseRateHourly() for granular 24-hour calculation
+- ✅ RegulatoryChargeRepository with multi-state data (MI, OH, IL, CA, NY)
+- ✅ UsageValidator for meter read validation and estimation
+- ✅ Supports FIXED, PER_UNIT, PERCENTAGE_OF_ENERGY, PERCENTAGE_OF_TOTAL charge types
+
+**Phase 3C: Service Migration** ⏸️ Ready for Execution (Estimated 5-7 days)
+- ⏸️ Create billing-domain type equivalents (CustomerSnapshot, RateContext, RegulatoryContext)
+- ⏸️ Migrate API modules (customer-api, rate-api, regulatory-api)
+- ⏸️ Create BillingComputationService (worker) using BillingEngine
+- ⏸️ Create BillingOrchestrationService (orchestrator) using BillingEngine
+- ⏸️ Remove payroll-domain dependencies from all 13 modules
+- ⏸️ Delete legacy modules (payroll-domain/, payroll-jackson/)
+- ⚠️ **Note**: payroll-domain still present for backward compatibility
+
+**Why Phase 3C is deferred:**
+- 100+ files depend on payroll-domain across 13 modules
+- Requires creating billing equivalents for 20+ payroll types
+- Worker/orchestrator services deeply coupled to PayrollEngine
+- Estimated 5-7 days of focused work with comprehensive testing
+- See `MIGRATION_GUIDE.md` for detailed execution plan
 
 ## Target Architecture
 
