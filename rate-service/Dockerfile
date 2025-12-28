@@ -22,6 +22,10 @@ COPY persistence-core persistence-core
 COPY web-core web-core
 COPY tenancy-core tenancy-core
 COPY rate-api rate-api
+COPY rate-config rate-config
+COPY rate-catalog-ports rate-catalog-ports
+COPY rate-impl rate-impl
+COPY rate-content rate-content
 COPY rate-service rate-service
 
 RUN --mount=type=cache,target=/home/gradle/.gradle,uid=1000,gid=1000 \
