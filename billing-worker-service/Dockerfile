@@ -17,19 +17,19 @@ COPY gradle.properties gradle.properties
 COPY gradle.lockfile gradle.lockfile
 
 COPY shared-kernel shared-kernel
-COPY payroll-domain payroll-domain
-COPY payroll-jackson payroll-jackson
-COPY payroll-jackson-spring payroll-jackson-spring
+COPY billing-domain billing-domain
+COPY billing-jackson billing-jackson
+COPY billing-jackson-spring billing-jackson-spring
 COPY messaging-core messaging-core
 COPY web-core web-core
-COPY hr-api hr-api
-COPY hr-client hr-client
-COPY tax-api tax-api
-COPY labor-api labor-api
-COPY payroll-worker-service payroll-worker-service
+COPY customer-api customer-api
+COPY customer-client customer-client
+COPY rate-api rate-api
+COPY regulatory-api regulatory-api
+COPY billing-worker-service billing-worker-service
 
 RUN --mount=type=cache,target=/home/gradle/.gradle,uid=1000,gid=1000 \
-    ./gradlew --no-daemon --max-workers=$GRADLE_MAX_WORKERS :payroll-worker-service:bootJar
+    ./gradlew --no-daemon --max-workers=$GRADLE_MAX_WORKERS :billing-worker-service:bootJar
 
 FROM eclipse-temurin:21-jre@sha256:b0f6befb3f2af49704998c4425cb6313c1da505648a8e78cee731531996f735d
 
@@ -39,11 +39,11 @@ WORKDIR /app
 RUN groupadd -g 10001 app && \
     useradd -u 10001 -g 10001 -M -s /usr/sbin/nologin app
 
-COPY --from=build --chown=10001:10001 /workspace/payroll-worker-service/build/libs/*.jar /app/app.jar
+COPY --from=build --chown=10001:10001 /workspace/billing-worker-service/build/libs/*.jar /app/app.jar
 
 ENV JAVA_TOOL_OPTIONS="-Djava.io.tmpdir=/tmp"
 
 USER 10001:10001
 
-EXPOSE 8088
+EXPOSE 8084
 ENTRYPOINT ["java","-jar","/app/app.jar"]

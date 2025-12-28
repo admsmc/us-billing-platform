@@ -1,0 +1,125 @@
+# Billing platform services overlay
+# Usage: docker compose -f docker-compose.yml -f docker-compose.billing.yml up
+
+services:
+  postgres:
+    environment:
+      # Billing platform DB passwords (override via shell env or .env file)
+      CUSTOMER_DB_PASSWORD: ${CUSTOMER_DB_PASSWORD:-customer_service}
+      RATE_DB_PASSWORD: ${RATE_DB_PASSWORD:-rate_service}
+      REGULATORY_DB_PASSWORD: ${REGULATORY_DB_PASSWORD:-regulatory_service}
+      BILLING_ORCHESTRATOR_DB_PASSWORD: ${BILLING_ORCHESTRATOR_DB_PASSWORD:-billing_orchestrator_service}
+
+  customer-service:
+    build:
+      context: .
+      dockerfile: customer-service/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8081
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/us_billing_customer
+      SPRING_DATASOURCE_USERNAME: customer_service
+      SPRING_DATASOURCE_PASSWORD: ${CUSTOMER_DB_PASSWORD:-customer_service}
+    ports:
+      - "8081:8081"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  rate-service:
+    build:
+      context: .
+      dockerfile: rate-service/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8082
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/us_billing_rate
+      SPRING_DATASOURCE_USERNAME: rate_service
+      SPRING_DATASOURCE_PASSWORD: ${RATE_DB_PASSWORD:-rate_service}
+    ports:
+      - "8082:8082"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  regulatory-service:
+    build:
+      context: .
+      dockerfile: regulatory-service/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8083
+      # Regulatory service uses in-memory data, no database needed
+    ports:
+      - "8083:8083"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  billing-worker-service:
+    build:
+      context: .
+      dockerfile: billing-worker-service/Dockerfile
+    depends_on:
+      customer-service:
+        condition: service_healthy
+      rate-service:
+        condition: service_healthy
+      regulatory-service:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8084
+      DOWNSTREAMS_CUSTOMER_BASE_URL: http://customer-service:8081
+      DOWNSTREAMS_RATE_BASE_URL: http://rate-service:8082
+      DOWNSTREAMS_REGULATORY_BASE_URL: http://regulatory-service:8083
+      DOWNSTREAMS_BILLING_ORCHESTRATOR_BASE_URL: http://billing-orchestrator-service:8085
+    ports:
+      - "8084:8084"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  billing-orchestrator-service:
+    build:
+      context: .
+      dockerfile: billing-orchestrator-service/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8085
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/us_billing_orchestrator
+      SPRING_DATASOURCE_USERNAME: billing_orchestrator_service
+      SPRING_DATASOURCE_PASSWORD: ${BILLING_ORCHESTRATOR_DB_PASSWORD:-billing_orchestrator_service}
+      
+      # Service-to-service URLs
+      DOWNSTREAMS_CUSTOMER_BASE_URL: http://customer-service:8081
+      DOWNSTREAMS_RATE_BASE_URL: http://rate-service:8082
+      DOWNSTREAMS_REGULATORY_BASE_URL: http://regulatory-service:8083
+      DOWNSTREAMS_BILLING_WORKER_BASE_URL: http://billing-worker-service:8084
+    ports:
+      - "8085:8085"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s

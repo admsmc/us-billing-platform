@@ -17,17 +17,16 @@ COPY build.gradle.kts build.gradle.kts
 COPY gradle.properties gradle.properties
 COPY gradle.lockfile gradle.lockfile
 
-# Copy project sources (include all subprojects required by :hr-service).
+# Copy project sources (include all subprojects required by :customer-service).
 COPY shared-kernel shared-kernel
-COPY payroll-domain payroll-domain
+COPY billing-domain billing-domain
 COPY persistence-core persistence-core
 COPY web-core web-core
 COPY tenancy-core tenancy-core
-COPY hr-api hr-api
-COPY hr-service hr-service
+COPY customer-service customer-service
 
 RUN --mount=type=cache,target=/home/gradle/.gradle,uid=1000,gid=1000 \
-    ./gradlew --no-daemon --max-workers=$GRADLE_MAX_WORKERS :hr-service:bootJar
+    ./gradlew --no-daemon --max-workers=$GRADLE_MAX_WORKERS :customer-service:bootJar
 
 FROM eclipse-temurin:21-jre@sha256:b0f6befb3f2af49704998c4425cb6313c1da505648a8e78cee731531996f735d
 
@@ -37,7 +36,7 @@ WORKDIR /app
 RUN groupadd -g 10001 app && \
     useradd -u 10001 -g 10001 -M -s /usr/sbin/nologin app
 
-COPY --from=build --chown=10001:10001 /workspace/hr-service/build/libs/*.jar /app/app.jar
+COPY --from=build --chown=10001:10001 /workspace/customer-service/build/libs/*.jar /app/app.jar
 
 ENV JAVA_TOOL_OPTIONS="-Djava.io.tmpdir=/tmp"
 

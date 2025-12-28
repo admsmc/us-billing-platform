@@ -17,15 +17,12 @@ COPY gradle.properties gradle.properties
 COPY gradle.lockfile gradle.lockfile
 
 COPY shared-kernel shared-kernel
-COPY payroll-domain payroll-domain
-COPY persistence-core persistence-core
+COPY billing-domain billing-domain
 COPY web-core web-core
-COPY tenancy-core tenancy-core
-COPY labor-api labor-api
-COPY labor-service labor-service
+COPY regulatory-service regulatory-service
 
 RUN --mount=type=cache,target=/home/gradle/.gradle,uid=1000,gid=1000 \
-    ./gradlew --no-daemon --max-workers=$GRADLE_MAX_WORKERS :labor-service:bootJar
+    ./gradlew --no-daemon --max-workers=$GRADLE_MAX_WORKERS :regulatory-service:bootJar
 
 FROM eclipse-temurin:21-jre@sha256:b0f6befb3f2af49704998c4425cb6313c1da505648a8e78cee731531996f735d
 
@@ -35,7 +32,7 @@ WORKDIR /app
 RUN groupadd -g 10001 app && \
     useradd -u 10001 -g 10001 -M -s /usr/sbin/nologin app
 
-COPY --from=build --chown=10001:10001 /workspace/labor-service/build/libs/*.jar /app/app.jar
+COPY --from=build --chown=10001:10001 /workspace/regulatory-service/build/libs/*.jar /app/app.jar
 
 ENV JAVA_TOOL_OPTIONS="-Djava.io.tmpdir=/tmp"
 

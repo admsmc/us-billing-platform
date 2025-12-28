@@ -40,4 +40,5 @@ include(
     "payments-service",
     "filings-service",
     "reporting-service",
+    "e2e-tests",
 )

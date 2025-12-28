@@ -42,8 +42,21 @@ When you add/upgrade/remove dependencies, refresh both verification metadata and
 
 ### Running Spring Boot services
 
-Each deployable service applies the Spring Boot Gradle plugin and is runnable via `bootRun` from the repo root:
+Each deployable service applies the Spring Boot Gradle plugin and is runnable via `bootRun` from the repo root.
 
+**Billing platform services:**
+- Customer service HTTP API:
+  - `./gradlew :customer-service:bootRun`
+- Rate service HTTP API:
+  - `./gradlew :rate-service:bootRun`
+- Regulatory service HTTP API:
+  - `./gradlew :regulatory-service:bootRun`
+- Billing worker service:
+  - `./gradlew :billing-worker-service:bootRun`
+- Billing orchestrator service:
+  - `./gradlew :billing-orchestrator-service:bootRun`
+
+**Legacy payroll services (deprecated):**
 - HR service HTTP API:
   - `./gradlew :hr-service:bootRun`
 - Tax service HTTP API:
@@ -55,7 +68,7 @@ Each deployable service applies the Spring Boot Gradle plugin and is runnable vi
 - Payroll orchestrator service:
   - `./gradlew :payroll-orchestrator-service:bootRun`
 
-Services are standard Spring Boot applications with `*ApplicationKt` main classes under `com.example.uspayroll.*`.
+Services are standard Spring Boot applications with `*ApplicationKt` main classes under `com.example.usbilling.*` (billing) or `com.example.uspayroll.*` (payroll).
 
 ### Configuration approach
 
@@ -138,9 +151,123 @@ The importer and validator operate on `TaxRuleFile` JSON documents generated fro
 - `state-income-tax-<YEAR>-rules.csv`
 - `state-income-tax-<YEAR>-brackets.csv`
 
+### Running billing platform with Docker Compose
+
+The billing platform services can be deployed locally via Docker Compose:
+
+**Start all billing services:**
+```bash
+docker compose -f docker-compose.yml -f docker-compose.billing.yml up -d
+```
+
+**Service endpoints:**
+- customer-service: http://localhost:8081
+- rate-service: http://localhost:8082
+- regulatory-service: http://localhost:8083
+- billing-worker-service: http://localhost:8084
+- billing-orchestrator-service: http://localhost:8085
+- postgres: localhost:15432
+
+**Stop and clean up:**
+```bash
+docker compose -f docker-compose.yml -f docker-compose.billing.yml down -v
+```
+
+**Seed test data:**
+```bash
+./scripts/seed-billing-test-data.sh
+```
+
+This creates sample customers, meters, billing periods, and meter reads for manual testing.
+
+### Running E2E tests
+
+End-to-end integration tests validate the complete billing workflow across all five microservices.
+
+**Run E2E test suite:**
+```bash
+./scripts/run-e2e-tests.sh
+```
+
+This script:
+1. Starts all billing services via docker-compose
+2. Waits for services to be healthy
+3. Runs the E2E test suite (`:e2e-tests` module)
+4. Tears down services (unless `--keep-running` is specified)
+
+**Keep services running after tests:**
+```bash
+./scripts/run-e2e-tests.sh --keep-running
+```
+
+**Run tests manually (services already running):**
+```bash
+./scripts/gradlew-java21.sh :e2e-tests:test --no-daemon
+```
+
+E2E tests are located in `e2e-tests/src/test/kotlin/com/example/usbilling/e2e/` and use RestAssured for HTTP interactions.
+
 ## High-level architecture
 
-The system is built around a functional payroll core surrounded by service modules and infrastructure.
+The system contains two major platforms:
+1. **Billing platform** (active development) - Utility billing for electric, gas, water, and other services
+2. **Payroll platform** (legacy, deprecated) - Employee payroll processing
+
+### Billing Platform Architecture
+
+The billing platform is built around a functional billing core with microservices for customer management, rate application, regulatory compliance, and bill lifecycle management.
+
+**Core modules:**
+- `shared-kernel`: Shared value types (`UtilityId`, `CustomerId`, `Money`, `ServiceType`, `Address`)
+- `billing-domain`: Pure calculation logic for utility billing
+  - `com.example.usbilling.billing.model.*` - domain models (`CustomerSnapshot`, `MeterReadPair`, `BillInput`, `BillResult`, `RateTariff`, `RegulatoryCharge`, `UsageCharge`, etc.)
+  - `com.example.usbilling.billing.engine.*` - calculators (`BillingEngine`, `RateApplier`, `TimeOfUseCalculator`)
+  - Framework-agnostic, side-effect-free calculation logic
+
+**Service boundaries:**
+- **customer-service (port 8081)**
+  - Owns customer, meter, billing period, and meter read data
+  - Implements `CustomerSnapshotProvider` and `BillingPeriodProvider` ports
+  - Database: `us_billing_customer` (postgres)
+  - HTTP endpoints under `/utilities/{utilityId}`
+
+- **rate-service (port 8082)**
+  - Owns rate tariffs, rate components, and time-of-use schedules
+  - Implements `RateContextProvider` to return applicable tariffs
+  - Database: `us_billing_rate` (postgres)
+  - Supports flat, tiered, time-of-use (TOU), and demand rate structures
+
+- **regulatory-service (port 8083)**
+  - Owns regulatory charges (base charges, riders, taxes, fees)
+  - Implements `RegulatoryChargeProvider`
+  - In-memory data repository (no database)
+  - Supports MI, OH, IL, CA, NY states
+
+- **billing-worker-service (port 8084)**
+  - Orchestrates bill calculation by calling customer, rate, and regulatory services
+  - Consumes HTTP APIs from other services using WebClient
+  - Stateless computation service
+
+- **billing-orchestrator-service (port 8085)**
+  - Manages bill lifecycle (DRAFT → COMPUTING → FINALIZED → ISSUED → VOIDED)
+  - Persists bills, bill lines, and audit events
+  - Database: `us_billing_orchestrator` (postgres)
+  - HTTP endpoints for bill creation, status updates, void operations
+
+**Docker Compose topology:**
+- Base: `docker-compose.yml` (postgres, pgbouncer)
+- Billing overlay: `docker-compose.billing.yml` (all 5 billing services)
+- Usage: `docker compose -f docker-compose.yml -f docker-compose.billing.yml up`
+
+**Testing approach:**
+- Unit tests: Each module tests its domain logic in isolation
+- E2E tests: `e2e-tests` module validates full workflow across all services
+- Test orchestration: `./scripts/run-e2e-tests.sh` automates service startup, testing, teardown
+- Test data seeding: `./scripts/seed-billing-test-data.sh` creates sample customers and meters
+
+### Payroll Platform Architecture (Legacy)
+
+The payroll platform is deprecated and undergoing migration to the billing domain.
 
 ### Core modules
 
