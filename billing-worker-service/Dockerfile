@@ -20,12 +20,13 @@ COPY shared-kernel shared-kernel
 COPY billing-domain billing-domain
 COPY billing-jackson billing-jackson
 COPY billing-jackson-spring billing-jackson-spring
-COPY messaging-core messaging-core
-COPY web-core web-core
 COPY customer-api customer-api
 COPY customer-client customer-client
+COPY customer-domain customer-domain
 COPY rate-api rate-api
 COPY regulatory-api regulatory-api
+COPY messaging-core messaging-core
+COPY web-core web-core
 COPY billing-worker-service billing-worker-service
 
 RUN --mount=type=cache,target=/home/gradle/.gradle,uid=1000,gid=1000 \

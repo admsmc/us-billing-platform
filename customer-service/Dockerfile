@@ -20,10 +20,11 @@ COPY gradle.lockfile gradle.lockfile
 # Copy project sources (include all subprojects required by :customer-service).
 COPY shared-kernel shared-kernel
 COPY billing-domain billing-domain
+COPY customer-domain customer-domain
+COPY customer-api customer-api
 COPY persistence-core persistence-core
 COPY web-core web-core
 COPY tenancy-core tenancy-core
-COPY customer-api customer-api
 COPY customer-service customer-service
 
 RUN --mount=type=cache,target=/home/gradle/.gradle,uid=1000,gid=1000 \

@@ -18,9 +18,16 @@ COPY gradle.lockfile gradle.lockfile
 
 COPY shared-kernel shared-kernel
 COPY billing-domain billing-domain
+COPY billing-jackson billing-jackson
+COPY billing-jackson-spring billing-jackson-spring
 COPY persistence-core persistence-core
+COPY messaging-core messaging-core
 COPY web-core web-core
 COPY tenancy-core tenancy-core
+COPY customer-api customer-api
+COPY customer-client customer-client
+COPY rate-api rate-api
+COPY regulatory-api regulatory-api
 COPY billing-orchestrator-service billing-orchestrator-service
 
 RUN --mount=type=cache,target=/home/gradle/.gradle,uid=1000,gid=1000 \
