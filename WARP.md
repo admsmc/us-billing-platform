@@ -157,7 +157,7 @@ The billing platform services can be deployed locally via Docker Compose:
 
 **Start all billing services:**
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.billing.yml up -d
+docker compose -f docker-compose.billing.yml up -d
 ```
 
 **Service endpoints:**
@@ -170,7 +170,7 @@ docker compose -f docker-compose.yml -f docker-compose.billing.yml up -d
 
 **Stop and clean up:**
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.billing.yml down -v
+docker compose -f docker-compose.billing.yml down -v
 ```
 
 **Seed test data:**
@@ -255,9 +255,8 @@ The billing platform is built around a functional billing core with microservice
   - HTTP endpoints for bill creation, status updates, void operations
 
 **Docker Compose topology:**
-- Base: `docker-compose.yml` (postgres, pgbouncer)
-- Billing overlay: `docker-compose.billing.yml` (all 5 billing services)
-- Usage: `docker compose -f docker-compose.yml -f docker-compose.billing.yml up`
+- Standalone: `docker-compose.billing.yml` (postgres + all 5 billing services)
+- Usage: `docker compose -f docker-compose.billing.yml up`
 
 **Testing approach:**
 - Unit tests: Each module tests its domain logic in isolation

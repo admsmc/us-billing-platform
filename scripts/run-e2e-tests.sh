@@ -28,14 +28,14 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$REPO_ROOT"
 
 echo "==> Starting billing platform services..."
-docker compose -f docker-compose.yml -f docker-compose.billing.yml up -d
+docker compose -f docker-compose.billing.yml up -d
 
 echo ""
 echo "==> Waiting for services to be healthy..."
 
 # Wait for postgres
 echo "Waiting for postgres..."
-timeout 60 bash -c 'until docker compose -f docker-compose.yml -f docker-compose.billing.yml ps postgres | grep -q "healthy"; do sleep 2; done'
+timeout 60 bash -c 'until docker compose -f docker-compose.billing.yml ps postgres | grep -q "healthy"; do sleep 2; done'
 
 # Wait for each billing service
 services=(
@@ -48,9 +48,9 @@ services=(
 
 for service in "${services[@]}"; do
   echo "Waiting for $service..."
-  timeout 90 bash -c "until docker compose -f docker-compose.yml -f docker-compose.billing.yml ps $service | grep -q 'healthy'; do sleep 3; done" || {
+  timeout 90 bash -c "until docker compose -f docker-compose.billing.yml ps $service | grep -q 'healthy'; do sleep 3; done" || {
     echo "ERROR: $service failed to become healthy"
-    docker compose -f docker-compose.yml -f docker-compose.billing.yml logs "$service"
+    docker compose -f docker-compose.billing.yml logs "$service"
     exit 1
   }
 done
@@ -77,13 +77,13 @@ if [ "${TEST_EXIT_CODE:-0}" -ne 0 ]; then
   for service in "${services[@]}"; do
     echo ""
     echo "==> $service logs:"
-    docker compose -f docker-compose.yml -f docker-compose.billing.yml logs --tail=50 "$service"
+    docker compose -f docker-compose.billing.yml logs --tail=50 "$service"
   done
   
   if [ "$KEEP_RUNNING" = false ]; then
     echo ""
     echo "==> Tearing down services..."
-    docker compose -f docker-compose.yml -f docker-compose.billing.yml down -v
+    docker compose -f docker-compose.billing.yml down -v
   fi
   
   exit "${TEST_EXIT_CODE}"
@@ -95,12 +95,12 @@ echo "==> E2E tests passed!"
 if [ "$KEEP_RUNNING" = false ]; then
   echo ""
   echo "==> Tearing down services..."
-  docker compose -f docker-compose.yml -f docker-compose.billing.yml down -v
+  docker compose -f docker-compose.billing.yml down -v
   echo "Services stopped and volumes removed."
 else
   echo ""
   echo "==> Services are still running (--keep-running flag)"
-  echo "To stop: docker compose -f docker-compose.yml -f docker-compose.billing.yml down -v"
+  echo "To stop: docker compose -f docker-compose.billing.yml down -v"
 fi
 
 echo ""

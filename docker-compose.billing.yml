@@ -1,14 +1,29 @@
-# Billing platform services overlay
-# Usage: docker compose -f docker-compose.yml -f docker-compose.billing.yml up
+# Billing platform services - standalone deployment
+# Usage: docker compose -f docker-compose.billing.yml up
 
 services:
   postgres:
+    image: postgres:15.14
     environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_HOST_AUTH_METHOD: md5
       # Billing platform DB passwords (override via shell env or .env file)
       CUSTOMER_DB_PASSWORD: ${CUSTOMER_DB_PASSWORD:-customer_service}
       RATE_DB_PASSWORD: ${RATE_DB_PASSWORD:-rate_service}
       REGULATORY_DB_PASSWORD: ${REGULATORY_DB_PASSWORD:-regulatory_service}
       BILLING_ORCHESTRATOR_DB_PASSWORD: ${BILLING_ORCHESTRATOR_DB_PASSWORD:-billing_orchestrator_service}
+    ports:
+      - "15432:5432"
+    command: >-
+      -c password_encryption=md5
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - ./docker/postgres/init.sh:/docker-entrypoint-initdb.d/init.sh:ro
 
   customer-service:
     build:
