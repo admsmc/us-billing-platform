@@ -47,7 +47,6 @@ BEGIN
   IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'time_service') THEN
     CREATE USER time_service WITH PASSWORD '${TIME_DB_PASSWORD}';
   END IF;
-  -- Billing platform users
   IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'customer_service') THEN
     CREATE USER customer_service WITH PASSWORD '${CUSTOMER_DB_PASSWORD}';
   END IF;
@@ -61,7 +60,7 @@ BEGIN
     CREATE USER billing_orchestrator_service WITH PASSWORD '${BILLING_ORCHESTRATOR_DB_PASSWORD}';
   END IF;
 END
-$$;
+\$\$;
 
 -- Create databases (idempotent in init context; guarded anyway for readability).
 SELECT 'CREATE DATABASE us_payroll_hr OWNER hr_service'
