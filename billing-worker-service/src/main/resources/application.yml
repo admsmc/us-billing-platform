@@ -5,6 +5,15 @@ spring:
   application:
     name: billing-worker-service
 
+# Service endpoint configuration
+services:
+  customer:
+    url: ${CUSTOMER_SERVICE_URL:http://localhost:8081}
+  rate:
+    url: ${RATE_SERVICE_URL:http://localhost:8082}
+  regulatory:
+    url: ${REGULATORY_SERVICE_URL:http://localhost:8083}
+
 management:
   endpoint:
     health:
