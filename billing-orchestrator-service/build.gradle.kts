@@ -19,6 +19,7 @@ dependencies {
     implementation(project(":billing-jackson-spring"))
     implementation(project(":shared-kernel"))
     // implementation(project(":payroll-domain")) // REMOVED Phase 3C
+    implementation(project(":billing-domain"))
     implementation(project(":billing-jackson"))
     implementation(project(":messaging-core"))
     implementation(project(":web-core"))
@@ -30,7 +31,7 @@ dependencies {
     implementation(project(":regulatory-api"))
 
     implementation("org.springframework.boot:spring-boot-starter-web")
-    implementation("org.springframework.boot:spring-boot-starter-jdbc")
+    implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("jakarta.validation:jakarta.validation-api:3.1.0")
     runtimeOnly("org.postgresql:postgresql")
