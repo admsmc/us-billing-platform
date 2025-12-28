@@ -83,7 +83,7 @@ tasks.withType<JavaCompile> {
 }
 
 application {
-    mainClass.set("com.example.usbilling.tax.TaxServiceApplicationKt")
+    mainClass.set("com.example.usbilling.rate.RateServiceApplicationKt")
 }
 // Convenience task to run the StateIncomeTaxImporter CLI via Gradle.
 tasks.register<JavaExec>("runStateIncomeTaxImporter") {
