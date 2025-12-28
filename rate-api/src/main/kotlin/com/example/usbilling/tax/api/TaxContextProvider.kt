@@ -1,19 +1,29 @@
 package com.example.usbilling.tax.api
 
-import com.example.usbilling.payroll.model.TaxContext
+import com.example.usbilling.billing.model.RateContext
 import com.example.usbilling.shared.UtilityId
 import java.time.LocalDate
 
 /**
- * Boundary interfaces exposed by the tax service.
- * The worker/orchestrator call this to obtain tax rules/statutory context.
+ * Boundary interfaces exposed by the rate service.
+ * The worker/orchestrator call this to obtain rate tariffs and schedules.
+ * 
+ * Note: Renamed from TaxContextProvider (payroll) to RateContextProvider (billing).
  */
 
-/** Provides TaxContext for a given employer and effective date. */
-interface TaxContextProvider {
+/** Provides RateContext for a given utility and effective date. */
+interface RateContextProvider {
     /**
-     * Returns a TaxContext that includes all relevant federal/state/local/employer-specific rules
-     * for the given employer as of [asOfDate].
+     * Returns a RateContext that includes all relevant rate schedules and regulatory charges
+     * for the given utility as of [asOfDate].
+     * 
+     * @param utilityId The utility company
+     * @param asOfDate Date to evaluate rate applicability
+     * @param serviceState State where service is provided (for rate jurisdiction)
      */
-    fun getTaxContext(employerId: UtilityId, asOfDate: LocalDate): TaxContext
+    fun getRateContext(utilityId: UtilityId, asOfDate: LocalDate, serviceState: String): RateContext
 }
+
+// Alias for backward compatibility
+@Deprecated("Use RateContextProvider instead", ReplaceWith("RateContextProvider"))
+typealias TaxContextProvider = RateContextProvider

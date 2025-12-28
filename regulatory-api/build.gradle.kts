@@ -15,6 +15,7 @@ kotlin {
 dependencies {
     implementation(project(":shared-kernel"))
     // implementation(project(":payroll-domain")) // REMOVED Phase 3C
+    implementation(project(":billing-domain")) // ADDED Phase 3C
 
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.17.0")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.0")
