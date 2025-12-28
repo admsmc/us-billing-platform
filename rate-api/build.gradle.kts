@@ -14,7 +14,7 @@ kotlin {
 
 dependencies {
     implementation(project(":shared-kernel"))
-    implementation(project(":payroll-domain"))
+    // implementation(project(":payroll-domain")) // REMOVED Phase 3C
 
     // Used by a few utilities in tax-service impl code and shared DTOs.
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.17.0")

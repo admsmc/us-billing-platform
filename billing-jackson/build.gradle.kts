@@ -13,7 +13,7 @@ kotlin {
 }
 
 dependencies {
-    implementation(project(":payroll-domain"))
+    // implementation(project(":payroll-domain")) // REMOVED Phase 3C
 
     // Jackson databind for Module + (de)serializers.
     implementation("com.fasterxml.jackson.core:jackson-databind:2.17.0")

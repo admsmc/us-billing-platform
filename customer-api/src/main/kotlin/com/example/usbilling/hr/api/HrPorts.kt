@@ -1,33 +1,35 @@
 package com.example.usbilling.hr.api
 
-import com.example.usbilling.payroll.model.EmployeeSnapshot
-import com.example.usbilling.payroll.model.PayPeriod
+import com.example.usbilling.billing.model.BillingPeriod
+import com.example.usbilling.billing.model.CustomerSnapshot
 import com.example.usbilling.shared.CustomerId
 import com.example.usbilling.shared.UtilityId
 import java.time.LocalDate
 
 /**
- * Boundary interfaces exposed by the HR service.
- * These interfaces are implemented in hr-service and consumed by orchestrator/worker services.
+ * Boundary interfaces exposed by the Customer service.
+ * These interfaces are implemented in customer-service and consumed by orchestrator/worker services.
+ * 
+ * Note: Originally ported from HR service (payroll domain), now adapted for billing.
  */
 
-/** Provides effective-dated employee snapshots for payroll calculations. */
-interface EmployeeSnapshotProvider {
+/** Provides effective-dated customer snapshots for billing calculations. */
+interface CustomerSnapshotProvider {
     /**
-     * Returns an employee snapshot as of the given date, suitable for a payroll period.
+     * Returns a customer snapshot as of the given date, suitable for a billing period.
      */
-    fun getEmployeeSnapshot(employerId: UtilityId, employeeId: CustomerId, asOfDate: LocalDate): EmployeeSnapshot?
+    fun getCustomerSnapshot(utilityId: UtilityId, customerId: CustomerId, asOfDate: LocalDate): CustomerSnapshot?
 }
 
-/** Provides pay periods and schedules for an employer. */
-interface PayPeriodProvider {
+/** Provides billing periods and schedules for a utility. */
+interface BillingPeriodProvider {
     /**
-     * Returns the pay period identified by [payPeriodId] for [employerId], or null if not found.
+     * Returns the billing period identified by [billingPeriodId] for [utilityId], or null if not found.
      */
-    fun getPayPeriod(employerId: UtilityId, payPeriodId: String): PayPeriod?
+    fun getBillingPeriod(utilityId: UtilityId, billingPeriodId: String): BillingPeriod?
 
     /**
-     * Returns the active pay period for a given check date, if any.
+     * Returns the active billing period for a given bill date, if any.
      */
-    fun findPayPeriodByCheckDate(employerId: UtilityId, checkDate: LocalDate): PayPeriod?
+    fun findBillingPeriodByBillDate(utilityId: UtilityId, billDate: LocalDate): BillingPeriod?
 }

@@ -10,7 +10,7 @@ rootProject.name = "us-billing-platform"
 
 include(
     "shared-kernel",
-    "payroll-domain",
+    // "payroll-domain", // REMOVED - Phase 3C migration complete
     "billing-domain",
     "billing-jackson",
     "billing-jackson-spring",

@@ -19,7 +19,7 @@ kotlin {
 
 dependencies {
     implementation(project(":shared-kernel"))
-    implementation(project(":payroll-domain"))
+    // implementation(project(":payroll-domain")) // REMOVED Phase 3C
     implementation(project(":regulatory-api"))
     implementation(project(":web-core"))
     implementation(project(":tenancy-core"))

@@ -18,7 +18,7 @@ kotlin {
 dependencies {
     implementation(project(":billing-jackson-spring"))
     implementation(project(":shared-kernel"))
-    implementation(project(":payroll-domain"))
+    // implementation(project(":payroll-domain")) // REMOVED Phase 3C
     implementation(project(":billing-domain")) // New billing domain
     implementation(project(":billing-jackson"))
     implementation(project(":customer-api"))

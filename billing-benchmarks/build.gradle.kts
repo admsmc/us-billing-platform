@@ -13,7 +13,7 @@ kotlin {
 }
 
 dependencies {
-    implementation(project(":payroll-domain"))
+    // implementation(project(":payroll-domain")) // REMOVED Phase 3C
     implementation(project(":shared-kernel"))
 }
 
