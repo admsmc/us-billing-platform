@@ -18,6 +18,7 @@ COPY gradle.lockfile gradle.lockfile
 
 COPY shared-kernel shared-kernel
 COPY billing-domain billing-domain
+COPY persistence-core persistence-core
 COPY web-core web-core
 COPY tenancy-core tenancy-core
 COPY regulatory-api regulatory-api
