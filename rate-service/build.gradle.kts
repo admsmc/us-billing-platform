@@ -20,6 +20,7 @@ kotlin {
 dependencies {
     implementation(project(":shared-kernel"))
     // implementation(project(":payroll-domain")) // REMOVED Phase 3C
+    implementation(project(":billing-domain"))
     implementation(project(":web-core"))
     implementation(project(":tenancy-core"))
     implementation(project(":rate-api"))
@@ -28,9 +29,9 @@ dependencies {
     implementation(project(":rate-impl"))
     implementation(project(":rate-content"))
 
-    // Spring Boot web + JDBC for tax-service HTTP API and DB access.
+    // Spring Boot web + JDBC for rate-service HTTP API and DB access.
     implementation("org.springframework.boot:spring-boot-starter-web")
-    implementation("org.springframework.boot:spring-boot-starter-jdbc")
+    implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("io.micrometer:micrometer-registry-prometheus")
     implementation("org.springframework.boot:spring-boot-starter-validation")
