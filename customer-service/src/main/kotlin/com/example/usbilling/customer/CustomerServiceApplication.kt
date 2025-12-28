@@ -1,4 +1,4 @@
-package com.example.usbilling.hr
+package com.example.usbilling.customer
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication

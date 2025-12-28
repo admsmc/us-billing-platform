@@ -1,4 +1,4 @@
-package com.example.usbilling.tax
+package com.example.usbilling.rate
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication

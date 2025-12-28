@@ -71,7 +71,7 @@ tasks.withType<JavaCompile> {
 }
 
 application {
-    mainClass.set("com.example.usbilling.labor.RegulatoryServiceApplicationKt")
+    mainClass.set("com.example.usbilling.regulatory.RegulatoryServiceApplicationKt")
 }
 
 // Convenience task to run the LaborStandardsImporter CLI via Gradle.

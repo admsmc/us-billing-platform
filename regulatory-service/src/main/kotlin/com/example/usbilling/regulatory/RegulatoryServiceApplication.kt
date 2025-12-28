@@ -1,4 +1,4 @@
-package com.example.usbilling.labor
+package com.example.usbilling.regulatory
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
