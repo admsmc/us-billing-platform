@@ -23,6 +23,7 @@ COPY billing-domain billing-domain
 COPY persistence-core persistence-core
 COPY web-core web-core
 COPY tenancy-core tenancy-core
+COPY customer-api customer-api
 COPY customer-service customer-service
 
 RUN --mount=type=cache,target=/home/gradle/.gradle,uid=1000,gid=1000 \

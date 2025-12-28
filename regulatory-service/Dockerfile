@@ -19,6 +19,8 @@ COPY gradle.lockfile gradle.lockfile
 COPY shared-kernel shared-kernel
 COPY billing-domain billing-domain
 COPY web-core web-core
+COPY tenancy-core tenancy-core
+COPY regulatory-api regulatory-api
 COPY regulatory-service regulatory-service
 
 RUN --mount=type=cache,target=/home/gradle/.gradle,uid=1000,gid=1000 \
