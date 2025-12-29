@@ -12,18 +12,19 @@ import java.util.UUID
 @Component
 @ConditionalOnProperty(name = ["notification.email.provider"], havingValue = "logging", matchIfMissing = true)
 class LoggingEmailProvider : EmailProvider {
-    
+
     private val logger = LoggerFactory.getLogger(javaClass)
-    
+
     override fun sendEmail(
         to: String,
         subject: String,
         htmlContent: String,
-        textContent: String?
+        textContent: String?,
     ): EmailSendResult {
         val messageId = UUID.randomUUID().toString()
-        
-        logger.info("""
+
+        logger.info(
+            """
             |========== EMAIL NOTIFICATION (DEV MODE) ==========
             |Message ID: $messageId
             |To: $to
@@ -35,11 +36,12 @@ class LoggingEmailProvider : EmailProvider {
             |Text Content:
             |${textContent ?: "(none)"}
             |==================================================
-        """.trimMargin())
-        
+            """.trimMargin(),
+        )
+
         return EmailSendResult(
             success = true,
-            messageId = messageId
+            messageId = messageId,
         )
     }
 }

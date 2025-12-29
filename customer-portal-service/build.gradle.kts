@@ -49,6 +49,9 @@ dependencies {
     // Rate limiting
     implementation("com.bucket4j:bucket4j-core:8.10.1")
 
+    // OpenAPI documentation
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
+
     testImplementation(kotlin("test"))
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin")

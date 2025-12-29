@@ -15,7 +15,7 @@ import java.time.LocalDate
 @RestController
 @RequestMapping("/utilities/{utilityId}")
 class RegulatoryController(
-    private val regulatoryContextService: RegulatoryContextService
+    private val regulatoryContextService: RegulatoryContextService,
 ) {
 
     /**
@@ -25,16 +25,16 @@ class RegulatoryController(
     fun getRegulatoryContext(
         @PathVariable utilityId: String,
         @RequestParam jurisdiction: String,
-        @RequestParam(required = false) asOfDate: String?
+        @RequestParam(required = false) asOfDate: String?,
     ): ResponseEntity<RegulatoryContext> {
         val date = asOfDate?.let { LocalDate.parse(it) } ?: LocalDate.now()
-        
+
         val context = regulatoryContextService.getRegulatoryContext(
             UtilityId(utilityId),
             date,
-            jurisdiction
+            jurisdiction,
         )
-        
+
         return ResponseEntity.ok(context)
     }
 
@@ -46,24 +46,24 @@ class RegulatoryController(
     fun getRegulatoryCharges(
         @PathVariable utilityId: String,
         @RequestParam state: String,
-        @RequestParam(required = false) asOfDate: String?
+        @RequestParam(required = false) asOfDate: String?,
     ): ResponseEntity<RegulatoryChargesResponse> {
         val date = asOfDate?.let { LocalDate.parse(it) } ?: LocalDate.now()
-        
+
         val context = regulatoryContextService.getRegulatoryContext(
             UtilityId(utilityId),
             date,
-            state
+            state,
         )
-        
+
         return ResponseEntity.ok(
             RegulatoryChargesResponse(
                 state = state,
-                charges = context.regulatoryCharges
-            )
+                charges = context.regulatoryCharges,
+            ),
         )
     }
-    
+
     /**
      * Get regulatory charges for a specific service type.
      */
@@ -72,18 +72,18 @@ class RegulatoryController(
         @PathVariable utilityId: String,
         @RequestParam jurisdiction: String,
         @RequestParam serviceType: String,
-        @RequestParam(required = false) asOfDate: String?
+        @RequestParam(required = false) asOfDate: String?,
     ): ResponseEntity<List<RegulatoryCharge>> {
         val date = asOfDate?.let { LocalDate.parse(it) } ?: LocalDate.now()
         val service = parseServiceType(serviceType)
-        
+
         val charges = regulatoryContextService.getChargesForService(
             UtilityId(utilityId),
             service,
             jurisdiction,
-            date
+            date,
         )
-        
+
         return ResponseEntity.ok(charges)
     }
 
@@ -95,16 +95,16 @@ class RegulatoryController(
         @PathVariable utilityId: String,
         @PathVariable chargeCode: String,
         @RequestParam jurisdiction: String,
-        @RequestParam(required = false) asOfDate: String?
+        @RequestParam(required = false) asOfDate: String?,
     ): ResponseEntity<RegulatoryCharge> {
         val date = asOfDate?.let { LocalDate.parse(it) } ?: LocalDate.now()
-        
+
         val charge = regulatoryContextService.getChargeByCode(
             chargeCode,
             jurisdiction,
-            date
+            date,
         )
-        
+
         return if (charge != null) {
             ResponseEntity.ok(charge)
         } else {
@@ -123,18 +123,16 @@ class RegulatoryController(
             StateInfo("OH", "Ohio", 4),
             StateInfo("IL", "Illinois", 4),
             StateInfo("CA", "California", 4),
-            StateInfo("NY", "New York", 3)
+            StateInfo("NY", "New York", 3),
         )
-        
+
         return ResponseEntity.ok(states)
     }
 
-    private fun parseServiceType(value: String): ServiceType {
-        return try {
-            ServiceType.valueOf(value.uppercase())
-        } catch (e: IllegalArgumentException) {
-            ServiceType.ELECTRIC // Default fallback
-        }
+    private fun parseServiceType(value: String): ServiceType = try {
+        ServiceType.valueOf(value.uppercase())
+    } catch (e: IllegalArgumentException) {
+        ServiceType.ELECTRIC // Default fallback
     }
 }
 
@@ -144,7 +142,7 @@ class RegulatoryController(
 data class StateInfo(
     val code: String,
     val name: String,
-    val chargeCount: Int
+    val chargeCount: Int,
 )
 
 /**
@@ -152,5 +150,5 @@ data class StateInfo(
  */
 data class RegulatoryChargesResponse(
     val state: String,
-    val charges: List<RegulatoryCharge>
+    val charges: List<RegulatoryCharge>,
 )

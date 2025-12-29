@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration
 
 /**
  * Configuration for regulatory service.
- * 
+ *
  * Provides the InMemoryRegulatoryChargeRepository as a Spring bean.
  * In production, this could be replaced with a database-backed implementation.
  */
@@ -15,7 +15,5 @@ import org.springframework.context.annotation.Configuration
 class RegulatoryConfiguration {
 
     @Bean
-    fun regulatoryChargeRepository(): RegulatoryChargeRepository {
-        return InMemoryRegulatoryChargeRepository()
-    }
+    fun regulatoryChargeRepository(): RegulatoryChargeRepository = InMemoryRegulatoryChargeRepository()
 }

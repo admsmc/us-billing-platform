@@ -12,7 +12,7 @@ import org.springframework.boot.runApplication
  * - Effective-dated charge applicability
  *
  * Implements RegulatoryContextProvider port from regulatory-api.
- * 
+ *
  * Note: Originally labor-service (payroll domain with FLSA/minimum wage rules).
  * Now adapted for billing with regulatory charges (PCA, DSM, ECA, etc.).
  */

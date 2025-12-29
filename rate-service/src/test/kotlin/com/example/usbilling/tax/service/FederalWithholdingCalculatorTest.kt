@@ -2,8 +2,8 @@ package com.example.usbilling.tax.service
 
 import com.example.usbilling.payroll.model.*
 import com.example.usbilling.shared.CustomerId
-import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
+import com.example.usbilling.shared.UtilityId
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertTrue

@@ -19,7 +19,7 @@ class RateController(
     private val rateContextService: RateContextService,
     private val rateTariffRepository: RateTariffRepository,
     private val rateComponentRepository: RateComponentRepository,
-    private val tariffRegulatoryChargeRepository: TariffRegulatoryChargeRepository
+    private val tariffRegulatoryChargeRepository: TariffRegulatoryChargeRepository,
 ) {
 
     /**
@@ -30,16 +30,16 @@ class RateController(
     fun getRateContext(
         @PathVariable utilityId: String,
         @RequestParam state: String,
-        @RequestParam(required = false) asOfDate: String?
+        @RequestParam(required = false) asOfDate: String?,
     ): ResponseEntity<RateContext> {
         val date = asOfDate?.let { LocalDate.parse(it) } ?: LocalDate.now()
-        
+
         val context = rateContextService.getRateContext(
             UtilityId(utilityId),
             date,
-            state
+            state,
         )
-        
+
         return ResponseEntity.ok(context)
     }
 
@@ -49,7 +49,7 @@ class RateController(
     @GetMapping("/tariffs")
     fun listTariffs(
         @PathVariable utilityId: String,
-        @RequestParam(required = false) asOfDate: String?
+        @RequestParam(required = false) asOfDate: String?,
     ): ResponseEntity<List<RateTariffEntity>> {
         val date = asOfDate?.let { LocalDate.parse(it) } ?: LocalDate.now()
         val tariffs = rateTariffRepository.findActiveByUtilityAndDate(utilityId, date)
@@ -62,18 +62,18 @@ class RateController(
     @GetMapping("/tariffs/{tariffId}")
     fun getTariffDetails(
         @PathVariable utilityId: String,
-        @PathVariable tariffId: String
+        @PathVariable tariffId: String,
     ): ResponseEntity<TariffDetailsResponse> {
         val tariff = rateTariffRepository.findById(tariffId).orElse(null)
             ?: return ResponseEntity.notFound().build()
-        
+
         if (tariff.utilityId != utilityId) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
         }
-        
+
         val components = rateComponentRepository.findByTariffId(tariffId)
         val regCharges = tariffRegulatoryChargeRepository.findByTariffId(tariffId)
-        
+
         return ResponseEntity.ok(TariffDetailsResponse(tariff, components, regCharges))
     }
 
@@ -83,10 +83,10 @@ class RateController(
     @PostMapping("/tariffs")
     fun createTariff(
         @PathVariable utilityId: String,
-        @RequestBody request: CreateTariffRequest
+        @RequestBody request: CreateTariffRequest,
     ): ResponseEntity<RateTariffEntity> {
         val tariffId = UUID.randomUUID().toString()
-        
+
         val tariffEntity = RateTariffEntity(
             tariffId = tariffId,
             utilityId = utilityId,
@@ -100,9 +100,9 @@ class RateController(
             active = true,
             readinessToServeCents = request.readinessToServeCents,
             createdAt = Instant.now(),
-            updatedAt = Instant.now()
+            updatedAt = Instant.now(),
         )
-        
+
         val saved = rateTariffRepository.save(tariffEntity)
         return ResponseEntity.status(HttpStatus.CREATED).body(saved)
     }
@@ -114,18 +114,18 @@ class RateController(
     fun addRateComponent(
         @PathVariable utilityId: String,
         @PathVariable tariffId: String,
-        @RequestBody request: AddRateComponentRequest
+        @RequestBody request: AddRateComponentRequest,
     ): ResponseEntity<RateComponentEntity> {
         // Verify tariff exists and belongs to utility
         val tariff = rateTariffRepository.findById(tariffId).orElse(null)
             ?: return ResponseEntity.notFound().build()
-        
+
         if (tariff.utilityId != utilityId) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
         }
-        
+
         val componentId = UUID.randomUUID().toString()
-        
+
         val componentEntity = RateComponentEntity(
             componentId = componentId,
             tariffId = tariffId,
@@ -135,9 +135,9 @@ class RateController(
             touPeriod = request.touPeriod,
             season = request.season,
             componentOrder = request.componentOrder ?: 0,
-            createdAt = Instant.now()
+            createdAt = Instant.now(),
         )
-        
+
         val saved = rateComponentRepository.save(componentEntity)
         return ResponseEntity.status(HttpStatus.CREATED).body(saved)
     }
@@ -149,18 +149,18 @@ class RateController(
     fun addRegulatoryCharge(
         @PathVariable utilityId: String,
         @PathVariable tariffId: String,
-        @RequestBody request: AddRegulatoryChargeRequest
+        @RequestBody request: AddRegulatoryChargeRequest,
     ): ResponseEntity<TariffRegulatoryChargeEntity> {
         // Verify tariff exists and belongs to utility
         val tariff = rateTariffRepository.findById(tariffId).orElse(null)
             ?: return ResponseEntity.notFound().build()
-        
+
         if (tariff.utilityId != utilityId) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
         }
-        
+
         val chargeId = UUID.randomUUID().toString()
-        
+
         val chargeEntity = TariffRegulatoryChargeEntity(
             chargeId = chargeId,
             tariffId = tariffId,
@@ -168,9 +168,9 @@ class RateController(
             chargeDescription = request.chargeDescription,
             calculationType = request.calculationType,
             rateValueCents = request.rateValueCents,
-            createdAt = Instant.now()
+            createdAt = Instant.now(),
         )
-        
+
         val saved = tariffRegulatoryChargeRepository.save(chargeEntity)
         return ResponseEntity.status(HttpStatus.CREATED).body(saved)
     }
@@ -186,7 +186,7 @@ data class CreateTariffRequest(
     val customerClass: String?,
     val effectiveDate: LocalDate,
     val expiryDate: LocalDate?,
-    val readinessToServeCents: Int
+    val readinessToServeCents: Int,
 )
 
 data class AddRateComponentRequest(
@@ -195,18 +195,18 @@ data class AddRateComponentRequest(
     val threshold: BigDecimal?,
     val touPeriod: String?,
     val season: String?,
-    val componentOrder: Int?
+    val componentOrder: Int?,
 )
 
 data class AddRegulatoryChargeRequest(
     val chargeCode: String,
     val chargeDescription: String,
     val calculationType: String,
-    val rateValueCents: Int
+    val rateValueCents: Int,
 )
 
 data class TariffDetailsResponse(
     val tariff: RateTariffEntity,
     val components: List<RateComponentEntity>,
-    val regulatoryCharges: List<TariffRegulatoryChargeEntity>
+    val regulatoryCharges: List<TariffRegulatoryChargeEntity>,
 )

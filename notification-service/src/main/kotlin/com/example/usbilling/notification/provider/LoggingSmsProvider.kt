@@ -12,24 +12,26 @@ import java.util.UUID
 @Component
 @ConditionalOnProperty(name = ["notification.sms.provider"], havingValue = "logging", matchIfMissing = true)
 class LoggingSmsProvider : SmsProvider {
-    
+
     private val logger = LoggerFactory.getLogger(javaClass)
-    
+
     override fun sendSms(to: String, message: String): SmsSendResult {
         val messageId = UUID.randomUUID().toString()
-        
-        logger.info("""
+
+        logger.info(
+            """
             |========== SMS NOTIFICATION (DEV MODE) ==========
             |Message ID: $messageId
             |To: $to
             |Message: $message
             |Length: ${message.length} chars
             |==================================================
-        """.trimMargin())
-        
+            """.trimMargin(),
+        )
+
         return SmsSendResult(
             success = true,
-            messageId = messageId
+            messageId = messageId,
         )
     }
 }

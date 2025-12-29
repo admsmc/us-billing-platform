@@ -21,7 +21,7 @@ data class RateTariffEntity(
     @Column("active") val active: Boolean = true,
     @Column("readiness_to_serve_cents") val readinessToServeCents: Int,
     @Column("created_at") val createdAt: Instant = Instant.now(),
-    @Column("updated_at") val updatedAt: Instant = Instant.now()
+    @Column("updated_at") val updatedAt: Instant = Instant.now(),
 )
 
 @Table("rate_component")
@@ -34,7 +34,7 @@ data class RateComponentEntity(
     @Column("tou_period") val touPeriod: String?,
     @Column("season") val season: String?,
     @Column("component_order") val componentOrder: Int = 0,
-    @Column("created_at") val createdAt: Instant = Instant.now()
+    @Column("created_at") val createdAt: Instant = Instant.now(),
 )
 
 @Table("tou_schedule")
@@ -47,7 +47,7 @@ data class TouScheduleEntity(
     @Column("start_hour") val startHour: Int,
     @Column("end_hour") val endHour: Int,
     @Column("day_of_week_mask") val dayOfWeekMask: Int,
-    @Column("created_at") val createdAt: Instant = Instant.now()
+    @Column("created_at") val createdAt: Instant = Instant.now(),
 )
 
 @Table("tariff_regulatory_charge")
@@ -58,5 +58,5 @@ data class TariffRegulatoryChargeEntity(
     @Column("charge_description") val chargeDescription: String,
     @Column("calculation_type") val calculationType: String,
     @Column("rate_value_cents") val rateValueCents: Int,
-    @Column("created_at") val createdAt: Instant = Instant.now()
+    @Column("created_at") val createdAt: Instant = Instant.now(),
 )

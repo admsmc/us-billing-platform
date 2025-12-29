@@ -4,8 +4,8 @@ import com.example.usbilling.labor.LaborHttpController
 import com.example.usbilling.labor.api.LaborStandardsContextProvider
 import com.example.usbilling.labor.web.CorrelationIdFilter
 import com.example.usbilling.payroll.model.LaborStandardsContext
-import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
+import com.example.usbilling.shared.UtilityId
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest

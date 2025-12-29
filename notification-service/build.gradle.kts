@@ -30,13 +30,13 @@ dependencies {
 
     // Kafka for event consumption
     implementation("org.springframework.kafka:spring-kafka")
-    
+
     // RabbitMQ for notification queuing
     implementation("org.springframework.boot:spring-boot-starter-amqp")
 
     // Email provider (SendGrid)
     implementation("com.sendgrid:sendgrid-java:4.10.2")
-    
+
     // SMS provider (Twilio)
     implementation("com.twilio.sdk:twilio:10.0.0")
 

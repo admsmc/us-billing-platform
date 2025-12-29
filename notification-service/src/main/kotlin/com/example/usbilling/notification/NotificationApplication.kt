@@ -7,7 +7,7 @@ import org.springframework.scheduling.annotation.EnableScheduling
 
 /**
  * Notification Service - Multi-channel notification delivery.
- * 
+ *
  * Provides notification capabilities for:
  * - Email notifications (SendGrid)
  * - SMS notifications (Twilio)
@@ -15,7 +15,7 @@ import org.springframework.scheduling.annotation.EnableScheduling
  * - Template rendering (Mustache)
  * - Notification queuing (RabbitMQ)
  * - Event-driven triggers (Kafka)
- * 
+ *
  * Port: 8091
  */
 @SpringBootApplication(scanBasePackages = ["com.example.usbilling.notification", "com.example.usbilling.web"])
