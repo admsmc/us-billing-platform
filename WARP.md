@@ -10,6 +10,59 @@ Generated artifacts
 - Anything under `**/build/**` (including `**/build/reports/**`) is generated output (e.g., Detekt reports).
 - These files are already ignored by `.gitignore` (`**/build/`) and should not be treated as source docs during documentation reviews/sweeps.
 
+## Database design rules
+
+### SCD2 (Slowly Changing Dimension Type 2) compliance
+
+**MANDATORY**: All database entities with mutable business state MUST use the bitemporal SCD2 append-only pattern.
+
+**Pattern requirements:**
+
+1. **Bitemporal fields** (required on all mutable entities):
+   - `system_from TIMESTAMP NOT NULL` – when this version became effective
+   - `system_to TIMESTAMP NOT NULL DEFAULT TIMESTAMP '9999-12-31 23:59:59'` – when this version was superseded
+   - `modified_by VARCHAR(255) NOT NULL` – who made this change
+
+2. **Primary key structure**:
+   - Composite PK: `(entity_id, system_from)`
+   - Example: `PRIMARY KEY (case_id, system_from)` for case_record table
+
+3. **Append-only writes**:
+   - All state changes create NEW rows; never UPDATE existing rows in place
+   - Current version: `system_to = TIMESTAMP '9999-12-31 23:59:59'`
+   - Historical versions: `system_to = timestamp when superseded`
+   - The ONLY UPDATE allowed: closing the temporal window on the previous current version (setting `system_to` to supersede)
+
+4. **Repository pattern**:
+   ```kotlin
+   fun save(entity: Entity): Entity {
+       // Close temporal window on current version
+       supersedeCurrent(entity.id, now)
+       // Insert new version
+       insertNewVersion(entity.copy(systemFrom = now, systemTo = END_OF_TIME))
+       return entity
+   }
+
+   fun findCurrent(id: EntityId): Entity? =
+       jdbc.query("""SELECT * FROM table 
+                      WHERE entity_id = ? 
+                      AND system_to = TIMESTAMP '9999-12-31 23:59:59'""", id)
+   ```
+
+5. **Exceptions** (entities that do NOT need SCD2):
+   - Append-only event/audit logs (e.g., `case_note`, `case_status_history`, `payment_plan_payment`, `communication_log`)
+   - Immutable reference data that never changes after creation
+   - Join tables with no mutable attributes
+
+**Reference documentation**: `docs/ops/hr-bitemporal-and-audit-semantics.md`
+
+**Converted entities** (examples):
+- `case_record` – case management state
+- `payment_plan` – payment plan state
+- `payment_plan_installment` – installment state
+
+When creating new database tables, evaluate whether the entity has mutable state. If yes, apply the bitemporal SCD2 pattern from the start.
+
 The project is a Kotlin/JVM Gradle multi-module build targeting Java 21.
 
 IMPORTANT: Ensure Gradle is run with a Java 21 runtime. If your system `java` is newer (and Kotlin tooling fails), use:

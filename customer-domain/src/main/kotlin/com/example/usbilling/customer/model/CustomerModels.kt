@@ -153,6 +153,21 @@ enum class ServiceType {
     WATER,
     SEWER,
     WASTEWATER,
+    STORMWATER,
+    REFUSE,
+    RECYCLING,
+    ;
+
+    fun displayName(): String = when (this) {
+        ELECTRIC -> "Electric"
+        GAS -> "Gas"
+        WATER -> "Water"
+        SEWER -> "Sewer"
+        WASTEWATER -> "Wastewater"
+        STORMWATER -> "Stormwater"
+        REFUSE -> "Refuse"
+        RECYCLING -> "Recycling"
+    }
 }
 
 enum class ConnectionStatus {

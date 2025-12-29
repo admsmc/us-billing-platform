@@ -104,9 +104,7 @@ class CaseRoutingService(
         return updated
     }
 
-    private fun determineTeam(caseRecord: CaseRecord): String {
-        return categoryTeamMap[caseRecord.caseCategory] ?: defaultTeam
-    }
+    private fun determineTeam(caseRecord: CaseRecord): String = categoryTeamMap[caseRecord.caseCategory] ?: defaultTeam
 
     /**
      * Round-robin assignment to team members.

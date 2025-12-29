@@ -151,22 +151,16 @@ class CaseService(
         return caseRepository.saveNote(note)
     }
 
-    fun getCaseById(caseId: String): CaseRecord? {
-        return caseRepository.findById(caseId)
-    }
+    fun getCaseById(caseId: String): CaseRecord? = caseRepository.findById(caseId)
 
     fun getCasesByUtilityId(
         utilityId: String,
         status: CaseStatus? = null,
         assignedTo: String? = null,
         limit: Int = 100,
-    ): List<CaseRecord> {
-        return caseRepository.findByUtilityId(utilityId, status, assignedTo, limit)
-    }
+    ): List<CaseRecord> = caseRepository.findByUtilityId(utilityId, status, assignedTo, limit)
 
-    fun getCasesByCustomerId(customerId: String, limit: Int = 50): List<CaseRecord> {
-        return caseRepository.findByCustomerId(customerId, limit)
-    }
+    fun getCasesByCustomerId(customerId: String, limit: Int = 50): List<CaseRecord> = caseRepository.findByCustomerId(customerId, limit)
 
     fun getCaseNotes(caseId: String, customerView: Boolean = false): List<CaseNote> {
         val notes = caseRepository.findNotesByCaseId(caseId)
