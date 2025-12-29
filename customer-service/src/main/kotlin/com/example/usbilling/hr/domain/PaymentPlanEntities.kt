@@ -4,7 +4,8 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 /**
- * Payment plan - allows customers to spread payments over time
+ * Payment plan - allows customers to spread payments over time.
+ * Bitemporal SCD2: All changes create new rows.
  */
 data class PaymentPlan(
     val planId: String,
@@ -25,6 +26,11 @@ data class PaymentPlan(
     val finalPaymentDate: LocalDate,
     val missedPayments: Int,
     val maxMissedPayments: Int,
+    // Bitemporal SCD2 fields
+    val systemFrom: LocalDateTime,
+    val systemTo: LocalDateTime,
+    val modifiedBy: String,
+    // Audit
     val createdAt: LocalDateTime,
     val createdBy: String,
     val cancelledAt: LocalDateTime?,
@@ -32,7 +38,8 @@ data class PaymentPlan(
 )
 
 /**
- * Payment plan installment
+ * Payment plan installment.
+ * Bitemporal SCD2: All payment updates create new rows.
  */
 data class PaymentPlanInstallment(
     val installmentId: String,
@@ -43,6 +50,10 @@ data class PaymentPlanInstallment(
     val paidAmountCents: Long,
     val status: InstallmentStatus,
     val paidAt: LocalDateTime?,
+    // Bitemporal SCD2 fields
+    val systemFrom: LocalDateTime,
+    val systemTo: LocalDateTime,
+    val modifiedBy: String,
 )
 
 /**
