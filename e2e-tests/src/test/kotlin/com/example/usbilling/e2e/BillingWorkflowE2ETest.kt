@@ -6,7 +6,7 @@ import java.time.LocalDate
 
 /**
  * End-to-end tests for the complete billing workflow.
- * 
+ *
  * Tests the integration between all five microservices:
  * - customer-service: Customer and meter management
  * - rate-service: Tariff and rate retrieval
@@ -16,7 +16,7 @@ import java.time.LocalDate
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class BillingWorkflowE2ETest : BaseE2ETest() {
-    
+
     companion object {
         private lateinit var utilityId: String
         private lateinit var customerId: String
@@ -24,7 +24,7 @@ class BillingWorkflowE2ETest : BaseE2ETest() {
         private lateinit var billingPeriodId: String
         private lateinit var billId: String
     }
-    
+
     @Test
     @Order(1)
     @DisplayName("Should create a customer in customer-service")
@@ -33,9 +33,9 @@ class BillingWorkflowE2ETest : BaseE2ETest() {
             "accountNumber" to "ACCT-12345",
             "customerName" to "Jane Smith",
             "serviceAddress" to "123 Main St | Apt 4B | Detroit | MI | 48201",
-            "customerClass" to "RESIDENTIAL"
+            "customerClass" to "RESIDENTIAL",
         )
-        
+
         val response = customerService()
             .body(requestBody)
             .`when`()
@@ -48,13 +48,13 @@ class BillingWorkflowE2ETest : BaseE2ETest() {
             .body("active", equalTo(true))
             .body("customerId", notNullValue())
             .extract()
-        
+
         customerId = response.path("customerId")
         utilityId = "UTIL-001"
-        
+
         println("Created customer: $customerId")
     }
-    
+
     @Test
     @Order(2)
     @DisplayName("Should create a meter for the customer")
@@ -62,9 +62,9 @@ class BillingWorkflowE2ETest : BaseE2ETest() {
         val requestBody = mapOf(
             "meterNumber" to "MTR-67890",
             "utilityServiceType" to "ELECTRIC",
-            "installDate" to "2024-01-01"
+            "installDate" to "2024-01-01",
         )
-        
+
         val response = customerService()
             .body(requestBody)
             .`when`()
@@ -76,12 +76,12 @@ class BillingWorkflowE2ETest : BaseE2ETest() {
             .body("active", equalTo(true))
             .body("meterId", notNullValue())
             .extract()
-        
+
         meterId = response.path("meterId")
-        
+
         println("Created meter: $meterId")
     }
-    
+
     @Test
     @Order(3)
     @DisplayName("Should create a billing period")
@@ -89,9 +89,9 @@ class BillingWorkflowE2ETest : BaseE2ETest() {
         val requestBody = mapOf(
             "startDate" to "2025-01-01",
             "endDate" to "2025-01-31",
-            "status" to "OPEN"
+            "status" to "OPEN",
         )
-        
+
         val response = customerService()
             .body(requestBody)
             .`when`()
@@ -104,12 +104,12 @@ class BillingWorkflowE2ETest : BaseE2ETest() {
             .body("status", equalTo("OPEN"))
             .body("periodId", notNullValue())
             .extract()
-        
+
         billingPeriodId = response.path("periodId")
-        
+
         println("Created billing period: $billingPeriodId")
     }
-    
+
     @Test
     @Order(4)
     @DisplayName("Should record meter reads for the billing period")
@@ -119,9 +119,9 @@ class BillingWorkflowE2ETest : BaseE2ETest() {
             "meterId" to meterId,
             "readDate" to "2025-01-01",
             "readingValue" to 10000.0,
-            "readingType" to "OPENING"
+            "readingType" to "OPENING",
         )
-        
+
         customerService()
             .body(openingReadBody)
             .`when`()
@@ -130,15 +130,15 @@ class BillingWorkflowE2ETest : BaseE2ETest() {
             .statusCode(201)
             .body("readingValue", equalTo(10000.0f))
             .body("readingType", equalTo("OPENING"))
-        
+
         // Closing read
         val closingReadBody = mapOf(
             "meterId" to meterId,
             "readDate" to "2025-01-31",
             "readingValue" to 10500.0,
-            "readingType" to "CLOSING"
+            "readingType" to "CLOSING",
         )
-        
+
         customerService()
             .body(closingReadBody)
             .`when`()
@@ -147,10 +147,10 @@ class BillingWorkflowE2ETest : BaseE2ETest() {
             .statusCode(201)
             .body("readingValue", equalTo(10500.0f))
             .body("readingType", equalTo("CLOSING"))
-        
+
         println("Recorded meter reads: 10000 kWh -> 10500 kWh (500 kWh usage)")
     }
-    
+
     @Test
     @Order(5)
     @DisplayName("Should retrieve rate context from rate-service")
@@ -165,10 +165,10 @@ class BillingWorkflowE2ETest : BaseE2ETest() {
             .statusCode(200)
             .body("utilityId", equalTo(utilityId))
             .body("applicableTariffs", notNullValue())
-        
+
         println("Retrieved rate context for MI utility")
     }
-    
+
     @Test
     @Order(6)
     @DisplayName("Should retrieve regulatory charges from regulatory-service")
@@ -183,10 +183,10 @@ class BillingWorkflowE2ETest : BaseE2ETest() {
             .body("state", equalTo("MI"))
             .body("charges", notNullValue())
             .body("charges.size()", greaterThan(0))
-        
+
         println("Retrieved regulatory charges for MI")
     }
-    
+
     @Test
     @Order(7)
     @DisplayName("Should create a draft bill in billing-orchestrator-service")
@@ -194,9 +194,9 @@ class BillingWorkflowE2ETest : BaseE2ETest() {
         val requestBody = mapOf(
             "customerId" to customerId,
             "billingPeriodId" to billingPeriodId,
-            "billDate" to LocalDate.now().toString()
+            "billDate" to LocalDate.now().toString(),
         )
-        
+
         val response = billingOrchestratorService()
             .body(requestBody)
             .`when`()
@@ -208,12 +208,12 @@ class BillingWorkflowE2ETest : BaseE2ETest() {
             .body("status", equalTo("DRAFT"))
             .body("billId", notNullValue())
             .extract()
-        
+
         billId = response.path("billId")
-        
+
         println("Created draft bill: $billId")
     }
-    
+
     @Test
     @Order(8)
     @DisplayName("Should retrieve bill with details")
@@ -229,10 +229,10 @@ class BillingWorkflowE2ETest : BaseE2ETest() {
             .body("status", equalTo("DRAFT"))
             .body("lines", notNullValue())
             .body("events", notNullValue())
-        
+
         println("Retrieved bill details for: $billId")
     }
-    
+
     @Test
     @Order(9)
     @DisplayName("Should list customer bills")
@@ -245,18 +245,18 @@ class BillingWorkflowE2ETest : BaseE2ETest() {
             .body("size()", greaterThanOrEqualTo(1))
             .body("[0].billId", equalTo(billId))
             .body("[0].customerId", equalTo(customerId))
-        
+
         println("Listed bills for customer: $customerId")
     }
-    
+
     @Test
     @Order(10)
     @DisplayName("Should void a bill")
     fun testVoidBill() {
         val requestBody = mapOf(
-            "reason" to "Test void - E2E test cleanup"
+            "reason" to "Test void - E2E test cleanup",
         )
-        
+
         billingOrchestratorService()
             .body(requestBody)
             .`when`()
@@ -265,10 +265,10 @@ class BillingWorkflowE2ETest : BaseE2ETest() {
             .statusCode(200)
             .body("billId", equalTo(billId))
             .body("status", equalTo("VOIDED"))
-        
+
         println("Voided bill: $billId")
     }
-    
+
     @Test
     @Order(11)
     @DisplayName("Should verify health endpoints for all services")
@@ -280,7 +280,7 @@ class BillingWorkflowE2ETest : BaseE2ETest() {
             .then()
             .statusCode(200)
             .body("status", equalTo("UP"))
-        
+
         // Rate service
         rateService()
             .`when`()
@@ -288,7 +288,7 @@ class BillingWorkflowE2ETest : BaseE2ETest() {
             .then()
             .statusCode(200)
             .body("status", equalTo("UP"))
-        
+
         // Regulatory service
         regulatoryService()
             .`when`()
@@ -296,14 +296,14 @@ class BillingWorkflowE2ETest : BaseE2ETest() {
             .then()
             .statusCode(200)
             .body("status", equalTo("UP"))
-        
+
         // Billing worker service
         billingWorkerService()
             .`when`()
             .get("/health")
             .then()
             .statusCode(200)
-        
+
         // Billing orchestrator service
         billingOrchestratorService()
             .`when`()
@@ -311,7 +311,7 @@ class BillingWorkflowE2ETest : BaseE2ETest() {
             .then()
             .statusCode(200)
             .body("status", equalTo("UP"))
-        
+
         println("All services health checks passed")
     }
 }

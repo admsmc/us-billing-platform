@@ -21,7 +21,7 @@ data class RegulatorySurcharge(
     val fixedAmount: Money? = null,
     val ratePerUnit: Money? = null,
     val percentageRate: Double? = null,
-    val appliesTo: Set<ServiceType> = emptySet()
+    val appliesTo: Set<ServiceType> = emptySet(),
 ) {
     init {
         // Validate that appropriate field is set for calculation type
@@ -33,18 +33,17 @@ data class RegulatorySurcharge(
                 require(ratePerUnit != null) { "ratePerUnit must be set for PER_UNIT calculation type" }
             }
             RegulatorySurchargeCalculation.PERCENTAGE_OF_ENERGY,
-            RegulatorySurchargeCalculation.PERCENTAGE_OF_TOTAL -> {
+            RegulatorySurchargeCalculation.PERCENTAGE_OF_TOTAL,
+            -> {
                 require(percentageRate != null) { "percentageRate must be set for percentage calculation types" }
             }
         }
     }
-    
+
     /**
      * Check if this surcharge applies to a given service type.
      */
-    fun appliesTo(serviceType: ServiceType): Boolean {
-        return appliesTo.isEmpty() || appliesTo.contains(serviceType)
-    }
+    fun appliesTo(serviceType: ServiceType): Boolean = appliesTo.isEmpty() || appliesTo.contains(serviceType)
 }
 
 /**
@@ -53,13 +52,13 @@ data class RegulatorySurcharge(
 enum class RegulatorySurchargeCalculation {
     /** Fixed dollar amount per bill */
     FIXED,
-    
+
     /** Charge per unit of consumption ($/kWh, $/CCF, etc.) */
     PER_UNIT,
-    
+
     /** Percentage of energy/usage charges only */
     PERCENTAGE_OF_ENERGY,
-    
+
     /** Percentage of total bill amount */
-    PERCENTAGE_OF_TOTAL
+    PERCENTAGE_OF_TOTAL,
 }

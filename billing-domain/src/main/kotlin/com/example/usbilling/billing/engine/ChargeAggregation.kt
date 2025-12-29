@@ -8,5 +8,5 @@ import com.example.usbilling.shared.Money
 data class ChargeAggregation(
     val totalCharges: Money,
     val totalCredits: Money,
-    val amountDue: Money
+    val amountDue: Money,
 )

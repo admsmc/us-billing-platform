@@ -11,7 +11,7 @@ import java.time.LocalDate
 
 /**
  * REST API for managing service connections.
- * 
+ *
  * Provides endpoints to:
  * - Connect new services
  * - Disconnect existing services
@@ -23,9 +23,9 @@ import java.time.LocalDate
 class ServiceConnectionController(
     private val serviceConnectionManager: ServiceConnectionManager,
     private val serviceConnectionRepository: ServiceConnectionRepository,
-    private val serviceRuleRepository: ServiceRuleRepository
+    private val serviceRuleRepository: ServiceRuleRepository,
 ) {
-    
+
     /**
      * Get currently active services for an account.
      */
@@ -33,27 +33,27 @@ class ServiceConnectionController(
     fun getActiveServices(
         @PathVariable utilityId: String,
         @PathVariable accountId: String,
-        @RequestParam(required = false) asOfDate: String?
+        @RequestParam(required = false) asOfDate: String?,
     ): ResponseEntity<ActiveServicesResponse> {
         val date = asOfDate?.let { LocalDate.parse(it) } ?: LocalDate.now()
-        
+
         val connections = serviceConnectionRepository.findActiveByAccountId(
             accountId = accountId,
-            asOfDate = date
+            asOfDate = date,
         )
-        
+
         val services = connections.map { it.serviceType }.toSet()
-        
+
         return ResponseEntity.ok(
             ActiveServicesResponse(
                 accountId = accountId,
                 services = services,
                 asOfDate = date,
-                connections = connections.map { it.toDto() }
-            )
+                connections = connections.map { it.toDto() },
+            ),
         )
     }
-    
+
     /**
      * Connect a new service to an account.
      */
@@ -62,18 +62,18 @@ class ServiceConnectionController(
         @PathVariable utilityId: String,
         @PathVariable accountId: String,
         @RequestBody request: ConnectServiceApiRequest,
-        @RequestHeader("X-Requested-By", required = false) requestedBy: String?
+        @RequestHeader("X-Requested-By", required = false) requestedBy: String?,
     ): ResponseEntity<ServiceConnectionResponse> {
         // Load service rules for this utility
         val rules = serviceRuleRepository.findByUtilityId(UtilityId(utilityId))
             ?: ServiceRulePresets.standardMunicipalUtility(UtilityId(utilityId))
-        
+
         // Get current active services
         val currentServices = serviceConnectionRepository
             .findActiveByAccountId(accountId, LocalDate.now())
             .map { it.serviceType }
             .toSet()
-        
+
         // Create domain request
         val domainRequest = ConnectServiceRequest(
             utilityId = UtilityId(utilityId),
@@ -85,27 +85,27 @@ class ServiceConnectionController(
             effectiveFrom = request.effectiveFrom,
             meterId = request.meterId,
             reason = request.reason,
-            requestedBy = requestedBy ?: "API"
+            requestedBy = requestedBy ?: "API",
         )
-        
+
         // Execute connection
         val result = serviceConnectionManager.connectService(
             request = domainRequest,
             ruleSet = rules,
-            currentServices = currentServices
+            currentServices = currentServices,
         )
-        
+
         return when (result) {
             is ServiceConnectionResult.Connected -> {
                 // Persist the connection
                 serviceConnectionRepository.save(result.connection)
-                
+
                 ResponseEntity.status(HttpStatus.CREATED).body(
                     ServiceConnectionResponse(
                         success = true,
                         connection = result.connection.toDto(),
-                        message = "Service ${request.serviceType.displayName()} connected successfully"
-                    )
+                        message = "Service ${request.serviceType.displayName()} connected successfully",
+                    ),
                 )
             }
             is ServiceConnectionResult.ValidationFailed -> {
@@ -114,14 +114,14 @@ class ServiceConnectionController(
                         success = false,
                         connection = null,
                         message = "Validation failed: ${result.errorMessage()}",
-                        violations = result.violations.map { it.toDto() }
-                    )
+                        violations = result.violations.map { it.toDto() },
+                    ),
                 )
             }
             else -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
         }
     }
-    
+
     /**
      * Disconnect an existing service.
      */
@@ -131,7 +131,7 @@ class ServiceConnectionController(
         @PathVariable accountId: String,
         @PathVariable serviceType: String,
         @RequestBody request: DisconnectServiceApiRequest,
-        @RequestHeader("X-Requested-By", required = false) requestedBy: String?
+        @RequestHeader("X-Requested-By", required = false) requestedBy: String?,
     ): ResponseEntity<ServiceConnectionResponse> {
         val serviceTypeEnum = try {
             ServiceType.valueOf(serviceType.uppercase())
@@ -140,25 +140,25 @@ class ServiceConnectionController(
                 ServiceConnectionResponse(
                     success = false,
                     connection = null,
-                    message = "Invalid service type: $serviceType"
-                )
+                    message = "Invalid service type: $serviceType",
+                ),
             )
         }
-        
+
         // Load service rules
         val rules = serviceRuleRepository.findByUtilityId(UtilityId(utilityId))
             ?: ServiceRulePresets.standardMunicipalUtility(UtilityId(utilityId))
-        
+
         // Get current active services
         val activeConnections = serviceConnectionRepository
             .findActiveByAccountId(accountId, LocalDate.now())
-        
+
         val currentServices = activeConnections.map { it.serviceType }.toSet()
-        
+
         // Find the existing connection for this service
         val existingConnection = activeConnections.find { it.serviceType == serviceTypeEnum }
             ?: return ResponseEntity.notFound().build()
-        
+
         // Create domain request
         val domainRequest = DisconnectServiceRequest(
             utilityId = UtilityId(utilityId),
@@ -168,28 +168,28 @@ class ServiceConnectionController(
             disconnectionDate = request.disconnectionDate ?: LocalDate.now(),
             effectiveTo = request.effectiveTo,
             reason = request.reason,
-            requestedBy = requestedBy ?: "API"
+            requestedBy = requestedBy ?: "API",
         )
-        
+
         // Execute disconnection
         val result = serviceConnectionManager.disconnectService(
             request = domainRequest,
             ruleSet = rules,
             currentServices = currentServices,
-            existingConnection = existingConnection
+            existingConnection = existingConnection,
         )
-        
+
         return when (result) {
             is ServiceConnectionResult.Disconnected -> {
                 // Update the connection in repository
                 serviceConnectionRepository.save(result.connection)
-                
+
                 ResponseEntity.ok(
                     ServiceConnectionResponse(
                         success = true,
                         connection = result.connection.toDto(),
-                        message = "Service ${serviceTypeEnum.displayName()} disconnected successfully"
-                    )
+                        message = "Service ${serviceTypeEnum.displayName()} disconnected successfully",
+                    ),
                 )
             }
             is ServiceConnectionResult.ValidationFailed -> {
@@ -198,14 +198,14 @@ class ServiceConnectionController(
                         success = false,
                         connection = null,
                         message = "Validation failed: ${result.errorMessage()}",
-                        violations = result.violations.map { it.toDto() }
-                    )
+                        violations = result.violations.map { it.toDto() },
+                    ),
                 )
             }
             else -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
         }
     }
-    
+
     /**
      * Validate a proposed service combination without actually making changes.
      */
@@ -213,14 +213,14 @@ class ServiceConnectionController(
     fun validateServiceCombination(
         @PathVariable utilityId: String,
         @PathVariable accountId: String,
-        @RequestBody request: ValidateServicesRequest
+        @RequestBody request: ValidateServicesRequest,
     ): ResponseEntity<ValidationResponse> {
         val rules = serviceRuleRepository.findByUtilityId(UtilityId(utilityId))
             ?: ServiceRulePresets.standardMunicipalUtility(UtilityId(utilityId))
-        
+
         val validator = ServiceRuleValidator()
         val result = validator.validate(request.services, rules)
-        
+
         return ResponseEntity.ok(
             ValidationResponse(
                 valid = result is ServiceRuleValidationResult.Valid,
@@ -228,21 +228,21 @@ class ServiceConnectionController(
                 violations = when (result) {
                     is ServiceRuleValidationResult.Invalid -> result.violations.map { it.toDto() }
                     is ServiceRuleValidationResult.Valid -> emptyList()
-                }
-            )
+                },
+            ),
         )
     }
-    
+
     /**
      * Get service rules for a utility.
      */
     @GetMapping("/service-rules")
     fun getServiceRules(
-        @PathVariable utilityId: String
+        @PathVariable utilityId: String,
     ): ResponseEntity<ServiceRuleSetDto> {
         val rules = serviceRuleRepository.findByUtilityId(UtilityId(utilityId))
             ?: ServiceRulePresets.standardMunicipalUtility(UtilityId(utilityId))
-        
+
         return ResponseEntity.ok(rules.toDto())
     }
 }
@@ -256,38 +256,38 @@ data class ConnectServiceApiRequest(
     val connectionDate: LocalDate? = null,
     val effectiveFrom: LocalDate? = null,
     val meterId: String? = null,
-    val reason: String? = null
+    val reason: String? = null,
 )
 
 data class DisconnectServiceApiRequest(
     val customerId: String,
     val disconnectionDate: LocalDate? = null,
     val effectiveTo: LocalDate? = null,
-    val reason: DisconnectionReason
+    val reason: DisconnectionReason,
 )
 
 data class ValidateServicesRequest(
-    val services: Set<ServiceType>
+    val services: Set<ServiceType>,
 )
 
 data class ActiveServicesResponse(
     val accountId: String,
     val services: Set<ServiceType>,
     val asOfDate: LocalDate,
-    val connections: List<ServiceConnectionDto>
+    val connections: List<ServiceConnectionDto>,
 )
 
 data class ServiceConnectionResponse(
     val success: Boolean,
     val connection: ServiceConnectionDto? = null,
     val message: String,
-    val violations: List<ServiceRuleViolationDto> = emptyList()
+    val violations: List<ServiceRuleViolationDto> = emptyList(),
 )
 
 data class ValidationResponse(
     val valid: Boolean,
     val services: Set<ServiceType>,
-    val violations: List<ServiceRuleViolationDto>
+    val violations: List<ServiceRuleViolationDto>,
 )
 
 data class ServiceConnectionDto(
@@ -298,13 +298,13 @@ data class ServiceConnectionDto(
     val connectionDate: LocalDate,
     val disconnectionDate: LocalDate?,
     val effectiveFrom: LocalDate,
-    val effectiveTo: LocalDate
+    val effectiveTo: LocalDate,
 )
 
 data class ServiceRuleViolationDto(
     val type: ViolationType,
     val message: String,
-    val affectedServices: Set<ServiceType>
+    val affectedServices: Set<ServiceType>,
 )
 
 data class ServiceRuleSetDto(
@@ -312,13 +312,13 @@ data class ServiceRuleSetDto(
     val dependencies: List<ServiceDependencyDto>,
     val requiredServices: Set<ServiceType>,
     val minimumServices: Int,
-    val maximumServices: Int?
+    val maximumServices: Int?,
 )
 
 data class ServiceDependencyDto(
     val dependentService: ServiceType,
     val requiredService: ServiceType,
-    val reason: String
+    val reason: String,
 )
 
 // Extension functions for DTO conversion
@@ -331,7 +331,7 @@ fun ServiceConnection.toDto() = ServiceConnectionDto(
     connectionDate = connectionDate,
     disconnectionDate = disconnectionDate,
     effectiveFrom = effectiveFrom,
-    effectiveTo = effectiveTo
+    effectiveTo = effectiveTo,
 )
 
 fun ServiceConnection.inferServiceTypeFromServicePoint(): ServiceType {
@@ -343,7 +343,7 @@ fun ServiceConnection.inferServiceTypeFromServicePoint(): ServiceType {
 fun ServiceRuleViolation.toDto() = ServiceRuleViolationDto(
     type = type,
     message = message,
-    affectedServices = affectedServices
+    affectedServices = affectedServices,
 )
 
 fun ServiceRuleSet.toDto() = ServiceRuleSetDto(
@@ -351,13 +351,13 @@ fun ServiceRuleSet.toDto() = ServiceRuleSetDto(
     dependencies = dependencies.map { it.toDto() },
     requiredServices = requiredServices,
     minimumServices = minimumServices,
-    maximumServices = maximumServices
+    maximumServices = maximumServices,
 )
 
 fun ServiceDependency.toDto() = ServiceDependencyDto(
     dependentService = dependentService,
     requiredService = requiredService,
-    reason = reason
+    reason = reason,
 )
 
 // Repository interfaces (to be implemented)

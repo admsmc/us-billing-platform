@@ -41,7 +41,7 @@ data class BillInput(
     val contributions: List<VoluntaryContribution> = emptyList(),
     val serviceStartDate: LocalDate? = null,
     val serviceEndDate: LocalDate? = null,
-    val prorationConfig: ProrationConfig = ProrationConfig.default()
+    val prorationConfig: ProrationConfig = ProrationConfig.default(),
 )
 
 /**
@@ -77,7 +77,7 @@ data class MultiServiceBillInput(
     val contributions: List<VoluntaryContribution> = emptyList(),
     val serviceStartDate: LocalDate? = null,
     val serviceEndDate: LocalDate? = null,
-    val prorationConfig: ProrationConfig = ProrationConfig.default()
+    val prorationConfig: ProrationConfig = ProrationConfig.default(),
 )
 
 /**
@@ -92,7 +92,7 @@ data class ServiceMeterReads(
     val serviceType: ServiceType,
     val reads: List<MeterReadPair>,
     val serviceStartDate: LocalDate? = null,
-    val serviceEndDate: LocalDate? = null
+    val serviceEndDate: LocalDate? = null,
 )
 
 /**
@@ -109,7 +109,7 @@ data class MeterReadPair(
     val serviceType: ServiceType,
     val usageType: UsageUnit,
     val startRead: MeterRead,
-    val endRead: MeterRead
+    val endRead: MeterRead,
 ) {
     /**
      * Calculate consumption between start and end reads.
@@ -158,15 +158,13 @@ data class BillResult(
     val accountBalanceAfter: AccountBalance,
     val amountDue: Money,
     val dueDate: LocalDate,
-    val computedAt: Instant
+    val computedAt: Instant,
 ) {
     /**
      * Get charges by category.
      */
-    fun chargesByCategory(category: ChargeCategory): List<ChargeLineItem> {
-        return charges.filter { it.category == category }
-    }
-    
+    fun chargesByCategory(category: ChargeCategory): List<ChargeLineItem> = charges.filter { it.category == category }
+
     /**
      * Calculate total charges for a specific category.
      */
@@ -176,24 +174,24 @@ data class BillResult(
             .sumOf { it.amount.amount }
         return Money(total)
     }
-    
+
     /**
      * Check if this bill includes any credits.
      */
     fun hasCredits(): Boolean = totalCredits.amount > 0
-    
+
     /**
      * Check if this bill has a positive amount due.
      */
     fun hasAmountDue(): Boolean = amountDue.amount > 0
-    
+
     /**
      * Format amount for display (e.g., "$75.50").
      */
     fun formatAmount(amount: Money): String {
         val dollars = amount.amount / 100
         val cents = amount.amount % 100
-        return "$${dollars}.${cents.toString().padStart(2, '0')}"
+        return "$$dollars.${cents.toString().padStart(2, '0')}"
     }
 }
 
@@ -208,9 +206,9 @@ sealed class RateTariff {
         val readinessToServeCharge: Money,
         val ratePerUnit: Money,
         val unit: String,
-        val regulatorySurcharges: List<RegulatoryCharge> = emptyList()
+        val regulatorySurcharges: List<RegulatoryCharge> = emptyList(),
     ) : RateTariff()
-    
+
     /**
      * Tiered rate structure with progressive blocks.
      */
@@ -218,9 +216,9 @@ sealed class RateTariff {
         val readinessToServeCharge: Money,
         val tiers: List<RateTier>,
         val unit: String,
-        val regulatorySurcharges: List<RegulatoryCharge> = emptyList()
+        val regulatorySurcharges: List<RegulatoryCharge> = emptyList(),
     ) : RateTariff()
-    
+
     /**
      * Time-of-use rate with different rates for peak/off-peak periods.
      */
@@ -230,9 +228,9 @@ sealed class RateTariff {
         val offPeakRate: Money,
         val shoulderRate: Money?,
         val unit: String,
-        val regulatorySurcharges: List<RegulatoryCharge> = emptyList()
+        val regulatorySurcharges: List<RegulatoryCharge> = emptyList(),
     ) : RateTariff()
-    
+
     /**
      * Demand rate for large commercial/industrial customers.
      * Includes both energy (usage) charges and demand (capacity) charges.
@@ -242,9 +240,9 @@ sealed class RateTariff {
         val energyRatePerUnit: Money,
         val demandRatePerKw: Money,
         val unit: String,
-        val regulatorySurcharges: List<RegulatoryCharge> = emptyList()
+        val regulatorySurcharges: List<RegulatoryCharge> = emptyList(),
     ) : RateTariff()
-    
+
     /**
      * Get all regulatory surcharges for this tariff.
      */
@@ -264,7 +262,7 @@ sealed class RateTariff {
  */
 data class RateTier(
     val maxUsage: Double?,
-    val ratePerUnit: Money
+    val ratePerUnit: Money,
 )
 
 /**
@@ -279,7 +277,7 @@ data class RegulatoryCharge(
     val code: String,
     val description: String,
     val calculationType: RegulatoryChargeType,
-    val rate: Money
+    val rate: Money,
 )
 
 /**
@@ -288,15 +286,15 @@ data class RegulatoryCharge(
 enum class RegulatoryChargeType {
     /** Fixed amount per bill */
     FIXED,
-    
+
     /** Percentage of energy charges */
     PERCENTAGE_OF_ENERGY,
-    
+
     /** Per-unit charge ($/kWh, $/CCF, etc.) */
     PER_UNIT,
-    
+
     /** Percentage of total bill */
-    PERCENTAGE_OF_TOTAL
+    PERCENTAGE_OF_TOTAL,
 }
 
 /**
@@ -310,7 +308,7 @@ enum class RegulatoryChargeType {
 data class DemandReading(
     val meterId: String,
     val peakDemandKw: Double,
-    val timestamp: java.time.Instant
+    val timestamp: java.time.Instant,
 )
 
 /**
@@ -323,7 +321,7 @@ data class DemandReading(
 data class ProrationConfig(
     val prorateReadinessToServe: Boolean = true,
     val prorateFixedRegulatoryCharges: Boolean = true,
-    val prorateContributions: Boolean = false
+    val prorateContributions: Boolean = false,
 ) {
     companion object {
         /**
@@ -331,23 +329,23 @@ data class ProrationConfig(
          * but not voluntary contributions (customer opted in for full amount).
          */
         fun default() = ProrationConfig()
-        
+
         /**
          * No proration - bill full amounts for everything.
          */
         fun none() = ProrationConfig(
             prorateReadinessToServe = false,
             prorateFixedRegulatoryCharges = false,
-            prorateContributions = false
+            prorateContributions = false,
         )
-        
+
         /**
          * Full proration - prorate all fixed charges including contributions.
          */
         fun full() = ProrationConfig(
             prorateReadinessToServe = true,
             prorateFixedRegulatoryCharges = true,
-            prorateContributions = true
+            prorateContributions = true,
         )
     }
 }

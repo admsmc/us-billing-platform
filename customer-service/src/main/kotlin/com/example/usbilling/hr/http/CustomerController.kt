@@ -1,7 +1,7 @@
 package com.example.usbilling.hr.http
 
-import com.example.usbilling.billing.model.CustomerSnapshot
 import com.example.usbilling.billing.model.BillingPeriod
+import com.example.usbilling.billing.model.CustomerSnapshot
 import com.example.usbilling.billing.model.MeterRead
 import com.example.usbilling.hr.domain.BillingPeriodEntity
 import com.example.usbilling.hr.domain.CustomerEntity
@@ -32,7 +32,7 @@ class CustomerController(
     private val customerRepository: CustomerRepository,
     private val meterRepository: MeterRepository,
     private val billingPeriodRepository: BillingPeriodRepository,
-    private val meterReadRepository: MeterReadRepository
+    private val meterReadRepository: MeterReadRepository,
 ) {
 
     /**
@@ -42,16 +42,16 @@ class CustomerController(
     fun getCustomerSnapshot(
         @PathVariable utilityId: String,
         @PathVariable customerId: String,
-        @RequestParam(required = false) asOfDate: String?
+        @RequestParam(required = false) asOfDate: String?,
     ): ResponseEntity<CustomerSnapshot> {
         val date = asOfDate?.let { LocalDate.parse(it) } ?: LocalDate.now()
-        
+
         val snapshot = customerService.getCustomerSnapshot(
             UtilityId(utilityId),
             CustomerId(customerId),
-            date
+            date,
         )
-        
+
         return if (snapshot != null) {
             ResponseEntity.ok(snapshot)
         } else {
@@ -66,13 +66,13 @@ class CustomerController(
     fun getBillingPeriod(
         @PathVariable utilityId: String,
         @PathVariable customerId: String,
-        @PathVariable periodId: String
+        @PathVariable periodId: String,
     ): ResponseEntity<BillingPeriodResponse> {
         val period = customerService.getBillingPeriod(UtilityId(utilityId), periodId)
             ?: return ResponseEntity.notFound().build()
-        
+
         val meterReads = customerService.getMeterReads(periodId)
-        
+
         return ResponseEntity.ok(BillingPeriodResponse(period, meterReads))
     }
 
@@ -82,10 +82,10 @@ class CustomerController(
     @PostMapping("/customers")
     fun createCustomer(
         @PathVariable utilityId: String,
-        @RequestBody request: CreateCustomerRequest
+        @RequestBody request: CreateCustomerRequest,
     ): ResponseEntity<CustomerEntity> {
         val customerId = UUID.randomUUID().toString()
-        
+
         val customerEntity = CustomerEntity(
             customerId = customerId,
             utilityId = utilityId,
@@ -95,9 +95,9 @@ class CustomerController(
             customerClass = request.customerClass,
             active = true,
             createdAt = Instant.now(),
-            updatedAt = Instant.now()
+            updatedAt = Instant.now(),
         )
-        
+
         val saved = customerRepository.save(customerEntity)
         return ResponseEntity.status(HttpStatus.CREATED).body(saved)
     }
@@ -109,18 +109,18 @@ class CustomerController(
     fun addMeter(
         @PathVariable utilityId: String,
         @PathVariable customerId: String,
-        @RequestBody request: AddMeterRequest
+        @RequestBody request: AddMeterRequest,
     ): ResponseEntity<MeterEntity> {
         // Verify customer exists and belongs to utility
         val customer = customerRepository.findById(customerId).orElse(null)
             ?: return ResponseEntity.notFound().build()
-        
+
         if (customer.utilityId != utilityId) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
         }
-        
+
         val meterId = UUID.randomUUID().toString()
-        
+
         val meterEntity = MeterEntity(
             meterId = meterId,
             customerId = customerId,
@@ -129,9 +129,9 @@ class CustomerController(
             installDate = request.installDate ?: LocalDate.now(),
             removalDate = null,
             active = true,
-            createdAt = Instant.now()
+            createdAt = Instant.now(),
         )
-        
+
         val saved = meterRepository.save(meterEntity)
         return ResponseEntity.status(HttpStatus.CREATED).body(saved)
     }
@@ -143,18 +143,18 @@ class CustomerController(
     fun recordMeterRead(
         @PathVariable utilityId: String,
         @PathVariable customerId: String,
-        @RequestBody request: RecordMeterReadRequest
+        @RequestBody request: RecordMeterReadRequest,
     ): ResponseEntity<MeterReadEntity> {
         // Verify meter exists and belongs to customer
         val meter = meterRepository.findById(request.meterId).orElse(null)
             ?: return ResponseEntity.notFound().build()
-        
+
         if (meter.customerId != customerId) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
         }
-        
+
         val readId = UUID.randomUUID().toString()
-        
+
         val meterReadEntity = MeterReadEntity(
             readId = readId,
             meterId = request.meterId,
@@ -162,9 +162,9 @@ class CustomerController(
             readDate = request.readDate,
             readingValue = request.readingValue,
             readingType = request.readingType,
-            recordedAt = Instant.now()
+            recordedAt = Instant.now(),
         )
-        
+
         val saved = meterReadRepository.save(meterReadEntity)
         return ResponseEntity.status(HttpStatus.CREATED).body(saved)
     }
@@ -176,18 +176,18 @@ class CustomerController(
     fun createBillingPeriod(
         @PathVariable utilityId: String,
         @PathVariable customerId: String,
-        @RequestBody request: CreateBillingPeriodRequest
+        @RequestBody request: CreateBillingPeriodRequest,
     ): ResponseEntity<BillingPeriodEntity> {
         // Verify customer exists and belongs to utility
         val customer = customerRepository.findById(customerId).orElse(null)
             ?: return ResponseEntity.notFound().build()
-        
+
         if (customer.utilityId != utilityId) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
         }
-        
+
         val periodId = UUID.randomUUID().toString()
-        
+
         val periodEntity = BillingPeriodEntity(
             periodId = periodId,
             customerId = customerId,
@@ -195,9 +195,9 @@ class CustomerController(
             endDate = request.endDate,
             status = request.status ?: "OPEN",
             createdAt = Instant.now(),
-            updatedAt = Instant.now()
+            updatedAt = Instant.now(),
         )
-        
+
         val saved = billingPeriodRepository.save(periodEntity)
         return ResponseEntity.status(HttpStatus.CREATED).body(saved)
     }
@@ -217,7 +217,7 @@ class CustomerController(
     @GetMapping("/customers/{customerId}/billing-periods")
     fun listBillingPeriods(
         @PathVariable utilityId: String,
-        @PathVariable customerId: String
+        @PathVariable customerId: String,
     ): ResponseEntity<List<BillingPeriodEntity>> {
         val periods = billingPeriodRepository.findByCustomerId(customerId)
         return ResponseEntity.ok(periods)
@@ -229,7 +229,7 @@ class CustomerController(
     @GetMapping("/customers/{customerId}/meters")
     fun listMeters(
         @PathVariable utilityId: String,
-        @PathVariable customerId: String
+        @PathVariable customerId: String,
     ): ResponseEntity<List<MeterEntity>> {
         val meters = meterRepository.findByCustomerId(customerId)
         return ResponseEntity.ok(meters)
@@ -242,13 +242,13 @@ data class CreateCustomerRequest(
     val accountNumber: String,
     val customerName: String,
     val serviceAddress: String,
-    val customerClass: String?
+    val customerClass: String?,
 )
 
 data class AddMeterRequest(
     val utilityServiceType: String,
     val meterNumber: String,
-    val installDate: LocalDate?
+    val installDate: LocalDate?,
 )
 
 data class RecordMeterReadRequest(
@@ -256,16 +256,16 @@ data class RecordMeterReadRequest(
     val billingPeriodId: String?,
     val readDate: LocalDate,
     val readingValue: BigDecimal,
-    val readingType: String
+    val readingType: String,
 )
 
 data class CreateBillingPeriodRequest(
     val startDate: LocalDate,
     val endDate: LocalDate,
-    val status: String?
+    val status: String?,
 )
 
 data class BillingPeriodResponse(
     val period: BillingPeriod,
-    val meterReads: List<MeterRead>
+    val meterReads: List<MeterRead>,
 )

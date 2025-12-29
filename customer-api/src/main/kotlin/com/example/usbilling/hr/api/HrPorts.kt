@@ -9,7 +9,7 @@ import java.time.LocalDate
 /**
  * Boundary interfaces exposed by the Customer service.
  * These interfaces are implemented in customer-service and consumed by orchestrator/worker services.
- * 
+ *
  * Note: Originally ported from HR service (payroll domain), now adapted for billing.
  */
 

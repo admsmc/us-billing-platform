@@ -22,25 +22,21 @@ data class BillingPeriod(
     val endDate: LocalDate,
     val billDate: LocalDate,
     val dueDate: LocalDate,
-    val frequency: BillingFrequency
+    val frequency: BillingFrequency,
 ) {
     /**
      * Calculate the number of days in this billing period.
      */
-    fun daysInPeriod(): Int {
-        return java.time.temporal.ChronoUnit.DAYS.between(startDate, endDate).toInt() + 1
-    }
-    
+    fun daysInPeriod(): Int = java.time.temporal.ChronoUnit.DAYS.between(startDate, endDate).toInt() + 1
+
     /**
      * Check if a given date falls within this billing period.
      */
-    fun contains(date: LocalDate): Boolean {
-        return !date.isBefore(startDate) && !date.isAfter(endDate)
-    }
-    
+    fun contains(date: LocalDate): Boolean = !date.isBefore(startDate) && !date.isAfter(endDate)
+
     /**
      * Calculate proration factor for a partial period.
-     * 
+     *
      * @param effectiveStartDate Actual start date for service
      * @param effectiveEndDate Actual end date for service
      * @return Proration factor between 0.0 and 1.0
@@ -48,9 +44,9 @@ data class BillingPeriod(
     fun prorationFactor(effectiveStartDate: LocalDate, effectiveEndDate: LocalDate): Double {
         val actualStart = maxOf(startDate, effectiveStartDate)
         val actualEnd = minOf(endDate, effectiveEndDate)
-        
+
         if (actualStart.isAfter(actualEnd)) return 0.0
-        
+
         val actualDays = java.time.temporal.ChronoUnit.DAYS.between(actualStart, actualEnd).toInt() + 1
         return actualDays.toDouble() / daysInPeriod().toDouble()
     }
@@ -63,7 +59,7 @@ enum class BillingFrequency {
     MONTHLY,
     BIMONTHLY,
     QUARTERLY,
-    ANNUAL
+    ANNUAL,
 }
 
 /**
@@ -86,7 +82,7 @@ data class ChargeLineItem(
     val usageUnit: String? = null,
     val rate: Money? = null,
     val category: ChargeCategory,
-    val serviceType: ServiceType? = null
+    val serviceType: ServiceType? = null,
 )
 
 /**
@@ -95,25 +91,25 @@ data class ChargeLineItem(
 enum class ChargeCategory {
     /** Fixed monthly readiness-to-serve charge */
     READINESS_TO_SERVE,
-    
+
     /** Usage-based charges (consumption × rate) */
     USAGE_CHARGE,
-    
+
     /** Demand/capacity charges */
     DEMAND_CHARGE,
-    
+
     /** Regulatory surcharges and riders */
     REGULATORY_CHARGE,
-    
+
     /** Taxes */
     TAX,
-    
+
     /** Credits and adjustments */
     CREDIT,
-    
+
     /** Late fees and penalties */
     FEE,
-    
+
     /** Voluntary contributions and donations */
-    CONTRIBUTION
+    CONTRIBUTION,
 }

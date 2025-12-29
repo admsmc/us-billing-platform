@@ -19,7 +19,7 @@ import java.time.LocalDate
 @Component
 class CustomerServiceClient(
     private val webClientBuilder: WebClient.Builder,
-    @Value("\${services.customer.url:http://localhost:8081}") private val customerServiceUrl: String
+    @Value("\${services.customer.url:http://localhost:8081}") private val customerServiceUrl: String,
 ) {
     private val webClient: WebClient by lazy {
         webClientBuilder.baseUrl(customerServiceUrl).build()
@@ -28,36 +28,40 @@ class CustomerServiceClient(
     fun getCustomerSnapshot(
         utilityId: UtilityId,
         customerId: CustomerId,
-        asOfDate: LocalDate
-    ): CustomerSnapshot? {
-        return try {
-            webClient.get()
-                .uri("/utilities/{utilityId}/customers/{customerId}/snapshot?asOfDate={date}",
-                    utilityId.value, customerId.value, asOfDate.toString())
-                .retrieve()
-                .bodyToMono<CustomerSnapshot>()
-                .block()
-        } catch (e: Exception) {
-            // Log error and return null
-            null
-        }
+        asOfDate: LocalDate,
+    ): CustomerSnapshot? = try {
+        webClient.get()
+            .uri(
+                "/utilities/{utilityId}/customers/{customerId}/snapshot?asOfDate={date}",
+                utilityId.value,
+                customerId.value,
+                asOfDate.toString(),
+            )
+            .retrieve()
+            .bodyToMono<CustomerSnapshot>()
+            .block()
+    } catch (e: Exception) {
+        // Log error and return null
+        null
     }
 
     fun getBillingPeriod(
         utilityId: UtilityId,
         customerId: CustomerId,
-        billingPeriodId: String
-    ): BillingPeriodWithReads? {
-        return try {
-            webClient.get()
-                .uri("/utilities/{utilityId}/customers/{customerId}/billing-periods/{periodId}",
-                    utilityId.value, customerId.value, billingPeriodId)
-                .retrieve()
-                .bodyToMono<BillingPeriodWithReads>()
-                .block()
-        } catch (e: Exception) {
-            null
-        }
+        billingPeriodId: String,
+    ): BillingPeriodWithReads? = try {
+        webClient.get()
+            .uri(
+                "/utilities/{utilityId}/customers/{customerId}/billing-periods/{periodId}",
+                utilityId.value,
+                customerId.value,
+                billingPeriodId,
+            )
+            .retrieve()
+            .bodyToMono<BillingPeriodWithReads>()
+            .block()
+    } catch (e: Exception) {
+        null
     }
 }
 
@@ -66,7 +70,7 @@ class CustomerServiceClient(
  */
 data class BillingPeriodWithReads(
     val period: BillingPeriod,
-    val meterReads: List<com.example.usbilling.billing.model.MeterRead>
+    val meterReads: List<com.example.usbilling.billing.model.MeterRead>,
 )
 
 /**
@@ -76,7 +80,7 @@ data class BillingPeriodWithReads(
 @Component
 class RateServiceClient(
     private val webClientBuilder: WebClient.Builder,
-    @Value("\${services.rate.url:http://localhost:8082}") private val rateServiceUrl: String
+    @Value("\${services.rate.url:http://localhost:8082}") private val rateServiceUrl: String,
 ) {
     private val webClient: WebClient by lazy {
         webClientBuilder.baseUrl(rateServiceUrl).build()
@@ -85,18 +89,20 @@ class RateServiceClient(
     fun getRateContext(
         utilityId: UtilityId,
         serviceState: String,
-        asOfDate: LocalDate
-    ): RateContext? {
-        return try {
-            webClient.get()
-                .uri("/utilities/{utilityId}/rates/context?serviceState={state}&asOfDate={date}",
-                    utilityId.value, serviceState, asOfDate.toString())
-                .retrieve()
-                .bodyToMono<RateContext>()
-                .block()
-        } catch (e: Exception) {
-            null
-        }
+        asOfDate: LocalDate,
+    ): RateContext? = try {
+        webClient.get()
+            .uri(
+                "/utilities/{utilityId}/rates/context?serviceState={state}&asOfDate={date}",
+                utilityId.value,
+                serviceState,
+                asOfDate.toString(),
+            )
+            .retrieve()
+            .bodyToMono<RateContext>()
+            .block()
+    } catch (e: Exception) {
+        null
     }
 }
 
@@ -107,7 +113,7 @@ class RateServiceClient(
 @Component
 class RegulatoryServiceClient(
     private val webClientBuilder: WebClient.Builder,
-    @Value("\${services.regulatory.url:http://localhost:8083}") private val regulatoryServiceUrl: String
+    @Value("\${services.regulatory.url:http://localhost:8083}") private val regulatoryServiceUrl: String,
 ) {
     private val webClient: WebClient by lazy {
         webClientBuilder.baseUrl(regulatoryServiceUrl).build()
@@ -116,17 +122,19 @@ class RegulatoryServiceClient(
     fun getRegulatoryContext(
         utilityId: UtilityId,
         jurisdiction: String,
-        asOfDate: LocalDate
-    ): RegulatoryContext? {
-        return try {
-            webClient.get()
-                .uri("/utilities/{utilityId}/regulatory/context?jurisdiction={jurisdiction}&asOfDate={date}",
-                    utilityId.value, jurisdiction, asOfDate.toString())
-                .retrieve()
-                .bodyToMono<RegulatoryContext>()
-                .block()
-        } catch (e: Exception) {
-            null
-        }
+        asOfDate: LocalDate,
+    ): RegulatoryContext? = try {
+        webClient.get()
+            .uri(
+                "/utilities/{utilityId}/regulatory/context?jurisdiction={jurisdiction}&asOfDate={date}",
+                utilityId.value,
+                jurisdiction,
+                asOfDate.toString(),
+            )
+            .retrieve()
+            .bodyToMono<RegulatoryContext>()
+            .block()
+    } catch (e: Exception) {
+        null
     }
 }

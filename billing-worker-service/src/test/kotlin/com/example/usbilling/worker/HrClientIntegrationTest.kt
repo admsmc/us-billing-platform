@@ -6,8 +6,8 @@ import com.example.usbilling.payroll.model.garnishment.GarnishmentFormula
 import com.example.usbilling.payroll.model.garnishment.GarnishmentType
 import com.example.usbilling.payroll.model.garnishment.ProtectedEarningsRule
 import com.example.usbilling.shared.CustomerId
-import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.worker.support.StubTaxLaborClientsTestConfig
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.micrometer.core.instrument.MeterRegistry

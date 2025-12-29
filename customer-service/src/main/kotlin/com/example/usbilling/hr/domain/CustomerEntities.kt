@@ -42,12 +42,13 @@ data class CustomerEntity(
 
     @Column("updated_at")
     val updatedAt: Instant = Instant.now(),
-    
+
     @Transient
     @JsonIgnore
-    val isNewEntity: Boolean = true
+    val isNewEntity: Boolean = true,
 ) : Persistable<String> {
     override fun getId(): String = customerId
+
     @JsonIgnore
     override fun isNew(): Boolean = isNewEntity
 }
@@ -81,12 +82,13 @@ data class MeterEntity(
 
     @Column("created_at")
     val createdAt: Instant = Instant.now(),
-    
+
     @Transient
     @JsonIgnore
-    val isNewEntity: Boolean = true
+    val isNewEntity: Boolean = true,
 ) : Persistable<String> {
     override fun getId(): String = meterId
+
     @JsonIgnore
     override fun isNew(): Boolean = isNewEntity
 }
@@ -117,12 +119,13 @@ data class BillingPeriodEntity(
 
     @Column("updated_at")
     val updatedAt: Instant = Instant.now(),
-    
+
     @Transient
     @JsonIgnore
-    val isNewEntity: Boolean = true
+    val isNewEntity: Boolean = true,
 ) : Persistable<String> {
     override fun getId(): String = periodId
+
     @JsonIgnore
     override fun isNew(): Boolean = isNewEntity
 }
@@ -153,12 +156,13 @@ data class MeterReadEntity(
 
     @Column("recorded_at")
     val recordedAt: Instant = Instant.now(),
-    
+
     @Transient
     @JsonIgnore
-    val isNewEntity: Boolean = true
+    val isNewEntity: Boolean = true,
 ) : Persistable<String> {
     override fun getId(): String = readId
+
     @JsonIgnore
     override fun isNew(): Boolean = isNewEntity
 }

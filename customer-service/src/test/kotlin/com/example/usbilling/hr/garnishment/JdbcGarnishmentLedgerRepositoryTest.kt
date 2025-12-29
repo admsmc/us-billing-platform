@@ -1,8 +1,8 @@
 package com.example.usbilling.hr.garnishment
 
 import com.example.usbilling.shared.CustomerId
-import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
+import com.example.usbilling.shared.UtilityId
 import org.h2.jdbcx.JdbcDataSource
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

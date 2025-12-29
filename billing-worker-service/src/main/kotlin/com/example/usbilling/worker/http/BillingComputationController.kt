@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*
  */
 @RestController
 class BillingComputationController(
-    private val billingComputationService: BillingComputationService
+    private val billingComputationService: BillingComputationService,
 ) {
 
     /**
@@ -25,23 +25,21 @@ class BillingComputationController(
             utilityId = UtilityId(request.utilityId),
             customerId = CustomerId(request.customerId),
             billingPeriodId = request.billingPeriodId,
-            serviceState = request.serviceState
+            serviceState = request.serviceState,
         )
-        
+
         return if (billResult != null) {
             ResponseEntity.ok(billResult)
         } else {
             ResponseEntity.badRequest().build()
         }
     }
-    
+
     /**
      * Health check endpoint.
      */
     @GetMapping("/health")
-    fun health(): ResponseEntity<Map<String, String>> {
-        return ResponseEntity.ok(mapOf("status" to "UP"))
-    }
+    fun health(): ResponseEntity<Map<String, String>> = ResponseEntity.ok(mapOf("status" to "UP"))
 }
 
 /**
@@ -52,5 +50,5 @@ data class ComputeBillRequest(
     val utilityId: String,
     val customerId: String,
     val billingPeriodId: String,
-    val serviceState: String
+    val serviceState: String,
 )

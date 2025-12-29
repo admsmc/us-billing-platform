@@ -7,7 +7,7 @@ import org.springframework.web.reactive.function.client.WebClient
 
 /**
  * Customer Portal Service - Customer-facing self-service REST API.
- * 
+ *
  * Provides customer portal endpoints for:
  * - Viewing bills and payment history
  * - Making payments
@@ -15,16 +15,14 @@ import org.springframework.web.reactive.function.client.WebClient
  * - Submitting cases and service requests
  * - Managing notification preferences
  * - Viewing usage data and insights
- * 
+ *
  * Port: 8090
  */
 @SpringBootApplication(scanBasePackages = ["com.example.usbilling.portal", "com.example.usbilling.web"])
 class CustomerPortalApplication {
-    
+
     @Bean
-    fun webClientBuilder(): WebClient.Builder {
-        return WebClient.builder()
-    }
+    fun webClientBuilder(): WebClient.Builder = WebClient.builder()
 }
 
 fun main(args: Array<String>) {

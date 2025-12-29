@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component
 @Component
 class BillComputationCompletedConsumer(
     private val billingOrchestrationService: BillingOrchestrationService,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -25,15 +25,15 @@ class BillComputationCompletedConsumer(
     @RabbitListener(queues = [BillingComputationJobRouting.BILL_COMPUTED])
     fun handleBillComputationCompleted(event: BillComputationCompletedEvent) {
         logger.info("Received BillComputationCompletedEvent for bill ${event.billId} (success=${event.success})")
-        
+
         try {
             if (event.success && event.billResultJson != null) {
                 // Deserialize BillResult
                 val billResult = objectMapper.readValue(event.billResultJson, BillResult::class.java)
-                
+
                 // Finalize bill with the computed result
                 val finalized = billingOrchestrationService.finalizeBill(event.billId, billResult)
-                
+
                 if (finalized != null) {
                     logger.info("Successfully finalized bill ${event.billId}")
                 } else {

@@ -12,14 +12,14 @@ import java.time.LocalDate
 enum class AccountType {
     /** Customer pays after service is rendered (traditional utility billing) */
     POSTPAID,
-    
+
     /** Customer pays in advance and usage depletes prepaid balance */
-    PREPAID
+    PREPAID,
 }
 
 /**
  * Prepaid account with balance that is depleted as usage occurs.
- * 
+ *
  * Unlike postpaid accounts where balance represents amount owed,
  * prepaid balance represents credit available for future consumption.
  *
@@ -54,65 +54,64 @@ data class PrepaidAccount(
     val lastRechargeAmount: Money? = null,
     val disconnectThreshold: Money = Money(0),
     val gracePeriodDays: Int = 0,
-    val status: PrepaidAccountStatus = PrepaidAccountStatus.ACTIVE
+    val status: PrepaidAccountStatus = PrepaidAccountStatus.ACTIVE,
 ) {
     /**
      * Check if balance is below low threshold.
      */
     fun isLowBalance(): Boolean = prepaidBalance.amount < lowBalanceThreshold.amount
-    
+
     /**
      * Check if balance is at critical level.
      */
     fun isCriticalBalance(): Boolean = prepaidBalance.amount < criticalBalanceThreshold.amount
-    
+
     /**
      * Check if balance requires automatic recharge.
      */
-    fun requiresAutoRecharge(): Boolean = 
-        autoRechargeEnabled && prepaidBalance.amount < autoRechargeThreshold.amount
-    
+    fun requiresAutoRecharge(): Boolean = autoRechargeEnabled && prepaidBalance.amount < autoRechargeThreshold.amount
+
     /**
      * Check if account should be disconnected due to insufficient balance.
      */
     fun shouldDisconnect(): Boolean = prepaidBalance.amount <= disconnectThreshold.amount
-    
+
     /**
      * Apply a recharge (add funds) to the prepaid balance.
      */
     fun applyRecharge(amount: Money, rechargeDate: LocalDate): PrepaidAccount {
         require(amount.amount > 0) { "Recharge amount must be positive" }
-        
+
         return copy(
             prepaidBalance = Money(prepaidBalance.amount + amount.amount),
             lastRechargeDate = rechargeDate,
             lastRechargeAmount = amount,
-            status = if (shouldDisconnect()) PrepaidAccountStatus.ACTIVE else status
+            status = if (shouldDisconnect()) PrepaidAccountStatus.ACTIVE else status,
         )
     }
-    
+
     /**
      * Deduct usage charges from prepaid balance.
      */
     fun deductUsage(amount: Money): PrepaidAccount {
         require(amount.amount >= 0) { "Usage amount cannot be negative" }
-        
+
         val newBalance = Money((prepaidBalance.amount - amount.amount).coerceAtLeast(0))
         val newStatus = when {
             newBalance.amount <= disconnectThreshold.amount -> PrepaidAccountStatus.DISCONNECTED
             newBalance.amount < criticalBalanceThreshold.amount -> PrepaidAccountStatus.CRITICAL
             else -> PrepaidAccountStatus.ACTIVE
         }
-        
+
         return copy(
             prepaidBalance = newBalance,
-            status = newStatus
+            status = newStatus,
         )
     }
-    
+
     /**
      * Calculate days of service remaining at current usage rate.
-     * 
+     *
      * @param dailyUsageCost Average daily cost of service
      * @return Estimated days remaining, or null if usage rate is zero
      */
@@ -128,18 +127,18 @@ data class PrepaidAccount(
 enum class PrepaidAccountStatus {
     /** Account active with sufficient balance */
     ACTIVE,
-    
+
     /** Balance below critical threshold but service still active */
     CRITICAL,
-    
+
     /** Balance depleted, service disconnected */
     DISCONNECTED,
-    
+
     /** Account suspended by customer or utility */
     SUSPENDED,
-    
+
     /** Account closed */
-    CLOSED
+    CLOSED,
 }
 
 /**
@@ -164,7 +163,7 @@ data class RechargeTransaction(
     val paymentMethod: PaymentMethod,
     val source: RechargeSource,
     val balanceBefore: Money,
-    val balanceAfter: Money
+    val balanceAfter: Money,
 )
 
 /**
@@ -178,7 +177,7 @@ enum class PaymentMethod {
     CHECK,
     MOBILE_PAYMENT,
     VOUCHER,
-    OTHER
+    OTHER,
 }
 
 /**
@@ -187,32 +186,32 @@ enum class PaymentMethod {
 enum class RechargeSource {
     /** Customer self-service web portal */
     ONLINE_PORTAL,
-    
+
     /** Mobile app */
     MOBILE_APP,
-    
+
     /** Payment kiosk */
     KIOSK,
-    
+
     /** Over the phone */
     PHONE,
-    
+
     /** In-person at utility office */
     IN_PERSON,
-    
+
     /** Automatic recharge triggered by system */
     AUTO_RECHARGE,
-    
+
     /** Third-party payment location */
     THIRD_PARTY,
-    
+
     /** Other source */
-    OTHER
+    OTHER,
 }
 
 /**
  * Real-time usage deduction record for prepaid accounts.
- * 
+ *
  * As customers use service, usage is deducted from prepaid balance
  * in near real-time based on interval meter data.
  *
@@ -239,7 +238,7 @@ data class UsageDeduction(
     val usageUnit: UsageUnit,
     val cost: Money,
     val balanceBefore: Money,
-    val balanceAfter: Money
+    val balanceAfter: Money,
 )
 
 /**
@@ -260,7 +259,7 @@ data class PrepaidAlert(
     val alertTime: Instant,
     val currentBalance: Money,
     val message: String,
-    val actionRequired: Boolean
+    val actionRequired: Boolean,
 )
 
 /**
@@ -269,22 +268,22 @@ data class PrepaidAlert(
 enum class PrepaidAlertType {
     /** Balance fell below low threshold */
     LOW_BALANCE,
-    
+
     /** Balance at critical level */
     CRITICAL_BALANCE,
-    
+
     /** Balance depleted, service will disconnect soon */
     DISCONNECT_PENDING,
-    
+
     /** Service has been disconnected */
     DISCONNECTED,
-    
+
     /** Automatic recharge succeeded */
     AUTO_RECHARGE_SUCCESS,
-    
+
     /** Automatic recharge failed */
     AUTO_RECHARGE_FAILED,
-    
+
     /** Usage rate increased significantly */
-    HIGH_USAGE_DETECTED
+    HIGH_USAGE_DETECTED,
 }

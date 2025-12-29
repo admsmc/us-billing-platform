@@ -2,7 +2,6 @@ package com.example.usbilling.billing.model
 
 import java.time.Instant
 import java.time.LocalDate
-import java.time.LocalTime
 
 /**
  * Hourly usage profile for a single day.
@@ -17,7 +16,7 @@ data class HourlyUsageProfile(
     val date: LocalDate,
     val hourlyReadings: List<HourlyReading>,
     val meterId: String,
-    val serviceType: ServiceType
+    val serviceType: ServiceType,
 ) {
     init {
         require(hourlyReadings.size == 24) { "Hourly profile must contain exactly 24 readings" }
@@ -42,31 +41,25 @@ data class HourlyUsageProfile(
     /**
      * Get usage during peak hours defined by schedule.
      */
-    fun peakUsage(schedule: TouPeriodSchedule): Double {
-        return schedule.peakHours.sumOf { range ->
-            hourlyReadings.filter { it.hour in range.start..range.endInclusive }
-                .sumOf { it.usage }
-        }
+    fun peakUsage(schedule: TouPeriodSchedule): Double = schedule.peakHours.sumOf { range ->
+        hourlyReadings.filter { it.hour in range.start..range.endInclusive }
+            .sumOf { it.usage }
     }
 
     /**
      * Get usage during off-peak hours defined by schedule.
      */
-    fun offPeakUsage(schedule: TouPeriodSchedule): Double {
-        return schedule.offPeakHours.sumOf { range ->
-            hourlyReadings.filter { it.hour in range.start..range.endInclusive }
-                .sumOf { it.usage }
-        }
+    fun offPeakUsage(schedule: TouPeriodSchedule): Double = schedule.offPeakHours.sumOf { range ->
+        hourlyReadings.filter { it.hour in range.start..range.endInclusive }
+            .sumOf { it.usage }
     }
 
     /**
      * Get usage during shoulder hours defined by schedule (if applicable).
      */
-    fun shoulderUsage(schedule: TouPeriodSchedule): Double {
-        return schedule.shoulderHours.sumOf { range ->
-            hourlyReadings.filter { it.hour in range.start..range.endInclusive }
-                .sumOf { it.usage }
-        }
+    fun shoulderUsage(schedule: TouPeriodSchedule): Double = schedule.shoulderHours.sumOf { range ->
+        hourlyReadings.filter { it.hour in range.start..range.endInclusive }
+            .sumOf { it.usage }
     }
 }
 
@@ -80,7 +73,7 @@ data class HourlyUsageProfile(
 data class HourlyReading(
     val hour: Int,
     val usage: Double,
-    val timestamp: Instant
+    val timestamp: Instant,
 ) {
     init {
         require(hour in 0..23) { "Hour must be 0-23" }
@@ -103,7 +96,7 @@ data class TouPeriodSchedule(
     val offPeakHours: List<HourRange>,
     val shoulderHours: List<HourRange> = emptyList(),
     val weekdaysOnly: Boolean = true,
-    val holidays: List<LocalDate> = emptyList()
+    val holidays: List<LocalDate> = emptyList(),
 ) {
     /**
      * Determine if a given date/hour is peak period.
@@ -158,48 +151,42 @@ data class TouPeriodSchedule(
         /**
          * Standard residential TOU schedule: peak 2pm-7pm weekdays.
          */
-        fun standardResidential(): TouPeriodSchedule {
-            return TouPeriodSchedule(
-                peakHours = listOf(HourRange(14, 18)), // 2pm-7pm
-                offPeakHours = listOf(
-                    HourRange(0, 13),  // midnight-2pm
-                    HourRange(19, 23)  // 7pm-midnight
-                ),
-                weekdaysOnly = true
-            )
-        }
+        fun standardResidential(): TouPeriodSchedule = TouPeriodSchedule(
+            peakHours = listOf(HourRange(14, 18)), // 2pm-7pm
+            offPeakHours = listOf(
+                HourRange(0, 13), // midnight-2pm
+                HourRange(19, 23), // 7pm-midnight
+            ),
+            weekdaysOnly = true,
+        )
 
         /**
          * Standard commercial TOU schedule: peak 8am-9pm weekdays.
          */
-        fun standardCommercial(): TouPeriodSchedule {
-            return TouPeriodSchedule(
-                peakHours = listOf(HourRange(8, 20)), // 8am-9pm
-                offPeakHours = listOf(
-                    HourRange(0, 7),   // midnight-8am
-                    HourRange(21, 23)  // 9pm-midnight
-                ),
-                weekdaysOnly = true
-            )
-        }
+        fun standardCommercial(): TouPeriodSchedule = TouPeriodSchedule(
+            peakHours = listOf(HourRange(8, 20)), // 8am-9pm
+            offPeakHours = listOf(
+                HourRange(0, 7), // midnight-8am
+                HourRange(21, 23), // 9pm-midnight
+            ),
+            weekdaysOnly = true,
+        )
 
         /**
          * Three-period TOU schedule with shoulder periods.
          */
-        fun threePeriod(): TouPeriodSchedule {
-            return TouPeriodSchedule(
-                peakHours = listOf(HourRange(14, 19)), // 2pm-8pm
-                offPeakHours = listOf(
-                    HourRange(0, 6),   // midnight-7am
-                    HourRange(23, 23)  // 11pm-midnight
-                ),
-                shoulderHours = listOf(
-                    HourRange(7, 13),  // 7am-2pm
-                    HourRange(20, 22)  // 8pm-11pm
-                ),
-                weekdaysOnly = true
-            )
-        }
+        fun threePeriod(): TouPeriodSchedule = TouPeriodSchedule(
+            peakHours = listOf(HourRange(14, 19)), // 2pm-8pm
+            offPeakHours = listOf(
+                HourRange(0, 6), // midnight-7am
+                HourRange(23, 23), // 11pm-midnight
+            ),
+            shoulderHours = listOf(
+                HourRange(7, 13), // 7am-2pm
+                HourRange(20, 22), // 8pm-11pm
+            ),
+            weekdaysOnly = true,
+        )
     }
 }
 
@@ -213,17 +200,15 @@ data class TouPeriodSchedule(
 data class SeasonalTouSchedule(
     val summerSchedule: TouPeriodSchedule,
     val winterSchedule: TouPeriodSchedule,
-    val summerMonths: Set<Int> = setOf(6, 7, 8, 9) // June-September
+    val summerMonths: Set<Int> = setOf(6, 7, 8, 9), // June-September
 ) {
     /**
      * Get the appropriate schedule for a given date.
      */
-    fun scheduleForDate(date: LocalDate): TouPeriodSchedule {
-        return if (summerMonths.contains(date.monthValue)) {
-            summerSchedule
-        } else {
-            winterSchedule
-        }
+    fun scheduleForDate(date: LocalDate): TouPeriodSchedule = if (summerMonths.contains(date.monthValue)) {
+        summerSchedule
+    } else {
+        winterSchedule
     }
 }
 
@@ -235,7 +220,7 @@ data class SeasonalTouSchedule(
  */
 data class HourRange(
     val start: Int,
-    val endInclusive: Int
+    val endInclusive: Int,
 ) {
     init {
         require(start in 0..23) { "Start hour must be 0-23" }

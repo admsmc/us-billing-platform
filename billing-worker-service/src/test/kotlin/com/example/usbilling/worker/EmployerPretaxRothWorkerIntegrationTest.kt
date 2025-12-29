@@ -6,8 +6,8 @@ import com.example.usbilling.payroll.model.config.DeductionConfigRepository
 import com.example.usbilling.payroll.model.config.DeductionKind
 import com.example.usbilling.payroll.model.config.DeductionPlan
 import com.example.usbilling.shared.CustomerId
-import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
+import com.example.usbilling.shared.UtilityId
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import kotlin.test.assertEquals

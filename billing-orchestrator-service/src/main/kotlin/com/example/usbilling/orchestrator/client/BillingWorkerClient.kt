@@ -15,10 +15,10 @@ import java.time.Duration
 @Component
 class BillingWorkerClient(
     private val webClientBuilder: WebClient.Builder,
-    @Value("\${services.billing-worker.url:http://localhost:8084}") private val workerServiceUrl: String
+    @Value("\${services.billing-worker.url:http://localhost:8084}") private val workerServiceUrl: String,
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
-    
+
     private val webClient: WebClient by lazy {
         webClientBuilder
             .baseUrl(workerServiceUrl)
@@ -31,24 +31,22 @@ class BillingWorkerClient(
      * @param request Bill computation request
      * @return Computed bill result, or null if computation failed
      */
-    fun computeBill(request: ComputeBillRequest): BillResult? {
-        return try {
-            logger.info("Requesting bill computation for bill ${request.billId}")
-            
-            val result = webClient.post()
-                .uri("/compute-bill")
-                .bodyValue(request)
-                .retrieve()
-                .bodyToMono<BillResult>()
-                .timeout(Duration.ofSeconds(30))
-                .block()
-            
-            logger.info("Bill computation successful for bill ${request.billId}")
-            result
-        } catch (e: Exception) {
-            logger.error("Bill computation failed for bill ${request.billId}: ${e.message}", e)
-            null
-        }
+    fun computeBill(request: ComputeBillRequest): BillResult? = try {
+        logger.info("Requesting bill computation for bill ${request.billId}")
+
+        val result = webClient.post()
+            .uri("/compute-bill")
+            .bodyValue(request)
+            .retrieve()
+            .bodyToMono<BillResult>()
+            .timeout(Duration.ofSeconds(30))
+            .block()
+
+        logger.info("Bill computation successful for bill ${request.billId}")
+        result
+    } catch (e: Exception) {
+        logger.error("Bill computation failed for bill ${request.billId}: ${e.message}", e)
+        null
     }
 }
 
@@ -60,5 +58,5 @@ data class ComputeBillRequest(
     val utilityId: String,
     val customerId: String,
     val billingPeriodId: String,
-    val serviceState: String
+    val serviceState: String,
 )

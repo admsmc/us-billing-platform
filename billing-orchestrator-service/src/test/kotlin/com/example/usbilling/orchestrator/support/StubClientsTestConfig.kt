@@ -13,8 +13,8 @@ import com.example.usbilling.payroll.model.PayPeriod
 import com.example.usbilling.payroll.model.TaxContext
 import com.example.usbilling.payroll.model.garnishment.GarnishmentOrder
 import com.example.usbilling.shared.CustomerId
-import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
+import com.example.usbilling.shared.UtilityId
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Primary

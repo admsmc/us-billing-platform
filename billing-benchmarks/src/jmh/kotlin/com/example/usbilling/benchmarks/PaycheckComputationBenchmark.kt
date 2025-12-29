@@ -27,11 +27,11 @@ import com.example.usbilling.payroll.model.garnishment.GarnishmentOrder
 import com.example.usbilling.payroll.model.garnishment.GarnishmentOrderId
 import com.example.usbilling.payroll.model.garnishment.GarnishmentType
 import com.example.usbilling.payroll.model.garnishment.ProtectedEarningsRule
-import com.example.usbilling.shared.CustomerId
-import com.example.usbilling.shared.UtilityId
-import com.example.usbilling.shared.Money
-import com.example.usbilling.shared.BillingCycleId
 import com.example.usbilling.shared.BillId
+import com.example.usbilling.shared.BillingCycleId
+import com.example.usbilling.shared.CustomerId
+import com.example.usbilling.shared.Money
+import com.example.usbilling.shared.UtilityId
 import org.openjdk.jmh.annotations.Benchmark
 import org.openjdk.jmh.annotations.BenchmarkMode
 import org.openjdk.jmh.annotations.Fork

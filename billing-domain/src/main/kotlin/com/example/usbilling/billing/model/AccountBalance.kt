@@ -23,7 +23,7 @@ data class AccountBalance(
     val lastBillDate: LocalDate? = null,
     val lastBillAmount: Money? = null,
     val adjustments: List<BalanceAdjustment> = emptyList(),
-    val depositAmount: Money? = null
+    val depositAmount: Money? = null,
 ) {
     /**
      * Apply a payment to the balance.
@@ -34,14 +34,14 @@ data class AccountBalance(
      */
     fun applyPayment(amount: Money, paymentDate: LocalDate): AccountBalance {
         require(amount.amount >= 0) { "Payment amount must be non-negative" }
-        
+
         return copy(
             balance = Money(balance.amount - amount.amount),
             lastPaymentDate = paymentDate,
-            lastPaymentAmount = amount
+            lastPaymentAmount = amount,
         )
     }
-    
+
     /**
      * Apply a new bill to the balance.
      *
@@ -49,27 +49,23 @@ data class AccountBalance(
      * @param billDate Date of bill
      * @return New AccountBalance with bill applied
      */
-    fun applyBill(amount: Money, billDate: LocalDate): AccountBalance {
-        return copy(
-            balance = Money(balance.amount + amount.amount),
-            lastBillDate = billDate,
-            lastBillAmount = amount
-        )
-    }
-    
+    fun applyBill(amount: Money, billDate: LocalDate): AccountBalance = copy(
+        balance = Money(balance.amount + amount.amount),
+        lastBillDate = billDate,
+        lastBillAmount = amount,
+    )
+
     /**
      * Apply a manual adjustment to the balance.
      *
      * @param adjustment The adjustment to apply
      * @return New AccountBalance with adjustment applied
      */
-    fun applyAdjustment(adjustment: BalanceAdjustment): AccountBalance {
-        return copy(
-            balance = Money(balance.amount + adjustment.amount.amount),
-            adjustments = adjustments + adjustment
-        )
-    }
-    
+    fun applyAdjustment(adjustment: BalanceAdjustment): AccountBalance = copy(
+        balance = Money(balance.amount + adjustment.amount.amount),
+        adjustments = adjustments + adjustment,
+    )
+
     /**
      * Check if account is past due.
      *
@@ -80,11 +76,11 @@ data class AccountBalance(
     fun isPastDue(asOfDate: LocalDate, dueDays: Int = 30): Boolean {
         if (balance.amount <= 0) return false
         if (lastBillDate == null) return false
-        
+
         val dueDate = lastBillDate.plusDays(dueDays.toLong())
         return asOfDate.isAfter(dueDate)
     }
-    
+
     companion object {
         /**
          * Create a new account with zero balance.
@@ -107,7 +103,7 @@ data class BalanceAdjustment(
     val amount: Money,
     val adjustmentDate: LocalDate,
     val adjustmentType: AdjustmentType,
-    val approvedBy: String? = null
+    val approvedBy: String? = null,
 )
 
 /**
@@ -116,25 +112,25 @@ data class BalanceAdjustment(
 enum class AdjustmentType {
     /** One-time credit applied to account */
     CREDIT,
-    
+
     /** Late fee or penalty */
     LATE_FEE,
-    
+
     /** Billing error correction */
     BILLING_CORRECTION,
-    
+
     /** Write-off of uncollectible balance */
     WRITE_OFF,
-    
+
     /** Returned payment fee */
     NSF_FEE,
-    
+
     /** Customer service adjustment */
     COURTESY_CREDIT,
-    
+
     /** Meter reading correction */
     METER_CORRECTION,
-    
+
     /** Other adjustment */
-    OTHER
+    OTHER,
 }

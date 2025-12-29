@@ -25,7 +25,7 @@ interface RegulatoryChargeRepository {
         utilityId: UtilityId,
         state: String,
         serviceType: ServiceType,
-        asOfDate: LocalDate
+        asOfDate: LocalDate,
     ): List<RegulatoryCharge>
 
     /**
@@ -39,7 +39,7 @@ interface RegulatoryChargeRepository {
     fun getChargeByCode(
         code: String,
         state: String,
-        asOfDate: LocalDate
+        asOfDate: LocalDate,
     ): RegulatoryCharge?
 }
 
@@ -55,7 +55,7 @@ class InMemoryRegulatoryChargeRepository : RegulatoryChargeRepository {
         utilityId: UtilityId,
         state: String,
         serviceType: ServiceType,
-        asOfDate: LocalDate
+        asOfDate: LocalDate,
     ): List<RegulatoryCharge> {
         val stateCharges = charges[state.uppercase()] ?: return emptyList()
 
@@ -71,7 +71,7 @@ class InMemoryRegulatoryChargeRepository : RegulatoryChargeRepository {
     override fun getChargeByCode(
         code: String,
         state: String,
-        asOfDate: LocalDate
+        asOfDate: LocalDate,
     ): RegulatoryCharge? {
         val stateCharges = charges[state.uppercase()] ?: return null
 
@@ -91,197 +91,195 @@ class InMemoryRegulatoryChargeRepository : RegulatoryChargeRepository {
         val rate: Money,
         val serviceTypes: Set<ServiceType>,
         val effectiveDate: LocalDate,
-        val expirationDate: LocalDate? = null
+        val expirationDate: LocalDate? = null,
     ) {
         fun toRegulatoryCharge() = RegulatoryCharge(
             code = code,
             description = description,
             calculationType = calculationType,
-            rate = rate
+            rate = rate,
         )
     }
 
-    private fun buildChargeRegistry(): Map<String, List<RegulatoryChargeEntry>> {
-        return mapOf(
-            // Michigan charges
-            "MI" to listOf(
-                RegulatoryChargeEntry(
-                    code = "PCA",
-                    description = "Power Cost Adjustment",
-                    calculationType = RegulatoryChargeType.PERCENTAGE_OF_ENERGY,
-                    rate = Money(250), // 2.5% (stored as basis points: 250/10000)
-                    serviceTypes = setOf(ServiceType.ELECTRIC),
-                    effectiveDate = LocalDate.of(2024, 1, 1)
-                ),
-                RegulatoryChargeEntry(
-                    code = "DSM",
-                    description = "Demand Side Management Surcharge",
-                    calculationType = RegulatoryChargeType.PER_UNIT,
-                    rate = Money(5), // $0.05 per kWh
-                    serviceTypes = setOf(ServiceType.ELECTRIC),
-                    effectiveDate = LocalDate.of(2024, 1, 1)
-                ),
-                RegulatoryChargeEntry(
-                    code = "ECA",
-                    description = "Energy Conservation Assessment",
-                    calculationType = RegulatoryChargeType.FIXED,
-                    rate = Money(150), // $1.50 per month
-                    serviceTypes = setOf(ServiceType.ELECTRIC, ServiceType.GAS),
-                    effectiveDate = LocalDate.of(2024, 1, 1)
-                ),
-                RegulatoryChargeEntry(
-                    code = "LIPA",
-                    description = "Low Income Program Assistance",
-                    calculationType = RegulatoryChargeType.PERCENTAGE_OF_TOTAL,
-                    rate = Money(50), // 0.5%
-                    serviceTypes = setOf(ServiceType.ELECTRIC, ServiceType.GAS),
-                    effectiveDate = LocalDate.of(2024, 1, 1)
-                )
+    private fun buildChargeRegistry(): Map<String, List<RegulatoryChargeEntry>> = mapOf(
+        // Michigan charges
+        "MI" to listOf(
+            RegulatoryChargeEntry(
+                code = "PCA",
+                description = "Power Cost Adjustment",
+                calculationType = RegulatoryChargeType.PERCENTAGE_OF_ENERGY,
+                rate = Money(250), // 2.5% (stored as basis points: 250/10000)
+                serviceTypes = setOf(ServiceType.ELECTRIC),
+                effectiveDate = LocalDate.of(2024, 1, 1),
             ),
-
-            // Ohio charges
-            "OH" to listOf(
-                RegulatoryChargeEntry(
-                    code = "UCF",
-                    description = "Universal Service Fund Rider",
-                    calculationType = RegulatoryChargeType.PERCENTAGE_OF_ENERGY,
-                    rate = Money(200), // 2.0%
-                    serviceTypes = setOf(ServiceType.ELECTRIC),
-                    effectiveDate = LocalDate.of(2024, 1, 1)
-                ),
-                RegulatoryChargeEntry(
-                    code = "AEC",
-                    description = "Advanced Energy Charge",
-                    calculationType = RegulatoryChargeType.PER_UNIT,
-                    rate = Money(8), // $0.08 per kWh
-                    serviceTypes = setOf(ServiceType.ELECTRIC),
-                    effectiveDate = LocalDate.of(2024, 1, 1)
-                ),
-                RegulatoryChargeEntry(
-                    code = "GCR",
-                    description = "Gas Cost Recovery",
-                    calculationType = RegulatoryChargeType.PERCENTAGE_OF_ENERGY,
-                    rate = Money(300), // 3.0%
-                    serviceTypes = setOf(ServiceType.GAS),
-                    effectiveDate = LocalDate.of(2024, 1, 1)
-                ),
-                RegulatoryChargeEntry(
-                    code = "EEC",
-                    description = "Energy Efficiency Charge",
-                    calculationType = RegulatoryChargeType.FIXED,
-                    rate = Money(200), // $2.00 per month
-                    serviceTypes = setOf(ServiceType.ELECTRIC, ServiceType.GAS),
-                    effectiveDate = LocalDate.of(2024, 1, 1)
-                )
+            RegulatoryChargeEntry(
+                code = "DSM",
+                description = "Demand Side Management Surcharge",
+                calculationType = RegulatoryChargeType.PER_UNIT,
+                rate = Money(5), // $0.05 per kWh
+                serviceTypes = setOf(ServiceType.ELECTRIC),
+                effectiveDate = LocalDate.of(2024, 1, 1),
             ),
-
-            // Illinois charges
-            "IL" to listOf(
-                RegulatoryChargeEntry(
-                    code = "EPUA",
-                    description = "Environmental Protection User Adjustment",
-                    calculationType = RegulatoryChargeType.PER_UNIT,
-                    rate = Money(10), // $0.10 per kWh
-                    serviceTypes = setOf(ServiceType.ELECTRIC),
-                    effectiveDate = LocalDate.of(2024, 1, 1)
-                ),
-                RegulatoryChargeEntry(
-                    code = "DCRA",
-                    description = "Delivery Cost Recovery Adjustment",
-                    calculationType = RegulatoryChargeType.PERCENTAGE_OF_ENERGY,
-                    rate = Money(350), // 3.5%
-                    serviceTypes = setOf(ServiceType.ELECTRIC),
-                    effectiveDate = LocalDate.of(2024, 1, 1)
-                ),
-                RegulatoryChargeEntry(
-                    code = "REP",
-                    description = "Renewable Energy Program",
-                    calculationType = RegulatoryChargeType.PER_UNIT,
-                    rate = Money(15), // $0.15 per kWh
-                    serviceTypes = setOf(ServiceType.ELECTRIC),
-                    effectiveDate = LocalDate.of(2024, 1, 1)
-                ),
-                RegulatoryChargeEntry(
-                    code = "ICCF",
-                    description = "Illinois Commerce Commission Fee",
-                    calculationType = RegulatoryChargeType.PERCENTAGE_OF_TOTAL,
-                    rate = Money(100), // 1.0%
-                    serviceTypes = setOf(ServiceType.ELECTRIC, ServiceType.GAS, ServiceType.WATER),
-                    effectiveDate = LocalDate.of(2024, 1, 1)
-                )
+            RegulatoryChargeEntry(
+                code = "ECA",
+                description = "Energy Conservation Assessment",
+                calculationType = RegulatoryChargeType.FIXED,
+                rate = Money(150), // $1.50 per month
+                serviceTypes = setOf(ServiceType.ELECTRIC, ServiceType.GAS),
+                effectiveDate = LocalDate.of(2024, 1, 1),
             ),
-
-            // California charges
-            "CA" to listOf(
-                RegulatoryChargeEntry(
-                    code = "PCIA",
-                    description = "Power Charge Indifference Adjustment",
-                    calculationType = RegulatoryChargeType.PER_UNIT,
-                    rate = Money(12), // $0.12 per kWh
-                    serviceTypes = setOf(ServiceType.ELECTRIC),
-                    effectiveDate = LocalDate.of(2024, 1, 1)
-                ),
-                RegulatoryChargeEntry(
-                    code = "PPP",
-                    description = "Public Purpose Program Surcharge",
-                    calculationType = RegulatoryChargeType.PERCENTAGE_OF_ENERGY,
-                    rate = Money(280), // 2.8%
-                    serviceTypes = setOf(ServiceType.ELECTRIC, ServiceType.GAS),
-                    effectiveDate = LocalDate.of(2024, 1, 1)
-                ),
-                RegulatoryChargeEntry(
-                    code = "CARE",
-                    description = "California Alternate Rates for Energy",
-                    calculationType = RegulatoryChargeType.PERCENTAGE_OF_TOTAL,
-                    rate = Money(150), // 1.5%
-                    serviceTypes = setOf(ServiceType.ELECTRIC, ServiceType.GAS),
-                    effectiveDate = LocalDate.of(2024, 1, 1)
-                ),
-                RegulatoryChargeEntry(
-                    code = "WCF",
-                    description = "Water Conservation Fee",
-                    calculationType = RegulatoryChargeType.FIXED,
-                    rate = Money(250), // $2.50 per month
-                    serviceTypes = setOf(ServiceType.WATER),
-                    effectiveDate = LocalDate.of(2024, 1, 1)
-                )
+            RegulatoryChargeEntry(
+                code = "LIPA",
+                description = "Low Income Program Assistance",
+                calculationType = RegulatoryChargeType.PERCENTAGE_OF_TOTAL,
+                rate = Money(50), // 0.5%
+                serviceTypes = setOf(ServiceType.ELECTRIC, ServiceType.GAS),
+                effectiveDate = LocalDate.of(2024, 1, 1),
             ),
+        ),
 
-            // New York charges
-            "NY" to listOf(
-                RegulatoryChargeEntry(
-                    code = "MFC",
-                    description = "Monthly Fixed Charge",
-                    calculationType = RegulatoryChargeType.FIXED,
-                    rate = Money(1800), // $18.00 per month
-                    serviceTypes = setOf(ServiceType.ELECTRIC),
-                    effectiveDate = LocalDate.of(2024, 1, 1)
-                ),
-                RegulatoryChargeEntry(
-                    code = "NYSLR",
-                    description = "NY State and Local Revenue-Based Surcharges",
-                    calculationType = RegulatoryChargeType.PERCENTAGE_OF_TOTAL,
-                    rate = Money(390), // 3.9%
-                    serviceTypes = setOf(ServiceType.ELECTRIC, ServiceType.GAS),
-                    effectiveDate = LocalDate.of(2024, 1, 1)
-                ),
-                RegulatoryChargeEntry(
-                    code = "SBC",
-                    description = "System Benefits Charge",
-                    calculationType = RegulatoryChargeType.PER_UNIT,
-                    rate = Money(18), // $0.18 per kWh
-                    serviceTypes = setOf(ServiceType.ELECTRIC),
-                    effectiveDate = LocalDate.of(2024, 1, 1)
-                ),
-                RegulatoryChargeEntry(
-                    code = "WSC",
-                    description = "Water/Sewer Commodity",
-                    calculationType = RegulatoryChargeType.PER_UNIT,
-                    rate = Money(750), // $7.50 per CCF
-                    serviceTypes = setOf(ServiceType.WATER, ServiceType.WASTEWATER),
-                    effectiveDate = LocalDate.of(2024, 1, 1)
-                )
-            )
-        )
-    }
+        // Ohio charges
+        "OH" to listOf(
+            RegulatoryChargeEntry(
+                code = "UCF",
+                description = "Universal Service Fund Rider",
+                calculationType = RegulatoryChargeType.PERCENTAGE_OF_ENERGY,
+                rate = Money(200), // 2.0%
+                serviceTypes = setOf(ServiceType.ELECTRIC),
+                effectiveDate = LocalDate.of(2024, 1, 1),
+            ),
+            RegulatoryChargeEntry(
+                code = "AEC",
+                description = "Advanced Energy Charge",
+                calculationType = RegulatoryChargeType.PER_UNIT,
+                rate = Money(8), // $0.08 per kWh
+                serviceTypes = setOf(ServiceType.ELECTRIC),
+                effectiveDate = LocalDate.of(2024, 1, 1),
+            ),
+            RegulatoryChargeEntry(
+                code = "GCR",
+                description = "Gas Cost Recovery",
+                calculationType = RegulatoryChargeType.PERCENTAGE_OF_ENERGY,
+                rate = Money(300), // 3.0%
+                serviceTypes = setOf(ServiceType.GAS),
+                effectiveDate = LocalDate.of(2024, 1, 1),
+            ),
+            RegulatoryChargeEntry(
+                code = "EEC",
+                description = "Energy Efficiency Charge",
+                calculationType = RegulatoryChargeType.FIXED,
+                rate = Money(200), // $2.00 per month
+                serviceTypes = setOf(ServiceType.ELECTRIC, ServiceType.GAS),
+                effectiveDate = LocalDate.of(2024, 1, 1),
+            ),
+        ),
+
+        // Illinois charges
+        "IL" to listOf(
+            RegulatoryChargeEntry(
+                code = "EPUA",
+                description = "Environmental Protection User Adjustment",
+                calculationType = RegulatoryChargeType.PER_UNIT,
+                rate = Money(10), // $0.10 per kWh
+                serviceTypes = setOf(ServiceType.ELECTRIC),
+                effectiveDate = LocalDate.of(2024, 1, 1),
+            ),
+            RegulatoryChargeEntry(
+                code = "DCRA",
+                description = "Delivery Cost Recovery Adjustment",
+                calculationType = RegulatoryChargeType.PERCENTAGE_OF_ENERGY,
+                rate = Money(350), // 3.5%
+                serviceTypes = setOf(ServiceType.ELECTRIC),
+                effectiveDate = LocalDate.of(2024, 1, 1),
+            ),
+            RegulatoryChargeEntry(
+                code = "REP",
+                description = "Renewable Energy Program",
+                calculationType = RegulatoryChargeType.PER_UNIT,
+                rate = Money(15), // $0.15 per kWh
+                serviceTypes = setOf(ServiceType.ELECTRIC),
+                effectiveDate = LocalDate.of(2024, 1, 1),
+            ),
+            RegulatoryChargeEntry(
+                code = "ICCF",
+                description = "Illinois Commerce Commission Fee",
+                calculationType = RegulatoryChargeType.PERCENTAGE_OF_TOTAL,
+                rate = Money(100), // 1.0%
+                serviceTypes = setOf(ServiceType.ELECTRIC, ServiceType.GAS, ServiceType.WATER),
+                effectiveDate = LocalDate.of(2024, 1, 1),
+            ),
+        ),
+
+        // California charges
+        "CA" to listOf(
+            RegulatoryChargeEntry(
+                code = "PCIA",
+                description = "Power Charge Indifference Adjustment",
+                calculationType = RegulatoryChargeType.PER_UNIT,
+                rate = Money(12), // $0.12 per kWh
+                serviceTypes = setOf(ServiceType.ELECTRIC),
+                effectiveDate = LocalDate.of(2024, 1, 1),
+            ),
+            RegulatoryChargeEntry(
+                code = "PPP",
+                description = "Public Purpose Program Surcharge",
+                calculationType = RegulatoryChargeType.PERCENTAGE_OF_ENERGY,
+                rate = Money(280), // 2.8%
+                serviceTypes = setOf(ServiceType.ELECTRIC, ServiceType.GAS),
+                effectiveDate = LocalDate.of(2024, 1, 1),
+            ),
+            RegulatoryChargeEntry(
+                code = "CARE",
+                description = "California Alternate Rates for Energy",
+                calculationType = RegulatoryChargeType.PERCENTAGE_OF_TOTAL,
+                rate = Money(150), // 1.5%
+                serviceTypes = setOf(ServiceType.ELECTRIC, ServiceType.GAS),
+                effectiveDate = LocalDate.of(2024, 1, 1),
+            ),
+            RegulatoryChargeEntry(
+                code = "WCF",
+                description = "Water Conservation Fee",
+                calculationType = RegulatoryChargeType.FIXED,
+                rate = Money(250), // $2.50 per month
+                serviceTypes = setOf(ServiceType.WATER),
+                effectiveDate = LocalDate.of(2024, 1, 1),
+            ),
+        ),
+
+        // New York charges
+        "NY" to listOf(
+            RegulatoryChargeEntry(
+                code = "MFC",
+                description = "Monthly Fixed Charge",
+                calculationType = RegulatoryChargeType.FIXED,
+                rate = Money(1800), // $18.00 per month
+                serviceTypes = setOf(ServiceType.ELECTRIC),
+                effectiveDate = LocalDate.of(2024, 1, 1),
+            ),
+            RegulatoryChargeEntry(
+                code = "NYSLR",
+                description = "NY State and Local Revenue-Based Surcharges",
+                calculationType = RegulatoryChargeType.PERCENTAGE_OF_TOTAL,
+                rate = Money(390), // 3.9%
+                serviceTypes = setOf(ServiceType.ELECTRIC, ServiceType.GAS),
+                effectiveDate = LocalDate.of(2024, 1, 1),
+            ),
+            RegulatoryChargeEntry(
+                code = "SBC",
+                description = "System Benefits Charge",
+                calculationType = RegulatoryChargeType.PER_UNIT,
+                rate = Money(18), // $0.18 per kWh
+                serviceTypes = setOf(ServiceType.ELECTRIC),
+                effectiveDate = LocalDate.of(2024, 1, 1),
+            ),
+            RegulatoryChargeEntry(
+                code = "WSC",
+                description = "Water/Sewer Commodity",
+                calculationType = RegulatoryChargeType.PER_UNIT,
+                rate = Money(750), // $7.50 per CCF
+                serviceTypes = setOf(ServiceType.WATER, ServiceType.WASTEWATER),
+                effectiveDate = LocalDate.of(2024, 1, 1),
+            ),
+        ),
+    )
 }

@@ -20,7 +20,7 @@ import java.time.LocalDate
 class BillingComputationService(
     private val customerServiceClient: CustomerServiceClient,
     private val rateServiceClient: RateServiceClient,
-    private val regulatoryServiceClient: RegulatoryServiceClient
+    private val regulatoryServiceClient: RegulatoryServiceClient,
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -37,13 +37,15 @@ class BillingComputationService(
         utilityId: UtilityId,
         customerId: CustomerId,
         billingPeriodId: String,
-        serviceState: String
+        serviceState: String,
     ): BillResult? {
         logger.info("Computing bill for customer=${customerId.value}, period=$billingPeriodId")
 
         // 1. Fetch customer snapshot
         val customerSnapshot = customerServiceClient.getCustomerSnapshot(
-            utilityId, customerId, LocalDate.now()
+            utilityId,
+            customerId,
+            LocalDate.now(),
         )
         if (customerSnapshot == null) {
             logger.error("Failed to fetch customer snapshot for customer=${customerId.value}")
@@ -52,7 +54,9 @@ class BillingComputationService(
 
         // 2. Fetch billing period with meter reads
         val periodWithReads = customerServiceClient.getBillingPeriod(
-            utilityId, customerId, billingPeriodId
+            utilityId,
+            customerId,
+            billingPeriodId,
         )
         if (periodWithReads == null) {
             logger.error("Failed to fetch billing period $billingPeriodId")
@@ -61,7 +65,9 @@ class BillingComputationService(
 
         // 3. Fetch rate context
         val rateContext = rateServiceClient.getRateContext(
-            utilityId, serviceState, periodWithReads.period.billDate
+            utilityId,
+            serviceState,
+            periodWithReads.period.billDate,
         )
         if (rateContext == null) {
             logger.error("Failed to fetch rate context for state=$serviceState")
@@ -70,7 +76,9 @@ class BillingComputationService(
 
         // 4. Fetch regulatory context
         val regulatoryContext = regulatoryServiceClient.getRegulatoryContext(
-            utilityId, serviceState, periodWithReads.period.billDate
+            utilityId,
+            serviceState,
+            periodWithReads.period.billDate,
         )
         if (regulatoryContext == null) {
             logger.error("Failed to fetch regulatory context for state=$serviceState")
@@ -85,7 +93,7 @@ class BillingComputationService(
         logger.info("Services found: ${readsByService.keys}")
         logger.info("Rate schedules: ${rateContext.rateSchedules.keys}")
         logger.info("Regulatory charges: ${regulatoryContext.regulatoryCharges.size}")
-        
+
         // 6. Build MeterReadPairs from meter reads
         // Group reads by meterId and create pairs (opening/closing reads)
         val meterReadPairs = buildMeterReadPairs(periodWithReads.meterReads)
@@ -93,7 +101,7 @@ class BillingComputationService(
             logger.error("No valid meter read pairs found for billing period $billingPeriodId")
             return null
         }
-        
+
         // 7. Determine primary service type and tariff
         val primaryServiceType = meterReadPairs.firstOrNull()?.serviceType
             ?: ServiceType.ELECTRIC
@@ -102,10 +110,10 @@ class BillingComputationService(
             logger.error("No tariff found for primary service type $primaryServiceType")
             return null
         }
-        
+
         // 8. Build BillInput
         val billInput = BillInput(
-            billId = BillId("BILL-${customerId.value}-${billingPeriodId}"),
+            billId = BillId("BILL-${customerId.value}-$billingPeriodId"),
             billRunId = BillingCycleId("RUN-${periodWithReads.period.id}"),
             utilityId = utilityId,
             customerId = customerId,
@@ -113,13 +121,13 @@ class BillingComputationService(
             meterReads = meterReadPairs,
             rateTariff = primaryTariff,
             accountBalance = customerSnapshot.accountBalance ?: AccountBalance.zero(),
-            regulatorySurcharges = regulatoryContext.regulatoryCharges.map { toRegulatorySurcharge(it) }
+            regulatorySurcharges = regulatoryContext.regulatoryCharges.map { toRegulatorySurcharge(it) },
         )
-        
+
         // 9. Call BillingEngine to compute the bill
         logger.info("Invoking BillingEngine for customer ${customerId.value}")
         val billResult = BillingEngine.calculateBill(billInput)
-        
+
         logger.info("Bill computed successfully - Amount due: ${billResult.amountDue}")
         return billResult
     }
@@ -134,21 +142,27 @@ class BillingComputationService(
         serviceType: ServiceType,
         usage: Double,
         billingPeriod: BillingPeriod,
-        serviceState: String
+        serviceState: String,
     ): BillResult? {
         logger.info("Computing single-service bill for customer=${customerId.value}, service=$serviceType")
 
         // Fetch contexts to demonstrate service integration
         val customerSnapshot = customerServiceClient.getCustomerSnapshot(
-            utilityId, customerId, LocalDate.now()
+            utilityId,
+            customerId,
+            LocalDate.now(),
         ) ?: return null
 
         val rateContext = rateServiceClient.getRateContext(
-            utilityId, serviceState, billingPeriod.billDate
+            utilityId,
+            serviceState,
+            billingPeriod.billDate,
         ) ?: return null
 
         val regulatoryContext = regulatoryServiceClient.getRegulatoryContext(
-            utilityId, serviceState, billingPeriod.billDate
+            utilityId,
+            serviceState,
+            billingPeriod.billDate,
         ) ?: return null
 
         val tariff = rateContext.rateSchedules[serviceType] ?: return null
@@ -156,11 +170,11 @@ class BillingComputationService(
         logger.info("Successfully fetched all contexts for $serviceType billing")
         logger.info("Tariff type: ${tariff::class.simpleName}")
         logger.info("Regulatory charges: ${regulatoryContext.regulatoryCharges.size}")
-        
+
         // TODO: Build BillInput and call BillingEngine
         return null
     }
-    
+
     /**
      * Build MeterReadPairs from a list of meter reads.
      * Groups reads by meterId and creates pairs from consecutive reads.
@@ -168,31 +182,31 @@ class BillingComputationService(
     private fun buildMeterReadPairs(meterReads: List<MeterRead>): List<MeterReadPair> {
         val readsByMeter = meterReads.groupBy { it.meterId }
         val pairs = mutableListOf<MeterReadPair>()
-        
+
         for ((meterId, reads) in readsByMeter) {
             // Sort by date
             val sortedReads = reads.sortedBy { it.readDate }
-            
+
             // Create pairs from consecutive reads
             for (i in 0 until sortedReads.size - 1) {
                 val startRead = sortedReads[i]
                 val endRead = sortedReads[i + 1]
-                
+
                 pairs.add(
                     MeterReadPair(
                         meterId = meterId,
                         serviceType = startRead.serviceType,
                         usageType = startRead.usageUnit,
                         startRead = startRead,
-                        endRead = endRead
-                    )
+                        endRead = endRead,
+                    ),
                 )
             }
         }
-        
+
         return pairs
     }
-    
+
     /**
      * Convert RegulatoryCharge to RegulatorySurcharge for BillingEngine.
      */
@@ -203,7 +217,7 @@ class BillingComputationService(
             RegulatoryChargeType.PERCENTAGE_OF_ENERGY -> RegulatorySurchargeCalculation.PERCENTAGE_OF_ENERGY
             RegulatoryChargeType.PERCENTAGE_OF_TOTAL -> RegulatorySurchargeCalculation.PERCENTAGE_OF_TOTAL
         }
-        
+
         return when (calculationType) {
             RegulatorySurchargeCalculation.FIXED -> {
                 RegulatorySurcharge(
@@ -213,7 +227,7 @@ class BillingComputationService(
                     fixedAmount = charge.rate,
                     ratePerUnit = null,
                     percentageRate = null,
-                    appliesTo = emptySet() // Apply to all services
+                    appliesTo = emptySet(), // Apply to all services
                 )
             }
             RegulatorySurchargeCalculation.PER_UNIT -> {
@@ -224,15 +238,16 @@ class BillingComputationService(
                     fixedAmount = null,
                     ratePerUnit = charge.rate,
                     percentageRate = null,
-                    appliesTo = emptySet()
+                    appliesTo = emptySet(),
                 )
             }
             RegulatorySurchargeCalculation.PERCENTAGE_OF_ENERGY,
-            RegulatorySurchargeCalculation.PERCENTAGE_OF_TOTAL -> {
+            RegulatorySurchargeCalculation.PERCENTAGE_OF_TOTAL,
+            -> {
                 // Convert rate (in cents) to percentage
                 // Assume rate is stored as basis points (e.g., 50 = 0.5%)
                 val percentage = charge.rate.amount / 100.0
-                
+
                 RegulatorySurcharge(
                     code = charge.code,
                     description = charge.description,
@@ -240,7 +255,7 @@ class BillingComputationService(
                     fixedAmount = null,
                     ratePerUnit = null,
                     percentageRate = percentage,
-                    appliesTo = emptySet()
+                    appliesTo = emptySet(),
                 )
             }
         }

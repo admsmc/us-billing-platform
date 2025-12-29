@@ -27,7 +27,7 @@ data class RealTimeUsageSnapshot(
     val currentPeriod: BillingPeriod,
     val periodToDate: PeriodToDateUsage,
     val recentUsage: List<DailyUsage>,
-    val projectedBill: ProjectedBill
+    val projectedBill: ProjectedBill,
 )
 
 /**
@@ -46,7 +46,7 @@ data class PeriodToDateUsage(
     val usageToDate: Double,
     val usageUnit: UsageUnit,
     val lastMeterRead: MeterRead?,
-    val estimatedCharges: Money
+    val estimatedCharges: Money,
 )
 
 /**
@@ -65,7 +65,7 @@ data class DailyUsage(
     val usageUnit: UsageUnit,
     val cost: Money,
     val temperatureHigh: Double? = null,
-    val temperatureLow: Double? = null
+    val temperatureLow: Double? = null,
 )
 
 /**
@@ -84,7 +84,7 @@ data class ProjectedBill(
     val usageUnit: UsageUnit,
     val projectionMethod: ProjectionMethod,
     val confidenceLevel: Double,
-    val breakdown: List<ProjectedCharge>
+    val breakdown: List<ProjectedCharge>,
 )
 
 /**
@@ -93,18 +93,18 @@ data class ProjectedBill(
 enum class ProjectionMethod {
     /** Simple daily average × remaining days */
     DAILY_AVERAGE,
-    
+
     /** Weighted average giving more weight to recent days */
     WEIGHTED_AVERAGE,
-    
+
     /** Historical pattern from same period last year */
     YEAR_OVER_YEAR,
-    
+
     /** Machine learning model prediction */
     ML_MODEL,
-    
+
     /** Degree-day adjusted for weather correlation */
-    DEGREE_DAY_ADJUSTED
+    DEGREE_DAY_ADJUSTED,
 }
 
 /**
@@ -117,7 +117,7 @@ enum class ProjectionMethod {
 data class ProjectedCharge(
     val description: String,
     val projectedAmount: Money,
-    val category: ChargeCategory
+    val category: ChargeCategory,
 )
 
 /**
@@ -141,7 +141,7 @@ data class IntervalUsage(
     val usage: Double,
     val usageUnit: UsageUnit,
     val demand: Double? = null,
-    val cost: Money
+    val cost: Money,
 )
 
 /**
@@ -161,7 +161,7 @@ data class MultiServiceUsageDashboard(
     val snapshotTime: Instant,
     val serviceSnapshots: List<RealTimeUsageSnapshot>,
     val totalProjectedBill: Money,
-    val budgetStatus: BudgetStatus? = null
+    val budgetStatus: BudgetStatus? = null,
 )
 
 /**
@@ -176,5 +176,5 @@ data class BudgetStatus(
     val budgetAmount: Money,
     val projectedAmount: Money,
     val variance: Money,
-    val onTrack: Boolean
+    val onTrack: Boolean,
 )

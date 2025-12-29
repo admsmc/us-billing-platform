@@ -1,14 +1,13 @@
 package com.example.usbilling.customer.model
 
 import com.example.usbilling.shared.CustomerId
-import com.example.usbilling.shared.Money
 import com.example.usbilling.shared.UtilityId
 import java.time.Instant
 import java.time.LocalDate
 
 /**
  * Customer account - the core aggregate in the CIS domain.
- * 
+ *
  * This follows bitemporal (SCD Type 2) modeling:
  * - Valid time: effective_from/effective_to (when the account attributes were true)
  * - System time: system_from/system_to (when the system knew about this version)
@@ -24,13 +23,13 @@ data class CustomerAccount(
     val serviceAddress: ServiceAddress?,
     val billingAddress: BillingAddress,
     val contactMethods: List<ContactMethod>,
-    
+
     // Bitemporal fields
     val effectiveFrom: LocalDate,
     val effectiveTo: LocalDate, // exclusive, use LocalDate.MAX for open-ended
     val systemFrom: Instant,
     val systemTo: Instant, // exclusive, use Instant.MAX for current version
-    
+
     // Audit fields
     val createdBy: String,
     val modifiedBy: String,
@@ -135,13 +134,13 @@ data class ServicePoint(
     val serviceType: ServiceType,
     val connectionStatus: ConnectionStatus,
     val rateClass: String?,
-    
+
     // Bitemporal fields
     val effectiveFrom: LocalDate,
     val effectiveTo: LocalDate,
     val systemFrom: Instant,
     val systemTo: Instant,
-    
+
     // Audit
     val createdBy: String,
     val modifiedBy: String,
@@ -177,13 +176,13 @@ data class Meter(
     val installDate: LocalDate?,
     val lastReadDate: LocalDate?,
     val meterStatus: MeterStatus,
-    
+
     // Bitemporal fields
     val effectiveFrom: LocalDate,
     val effectiveTo: LocalDate,
     val systemFrom: Instant,
     val systemTo: Instant,
-    
+
     // Audit
     val createdBy: String,
     val modifiedBy: String,
@@ -219,13 +218,13 @@ data class ServiceConnection(
     val connectionDate: LocalDate,
     val disconnectionDate: LocalDate?,
     val connectionReason: String?,
-    
+
     // Bitemporal fields
     val effectiveFrom: LocalDate,
     val effectiveTo: LocalDate,
     val systemFrom: Instant,
     val systemTo: Instant,
-    
+
     // Audit
     val createdBy: String,
     val modifiedBy: String,

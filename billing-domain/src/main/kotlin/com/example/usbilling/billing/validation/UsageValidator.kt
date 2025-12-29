@@ -1,6 +1,5 @@
 package com.example.usbilling.billing.validation
 
-import com.example.usbilling.billing.model.MeterRead
 import com.example.usbilling.billing.model.MeterReadPair
 import com.example.usbilling.billing.model.ReadingType
 import java.time.temporal.ChronoUnit
@@ -30,8 +29,8 @@ object UsageValidator {
                     ValidationError(
                         meterId = read.meterId,
                         errorType = ValidationErrorType.NEGATIVE_USAGE,
-                        message = "Meter ${read.meterId} has negative consumption: $consumption"
-                    )
+                        message = "Meter ${read.meterId} has negative consumption: $consumption",
+                    ),
                 )
             }
 
@@ -41,8 +40,8 @@ object UsageValidator {
                     ValidationWarning(
                         meterId = read.meterId,
                         warningType = ValidationWarningType.HIGH_USAGE,
-                        message = "Meter ${read.meterId} has unusually high consumption: $consumption"
-                    )
+                        message = "Meter ${read.meterId} has unusually high consumption: $consumption",
+                    ),
                 )
             }
 
@@ -52,8 +51,8 @@ object UsageValidator {
                     ValidationWarning(
                         meterId = read.meterId,
                         warningType = ValidationWarningType.ZERO_USAGE,
-                        message = "Meter ${read.meterId} has zero consumption"
-                    )
+                        message = "Meter ${read.meterId} has zero consumption",
+                    ),
                 )
             }
 
@@ -63,23 +62,23 @@ object UsageValidator {
                     ValidationError(
                         meterId = read.meterId,
                         errorType = ValidationErrorType.INVALID_TIMESTAMP,
-                        message = "Meter ${read.meterId} start read date is after end read"
-                    )
+                        message = "Meter ${read.meterId} start read date is after end read",
+                    ),
                 )
             }
 
             // Check for very short period (less than 25 days for monthly billing)
             val daysBetween = ChronoUnit.DAYS.between(
                 read.startRead.readDate,
-                read.endRead.readDate
+                read.endRead.readDate,
             )
             if (daysBetween < 25) {
                 warnings.add(
                     ValidationWarning(
                         meterId = read.meterId,
                         warningType = ValidationWarningType.SHORT_PERIOD,
-                        message = "Meter ${read.meterId} has short read period: $daysBetween days"
-                    )
+                        message = "Meter ${read.meterId} has short read period: $daysBetween days",
+                    ),
                 )
             }
 
@@ -89,8 +88,8 @@ object UsageValidator {
                     ValidationWarning(
                         meterId = read.meterId,
                         warningType = ValidationWarningType.LONG_PERIOD,
-                        message = "Meter ${read.meterId} has long read period: $daysBetween days"
-                    )
+                        message = "Meter ${read.meterId} has long read period: $daysBetween days",
+                    ),
                 )
             }
 
@@ -101,8 +100,8 @@ object UsageValidator {
                     ValidationWarning(
                         meterId = read.meterId,
                         warningType = ValidationWarningType.POSSIBLE_ROLLOVER,
-                        message = "Meter ${read.meterId} may have rolled over (consumption: $consumption)"
-                    )
+                        message = "Meter ${read.meterId} may have rolled over (consumption: $consumption)",
+                    ),
                 )
             }
         }
@@ -110,7 +109,7 @@ object UsageValidator {
         return ValidationResult(
             isValid = errors.isEmpty(),
             warnings = warnings,
-            errors = errors
+            errors = errors,
         )
     }
 
@@ -125,7 +124,7 @@ object UsageValidator {
      */
     fun estimateIfMissing(
         reads: List<MeterReadPair>,
-        historicalUsage: List<Double>
+        historicalUsage: List<Double>,
     ): List<MeterReadPair> {
         if (historicalUsage.isEmpty()) {
             // No history available, return original reads
@@ -145,8 +144,8 @@ object UsageValidator {
                 read.copy(
                     endRead = read.endRead.copy(
                         readingValue = estimatedEndValue,
-                        readingType = ReadingType.ESTIMATED
-                    )
+                        readingType = ReadingType.ESTIMATED,
+                    ),
                 )
             } else {
                 read
@@ -164,7 +163,7 @@ object UsageValidator {
      */
     fun estimateFromPriorYear(
         currentPeriodStart: java.time.LocalDate,
-        historicalUsageByPeriod: Map<String, Double>
+        historicalUsageByPeriod: Map<String, Double>,
     ): Double? {
         val priorYearKey = currentPeriodStart.minusYears(1).toString()
         return historicalUsageByPeriod[priorYearKey]
@@ -197,7 +196,7 @@ object UsageValidator {
 data class ValidationResult(
     val isValid: Boolean,
     val warnings: List<ValidationWarning>,
-    val errors: List<ValidationError>
+    val errors: List<ValidationError>,
 ) {
     /**
      * Check if there are any warnings.
@@ -212,9 +211,7 @@ data class ValidationResult(
     /**
      * Get all issues (warnings + errors) as strings.
      */
-    fun allIssues(): List<String> {
-        return warnings.map { it.message } + errors.map { it.message }
-    }
+    fun allIssues(): List<String> = warnings.map { it.message } + errors.map { it.message }
 }
 
 /**
@@ -227,7 +224,7 @@ data class ValidationResult(
 data class ValidationWarning(
     val meterId: String,
     val warningType: ValidationWarningType,
-    val message: String
+    val message: String,
 )
 
 /**
@@ -238,7 +235,7 @@ enum class ValidationWarningType {
     ZERO_USAGE,
     SHORT_PERIOD,
     LONG_PERIOD,
-    POSSIBLE_ROLLOVER
+    POSSIBLE_ROLLOVER,
 }
 
 /**
@@ -251,7 +248,7 @@ enum class ValidationWarningType {
 data class ValidationError(
     val meterId: String,
     val errorType: ValidationErrorType,
-    val message: String
+    val message: String,
 )
 
 /**
@@ -261,5 +258,5 @@ enum class ValidationErrorType {
     NEGATIVE_USAGE,
     INVALID_TIMESTAMP,
     MISSING_READ,
-    DUPLICATE_READ
+    DUPLICATE_READ,
 }

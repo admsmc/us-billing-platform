@@ -27,7 +27,7 @@ data class CustomerSnapshot(
     val accountStatus: AccountStatus,
     val meters: List<MeterInfo>,
     val specialRates: List<String> = emptyList(),
-    val accountBalance: AccountBalance? = null
+    val accountBalance: AccountBalance? = null,
 )
 
 /**
@@ -39,7 +39,7 @@ data class ServiceAddress(
     val city: String,
     val state: String,
     val zipCode: String,
-    val country: String = "US"
+    val country: String = "US",
 )
 
 /**
@@ -48,30 +48,30 @@ data class ServiceAddress(
 enum class CustomerClass {
     /** Single-family residential */
     RESIDENTIAL,
-    
+
     /** Multi-family residential */
     MULTI_FAMILY,
-    
+
     /** Small commercial (< 50 kW demand) */
     SMALL_COMMERCIAL,
-    
+
     /** General commercial */
     COMMERCIAL,
-    
+
     /** Large commercial (> 500 kW demand) */
     LARGE_COMMERCIAL,
-    
+
     /** Industrial customers */
     INDUSTRIAL,
-    
+
     /** Agricultural operations */
     AGRICULTURAL,
-    
+
     /** Government/municipal */
     MUNICIPAL,
-    
+
     /** Schools and universities */
-    INSTITUTIONAL
+    INSTITUTIONAL,
 }
 
 /**
@@ -80,18 +80,18 @@ enum class CustomerClass {
 enum class AccountStatus {
     /** Active account in good standing */
     ACTIVE,
-    
+
     /** Account suspended (non-payment, etc.) */
     SUSPENDED,
-    
+
     /** Service disconnected */
     DISCONNECTED,
-    
+
     /** Account closed */
     CLOSED,
-    
+
     /** New account pending activation */
-    PENDING
+    PENDING,
 }
 
 /**
@@ -108,7 +108,7 @@ data class MeterInfo(
     val serviceType: ServiceType,
     val meterType: MeterType,
     val installDate: java.time.LocalDate,
-    val lastReadDate: java.time.LocalDate?
+    val lastReadDate: java.time.LocalDate?,
 )
 
 /**
@@ -117,13 +117,13 @@ data class MeterInfo(
 enum class MeterType {
     /** Automated Meter Reading (AMR) - one-way communication */
     AMR,
-    
+
     /** Advanced Metering Infrastructure (AMI) - two-way communication */
     AMI,
-    
+
     /** Traditional analog meter requiring manual reads */
     ANALOG,
-    
+
     /** Smart meter with interval data */
-    SMART
+    SMART,
 }

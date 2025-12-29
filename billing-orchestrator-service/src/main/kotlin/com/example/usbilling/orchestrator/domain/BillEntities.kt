@@ -1,10 +1,10 @@
 package com.example.usbilling.orchestrator.domain
 
 import org.springframework.data.annotation.Id
+import org.springframework.data.jdbc.repository.query.Query
 import org.springframework.data.relational.core.mapping.Column
 import org.springframework.data.relational.core.mapping.Table
 import org.springframework.data.repository.CrudRepository
-import org.springframework.data.jdbc.repository.query.Query
 import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
@@ -23,7 +23,7 @@ data class BillEntity(
     @Column("due_date") val dueDate: LocalDate,
     @Column("bill_date") val billDate: LocalDate,
     @Column("created_at") val createdAt: Instant = Instant.now(),
-    @Column("updated_at") val updatedAt: Instant = Instant.now()
+    @Column("updated_at") val updatedAt: Instant = Instant.now(),
 )
 
 @Table("bill_line")
@@ -36,7 +36,7 @@ data class BillLineEntity(
     @Column("usage_amount") val usageAmount: BigDecimal?,
     @Column("rate_value_cents") val rateValueCents: Long?,
     @Column("line_amount_cents") val lineAmountCents: Long,
-    @Column("line_order") val lineOrder: Int
+    @Column("line_order") val lineOrder: Int,
 )
 
 @Table("bill_event")
@@ -45,18 +45,18 @@ data class BillEventEntity(
     @Column("bill_id") val billId: String,
     @Column("event_type") val eventType: String,
     @Column("event_data") val eventData: String?,
-    @Column("created_at") val createdAt: Instant = Instant.now()
+    @Column("created_at") val createdAt: Instant = Instant.now(),
 )
 
 @Repository
 interface BillRepository : CrudRepository<BillEntity, String> {
     @Query("SELECT * FROM bill WHERE customer_id = :customerId ORDER BY bill_date DESC")
     fun findByCustomerId(@Param("customerId") customerId: String): List<BillEntity>
-    
+
     @Query("SELECT * FROM bill WHERE utility_id = :utilityId AND status = :status")
     fun findByUtilityIdAndStatus(
         @Param("utilityId") utilityId: String,
-        @Param("status") status: String
+        @Param("status") status: String,
     ): List<BillEntity>
 }
 

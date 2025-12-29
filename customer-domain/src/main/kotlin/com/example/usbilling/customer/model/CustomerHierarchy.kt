@@ -15,13 +15,13 @@ data class Customer(
     val utilityId: UtilityId,
     val customerType: CustomerType,
     val profile: CustomerProfile,
-    
+
     // Bitemporal fields
     val effectiveFrom: LocalDate,
     val effectiveTo: LocalDate,
     val systemFrom: Instant,
     val systemTo: Instant,
-    
+
     // Audit
     val createdBy: String,
     val modifiedBy: String,
@@ -64,13 +64,13 @@ data class AccountCustomerRole(
     val isPrimary: Boolean, // Primary contact for this role type
     val authorizationLevel: AuthorizationLevel,
     val notes: String?,
-    
+
     // Bitemporal fields
     val effectiveFrom: LocalDate,
     val effectiveTo: LocalDate,
     val systemFrom: Instant,
     val systemTo: Instant,
-    
+
     // Audit
     val createdBy: String,
     val modifiedBy: String,
@@ -84,14 +84,14 @@ enum class CustomerRoleType {
     ACCOUNT_HOLDER, // Legal account holder
     BILL_PAYER, // Responsible for payments
     AUTHORIZED_USER, // Can make changes to account
-    
+
     // Property-related roles
     PROPERTY_OWNER, // Owns the property
     LANDLORD, // Rents out the property
     TENANT, // Rents the property
     PROPERTY_MANAGER, // Manages property on behalf of owner
     MANAGEMENT_COMPANY, // Property management company
-    
+
     // Additional roles
     EMERGENCY_CONTACT, // Contact in emergencies
     AUTHORIZED_THIRD_PARTY, // Third party with limited access (e.g., energy consultant)
@@ -125,13 +125,13 @@ data class Property(
     val numberOfUnits: Int?, // For multi-unit properties
     val yearBuilt: Int?,
     val notes: String?,
-    
+
     // Bitemporal
     val effectiveFrom: LocalDate,
     val effectiveTo: LocalDate,
     val systemFrom: Instant,
     val systemTo: Instant,
-    
+
     // Audit
     val createdBy: String,
     val modifiedBy: String,

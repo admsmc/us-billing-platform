@@ -10,15 +10,15 @@ import java.time.temporal.ChronoUnit
 
 /**
  * Engine for calculating real-time usage snapshots and projected bills.
- * 
+ *
  * Provides mid-cycle usage reporting for customer portals and mobile apps,
  * separate from the periodic billing engine which generates final bills.
  */
 object RealTimeUsageEngine {
-    
+
     /**
      * Generate a real-time usage snapshot for a single service.
-     * 
+     *
      * @param utilityId The utility company
      * @param customerId The customer
      * @param serviceType Type of service (ELECTRIC, WATER, etc.)
@@ -39,9 +39,8 @@ object RealTimeUsageEngine {
         currentMeterRead: MeterRead?,
         periodStartMeterRead: MeterRead?,
         tariff: RateTariff,
-        snapshotTime: Instant = Instant.now()
+        snapshotTime: Instant = Instant.now(),
     ): RealTimeUsageSnapshot {
-        
         // Calculate period-to-date usage
         val periodToDate = calculatePeriodToDate(
             currentPeriod = currentPeriod,
@@ -49,18 +48,18 @@ object RealTimeUsageEngine {
             periodStartMeterRead = periodStartMeterRead,
             dailyUsageHistory = dailyUsageHistory,
             tariff = tariff,
-            snapshotTime = snapshotTime
+            snapshotTime = snapshotTime,
         )
-        
+
         // Project bill to end of period
         val projectedBill = projectBill(
             periodToDate = periodToDate,
             dailyUsageHistory = dailyUsageHistory,
             currentPeriod = currentPeriod,
             tariff = tariff,
-            snapshotTime = snapshotTime
+            snapshotTime = snapshotTime,
         )
-        
+
         return RealTimeUsageSnapshot(
             utilityId = utilityId,
             customerId = customerId,
@@ -69,13 +68,13 @@ object RealTimeUsageEngine {
             currentPeriod = currentPeriod,
             periodToDate = periodToDate,
             recentUsage = dailyUsageHistory.takeLast(30), // Last 30 days
-            projectedBill = projectedBill
+            projectedBill = projectedBill,
         )
     }
-    
+
     /**
      * Generate multi-service usage dashboard.
-     * 
+     *
      * @param utilityId The utility company
      * @param customerId The customer
      * @param serviceSnapshots Individual service snapshots
@@ -88,46 +87,44 @@ object RealTimeUsageEngine {
         customerId: CustomerId,
         serviceSnapshots: List<RealTimeUsageSnapshot>,
         budgetAmount: Money? = null,
-        snapshotTime: Instant = Instant.now()
+        snapshotTime: Instant = Instant.now(),
     ): MultiServiceUsageDashboard {
-        
         val totalProjected = serviceSnapshots
             .sumOf { it.projectedBill.projectedTotal.amount }
             .let { Money(it) }
-        
+
         val budgetStatus = budgetAmount?.let {
             val variance = Money(it.amount - totalProjected.amount)
             BudgetStatus(
                 budgetAmount = it,
                 projectedAmount = totalProjected,
                 variance = variance,
-                onTrack = variance.amount >= 0
+                onTrack = variance.amount >= 0,
             )
         }
-        
+
         return MultiServiceUsageDashboard(
             utilityId = utilityId,
             customerId = customerId,
             snapshotTime = snapshotTime,
             serviceSnapshots = serviceSnapshots,
             totalProjectedBill = totalProjected,
-            budgetStatus = budgetStatus
+            budgetStatus = budgetStatus,
         )
     }
-    
+
     private fun calculatePeriodToDate(
         currentPeriod: BillingPeriod,
         currentMeterRead: MeterRead?,
         periodStartMeterRead: MeterRead?,
         dailyUsageHistory: List<DailyUsage>,
         tariff: RateTariff,
-        snapshotTime: Instant
+        snapshotTime: Instant,
     ): PeriodToDateUsage {
-        
         val today = LocalDate.ofInstant(snapshotTime, java.time.ZoneId.systemDefault())
         val daysElapsed = ChronoUnit.DAYS.between(currentPeriod.startDate, today).toInt() + 1
         val daysRemaining = ChronoUnit.DAYS.between(today, currentPeriod.endDate).toInt()
-        
+
         // Calculate usage to date from meter reads or daily history
         val usageToDate = if (currentMeterRead != null && periodStartMeterRead != null) {
             currentMeterRead.readingValue - periodStartMeterRead.readingValue
@@ -136,77 +133,75 @@ object RealTimeUsageEngine {
                 .filter { it.date >= currentPeriod.startDate && it.date <= today }
                 .sumOf { it.usage }
         }
-        
+
         // Estimate charges based on usage so far
         val estimatedCharges = estimateCharges(
             usage = usageToDate,
             tariff = tariff,
             daysElapsed = daysElapsed,
-            totalDaysInPeriod = currentPeriod.daysInPeriod()
+            totalDaysInPeriod = currentPeriod.daysInPeriod(),
         )
-        
-        val usageUnit = currentMeterRead?.usageUnit 
-            ?: dailyUsageHistory.firstOrNull()?.usageUnit 
+
+        val usageUnit = currentMeterRead?.usageUnit
+            ?: dailyUsageHistory.firstOrNull()?.usageUnit
             ?: UsageUnit.KWH
-        
+
         return PeriodToDateUsage(
             daysElapsed = daysElapsed,
             daysRemaining = daysRemaining.coerceAtLeast(0),
             usageToDate = usageToDate,
             usageUnit = usageUnit,
             lastMeterRead = currentMeterRead,
-            estimatedCharges = estimatedCharges
+            estimatedCharges = estimatedCharges,
         )
     }
-    
+
     private fun projectBill(
         periodToDate: PeriodToDateUsage,
         dailyUsageHistory: List<DailyUsage>,
         currentPeriod: BillingPeriod,
         tariff: RateTariff,
-        snapshotTime: Instant
+        snapshotTime: Instant,
     ): ProjectedBill {
-        
         // Use daily average projection for simplicity
         val avgDailyUsage = if (periodToDate.daysElapsed > 0) {
             periodToDate.usageToDate / periodToDate.daysElapsed
         } else {
             0.0
         }
-        
+
         val projectedUsage = periodToDate.usageToDate + (avgDailyUsage * periodToDate.daysRemaining)
-        
+
         // Estimate total charges including readiness-to-serve
         val projectedTotal = estimateCharges(
             usage = projectedUsage,
             tariff = tariff,
             daysElapsed = currentPeriod.daysInPeriod(),
-            totalDaysInPeriod = currentPeriod.daysInPeriod()
+            totalDaysInPeriod = currentPeriod.daysInPeriod(),
         )
-        
+
         // Calculate confidence based on days elapsed
         val confidence = (periodToDate.daysElapsed.toDouble() / currentPeriod.daysInPeriod()).coerceIn(0.0, 1.0)
-        
+
         // Create breakdown
         val breakdown = createProjectionBreakdown(tariff, projectedUsage, projectedTotal)
-        
+
         return ProjectedBill(
             projectedTotal = projectedTotal,
             projectedUsage = projectedUsage,
             usageUnit = periodToDate.usageUnit,
             projectionMethod = ProjectionMethod.DAILY_AVERAGE,
             confidenceLevel = confidence,
-            breakdown = breakdown
+            breakdown = breakdown,
         )
     }
-    
+
     private fun estimateCharges(
         usage: Double,
         tariff: RateTariff,
         daysElapsed: Int,
-        totalDaysInPeriod: Int
+        totalDaysInPeriod: Int,
     ): Money {
-        
         // Get readiness-to-serve charge (prorated if mid-period)
         val readinessToServe = when (tariff) {
             is RateTariff.FlatRate -> tariff.readinessToServeCharge
@@ -214,10 +209,10 @@ object RealTimeUsageEngine {
             is RateTariff.TimeOfUseRate -> tariff.readinessToServeCharge
             is RateTariff.DemandRate -> tariff.readinessToServeCharge
         }
-        
+
         val prorationFactor = daysElapsed.toDouble() / totalDaysInPeriod
         val proratedReadinessToServe = Money((readinessToServe.amount * prorationFactor).toLong())
-        
+
         // Calculate usage charges
         val usageCharges = when (tariff) {
             is RateTariff.FlatRate -> {
@@ -231,44 +226,43 @@ object RealTimeUsageEngine {
                 val peakUsage = usage * 0.5
                 val offPeakUsage = usage * 0.5
                 Money(
-                    (peakUsage * tariff.peakRate.amount + offPeakUsage * tariff.offPeakRate.amount).toLong()
+                    (peakUsage * tariff.peakRate.amount + offPeakUsage * tariff.offPeakRate.amount).toLong(),
                 )
             }
             is RateTariff.DemandRate -> {
                 Money((usage * tariff.energyRatePerUnit.amount).toLong())
             }
         }
-        
+
         return Money(proratedReadinessToServe.amount + usageCharges.amount)
     }
-    
+
     private fun calculateTieredCharges(usage: Double, tiers: List<RateTier>): Money {
         var remainingUsage = usage
         var totalCharge = 0L
-        
+
         for (tier in tiers) {
             val tierMax = tier.maxUsage ?: Double.MAX_VALUE
             val tierUsage = minOf(remainingUsage, tierMax)
-            
+
             if (tierUsage > 0) {
                 totalCharge += (tierUsage * tier.ratePerUnit.amount).toLong()
                 remainingUsage -= tierUsage
             }
-            
+
             if (remainingUsage <= 0) break
         }
-        
+
         return Money(totalCharge)
     }
-    
+
     private fun createProjectionBreakdown(
         tariff: RateTariff,
         projectedUsage: Double,
-        projectedTotal: Money
+        projectedTotal: Money,
     ): List<ProjectedCharge> {
-        
         val breakdown = mutableListOf<ProjectedCharge>()
-        
+
         // Readiness to serve
         val readinessToServe = when (tariff) {
             is RateTariff.FlatRate -> tariff.readinessToServeCharge
@@ -276,25 +270,25 @@ object RealTimeUsageEngine {
             is RateTariff.TimeOfUseRate -> tariff.readinessToServeCharge
             is RateTariff.DemandRate -> tariff.readinessToServeCharge
         }
-        
+
         breakdown.add(
             ProjectedCharge(
                 description = "Readiness to Serve",
                 projectedAmount = readinessToServe,
-                category = ChargeCategory.READINESS_TO_SERVE
-            )
+                category = ChargeCategory.READINESS_TO_SERVE,
+            ),
         )
-        
+
         // Usage charges
         val usageCharge = Money(projectedTotal.amount - readinessToServe.amount)
         breakdown.add(
             ProjectedCharge(
                 description = "Usage Charges",
                 projectedAmount = usageCharge,
-                category = ChargeCategory.USAGE_CHARGE
-            )
+                category = ChargeCategory.USAGE_CHARGE,
+            ),
         )
-        
+
         return breakdown
     }
 }

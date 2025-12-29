@@ -14,7 +14,7 @@ data class VoluntaryContribution(
     val code: String,
     val description: String,
     val amount: Money,
-    val program: ContributionProgram
+    val program: ContributionProgram,
 )
 
 /**
@@ -23,28 +23,30 @@ data class VoluntaryContribution(
 enum class ContributionProgram {
     /** Low-income energy assistance programs */
     ENERGY_ASSISTANCE,
-    
+
     /** Tree planting and urban forestry programs */
     TREE_PLANTING,
-    
+
     /** Renewable energy development funds */
     RENEWABLE_ENERGY,
-    
+
     /** General low-income customer support */
     LOW_INCOME_SUPPORT,
-    
+
     /** Community improvement fund */
     COMMUNITY_FUND,
-    
+
     /** Environmental conservation programs */
     CONSERVATION,
-    
+
     /** Education and outreach programs */
     EDUCATION,
-    
+
     /** Other/miscellaneous programs */
-    OTHER;
-    
+    OTHER,
+
+    ;
+
     /**
      * Human-readable display name for the program.
      */

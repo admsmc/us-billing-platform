@@ -2,8 +2,8 @@ package com.example.usbilling.worker
 
 import com.example.usbilling.payroll.model.*
 import com.example.usbilling.shared.CustomerId
-import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.shared.Money
+import com.example.usbilling.shared.UtilityId
 import com.example.usbilling.worker.support.StubTaxLaborClientsTestConfig
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance

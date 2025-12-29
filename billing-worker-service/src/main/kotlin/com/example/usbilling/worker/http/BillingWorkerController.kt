@@ -1,8 +1,8 @@
 package com.example.usbilling.worker.http
 
 import com.example.usbilling.billing.model.BillResult
-import com.example.usbilling.billing.model.BillingPeriod
 import com.example.usbilling.billing.model.BillingFrequency
+import com.example.usbilling.billing.model.BillingPeriod
 import com.example.usbilling.billing.model.ServiceType
 import com.example.usbilling.shared.CustomerId
 import com.example.usbilling.shared.UtilityId
@@ -18,7 +18,7 @@ import java.time.LocalDate
 @RestController
 @RequestMapping("/billing-worker")
 class BillingWorkerController(
-    private val billingComputationService: BillingComputationService
+    private val billingComputationService: BillingComputationService,
 ) {
 
     /**
@@ -31,7 +31,7 @@ class BillingWorkerController(
             utilityId = UtilityId(request.utilityId),
             customerId = CustomerId(request.customerId),
             billingPeriodId = request.billingPeriodId,
-            serviceState = request.serviceState
+            serviceState = request.serviceState,
         )
 
         return if (billResult != null) {
@@ -54,7 +54,7 @@ class BillingWorkerController(
             endDate = LocalDate.now(),
             billDate = LocalDate.now(),
             dueDate = LocalDate.now().plusDays(20),
-            frequency = BillingFrequency.MONTHLY
+            frequency = BillingFrequency.MONTHLY,
         )
 
         val serviceType = parseServiceType(request.serviceType)
@@ -65,7 +65,7 @@ class BillingWorkerController(
             serviceType = serviceType,
             usage = request.usage,
             billingPeriod = billingPeriod,
-            serviceState = request.serviceState
+            serviceState = request.serviceState,
         )
 
         return if (billResult != null) {
@@ -79,16 +79,12 @@ class BillingWorkerController(
      * Health check endpoint.
      */
     @GetMapping("/health")
-    fun health(): ResponseEntity<HealthResponse> {
-        return ResponseEntity.ok(HealthResponse("UP", "Billing Worker Service"))
-    }
+    fun health(): ResponseEntity<HealthResponse> = ResponseEntity.ok(HealthResponse("UP", "Billing Worker Service"))
 
-    private fun parseServiceType(value: String): ServiceType {
-        return try {
-            ServiceType.valueOf(value.uppercase())
-        } catch (e: IllegalArgumentException) {
-            ServiceType.ELECTRIC
-        }
+    private fun parseServiceType(value: String): ServiceType = try {
+        ServiceType.valueOf(value.uppercase())
+    } catch (e: IllegalArgumentException) {
+        ServiceType.ELECTRIC
     }
 }
 
@@ -99,7 +95,7 @@ data class DryRunBillRequest(
     val utilityId: String,
     val customerId: String,
     val billingPeriodId: String,
-    val serviceState: String
+    val serviceState: String,
 )
 
 /**
@@ -110,7 +106,7 @@ data class SimpleDryRunRequest(
     val customerId: String,
     val serviceType: String,
     val usage: Double,
-    val serviceState: String
+    val serviceState: String,
 )
 
 /**
@@ -118,5 +114,5 @@ data class SimpleDryRunRequest(
  */
 data class HealthResponse(
     val status: String,
-    val service: String
+    val service: String,
 )

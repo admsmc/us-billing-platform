@@ -21,7 +21,7 @@ data class ServiceRuleSet(
     val requiredServices: Set<ServiceType> = emptySet(),
     val minimumServices: Int = 0,
     val maximumServices: Int? = null,
-    val allowedCombinations: List<ServiceCombination>? = null
+    val allowedCombinations: List<ServiceCombination>? = null,
 )
 
 /**
@@ -34,7 +34,7 @@ data class ServiceRuleSet(
 data class ServiceDependency(
     val dependentService: ServiceType,
     val requiredService: ServiceType,
-    val reason: String
+    val reason: String,
 ) {
     companion object {
         /**
@@ -43,16 +43,16 @@ data class ServiceDependency(
         fun wastewaterRequiresWater() = ServiceDependency(
             dependentService = ServiceType.WASTEWATER,
             requiredService = ServiceType.WATER,
-            reason = "Wastewater service requires active water service for measurement"
+            reason = "Wastewater service requires active water service for measurement",
         )
-        
+
         /**
          * Common dependency: Stormwater typically requires water service.
          */
         fun stormwaterRequiresWater() = ServiceDependency(
             dependentService = ServiceType.STORMWATER,
             requiredService = ServiceType.WATER,
-            reason = "Stormwater fees typically bundled with water service"
+            reason = "Stormwater fees typically bundled with water service",
         )
     }
 }
@@ -65,7 +65,7 @@ data class ServiceDependency(
  */
 data class MutualExclusionRule(
     val services: Set<ServiceType>,
-    val reason: String
+    val reason: String,
 ) {
     init {
         require(services.size >= 2) { "Mutual exclusion rule must include at least 2 services" }
@@ -81,7 +81,7 @@ data class MutualExclusionRule(
  */
 data class ServiceCombination(
     val services: Set<ServiceType>,
-    val description: String
+    val description: String,
 ) {
     companion object {
         /**
@@ -89,9 +89,9 @@ data class ServiceCombination(
          */
         fun electricOnly() = ServiceCombination(
             services = setOf(ServiceType.ELECTRIC),
-            description = "Electric service only"
+            description = "Electric service only",
         )
-        
+
         /**
          * Full utility bundle.
          */
@@ -101,17 +101,17 @@ data class ServiceCombination(
                 ServiceType.WATER,
                 ServiceType.WASTEWATER,
                 ServiceType.REFUSE,
-                ServiceType.RECYCLING
+                ServiceType.RECYCLING,
             ),
-            description = "Complete utility service bundle"
+            description = "Complete utility service bundle",
         )
-        
+
         /**
          * Water services (water + wastewater).
          */
         fun waterServices() = ServiceCombination(
             services = setOf(ServiceType.WATER, ServiceType.WASTEWATER),
-            description = "Water and wastewater services"
+            description = "Water and wastewater services",
         )
     }
 }
@@ -124,7 +124,7 @@ sealed class ServiceRuleValidationResult {
      * The proposed service configuration is valid.
      */
     data class Valid(val services: Set<ServiceType>) : ServiceRuleValidationResult()
-    
+
     /**
      * The proposed service configuration violates one or more rules.
      *
@@ -132,7 +132,7 @@ sealed class ServiceRuleValidationResult {
      */
     data class Invalid(val violations: List<ServiceRuleViolation>) : ServiceRuleValidationResult() {
         fun hasViolations(): Boolean = violations.isNotEmpty()
-        
+
         /**
          * Get all violation messages as a single string.
          */
@@ -150,7 +150,7 @@ sealed class ServiceRuleValidationResult {
 data class ServiceRuleViolation(
     val type: ViolationType,
     val message: String,
-    val affectedServices: Set<ServiceType>
+    val affectedServices: Set<ServiceType>,
 )
 
 /**
@@ -159,21 +159,21 @@ data class ServiceRuleViolation(
 enum class ViolationType {
     /** Missing required dependency */
     MISSING_DEPENDENCY,
-    
+
     /** Mutually exclusive services present */
     MUTUAL_EXCLUSION,
-    
+
     /** Required service is missing */
     REQUIRED_SERVICE_MISSING,
-    
+
     /** Too few services */
     BELOW_MINIMUM,
-    
+
     /** Too many services */
     ABOVE_MAXIMUM,
-    
+
     /** Combination not in allowed list */
-    COMBINATION_NOT_ALLOWED
+    COMBINATION_NOT_ALLOWED,
 }
 
 /**
@@ -190,11 +190,11 @@ object ServiceRulePresets {
         utilityId = utilityId,
         dependencies = listOf(
             ServiceDependency.wastewaterRequiresWater(),
-            ServiceDependency.stormwaterRequiresWater()
+            ServiceDependency.stormwaterRequiresWater(),
         ),
-        minimumServices = 1
+        minimumServices = 1,
     )
-    
+
     /**
      * Electric-only utility rules.
      * - Only electric service allowed
@@ -202,9 +202,9 @@ object ServiceRulePresets {
     fun electricOnly(utilityId: UtilityId) = ServiceRuleSet(
         utilityId = utilityId,
         requiredServices = setOf(ServiceType.ELECTRIC),
-        allowedCombinations = listOf(ServiceCombination.electricOnly())
+        allowedCombinations = listOf(ServiceCombination.electricOnly()),
     )
-    
+
     /**
      * Water utility rules.
      * - Water or water+wastewater allowed
@@ -214,14 +214,14 @@ object ServiceRulePresets {
         utilityId = utilityId,
         dependencies = listOf(ServiceDependency.wastewaterRequiresWater()),
         requiredServices = setOf(ServiceType.WATER),
-        minimumServices = 1
+        minimumServices = 1,
     )
-    
+
     /**
      * No restrictions - any combination allowed.
      */
     fun unrestricted(utilityId: UtilityId) = ServiceRuleSet(
         utilityId = utilityId,
-        minimumServices = 0
+        minimumServices = 0,
     )
 }

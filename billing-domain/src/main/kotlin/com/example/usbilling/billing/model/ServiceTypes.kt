@@ -6,31 +6,33 @@ package com.example.usbilling.billing.model
 enum class ServiceType {
     /** Electric/power service */
     ELECTRIC,
-    
+
     /** Potable water service */
     WATER,
-    
+
     /** Wastewater/sewer service */
     WASTEWATER,
-    
+
     /** Internet/broadband service */
     BROADBAND,
-    
+
     /** Natural gas service */
     GAS,
-    
+
     /** Refuse/trash collection */
     REFUSE,
-    
+
     /** Recycling collection */
     RECYCLING,
-    
+
     /** Stormwater management */
     STORMWATER,
-    
+
     /** Not a metered service - used for voluntary contributions/donations */
-    DONATION;
-    
+    DONATION,
+
+    ;
+
     /**
      * Human-readable display name for the service.
      */
@@ -53,34 +55,36 @@ enum class ServiceType {
 enum class UsageUnit {
     /** Kilowatt-hours (electricity) */
     KWH,
-    
+
     /** Kilowatts (demand/capacity) */
     KW,
-    
+
     /** Hundred cubic feet (water/wastewater/gas) */
     CCF,
-    
+
     /** Gallons (water/wastewater alternative) */
     GALLONS,
-    
+
     /** Therms (natural gas) */
     THERMS,
-    
+
     /** Megabits per second (broadband speed tier) */
     MBPS,
-    
+
     /** Gigabytes (broadband data cap) */
     GB,
-    
+
     /** Cubic yards (refuse/recycling) */
     CUBIC_YARDS,
-    
+
     /** Number of containers/cans */
     CONTAINERS,
-    
+
     /** For fixed services or donations with no usage measurement */
-    NONE;
-    
+    NONE,
+
+    ;
+
     /**
      * Human-readable display name for the unit.
      */
@@ -110,7 +114,7 @@ data class ServiceConfiguration(
     val serviceType: ServiceType,
     val enabled: Boolean,
     val defaultUsageUnit: UsageUnit,
-    val requiresMeter: Boolean
+    val requiresMeter: Boolean,
 ) {
     companion object {
         /**
@@ -120,9 +124,9 @@ data class ServiceConfiguration(
             serviceType = ServiceType.ELECTRIC,
             enabled = true,
             defaultUsageUnit = UsageUnit.KWH,
-            requiresMeter = true
+            requiresMeter = true,
         )
-        
+
         /**
          * Standard configuration for water service.
          */
@@ -130,9 +134,9 @@ data class ServiceConfiguration(
             serviceType = ServiceType.WATER,
             enabled = true,
             defaultUsageUnit = UsageUnit.CCF,
-            requiresMeter = true
+            requiresMeter = true,
         )
-        
+
         /**
          * Standard configuration for wastewater service.
          */
@@ -140,9 +144,9 @@ data class ServiceConfiguration(
             serviceType = ServiceType.WASTEWATER,
             enabled = true,
             defaultUsageUnit = UsageUnit.CCF,
-            requiresMeter = true
+            requiresMeter = true,
         )
-        
+
         /**
          * Standard configuration for broadband service.
          */
@@ -150,9 +154,9 @@ data class ServiceConfiguration(
             serviceType = ServiceType.BROADBAND,
             enabled = true,
             defaultUsageUnit = UsageUnit.MBPS,
-            requiresMeter = false
+            requiresMeter = false,
         )
-        
+
         /**
          * Standard configuration for natural gas service.
          */
@@ -160,7 +164,7 @@ data class ServiceConfiguration(
             serviceType = ServiceType.GAS,
             enabled = true,
             defaultUsageUnit = UsageUnit.THERMS,
-            requiresMeter = true
+            requiresMeter = true,
         )
     }
 }

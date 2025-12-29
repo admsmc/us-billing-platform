@@ -13,24 +13,18 @@ import org.springframework.context.annotation.Configuration
 class BillingRabbitConfiguration {
 
     @Bean
-    fun billingJobsExchange(): TopicExchange {
-        return TopicExchange(BillingComputationJobRouting.EXCHANGE, true, false)
-    }
+    fun billingJobsExchange(): TopicExchange = TopicExchange(BillingComputationJobRouting.EXCHANGE, true, false)
 
     @Bean
-    fun billComputedQueue(): Queue {
-        return QueueBuilder.durable(BillingComputationJobRouting.BILL_COMPUTED)
-            .build()
-    }
+    fun billComputedQueue(): Queue = QueueBuilder.durable(BillingComputationJobRouting.BILL_COMPUTED)
+        .build()
 
     @Bean
     fun billComputedBinding(
         billComputedQueue: Queue,
-        billingJobsExchange: TopicExchange
-    ): Binding {
-        return BindingBuilder
-            .bind(billComputedQueue)
-            .to(billingJobsExchange)
-            .with(BillingComputationJobRouting.BILL_COMPUTED)
-    }
+        billingJobsExchange: TopicExchange,
+    ): Binding = BindingBuilder
+        .bind(billComputedQueue)
+        .to(billingJobsExchange)
+        .with(BillingComputationJobRouting.BILL_COMPUTED)
 }

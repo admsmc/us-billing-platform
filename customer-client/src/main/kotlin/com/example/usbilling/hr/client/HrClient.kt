@@ -12,7 +12,7 @@ import java.time.LocalDate
  *
  * This interface is intentionally transport-agnostic (HTTP/gRPC/etc). Concrete
  * adapters live in service modules.
- * 
+ *
  * Note: Renamed from HrClient (payroll) to CustomerClient (billing).
  * Garnishment methods removed (payroll-specific).
  */
@@ -22,7 +22,7 @@ interface CustomerClient {
     fun getBillingPeriod(utilityId: UtilityId, billingPeriodId: String): BillingPeriod?
 
     fun findBillingPeriodByBillDate(utilityId: UtilityId, billDate: LocalDate): BillingPeriod?
-    
+
     /**
      * Get meter reads for a customer within a billing period.
      * This is the billing equivalent of time/hours data in payroll.

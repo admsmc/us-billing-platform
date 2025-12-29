@@ -22,7 +22,7 @@ import java.util.*
 class BillingComputationConsumer(
     private val billingComputationService: BillingComputationService,
     private val rabbitTemplate: RabbitTemplate,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -32,16 +32,16 @@ class BillingComputationConsumer(
     @RabbitListener(queues = [BillingComputationJobRouting.COMPUTE_BILL])
     fun handleComputeBillJob(job: ComputeBillJob) {
         logger.info("Received ComputeBillJob for bill ${job.billId} (messageId: ${job.messageId}, attempt: ${job.attempt})")
-        
+
         try {
             // Compute the bill
             val billResult = billingComputationService.computeBill(
                 utilityId = UtilityId(job.utilityId),
                 customerId = CustomerId(job.customerId),
                 billingPeriodId = job.billingPeriodId,
-                serviceState = job.serviceState
+                serviceState = job.serviceState,
             )
-            
+
             if (billResult != null) {
                 // Publish success event
                 publishCompletionEvent(job, billResult, success = true)
@@ -59,7 +59,7 @@ class BillingComputationConsumer(
             throw e
         }
     }
-    
+
     /**
      * Publish a BillComputationCompletedEvent to notify the orchestrator.
      */
@@ -67,7 +67,7 @@ class BillingComputationConsumer(
         job: ComputeBillJob,
         billResult: BillResult?,
         success: Boolean,
-        errorMessage: String? = null
+        errorMessage: String? = null,
     ) {
         try {
             val event = BillComputationCompletedEvent(
@@ -78,15 +78,15 @@ class BillingComputationConsumer(
                 success = success,
                 billResultJson = billResult?.let { objectMapper.writeValueAsString(it) },
                 errorMessage = errorMessage,
-                computedAt = Instant.now().toString()
+                computedAt = Instant.now().toString(),
             )
-            
+
             rabbitTemplate.convertAndSend(
                 BillingComputationJobRouting.EXCHANGE,
                 BillingComputationJobRouting.BILL_COMPUTED,
-                event
+                event,
             )
-            
+
             logger.info("Published BillComputationCompletedEvent for bill ${job.billId} (success=$success)")
         } catch (e: Exception) {
             logger.error("Failed to publish completion event for bill ${job.billId}: ${e.message}", e)

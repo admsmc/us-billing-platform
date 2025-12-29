@@ -18,7 +18,7 @@ data class RateContext(
     val serviceState: String,
     val rateSchedules: Map<ServiceType, RateTariff>,
     val regulatoryCharges: List<RegulatoryCharge>,
-    val effectiveDate: LocalDate
+    val effectiveDate: LocalDate,
 )
 
 /**
@@ -36,5 +36,5 @@ data class RegulatoryContext(
     val jurisdiction: String,
     val regulatoryCharges: List<RegulatoryCharge>,
     val effectiveDate: LocalDate,
-    val pucRules: Map<String, String> = emptyMap()
+    val pucRules: Map<String, String> = emptyMap(),
 )

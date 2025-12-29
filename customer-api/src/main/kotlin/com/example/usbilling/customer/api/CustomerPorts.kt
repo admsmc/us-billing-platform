@@ -1,7 +1,6 @@
 package com.example.usbilling.customer.api
 
 import com.example.usbilling.shared.CustomerId
-import com.example.usbilling.shared.UtilityId
 import java.time.Instant
 import java.time.LocalDate
 
