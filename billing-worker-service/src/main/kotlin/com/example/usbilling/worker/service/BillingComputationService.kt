@@ -80,18 +80,48 @@ class BillingComputationService(
         // 5. Group meter reads by service type
         val readsByService = periodWithReads.meterReads.groupBy { it.serviceType }
 
-        // 6. Validate service integration (demonstrates full service connectivity)
-        logger.info("Bill computation successful - fetched all required contexts")
+        logger.info("Bill computation - fetched all required contexts")
         logger.info("Customer: ${customerSnapshot.customerId.value} at ${customerSnapshot.serviceAddress}")
         logger.info("Services found: ${readsByService.keys}")
         logger.info("Rate schedules: ${rateContext.rateSchedules.keys}")
         logger.info("Regulatory charges: ${regulatoryContext.regulatoryCharges.size}")
         
-        // TODO: Build BillInput object and call BillingEngine.calculateBill(input)
-        // This requires creating MeterReadPairs, AccountBalance, etc.
-        // Will be completed when billing-orchestrator-service provides bill persistence
+        // 6. Build MeterReadPairs from meter reads
+        // Group reads by meterId and create pairs (opening/closing reads)
+        val meterReadPairs = buildMeterReadPairs(periodWithReads.meterReads)
+        if (meterReadPairs.isEmpty()) {
+            logger.error("No valid meter read pairs found for billing period $billingPeriodId")
+            return null
+        }
         
-        return null // Demonstrates service connectivity working
+        // 7. Determine primary service type and tariff
+        val primaryServiceType = meterReadPairs.firstOrNull()?.serviceType
+            ?: ServiceType.ELECTRIC
+        val primaryTariff = rateContext.rateSchedules[primaryServiceType]
+        if (primaryTariff == null) {
+            logger.error("No tariff found for primary service type $primaryServiceType")
+            return null
+        }
+        
+        // 8. Build BillInput
+        val billInput = BillInput(
+            billId = BillId("BILL-${customerId.value}-${billingPeriodId}"),
+            billRunId = BillingCycleId("RUN-${periodWithReads.period.id}"),
+            utilityId = utilityId,
+            customerId = customerId,
+            billPeriod = periodWithReads.period,
+            meterReads = meterReadPairs,
+            rateTariff = primaryTariff,
+            accountBalance = customerSnapshot.accountBalance ?: AccountBalance.zero(),
+            regulatorySurcharges = regulatoryContext.regulatoryCharges.map { toRegulatorySurcharge(it) }
+        )
+        
+        // 9. Call BillingEngine to compute the bill
+        logger.info("Invoking BillingEngine for customer ${customerId.value}")
+        val billResult = BillingEngine.calculateBill(billInput)
+        
+        logger.info("Bill computed successfully - Amount due: ${billResult.amountDue}")
+        return billResult
     }
 
     /**
@@ -129,5 +159,90 @@ class BillingComputationService(
         
         // TODO: Build BillInput and call BillingEngine
         return null
+    }
+    
+    /**
+     * Build MeterReadPairs from a list of meter reads.
+     * Groups reads by meterId and creates pairs from consecutive reads.
+     */
+    private fun buildMeterReadPairs(meterReads: List<MeterRead>): List<MeterReadPair> {
+        val readsByMeter = meterReads.groupBy { it.meterId }
+        val pairs = mutableListOf<MeterReadPair>()
+        
+        for ((meterId, reads) in readsByMeter) {
+            // Sort by date
+            val sortedReads = reads.sortedBy { it.readDate }
+            
+            // Create pairs from consecutive reads
+            for (i in 0 until sortedReads.size - 1) {
+                val startRead = sortedReads[i]
+                val endRead = sortedReads[i + 1]
+                
+                pairs.add(
+                    MeterReadPair(
+                        meterId = meterId,
+                        serviceType = startRead.serviceType,
+                        usageType = startRead.usageUnit,
+                        startRead = startRead,
+                        endRead = endRead
+                    )
+                )
+            }
+        }
+        
+        return pairs
+    }
+    
+    /**
+     * Convert RegulatoryCharge to RegulatorySurcharge for BillingEngine.
+     */
+    private fun toRegulatorySurcharge(charge: RegulatoryCharge): RegulatorySurcharge {
+        val calculationType = when (charge.calculationType) {
+            RegulatoryChargeType.FIXED -> RegulatorySurchargeCalculation.FIXED
+            RegulatoryChargeType.PER_UNIT -> RegulatorySurchargeCalculation.PER_UNIT
+            RegulatoryChargeType.PERCENTAGE_OF_ENERGY -> RegulatorySurchargeCalculation.PERCENTAGE_OF_ENERGY
+            RegulatoryChargeType.PERCENTAGE_OF_TOTAL -> RegulatorySurchargeCalculation.PERCENTAGE_OF_TOTAL
+        }
+        
+        return when (calculationType) {
+            RegulatorySurchargeCalculation.FIXED -> {
+                RegulatorySurcharge(
+                    code = charge.code,
+                    description = charge.description,
+                    calculationType = calculationType,
+                    fixedAmount = charge.rate,
+                    ratePerUnit = null,
+                    percentageRate = null,
+                    appliesTo = emptySet() // Apply to all services
+                )
+            }
+            RegulatorySurchargeCalculation.PER_UNIT -> {
+                RegulatorySurcharge(
+                    code = charge.code,
+                    description = charge.description,
+                    calculationType = calculationType,
+                    fixedAmount = null,
+                    ratePerUnit = charge.rate,
+                    percentageRate = null,
+                    appliesTo = emptySet()
+                )
+            }
+            RegulatorySurchargeCalculation.PERCENTAGE_OF_ENERGY,
+            RegulatorySurchargeCalculation.PERCENTAGE_OF_TOTAL -> {
+                // Convert rate (in cents) to percentage
+                // Assume rate is stored as basis points (e.g., 50 = 0.5%)
+                val percentage = charge.rate.amount / 100.0
+                
+                RegulatorySurcharge(
+                    code = charge.code,
+                    description = charge.description,
+                    calculationType = calculationType,
+                    fixedAmount = null,
+                    ratePerUnit = null,
+                    percentageRate = percentage,
+                    appliesTo = emptySet()
+                )
+            }
+        }
     }
 }

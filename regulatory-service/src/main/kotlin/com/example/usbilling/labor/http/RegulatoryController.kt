@@ -39,9 +39,35 @@ class RegulatoryController(
     }
 
     /**
+     * Get regulatory charges for a jurisdiction.
+     * E2E test expects GET /utilities/{utilityId}/regulatory-charges?state=MI
+     */
+    @GetMapping("/regulatory-charges")
+    fun getRegulatoryCharges(
+        @PathVariable utilityId: String,
+        @RequestParam state: String,
+        @RequestParam(required = false) asOfDate: String?
+    ): ResponseEntity<RegulatoryChargesResponse> {
+        val date = asOfDate?.let { LocalDate.parse(it) } ?: LocalDate.now()
+        
+        val context = regulatoryContextService.getRegulatoryContext(
+            UtilityId(utilityId),
+            date,
+            state
+        )
+        
+        return ResponseEntity.ok(
+            RegulatoryChargesResponse(
+                state = state,
+                charges = context.regulatoryCharges
+            )
+        )
+    }
+    
+    /**
      * Get regulatory charges for a specific service type.
      */
-    @GetMapping("/regulatory/charges")
+    @GetMapping("/regulatory/charges/by-service")
     fun getChargesForService(
         @PathVariable utilityId: String,
         @RequestParam jurisdiction: String,
@@ -119,4 +145,12 @@ data class StateInfo(
     val code: String,
     val name: String,
     val chargeCount: Int
+)
+
+/**
+ * Response containing regulatory charges for a jurisdiction.
+ */
+data class RegulatoryChargesResponse(
+    val state: String,
+    val charges: List<RegulatoryCharge>
 )

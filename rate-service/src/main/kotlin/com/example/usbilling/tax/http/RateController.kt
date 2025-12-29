@@ -24,11 +24,12 @@ class RateController(
 
     /**
      * Get rate context (implements port interface via HTTP).
+     * E2E test expects GET /utilities/{utilityId}/rate-context
      */
-    @GetMapping("/rates/context")
+    @GetMapping("/rate-context")
     fun getRateContext(
         @PathVariable utilityId: String,
-        @RequestParam serviceState: String,
+        @RequestParam state: String,
         @RequestParam(required = false) asOfDate: String?
     ): ResponseEntity<RateContext> {
         val date = asOfDate?.let { LocalDate.parse(it) } ?: LocalDate.now()
@@ -36,7 +37,7 @@ class RateController(
         val context = rateContextService.getRateContext(
             UtilityId(utilityId),
             date,
-            serviceState
+            state
         )
         
         return ResponseEntity.ok(context)

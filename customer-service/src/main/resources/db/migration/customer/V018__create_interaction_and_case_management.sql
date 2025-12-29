@@ -192,8 +192,7 @@ CREATE TABLE notification_preference_effective (
 );
 
 CREATE INDEX idx_notification_preference_customer
-    ON notification_preference_effective (customer_id, utility_id)
-    WHERE system_from <= CURRENT_TIMESTAMP AND system_to > CURRENT_TIMESTAMP;
+    ON notification_preference_effective (customer_id, utility_id, system_from, system_to);
 
 -- Communication log (append-only)
 CREATE TABLE communication_log (

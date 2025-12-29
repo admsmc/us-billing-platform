@@ -28,8 +28,7 @@ CREATE TABLE service_point_effective (
 );
 
 CREATE INDEX idx_service_point_utility
-    ON service_point_effective (utility_id, service_type, connection_status)
-    WHERE system_from <= CURRENT_TIMESTAMP AND system_to > CURRENT_TIMESTAMP;
+    ON service_point_effective (utility_id, service_type, connection_status, system_from, system_to);
 
 CREATE INDEX idx_service_point_address
     ON service_point_effective (address_id, effective_from, effective_to, system_from, system_to);
@@ -65,12 +64,10 @@ CREATE TABLE meter_effective (
 );
 
 CREATE INDEX idx_meter_service_point
-    ON meter_effective (service_point_id, meter_status)
-    WHERE system_from <= CURRENT_TIMESTAMP AND system_to > CURRENT_TIMESTAMP;
+    ON meter_effective (service_point_id, meter_status, system_from, system_to);
 
 CREATE INDEX idx_meter_serial
-    ON meter_effective (meter_serial)
-    WHERE system_from <= CURRENT_TIMESTAMP AND system_to > CURRENT_TIMESTAMP;
+    ON meter_effective (meter_serial, system_from, system_to);
 
 -- Service connection table (bitemporal) - links account to service point and meter
 CREATE TABLE service_connection_effective (

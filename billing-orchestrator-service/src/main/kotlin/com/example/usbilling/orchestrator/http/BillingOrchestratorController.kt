@@ -64,6 +64,21 @@ class BillingOrchestratorController(
             ResponseEntity.notFound().build()
         }
     }
+    
+    @PostMapping("/bills/{billId}/finalize")
+    fun finalizeBill(
+        @PathVariable utilityId: String,
+        @PathVariable billId: String,
+        @RequestBody request: FinalizeBillRequest
+    ): ResponseEntity<BillEntity> {
+        val bill = billingOrchestrationService.triggerBillComputation(billId, request.serviceState)
+        return if (bill != null) {
+            // Return 202 Accepted - computation is async
+            ResponseEntity.accepted().body(bill)
+        } else {
+            ResponseEntity.notFound().build()
+        }
+    }
 }
 
 data class CreateBillRequest(
@@ -75,4 +90,8 @@ data class CreateBillRequest(
 
 data class VoidBillRequest(
     val reason: String
+)
+
+data class FinalizeBillRequest(
+    val serviceState: String
 )

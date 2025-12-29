@@ -30,13 +30,10 @@ class BillingWorkflowE2ETest : BaseE2ETest() {
     @DisplayName("Should create a customer in customer-service")
     fun testCreateCustomer() {
         val requestBody = mapOf(
-            "utilityId" to "UTIL-001",
             "accountNumber" to "ACCT-12345",
-            "name" to "Jane Smith",
+            "customerName" to "Jane Smith",
             "serviceAddress" to "123 Main St | Apt 4B | Detroit | MI | 48201",
-            "mailingAddress" to "123 Main St | Apt 4B | Detroit | MI | 48201",
-            "status" to "ACTIVE",
-            "accountBalance" to 0
+            "customerClass" to "RESIDENTIAL"
         )
         
         val response = customerService()
@@ -47,8 +44,8 @@ class BillingWorkflowE2ETest : BaseE2ETest() {
             .statusCode(201)
             .body("utilityId", equalTo("UTIL-001"))
             .body("accountNumber", equalTo("ACCT-12345"))
-            .body("name", equalTo("Jane Smith"))
-            .body("status", equalTo("ACTIVE"))
+            .body("customerName", equalTo("Jane Smith"))
+            .body("active", equalTo(true))
             .body("customerId", notNullValue())
             .extract()
         
@@ -64,9 +61,8 @@ class BillingWorkflowE2ETest : BaseE2ETest() {
     fun testCreateMeter() {
         val requestBody = mapOf(
             "meterNumber" to "MTR-67890",
-            "serviceType" to "ELECTRIC",
-            "installDate" to "2024-01-01",
-            "status" to "ACTIVE"
+            "utilityServiceType" to "ELECTRIC",
+            "installDate" to "2024-01-01"
         )
         
         val response = customerService()
@@ -76,8 +72,8 @@ class BillingWorkflowE2ETest : BaseE2ETest() {
             .then()
             .statusCode(201)
             .body("meterNumber", equalTo("MTR-67890"))
-            .body("serviceType", equalTo("ELECTRIC"))
-            .body("status", equalTo("ACTIVE"))
+            .body("utilityServiceType", equalTo("ELECTRIC"))
+            .body("active", equalTo(true))
             .body("meterId", notNullValue())
             .extract()
         
@@ -91,27 +87,25 @@ class BillingWorkflowE2ETest : BaseE2ETest() {
     @DisplayName("Should create a billing period")
     fun testCreateBillingPeriod() {
         val requestBody = mapOf(
-            "customerId" to customerId,
             "startDate" to "2025-01-01",
             "endDate" to "2025-01-31",
-            "dueDate" to "2025-02-15",
             "status" to "OPEN"
         )
         
         val response = customerService()
             .body(requestBody)
             .`when`()
-            .post("/utilities/$utilityId/billing-periods")
+            .post("/utilities/$utilityId/customers/$customerId/billing-periods")
             .then()
             .statusCode(201)
             .body("customerId", equalTo(customerId))
             .body("startDate", equalTo("2025-01-01"))
             .body("endDate", equalTo("2025-01-31"))
             .body("status", equalTo("OPEN"))
-            .body("billingPeriodId", notNullValue())
+            .body("periodId", notNullValue())
             .extract()
         
-        billingPeriodId = response.path("billingPeriodId")
+        billingPeriodId = response.path("periodId")
         
         println("Created billing period: $billingPeriodId")
     }
@@ -124,37 +118,35 @@ class BillingWorkflowE2ETest : BaseE2ETest() {
         val openingReadBody = mapOf(
             "meterId" to meterId,
             "readDate" to "2025-01-01",
-            "readValue" to 10000.0,
-            "readType" to "OPENING",
-            "qualityCode" to "ACTUAL"
+            "readingValue" to 10000.0,
+            "readingType" to "OPENING"
         )
         
         customerService()
             .body(openingReadBody)
             .`when`()
-            .post("/utilities/$utilityId/meter-reads")
+            .post("/utilities/$utilityId/customers/$customerId/meter-reads")
             .then()
             .statusCode(201)
-            .body("readValue", equalTo(10000.0f))
-            .body("readType", equalTo("OPENING"))
+            .body("readingValue", equalTo(10000.0f))
+            .body("readingType", equalTo("OPENING"))
         
         // Closing read
         val closingReadBody = mapOf(
             "meterId" to meterId,
             "readDate" to "2025-01-31",
-            "readValue" to 10500.0,
-            "readType" to "CLOSING",
-            "qualityCode" to "ACTUAL"
+            "readingValue" to 10500.0,
+            "readingType" to "CLOSING"
         )
         
         customerService()
             .body(closingReadBody)
             .`when`()
-            .post("/utilities/$utilityId/meter-reads")
+            .post("/utilities/$utilityId/customers/$customerId/meter-reads")
             .then()
             .statusCode(201)
-            .body("readValue", equalTo(10500.0f))
-            .body("readType", equalTo("CLOSING"))
+            .body("readingValue", equalTo(10500.0f))
+            .body("readingType", equalTo("CLOSING"))
         
         println("Recorded meter reads: 10000 kWh -> 10500 kWh (500 kWh usage)")
     }
@@ -250,7 +242,7 @@ class BillingWorkflowE2ETest : BaseE2ETest() {
             .get("/utilities/$utilityId/customers/$customerId/bills")
             .then()
             .statusCode(200)
-            .body("$", hasSize(greaterThanOrEqualTo(1)))
+            .body("size()", greaterThanOrEqualTo(1))
             .body("[0].billId", equalTo(billId))
             .body("[0].customerId", equalTo(customerId))
         

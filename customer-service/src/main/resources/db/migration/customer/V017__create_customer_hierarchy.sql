@@ -34,19 +34,15 @@ CREATE TABLE customer_effective (
     CONSTRAINT chk_customer_effective_range CHECK (effective_to > effective_from)
 );
 
-CREATE INDEX idx_customer_utility
-    ON customer_effective (utility_id, customer_type)
-    WHERE system_from <= CURRENT_TIMESTAMP AND system_to > CURRENT_TIMESTAMP;
+CREATE INDEX idx_customer_effective_utility
+    ON customer_effective (utility_id, customer_type, system_from, system_to);
 
 CREATE INDEX idx_customer_name
-    ON customer_effective (utility_id, last_name, first_name)
-    WHERE system_from <= CURRENT_TIMESTAMP AND system_to > CURRENT_TIMESTAMP;
+    ON customer_effective (utility_id, last_name, first_name, system_from, system_to);
 
 CREATE INDEX idx_customer_business_name
-    ON customer_effective (utility_id, business_name)
-    WHERE business_name IS NOT NULL 
-      AND system_from <= CURRENT_TIMESTAMP 
-      AND system_to > CURRENT_TIMESTAMP;
+    ON customer_effective (utility_id, business_name, system_from, system_to)
+    WHERE business_name IS NOT NULL;
 
 -- Account-Customer relationship table (bitemporal)
 -- Links customers to accounts with specific roles
@@ -75,12 +71,10 @@ CREATE TABLE account_customer_role_effective (
 );
 
 CREATE INDEX idx_account_customer_role_account
-    ON account_customer_role_effective (account_id, role_type)
-    WHERE system_from <= CURRENT_TIMESTAMP AND system_to > CURRENT_TIMESTAMP;
+    ON account_customer_role_effective (account_id, role_type, system_from, system_to);
 
 CREATE INDEX idx_account_customer_role_customer
-    ON account_customer_role_effective (customer_id, role_type)
-    WHERE system_from <= CURRENT_TIMESTAMP AND system_to > CURRENT_TIMESTAMP;
+    ON account_customer_role_effective (customer_id, role_type, system_from, system_to);
 
 -- Property table (bitemporal) - represents physical properties
 CREATE TABLE property_effective (
@@ -122,19 +116,15 @@ CREATE TABLE property_effective (
 );
 
 CREATE INDEX idx_property_utility
-    ON property_effective (utility_id, property_type, property_status)
-    WHERE system_from <= CURRENT_TIMESTAMP AND system_to > CURRENT_TIMESTAMP;
+    ON property_effective (utility_id, property_type, property_status, system_from, system_to);
 
 CREATE INDEX idx_property_address
-    ON property_effective (utility_id, postal_code, address_line1)
-    WHERE system_from <= CURRENT_TIMESTAMP AND system_to > CURRENT_TIMESTAMP;
+    ON property_effective (utility_id, postal_code, address_line1, system_from, system_to);
 
 -- Update customer_account_effective to link to property (optional)
 ALTER TABLE customer_account_effective
     ADD COLUMN IF NOT EXISTS property_id VARCHAR(255);
 
 CREATE INDEX idx_customer_account_property
-    ON customer_account_effective (property_id)
-    WHERE property_id IS NOT NULL
-      AND system_from <= CURRENT_TIMESTAMP 
-      AND system_to > CURRENT_TIMESTAMP;
+    ON customer_account_effective (property_id, system_from, system_to)
+    WHERE property_id IS NOT NULL;

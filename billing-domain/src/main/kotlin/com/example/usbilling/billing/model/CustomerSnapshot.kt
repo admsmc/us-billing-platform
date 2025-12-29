@@ -16,6 +16,7 @@ import com.example.usbilling.shared.UtilityId
  * @property accountStatus Current account status
  * @property meters List of meters assigned to this customer
  * @property specialRates Any special rate programs customer is enrolled in
+ * @property accountBalance Current account balance state (optional, defaults to zero)
  */
 data class CustomerSnapshot(
     val customerId: CustomerId,
@@ -25,7 +26,8 @@ data class CustomerSnapshot(
     val customerClass: CustomerClass,
     val accountStatus: AccountStatus,
     val meters: List<MeterInfo>,
-    val specialRates: List<String> = emptyList()
+    val specialRates: List<String> = emptyList(),
+    val accountBalance: AccountBalance? = null
 )
 
 /**

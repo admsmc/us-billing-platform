@@ -1,6 +1,9 @@
 package com.example.usbilling.hr.domain
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import org.springframework.data.annotation.Id
+import org.springframework.data.annotation.Transient
+import org.springframework.data.domain.Persistable
 import org.springframework.data.relational.core.mapping.Column
 import org.springframework.data.relational.core.mapping.Table
 import java.math.BigDecimal
@@ -38,8 +41,16 @@ data class CustomerEntity(
     val createdAt: Instant = Instant.now(),
 
     @Column("updated_at")
-    val updatedAt: Instant = Instant.now()
-)
+    val updatedAt: Instant = Instant.now(),
+    
+    @Transient
+    @JsonIgnore
+    val isNewEntity: Boolean = true
+) : Persistable<String> {
+    override fun getId(): String = customerId
+    @JsonIgnore
+    override fun isNew(): Boolean = isNewEntity
+}
 
 /**
  * Meter entity - meter installation record.
@@ -69,8 +80,16 @@ data class MeterEntity(
     val active: Boolean = true,
 
     @Column("created_at")
-    val createdAt: Instant = Instant.now()
-)
+    val createdAt: Instant = Instant.now(),
+    
+    @Transient
+    @JsonIgnore
+    val isNewEntity: Boolean = true
+) : Persistable<String> {
+    override fun getId(): String = meterId
+    @JsonIgnore
+    override fun isNew(): Boolean = isNewEntity
+}
 
 /**
  * Billing period entity - billing cycle window.
@@ -97,8 +116,16 @@ data class BillingPeriodEntity(
     val createdAt: Instant = Instant.now(),
 
     @Column("updated_at")
-    val updatedAt: Instant = Instant.now()
-)
+    val updatedAt: Instant = Instant.now(),
+    
+    @Transient
+    @JsonIgnore
+    val isNewEntity: Boolean = true
+) : Persistable<String> {
+    override fun getId(): String = periodId
+    @JsonIgnore
+    override fun isNew(): Boolean = isNewEntity
+}
 
 /**
  * Meter read entity - usage data point.
@@ -125,5 +152,13 @@ data class MeterReadEntity(
     val readingType: String,
 
     @Column("recorded_at")
-    val recordedAt: Instant = Instant.now()
-)
+    val recordedAt: Instant = Instant.now(),
+    
+    @Transient
+    @JsonIgnore
+    val isNewEntity: Boolean = true
+) : Persistable<String> {
+    override fun getId(): String = readId
+    @JsonIgnore
+    override fun isNew(): Boolean = isNewEntity
+}

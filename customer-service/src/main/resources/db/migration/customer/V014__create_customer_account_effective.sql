@@ -52,18 +52,18 @@ CREATE TABLE customer_account_effective (
 );
 
 -- Index for current version queries (most common query pattern)
+-- Note: Removed temporal predicate from index - temporal filtering done in queries
 CREATE INDEX idx_customer_account_current
-    ON customer_account_effective (utility_id, customer_id, account_status)
-    WHERE system_from <= CURRENT_TIMESTAMP AND system_to > CURRENT_TIMESTAMP;
+    ON customer_account_effective (utility_id, customer_id, account_status, system_from, system_to);
 
 -- Index for bitemporal queries
 CREATE INDEX idx_customer_account_bitemporal
     ON customer_account_effective (account_id, effective_from, effective_to, system_from, system_to);
 
 -- Index for account number lookups
+-- Note: Removed temporal predicate from index - temporal filtering done in queries
 CREATE INDEX idx_customer_account_number
-    ON customer_account_effective (utility_id, account_number)
-    WHERE system_from <= CURRENT_TIMESTAMP AND system_to > CURRENT_TIMESTAMP;
+    ON customer_account_effective (utility_id, account_number, system_from, system_to);
 
 -- Service address table (bitemporal)
 CREATE TABLE service_address_effective (
