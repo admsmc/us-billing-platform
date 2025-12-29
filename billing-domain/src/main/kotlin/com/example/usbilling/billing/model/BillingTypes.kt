@@ -23,6 +23,9 @@ import java.time.LocalDate
  * @property demandReadings Peak demand readings for demand-based billing (optional)
  * @property regulatorySurcharges Regulatory surcharges to apply (optional)
  * @property contributions Voluntary contributions (optional)
+ * @property serviceStartDate Actual start date of service within billing period (for proration)
+ * @property serviceEndDate Actual end date of service within billing period (for proration)
+ * @property prorationConfig Configuration for which charge types should be prorated
  */
 data class BillInput(
     val billId: BillId,
@@ -35,7 +38,10 @@ data class BillInput(
     val accountBalance: AccountBalance,
     val demandReadings: List<DemandReading> = emptyList(),
     val regulatorySurcharges: List<RegulatorySurcharge> = emptyList(),
-    val contributions: List<VoluntaryContribution> = emptyList()
+    val contributions: List<VoluntaryContribution> = emptyList(),
+    val serviceStartDate: LocalDate? = null,
+    val serviceEndDate: LocalDate? = null,
+    val prorationConfig: ProrationConfig = ProrationConfig.default()
 )
 
 /**
@@ -53,6 +59,9 @@ data class BillInput(
  * @property demandReadings Peak demand readings (optional)
  * @property regulatorySurcharges Regulatory surcharges to apply
  * @property contributions Voluntary contributions
+ * @property serviceStartDate Actual start date of service within billing period (for proration)
+ * @property serviceEndDate Actual end date of service within billing period (for proration)
+ * @property prorationConfig Configuration for which charge types should be prorated
  */
 data class MultiServiceBillInput(
     val billId: BillId,
@@ -65,7 +74,10 @@ data class MultiServiceBillInput(
     val accountBalance: AccountBalance,
     val demandReadings: List<DemandReading> = emptyList(),
     val regulatorySurcharges: List<RegulatorySurcharge> = emptyList(),
-    val contributions: List<VoluntaryContribution> = emptyList()
+    val contributions: List<VoluntaryContribution> = emptyList(),
+    val serviceStartDate: LocalDate? = null,
+    val serviceEndDate: LocalDate? = null,
+    val prorationConfig: ProrationConfig = ProrationConfig.default()
 )
 
 /**
@@ -73,10 +85,14 @@ data class MultiServiceBillInput(
  *
  * @property serviceType The type of service (ELECTRIC, WATER, etc.)
  * @property reads List of meter read pairs for this service
+ * @property serviceStartDate Service-specific start date for proration (overrides global)
+ * @property serviceEndDate Service-specific end date for proration (overrides global)
  */
 data class ServiceMeterReads(
     val serviceType: ServiceType,
-    val reads: List<MeterReadPair>
+    val reads: List<MeterReadPair>,
+    val serviceStartDate: LocalDate? = null,
+    val serviceEndDate: LocalDate? = null
 )
 
 /**
@@ -296,3 +312,42 @@ data class DemandReading(
     val peakDemandKw: Double,
     val timestamp: java.time.Instant
 )
+
+/**
+ * Configuration for proration behavior when service starts or ends mid-period.
+ *
+ * @property prorateReadinessToServe Whether to prorate fixed readiness-to-serve charges
+ * @property prorateFixedRegulatoryCharges Whether to prorate FIXED regulatory surcharges
+ * @property prorateContributions Whether to prorate voluntary contributions
+ */
+data class ProrationConfig(
+    val prorateReadinessToServe: Boolean = true,
+    val prorateFixedRegulatoryCharges: Boolean = true,
+    val prorateContributions: Boolean = false
+) {
+    companion object {
+        /**
+         * Default proration config: prorate readiness-to-serve and fixed regulatory charges,
+         * but not voluntary contributions (customer opted in for full amount).
+         */
+        fun default() = ProrationConfig()
+        
+        /**
+         * No proration - bill full amounts for everything.
+         */
+        fun none() = ProrationConfig(
+            prorateReadinessToServe = false,
+            prorateFixedRegulatoryCharges = false,
+            prorateContributions = false
+        )
+        
+        /**
+         * Full proration - prorate all fixed charges including contributions.
+         */
+        fun full() = ProrationConfig(
+            prorateReadinessToServe = true,
+            prorateFixedRegulatoryCharges = true,
+            prorateContributions = true
+        )
+    }
+}

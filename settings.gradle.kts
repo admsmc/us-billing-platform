@@ -16,7 +16,7 @@ include(
     "billing-jackson-spring",
     "customer-domain",
     "time-domain",
-    "rate-domain",
+    // "rate-domain", // REMOVED - directory does not exist
     "persistence-core",
     "messaging-core",
     "web-core",
@@ -40,5 +40,9 @@ include(
     "payments-service",
     "filings-service",
     "reporting-service",
+    // Customer service platform services (Phase 1 Sprint 1)
+    "customer-portal-service",
+    "notification-service",
+    "document-service",
     "e2e-tests",
 )

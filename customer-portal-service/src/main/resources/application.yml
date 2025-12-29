@@ -1,0 +1,55 @@
+server:
+  port: 8090
+
+spring:
+  application:
+    name: customer-portal-service
+  
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,info
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+  health:
+    defaults:
+      enabled: true
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+
+# Customer Portal Configuration
+customer-portal:
+  # Backend service URLs (default to local development)
+  customer-service-url: ${CUSTOMER_SERVICE_URL:http://localhost:8081}
+  billing-orchestrator-url: ${BILLING_ORCHESTRATOR_URL:http://localhost:8085}
+  payments-service-url: ${PAYMENTS_SERVICE_URL:http://localhost:8086}
+  notification-service-url: ${NOTIFICATION_SERVICE_URL:http://localhost:8091}
+  case-management-url: ${CASE_MANAGEMENT_URL:http://localhost:8092}
+  outage-service-url: ${OUTAGE_SERVICE_URL:http://localhost:8093}
+  document-service-url: ${DOCUMENT_SERVICE_URL:http://localhost:8094}
+  
+  # JWT authentication
+  jwt:
+    secret: ${JWT_SECRET:dev-secret-change-in-production-min-256-bits}
+    expiration-hours: 24
+  
+  # Rate limiting
+  rate-limit:
+    enabled: true
+    requests-per-minute: 100
+
+logging:
+  level:
+    com.example.usbilling: INFO
+  pattern:
+    console: "%d{ISO8601} [%thread] %-5level %logger{36} - %msg%n"

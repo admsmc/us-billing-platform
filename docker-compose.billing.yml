@@ -138,3 +138,80 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
+
+  # Customer service platform services
+  customer-portal-service:
+    build:
+      context: .
+      dockerfile: customer-portal-service/Dockerfile
+    depends_on:
+      customer-service:
+        condition: service_healthy
+      billing-orchestrator-service:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8090
+      CUSTOMER_SERVICE_URL: http://customer-service:8081
+      BILLING_ORCHESTRATOR_URL: http://billing-orchestrator-service:8085
+      NOTIFICATION_SERVICE_URL: http://notification-service:8091
+      DOCUMENT_SERVICE_URL: http://document-service:8094
+    ports:
+      - "8090:8090"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8090/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: notification-service/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8091
+      DB_URL: jdbc:postgresql://postgres:5432/us_billing_notification
+      DB_USERNAME: notification_service
+      DB_PASSWORD: ${NOTIFICATION_DB_PASSWORD:-notification_service}
+      # Email/SMS providers in logging mode for dev
+      EMAIL_PROVIDER: logging
+      SMS_PROVIDER: logging
+    ports:
+      - "8091:8091"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8091/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  document-service:
+    build:
+      context: .
+      dockerfile: document-service/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8094
+      DB_URL: jdbc:postgresql://postgres:5432/us_billing_document
+      DB_USERNAME: document_service
+      DB_PASSWORD: ${DOCUMENT_DB_PASSWORD:-document_service}
+      DOCUMENT_STORAGE_TYPE: local
+      DOCUMENT_STORAGE_LOCAL_DIR: /app/document-storage
+    ports:
+      - "8094:8094"
+    volumes:
+      - document-storage:/app/document-storage
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8094/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  document-storage:

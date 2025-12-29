@@ -1,0 +1,73 @@
+server:
+  port: 8094
+
+spring:
+  application:
+    name: document-service
+  
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/us_billing_document}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+  
+  flyway:
+    enabled: true
+    locations: classpath:db/migration/document
+    baseline-on-migrate: true
+  
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+  
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    suffix: .html
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,info
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+  health:
+    defaults:
+      enabled: true
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+
+# Document configuration
+document:
+  # Storage type: "local" for filesystem, "s3" for S3-compatible storage
+  storage:
+    type: ${DOCUMENT_STORAGE_TYPE:local}
+    local:
+      base-directory: ${DOCUMENT_STORAGE_LOCAL_DIR:${user.home}/document-storage}
+    s3:
+      bucket-name: ${S3_BUCKET_NAME:}
+      region: ${S3_REGION:us-east-1}
+      endpoint: ${S3_ENDPOINT:}
+      access-key: ${S3_ACCESS_KEY:}
+      secret-key: ${S3_SECRET_KEY:}
+  
+  # PDF generation
+  pdf:
+    # Quality settings
+    compression: true
+    pdf-version: 1.7
+    # Branding
+    utility-logo-url: ${UTILITY_LOGO_URL:}
+
+logging:
+  level:
+    com.example.usbilling: INFO
+    com.example.usbilling.document: DEBUG
+  pattern:
+    console: "%d{ISO8601} [%thread] %-5level %logger{36} - %msg%n"

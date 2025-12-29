@@ -25,18 +25,40 @@ object BillingEngine {
     fun calculateBill(input: BillInput, computedAt: Instant = Instant.now()): BillResult {
         val charges = mutableListOf<ChargeLineItem>()
         
+        // Calculate proration factor if service dates are provided
+        val prorationFactor = if (input.serviceStartDate != null || input.serviceEndDate != null) {
+            val effectiveStart = input.serviceStartDate ?: input.billPeriod.startDate
+            val effectiveEnd = input.serviceEndDate ?: input.billPeriod.endDate
+            input.billPeriod.prorationFactor(effectiveStart, effectiveEnd)
+        } else {
+            1.0
+        }
+        
         // Step 1: Add readiness-to-serve charge (fixed monthly fee)
-        val readinessToServeCharge = when (val tariff = input.rateTariff) {
+        val baseReadinessToServeCharge = when (val tariff = input.rateTariff) {
             is RateTariff.FlatRate -> tariff.readinessToServeCharge
             is RateTariff.TieredRate -> tariff.readinessToServeCharge
             is RateTariff.TimeOfUseRate -> tariff.readinessToServeCharge
             is RateTariff.DemandRate -> tariff.readinessToServeCharge
         }
         
+        // Apply proration to readiness-to-serve charge if configured
+        val readinessToServeCharge = if (input.prorationConfig.prorateReadinessToServe && prorationFactor < 1.0) {
+            Money((baseReadinessToServeCharge.amount * prorationFactor).toLong())
+        } else {
+            baseReadinessToServeCharge
+        }
+        
+        val description = if (prorationFactor < 1.0 && input.prorationConfig.prorateReadinessToServe) {
+            "Readiness to Serve Charge (prorated)"
+        } else {
+            "Readiness to Serve Charge"
+        }
+        
         charges.add(
             ChargeLineItem(
                 code = "READINESS_TO_SERVE",
-                description = "Readiness to Serve Charge",
+                description = description,
                 amount = readinessToServeCharge,
                 usageAmount = null,
                 usageUnit = null,
@@ -102,23 +124,54 @@ object BillingEngine {
     fun calculateMultiServiceBill(input: MultiServiceBillInput, computedAt: Instant = Instant.now()): BillResult {
         val charges = mutableListOf<ChargeLineItem>()
         
+        // Calculate global proration factor if service dates are provided
+        val globalProrationFactor = if (input.serviceStartDate != null || input.serviceEndDate != null) {
+            val effectiveStart = input.serviceStartDate ?: input.billPeriod.startDate
+            val effectiveEnd = input.serviceEndDate ?: input.billPeriod.endDate
+            input.billPeriod.prorationFactor(effectiveStart, effectiveEnd)
+        } else {
+            1.0
+        }
+        
         // Step 1: Process each service type
         for (serviceReads in input.serviceReads) {
             val serviceTariff = input.serviceTariffs[serviceReads.serviceType]
                 ?: error("No tariff configured for ${serviceReads.serviceType}")
             
+            // Calculate service-specific proration factor (overrides global if provided)
+            val serviceProrationFactor = if (serviceReads.serviceStartDate != null || serviceReads.serviceEndDate != null) {
+                val effectiveStart = serviceReads.serviceStartDate ?: input.billPeriod.startDate
+                val effectiveEnd = serviceReads.serviceEndDate ?: input.billPeriod.endDate
+                input.billPeriod.prorationFactor(effectiveStart, effectiveEnd)
+            } else {
+                globalProrationFactor
+            }
+            
             // Add readiness-to-serve charge per service
-            val readinessToServeCharge = when (serviceTariff) {
+            val baseReadinessToServeCharge = when (serviceTariff) {
                 is RateTariff.FlatRate -> serviceTariff.readinessToServeCharge
                 is RateTariff.TieredRate -> serviceTariff.readinessToServeCharge
                 is RateTariff.TimeOfUseRate -> serviceTariff.readinessToServeCharge
                 is RateTariff.DemandRate -> serviceTariff.readinessToServeCharge
             }
             
+            // Apply proration to readiness-to-serve charge if configured
+            val readinessToServeCharge = if (input.prorationConfig.prorateReadinessToServe && serviceProrationFactor < 1.0) {
+                Money((baseReadinessToServeCharge.amount * serviceProrationFactor).toLong())
+            } else {
+                baseReadinessToServeCharge
+            }
+            
+            val description = if (serviceProrationFactor < 1.0 && input.prorationConfig.prorateReadinessToServe) {
+                "${serviceReads.serviceType.displayName()} Readiness to Serve (prorated)"
+            } else {
+                "${serviceReads.serviceType.displayName()} Readiness to Serve"
+            }
+            
             charges.add(
                 ChargeLineItem(
                     code = "${serviceReads.serviceType}_READINESS_TO_SERVE",
-                    description = "${serviceReads.serviceType.displayName()} Readiness to Serve",
+                    description = description,
                     amount = readinessToServeCharge,
                     usageAmount = null,
                     usageUnit = null,
@@ -152,18 +205,33 @@ object BillingEngine {
         for (surcharge in input.regulatorySurcharges) {
             val surchargeCharges = applySurcharges(
                 surcharge = surcharge,
-                existingCharges = charges
+                existingCharges = charges,
+                prorationFactor = globalProrationFactor,
+                prorationConfig = input.prorationConfig
             )
             charges.addAll(surchargeCharges)
         }
         
         // Step 3: Add voluntary contributions
         for (contribution in input.contributions) {
+            // Apply proration to contributions if configured
+            val contributionAmount = if (input.prorationConfig.prorateContributions && globalProrationFactor < 1.0) {
+                Money((contribution.amount.amount * globalProrationFactor).toLong())
+            } else {
+                contribution.amount
+            }
+            
+            val description = if (input.prorationConfig.prorateContributions && globalProrationFactor < 1.0) {
+                "${contribution.description} (prorated)"
+            } else {
+                contribution.description
+            }
+            
             charges.add(
                 ChargeLineItem(
                     code = contribution.code,
-                    description = contribution.description,
-                    amount = contribution.amount,
+                    description = description,
+                    amount = contributionAmount,
                     usageAmount = null,
                     usageUnit = null,
                     rate = null,
@@ -206,7 +274,9 @@ object BillingEngine {
      */
     private fun applySurcharges(
         surcharge: RegulatorySurcharge,
-        existingCharges: List<ChargeLineItem>
+        existingCharges: List<ChargeLineItem>,
+        prorationFactor: Double = 1.0,
+        prorationConfig: ProrationConfig = ProrationConfig.default()
     ): List<ChargeLineItem> {
         val result = mutableListOf<ChargeLineItem>()
         
@@ -219,7 +289,7 @@ object BillingEngine {
                 continue
             }
             
-            val amount = when (surcharge.calculationType) {
+            val baseAmount = when (surcharge.calculationType) {
                 RegulatorySurchargeCalculation.FIXED -> {
                     surcharge.fixedAmount!!
                 }
@@ -244,6 +314,15 @@ object BillingEngine {
                 }
             }
             
+            // Apply proration to FIXED surcharges if configured
+            val amount = if (surcharge.calculationType == RegulatorySurchargeCalculation.FIXED && 
+                             prorationConfig.prorateFixedRegulatoryCharges && 
+                             prorationFactor < 1.0) {
+                Money((baseAmount.amount * prorationFactor).toLong())
+            } else {
+                baseAmount
+            }
+            
             if (amount.amount > 0) {
                 result.add(
                     ChargeLineItem(
@@ -263,12 +342,3 @@ object BillingEngine {
         return result
     }
 }
-
-/**
- * Aggregated charge totals.
- */
-data class ChargeAggregation(
-    val totalCharges: Money,
-    val totalCredits: Money,
-    val amountDue: Money
-)
