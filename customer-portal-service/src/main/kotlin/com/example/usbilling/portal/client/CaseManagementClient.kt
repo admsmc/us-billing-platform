@@ -45,21 +45,17 @@ class CaseManagementClient(
             .block()!!
     }
 
-    fun getCaseById(utilityId: String, caseId: String): CaseResponse {
-        return webClient.get()
-            .uri("$caseManagementUrl/utilities/$utilityId/cases/$caseId")
-            .retrieve()
-            .bodyToMono<CaseResponse>()
-            .block()!!
-    }
+    fun getCaseById(utilityId: String, caseId: String): CaseResponse = webClient.get()
+        .uri("$caseManagementUrl/utilities/$utilityId/cases/$caseId")
+        .retrieve()
+        .bodyToMono<CaseResponse>()
+        .block()!!
 
-    fun getCaseDetail(utilityId: String, caseId: String): CaseDetailResponse {
-        return webClient.get()
-            .uri("$caseManagementUrl/utilities/$utilityId/cases/$caseId")
-            .retrieve()
-            .bodyToMono<CaseDetailResponse>()
-            .block()!!
-    }
+    fun getCaseDetail(utilityId: String, caseId: String): CaseDetailResponse = webClient.get()
+        .uri("$caseManagementUrl/utilities/$utilityId/cases/$caseId")
+        .retrieve()
+        .bodyToMono<CaseDetailResponse>()
+        .block()!!
 
     fun getCasesByCustomerId(utilityId: String, customerId: String): List<CaseResponse> {
         // In production, case-management-service would have a customer-specific endpoint

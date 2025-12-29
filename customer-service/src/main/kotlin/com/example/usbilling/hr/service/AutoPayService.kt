@@ -148,16 +148,14 @@ class AutoPayService(
     /**
      * Determine if enrollment should be processed on given date.
      */
-    private fun shouldProcessEnrollment(enrollment: AutoPayEnrollment, date: LocalDate): Boolean {
-        return when (enrollment.paymentTiming) {
-            PaymentTiming.ON_DUE_DATE -> {
-                // Would need to query for bills with due date = date
-                // For now, simplified logic
-                true
-            }
-            PaymentTiming.FIXED_DAY -> {
-                date.dayOfMonth == enrollment.fixedDayOfMonth
-            }
+    private fun shouldProcessEnrollment(enrollment: AutoPayEnrollment, date: LocalDate): Boolean = when (enrollment.paymentTiming) {
+        PaymentTiming.ON_DUE_DATE -> {
+            // Would need to query for bills with due date = date
+            // For now, simplified logic
+            true
+        }
+        PaymentTiming.FIXED_DAY -> {
+            date.dayOfMonth == enrollment.fixedDayOfMonth
         }
     }
 
@@ -193,20 +191,18 @@ class AutoPayService(
     /**
      * Calculate payment amount based on enrollment configuration.
      */
-    private fun calculatePaymentAmount(enrollment: AutoPayEnrollment): Long {
-        return when (enrollment.amountType) {
-            AutoPayAmountType.FULL_BALANCE -> {
-                // Would query billing service for current balance
-                // For now, placeholder
-                10000L // $100
-            }
-            AutoPayAmountType.MINIMUM_DUE -> {
-                // Would query billing service for minimum due
-                5000L // $50
-            }
-            AutoPayAmountType.FIXED_AMOUNT -> {
-                enrollment.fixedAmountCents ?: throw IllegalStateException("Fixed amount not set")
-            }
+    private fun calculatePaymentAmount(enrollment: AutoPayEnrollment): Long = when (enrollment.amountType) {
+        AutoPayAmountType.FULL_BALANCE -> {
+            // Would query billing service for current balance
+            // For now, placeholder
+            10000L // $100
+        }
+        AutoPayAmountType.MINIMUM_DUE -> {
+            // Would query billing service for minimum due
+            5000L // $50
+        }
+        AutoPayAmountType.FIXED_AMOUNT -> {
+            enrollment.fixedAmountCents ?: throw IllegalStateException("Fixed amount not set")
         }
     }
 
@@ -311,18 +307,15 @@ class AutoPayService(
     /**
      * Get enrollment by ID.
      */
-    fun getEnrollment(enrollmentId: String): AutoPayEnrollment? =
-        enrollmentRepository.findById(enrollmentId)
+    fun getEnrollment(enrollmentId: String): AutoPayEnrollment? = enrollmentRepository.findById(enrollmentId)
 
     /**
      * Get enrollment by account ID.
      */
-    fun getEnrollmentByAccountId(accountId: String): AutoPayEnrollment? =
-        enrollmentRepository.findByAccountId(accountId)
+    fun getEnrollmentByAccountId(accountId: String): AutoPayEnrollment? = enrollmentRepository.findByAccountId(accountId)
 
     /**
      * Get execution history for enrollment.
      */
-    fun getExecutionHistory(enrollmentId: String, limit: Int = 50): List<AutoPayExecution> =
-        executionRepository.findByEnrollmentId(enrollmentId, limit)
+    fun getExecutionHistory(enrollmentId: String, limit: Int = 50): List<AutoPayExecution> = executionRepository.findByEnrollmentId(enrollmentId, limit)
 }

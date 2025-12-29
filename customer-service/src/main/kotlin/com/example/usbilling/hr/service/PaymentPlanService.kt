@@ -257,9 +257,7 @@ class PaymentPlanService(
     /**
      * Get customer's payment plans.
      */
-    fun getCustomerPaymentPlans(customerId: String, status: PaymentPlanStatus? = null): List<PaymentPlan> {
-        return paymentPlanRepository.findByCustomerId(customerId, status)
-    }
+    fun getCustomerPaymentPlans(customerId: String, status: PaymentPlanStatus? = null): List<PaymentPlan> = paymentPlanRepository.findByCustomerId(customerId, status)
 
     /**
      * Check payment plan eligibility for a customer.
@@ -320,12 +318,10 @@ class PaymentPlanService(
         return plan
     }
 
-    private fun calculateNextPaymentDate(fromDate: LocalDate, frequency: PaymentFrequency): LocalDate {
-        return when (frequency) {
-            PaymentFrequency.WEEKLY -> fromDate.plusWeeks(1)
-            PaymentFrequency.BIWEEKLY -> fromDate.plusWeeks(2)
-            PaymentFrequency.MONTHLY -> fromDate.plusMonths(1)
-        }
+    private fun calculateNextPaymentDate(fromDate: LocalDate, frequency: PaymentFrequency): LocalDate = when (frequency) {
+        PaymentFrequency.WEEKLY -> fromDate.plusWeeks(1)
+        PaymentFrequency.BIWEEKLY -> fromDate.plusWeeks(2)
+        PaymentFrequency.MONTHLY -> fromDate.plusMonths(1)
     }
 
     private fun calculateFinalPaymentDate(
