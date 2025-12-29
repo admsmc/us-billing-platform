@@ -58,7 +58,7 @@ class CaseEventListener(
           "customerId": "...",
           "resolutionNotes": "..."
         }
-        */
+         */
 
         // TODO: Implement notification sending logic
         // notificationService.sendCaseCreatedNotification(...)
