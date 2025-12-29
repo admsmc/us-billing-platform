@@ -1,0 +1,48 @@
+server:
+  port: 8092
+
+spring:
+  application:
+    name: case-management-service
+  
+  datasource:
+    url: jdbc:postgresql://localhost:15432/us_billing_customer
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  
+  flyway:
+    enabled: true
+    locations: classpath:db/migration/casemanagement
+    schemas: public
+  
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+  
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# Service-specific configuration
+case-management:
+  auto-assignment:
+    enabled: true
+    default-team: general-support
+  escalation:
+    high-priority-threshold-hours: 4
+    critical-priority-threshold-hours: 1

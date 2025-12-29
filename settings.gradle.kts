@@ -40,9 +40,10 @@ include(
     "payments-service",
     "filings-service",
     "reporting-service",
-    // Customer service platform services (Phase 1 Sprint 1)
+    // Customer service platform services (Phase 1)
     "customer-portal-service",
     "notification-service",
     "document-service",
+    "case-management-service",
     "e2e-tests",
 )
