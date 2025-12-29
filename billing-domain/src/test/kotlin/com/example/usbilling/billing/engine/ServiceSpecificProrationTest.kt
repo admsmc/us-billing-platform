@@ -109,12 +109,12 @@ class ServiceSpecificProrationTest {
         assertTrue(refuseReadiness.description.contains("prorated"))
 
         // Water - prorated for 15 days (Jan 1-15) out of 31
-        // $15.00 * (15/31) = $7.26 = 726 cents
+        // $15.00 * (15/31) = $7.25 (rounded) = 725 cents
         val waterReadiness = result.charges.find {
             it.code == "WATER_READINESS_TO_SERVE"
         }
         assertTrue(waterReadiness != null)
-        assertEquals(Money(726), waterReadiness.amount)
+        assertEquals(Money(725), waterReadiness.amount)
         assertTrue(waterReadiness.description.contains("prorated"))
     }
 
@@ -229,12 +229,12 @@ class ServiceSpecificProrationTest {
         val result = BillingEngine.calculateMultiServiceBill(input)
 
         // Refuse for 17 days (Jan 15-31) out of 31
-        // $25.00 * (17/31) = $13.71 = 1371 cents
+        // $25.00 * (17/31) = $13.70 (rounded) = 1370 cents
         val refuseCharge = result.charges.find {
             it.code == "REFUSE_READINESS_TO_SERVE"
         }
         assertTrue(refuseCharge != null)
-        assertEquals(Money(1371), refuseCharge.amount)
+        assertEquals(Money(1370), refuseCharge.amount)
         assertTrue(refuseCharge.description.contains("prorated"))
     }
 
