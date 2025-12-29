@@ -67,9 +67,13 @@ class CaseRoutingService(
             assignToTeamMember(assignedTeam)
         }
 
+        val now = java.time.LocalDateTime.now()
         val updated = caseRecord.copy(
             assignedTeam = assignedTeam,
             assignedTo = assignedTo,
+            systemFrom = now,
+            systemTo = java.time.LocalDateTime.of(9999, 12, 31, 23, 59, 59),
+            modifiedBy = "system:auto-assignment",
         )
 
         caseRepository.save(updated)
@@ -81,6 +85,7 @@ class CaseRoutingService(
     fun escalateCase(caseRecord: CaseRecord, reason: String): CaseRecord {
         val supervisor = teamSupervisors[caseRecord.assignedTeam] ?: teamSupervisors[defaultTeam]
 
+        val now = java.time.LocalDateTime.now()
         val updated = caseRecord.copy(
             assignedTo = supervisor,
             priority = when (caseRecord.priority) {
@@ -88,6 +93,9 @@ class CaseRoutingService(
                 CasePriority.MEDIUM -> CasePriority.HIGH
                 CasePriority.HIGH, CasePriority.CRITICAL -> CasePriority.CRITICAL
             },
+            systemFrom = now,
+            systemTo = java.time.LocalDateTime.of(9999, 12, 31, 23, 59, 59),
+            modifiedBy = "system:escalation",
         )
 
         caseRepository.save(updated)

@@ -33,6 +33,7 @@ class CaseService(
         val caseId = UUID.randomUUID().toString()
         val caseNumber = generateCaseNumber(utilityId)
 
+        val now = LocalDateTime.now()
         val caseRecord = CaseRecord(
             caseId = caseId,
             caseNumber = caseNumber,
@@ -46,12 +47,15 @@ class CaseService(
             title = title,
             description = description,
             openedBy = openedBy,
-            openedAt = LocalDateTime.now(),
+            openedAt = now,
             assignedTo = null,
             assignedTeam = null,
             resolvedAt = null,
             closedAt = null,
             resolutionNotes = null,
+            systemFrom = now,
+            systemTo = LocalDateTime.of(9999, 12, 31, 23, 59, 59),
+            modifiedBy = openedBy,
         )
 
         val saved = caseRepository.save(caseRecord)
@@ -75,11 +79,15 @@ class CaseService(
         val existing = caseRepository.findById(caseId)
             ?: throw IllegalArgumentException("Case not found: $caseId")
 
+        val now = LocalDateTime.now()
         val updated = existing.copy(
             status = newStatus,
-            resolvedAt = if (newStatus == CaseStatus.RESOLVED) LocalDateTime.now() else existing.resolvedAt,
-            closedAt = if (newStatus == CaseStatus.CLOSED) LocalDateTime.now() else existing.closedAt,
+            resolvedAt = if (newStatus == CaseStatus.RESOLVED) now else existing.resolvedAt,
+            closedAt = if (newStatus == CaseStatus.CLOSED) now else existing.closedAt,
             resolutionNotes = resolutionNotes ?: existing.resolutionNotes,
+            systemFrom = now,
+            systemTo = LocalDateTime.of(9999, 12, 31, 23, 59, 59),
+            modifiedBy = changedBy,
         )
 
         caseRepository.save(updated)
@@ -99,10 +107,14 @@ class CaseService(
         val existing = caseRepository.findById(caseId)
             ?: throw IllegalArgumentException("Case not found: $caseId")
 
+        val now = LocalDateTime.now()
         val updated = existing.copy(
             assignedTo = assignedTo,
             assignedTeam = assignedTeam,
             status = if (existing.status == CaseStatus.OPEN) CaseStatus.IN_PROGRESS else existing.status,
+            systemFrom = now,
+            systemTo = LocalDateTime.of(9999, 12, 31, 23, 59, 59),
+            modifiedBy = assignedBy,
         )
 
         caseRepository.save(updated)

@@ -4,6 +4,7 @@ import java.time.LocalDateTime
 
 /**
  * Case record entity - maps to case_record table in customer database.
+ * Bitemporal SCD2: All changes create new rows with system_from/system_to.
  */
 data class CaseRecord(
     val caseId: String,
@@ -24,6 +25,10 @@ data class CaseRecord(
     val resolvedAt: LocalDateTime?,
     val closedAt: LocalDateTime?,
     val resolutionNotes: String?,
+    // Bitemporal fields
+    val systemFrom: LocalDateTime,
+    val systemTo: LocalDateTime,
+    val modifiedBy: String,
 )
 
 /**

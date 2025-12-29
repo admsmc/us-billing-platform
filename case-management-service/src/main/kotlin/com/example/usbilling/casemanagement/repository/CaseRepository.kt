@@ -14,27 +14,33 @@ class CaseRepository(
     private val jdbcTemplate: NamedParameterJdbcTemplate,
 ) {
 
+    /**
+     * Save a case record using bitemporal SCD2 pattern.
+     * Creates a new row with system_from = now, system_to = 9999-12-31.
+     * If updating, supersedes the current version by setting its system_to = now.
+     */
     fun save(caseRecord: CaseRecord): CaseRecord {
+        // First, supersede the current version if it exists
+        val currentVersion = findCurrentVersion(caseRecord.caseId)
+        if (currentVersion != null) {
+            supersedeCurrent(caseRecord.caseId)
+        }
+
+        // Insert new version
         val sql = """
             INSERT INTO case_record (
                 case_id, case_number, utility_id, account_id, customer_id,
                 case_type, case_category, status, priority, title, description,
                 opened_by, opened_at, assigned_to, assigned_team,
-                resolved_at, closed_at, resolution_notes
+                resolved_at, closed_at, resolution_notes,
+                system_from, system_to, modified_by
             ) VALUES (
                 :caseId, :caseNumber, :utilityId, :accountId, :customerId,
                 :caseType, :caseCategory, :status, :priority, :title, :description,
                 :openedBy, :openedAt, :assignedTo, :assignedTeam,
-                :resolvedAt, :closedAt, :resolutionNotes
+                :resolvedAt, :closedAt, :resolutionNotes,
+                :systemFrom, :systemTo, :modifiedBy
             )
-            ON CONFLICT (case_id) DO UPDATE SET
-                status = :status,
-                priority = :priority,
-                assigned_to = :assignedTo,
-                assigned_team = :assignedTeam,
-                resolved_at = :resolvedAt,
-                closed_at = :closedAt,
-                resolution_notes = :resolutionNotes
         """.trimIndent()
 
         val params = MapSqlParameterSource()
@@ -56,14 +62,37 @@ class CaseRepository(
             .addValue("resolvedAt", caseRecord.resolvedAt)
             .addValue("closedAt", caseRecord.closedAt)
             .addValue("resolutionNotes", caseRecord.resolutionNotes)
+            .addValue("systemFrom", caseRecord.systemFrom)
+            .addValue("systemTo", caseRecord.systemTo)
+            .addValue("modifiedBy", caseRecord.modifiedBy)
 
         jdbcTemplate.update(sql, params)
         return caseRecord
     }
 
-    fun findById(caseId: String): CaseRecord? {
+    /**
+     * Supersede the current version by setting system_to = CURRENT_TIMESTAMP.
+     * This is the only UPDATE operation - it closes the temporal window.
+     */
+    private fun supersedeCurrent(caseId: String) {
         val sql = """
-            SELECT * FROM case_record WHERE case_id = :caseId
+            UPDATE case_record 
+            SET system_to = CURRENT_TIMESTAMP 
+            WHERE case_id = :caseId 
+              AND system_to = TIMESTAMP '9999-12-31 23:59:59'
+        """.trimIndent()
+
+        jdbcTemplate.update(sql, MapSqlParameterSource("caseId", caseId))
+    }
+
+    /**
+     * Find the current version (system_to = 9999-12-31).
+     */
+    private fun findCurrentVersion(caseId: String): CaseRecord? {
+        val sql = """
+            SELECT * FROM case_record 
+            WHERE case_id = :caseId 
+              AND system_to = TIMESTAMP '9999-12-31 23:59:59'
         """.trimIndent()
 
         val params = MapSqlParameterSource("caseId", caseId)
@@ -71,6 +100,24 @@ class CaseRepository(
             .firstOrNull()
     }
 
+    /**
+     * Find current version of a case (system_to = 9999-12-31).
+     */
+    fun findById(caseId: String): CaseRecord? {
+        val sql = """
+            SELECT * FROM case_record 
+            WHERE case_id = :caseId 
+              AND system_to = TIMESTAMP '9999-12-31 23:59:59'
+        """.trimIndent()
+
+        val params = MapSqlParameterSource("caseId", caseId)
+        return jdbcTemplate.query(sql, params) { rs, _ -> mapCaseRecord(rs) }
+            .firstOrNull()
+    }
+
+    /**
+     * Find current versions of cases by utility (system_to = 9999-12-31).
+     */
     fun findByUtilityId(
         utilityId: String,
         status: CaseStatus? = null,
@@ -79,6 +126,7 @@ class CaseRepository(
     ): List<CaseRecord> {
         val sql = buildString {
             append("SELECT * FROM case_record WHERE utility_id = :utilityId")
+            append(" AND system_to = TIMESTAMP '9999-12-31 23:59:59'")
             if (status != null) append(" AND status = :status")
             if (assignedTo != null) append(" AND assigned_to = :assignedTo")
             append(" ORDER BY opened_at DESC LIMIT :limit")
@@ -93,10 +141,14 @@ class CaseRepository(
         return jdbcTemplate.query(sql, params) { rs, _ -> mapCaseRecord(rs) }
     }
 
+    /**
+     * Find current versions of cases by customer (system_to = 9999-12-31).
+     */
     fun findByCustomerId(customerId: String, limit: Int = 50): List<CaseRecord> {
         val sql = """
             SELECT * FROM case_record 
             WHERE customer_id = :customerId 
+              AND system_to = TIMESTAMP '9999-12-31 23:59:59'
             ORDER BY opened_at DESC 
             LIMIT :limit
         """.trimIndent()
@@ -180,6 +232,9 @@ class CaseRepository(
         resolvedAt = rs.getTimestamp("resolved_at")?.toLocalDateTime(),
         closedAt = rs.getTimestamp("closed_at")?.toLocalDateTime(),
         resolutionNotes = rs.getString("resolution_notes"),
+        systemFrom = rs.getTimestamp("system_from").toLocalDateTime(),
+        systemTo = rs.getTimestamp("system_to").toLocalDateTime(),
+        modifiedBy = rs.getString("modified_by"),
     )
 
     private fun mapCaseNote(rs: ResultSet) = CaseNote(
