@@ -45,5 +45,7 @@ include(
     "notification-service",
     "document-service",
     "case-management-service",
+    // CSR tools (Phase 3)
+    "csr-portal-service",
     "e2e-tests",
 )

@@ -1,0 +1,49 @@
+server:
+  port: 8095
+
+spring:
+  application:
+    name: csr-portal-service
+  
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
+
+  security:
+    filter:
+      dispatcher-types: REQUEST, ERROR
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# Service URLs
+csr-portal:
+  customer-service-url: ${CUSTOMER_SERVICE_URL:http://localhost:8081}
+  billing-orchestrator-url: ${BILLING_ORCHESTRATOR_URL:http://localhost:8085}
+  payments-service-url: ${PAYMENTS_SERVICE_URL:http://localhost:8086}
+  case-management-url: ${CASE_MANAGEMENT_URL:http://localhost:8092}
+  notification-service-url: ${NOTIFICATION_SERVICE_URL:http://localhost:8091}
+
+# JWT configuration for CSR authentication
+jwt:
+  secret: ${JWT_SECRET:csr-portal-secret-key-change-in-production}
+  expiration-ms: 28800000 # 8 hours
+
+# Logging
+logging:
+  level:
+    com.example.usbilling: INFO
+    org.springframework.web: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
