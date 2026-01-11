@@ -1,21 +1,10 @@
 package com.example.usbilling.hr.http
 
-import com.example.usbilling.shared.Money
-import java.time.LocalDate
-
 /**
- * Payload sent from worker-service back to hr-service to record the amount
- * withheld for each garnishment order in a given paycheck.
+ * Legacy payroll DTOs for garnishment withholding were removed as part of the
+ * billing-only migration. This stub object exists only to keep the file
+ * non-empty for ktlint and to make any accidental usages obvious at compile
+ * time.
  */
-data class GarnishmentWithholdingEvent(
-    val orderId: String,
-    val paycheckId: String,
-    val payRunId: String?,
-    val checkDate: LocalDate,
-    val withheld: Money,
-    val netPay: Money,
-)
-
-data class GarnishmentWithholdingRequest(
-    val events: List<GarnishmentWithholdingEvent>,
-)
+@Deprecated("Legacy payroll DTOs removed; do not use")
+object GarnishmentWithholdingDtosStub

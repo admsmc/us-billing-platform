@@ -231,14 +231,12 @@ class DisputeService(
     /**
      * Get customer's disputes.
      */
-    fun getCustomerDisputes(customerId: String, limit: Int = 50): List<BillingDispute> =
-        disputeRepository.findByCustomerId(customerId, limit)
+    fun getCustomerDisputes(customerId: String, limit: Int = 50): List<BillingDispute> = disputeRepository.findByCustomerId(customerId, limit)
 
     /**
      * Get disputes by status (for CSR dashboard).
      */
-    fun getDisputesByStatus(status: DisputeStatus, limit: Int = 100): List<BillingDispute> =
-        disputeRepository.findByStatus(status, limit)
+    fun getDisputesByStatus(status: DisputeStatus, limit: Int = 100): List<BillingDispute> = disputeRepository.findByStatus(status, limit)
 
     /**
      * Determine priority based on dispute type and amount.

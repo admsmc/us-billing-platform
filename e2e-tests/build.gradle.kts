@@ -54,3 +54,9 @@ tasks.test {
         exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
     }
 }
+
+// e2e-tests is a tests-only module; disable Spring Boot's executable jar packaging
+// to avoid requiring a main class.
+tasks.withType<org.springframework.boot.gradle.tasks.bundling.BootJar> {
+    enabled = false
+}

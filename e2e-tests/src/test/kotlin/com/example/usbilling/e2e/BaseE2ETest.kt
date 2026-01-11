@@ -7,24 +7,64 @@ import org.junit.jupiter.api.BeforeEach
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
+import org.testcontainers.containers.DockerComposeContainer
+import org.testcontainers.containers.wait.strategy.Wait
+import org.testcontainers.junit.jupiter.Container
+import org.testcontainers.junit.jupiter.Testcontainers
+import java.io.File
 
 /**
- * Base class for E2E tests that interact with deployed services.
+ * Base class for E2E tests that interact with the full billing stack.
  *
- * Tests assume services are running via docker-compose:
- * docker compose -f docker-compose.yml -f docker-compose.billing.yml up
+ * Tests now use Testcontainers to spin up the Docker Compose environment defined in
+ * docker-compose.billing.yml, so there is no need to manually run docker compose
+ * before executing :e2e-tests:test or the Gradle build.
  *
- * Service ports:
+ * Service ports (from docker-compose.billing.yml):
  * - customer-service: 8081
  * - rate-service: 8082
  * - regulatory-service: 8083
  * - billing-worker-service: 8084
  * - billing-orchestrator-service: 8085
  */
+@Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 abstract class BaseE2ETest {
 
+    class BillingDockerCompose(file: File) : DockerComposeContainer<BillingDockerCompose>(file)
+
     companion object {
+        private val composeFile = File("../docker-compose.billing.yml").canonicalFile
+
+        @Container
+        @JvmStatic
+        val environment: BillingDockerCompose = BillingDockerCompose(composeFile)
+            .withExposedService(
+                "customer-service",
+                8081,
+                Wait.forHttp("/actuator/health").forStatusCode(200),
+            )
+            .withExposedService(
+                "rate-service",
+                8082,
+                Wait.forHttp("/actuator/health").forStatusCode(200),
+            )
+            .withExposedService(
+                "regulatory-service",
+                8083,
+                Wait.forHttp("/actuator/health").forStatusCode(200),
+            )
+            .withExposedService(
+                "billing-worker-service",
+                8084,
+                Wait.forHttp("/health").forStatusCode(200),
+            )
+            .withExposedService(
+                "billing-orchestrator-service",
+                8085,
+                Wait.forHttp("/actuator/health").forStatusCode(200),
+            )
+
         const val CUSTOMER_SERVICE_BASE_URL = "http://localhost:8081"
         const val RATE_SERVICE_BASE_URL = "http://localhost:8082"
         const val REGULATORY_SERVICE_BASE_URL = "http://localhost:8083"

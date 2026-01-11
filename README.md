@@ -6,7 +6,7 @@ Enterprise-focused, Kotlin-based utility billing platform with a functional-core
 
 This platform adapts the proven architecture from us-payroll-platform for utility customer information management and billing cycles.
 
-Status: **Phase 3B complete** (Billing domain ready, services await migration). See `MIGRATION_GUIDE.md` for Phase 3C execution plan.
+Status: **Billing-core in place; payroll-era services removed from the active build**. See `MIGRATION_GUIDE.md` for historical context on the payroll → billing migration.
 
 ## Refactoring Status
 
@@ -34,14 +34,12 @@ Status: **Phase 3B complete** (Billing domain ready, services await migration). 
 - ✅ UsageValidator for meter read validation and estimation
 - ✅ Supports FIXED, PER_UNIT, PERCENTAGE_OF_ENERGY, PERCENTAGE_OF_TOTAL charge types
 
-**Phase 3C: Service Migration** ⏸️ Ready for Execution (Estimated 5-7 days)
-- ⏸️ Create billing-domain type equivalents (CustomerSnapshot, RateContext, RegulatoryContext)
-- ⏸️ Migrate API modules (customer-api, rate-api, regulatory-api)
-- ⏸️ Create BillingComputationService (worker) using BillingEngine
-- ⏸️ Create BillingOrchestrationService (orchestrator) using BillingEngine
-- ⏸️ Remove payroll-domain dependencies from all 13 modules
-- ⏸️ Delete legacy modules (payroll-domain/, payroll-jackson/)
-- ⚠️ **Note**: payroll-domain still present for backward compatibility
+**Phase 3C: Service Migration** ✅ Core migration complete, payroll modules archived
+- ✅ Billing-domain type equivalents (CustomerSnapshot, RateContext, RegulatoryContext)
+- ✅ API modules (customer-api, rate-api, regulatory-api) now use billing-domain types
+- ✅ Billing worker/orchestrator services depend on billing-domain
+- ✅ `payroll-domain` and payroll services removed from the active Gradle build
+- ℹ️ Remaining payroll-oriented subsystems (payments/reporting/filings, paycheck ledger schemas, and payroll K8s manifests) are now treated as legacy and excluded from the billing runtime.
 
 **Why Phase 3C is deferred:**
 - 100+ files depend on payroll-domain across 13 modules

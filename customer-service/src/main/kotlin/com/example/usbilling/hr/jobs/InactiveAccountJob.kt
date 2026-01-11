@@ -10,12 +10,12 @@ import java.time.LocalDate
 
 /**
  * Proactive monitoring job that detects accounts with no usage for 60+ days.
- * 
+ *
  * Detection criteria:
  * - No increase in meter readings for 60+ consecutive days
  * - Account is active (not closed)
  * - Account had previous usage history
- * 
+ *
  * When detected, creates a case to follow up with customer to determine:
  * - Is the property vacant?
  * - Should the account be closed?
@@ -173,7 +173,9 @@ class InactiveAccountJob(
     private fun createInactiveAccountCase(account: InactiveAccount): String {
         val safetyNote = if (account.serviceType == "GAS") {
             "\n\nIMPORTANT: Gas service with no usage may indicate a safety concern or pilot light issue."
-        } else ""
+        } else {
+            ""
+        }
 
         val description = """
             Account has been inactive with no usage for ${account.daysInactive} days.

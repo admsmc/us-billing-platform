@@ -6,17 +6,16 @@ import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
-import java.time.LocalDateTime
 
 /**
  * Proactive monitoring job that detects potential meter tampering based on usage pattern anomalies.
- * 
+ *
  * Detection criteria:
  * - Sudden drop in usage compared to historical baseline (>50% reduction)
  * - Zero or near-zero usage when occupancy confirmed
  * - Irregular usage patterns (usage only during specific hours suggesting bypass)
  * - Meter reading reversals or impossible values
- * 
+ *
  * When detected, creates a high-priority case and dispatches field operations.
  */
 @Component
@@ -260,6 +259,12 @@ class TamperingDetectionJob(
      * Notify field operations team about tampering indicator.
      */
     private fun notifyFieldOperations(indicator: TamperingIndicator, caseId: String) {
+        val indicatorDetails = if (indicator.indicatorType == "USAGE_DROP") {
+            "Usage dropped ${String.format("%.1f", indicator.dropPercentage)}% from baseline"
+        } else {
+            "Meter reversal detected"
+        }
+
         val message = """
             TAMPERING ALERT: Field inspection required
             
@@ -269,12 +274,7 @@ class TamperingDetectionJob(
             Service: ${indicator.serviceType}
             Indicator: ${indicator.indicatorType}
             
-            ${
-            if (indicator.indicatorType == "USAGE_DROP")
-                "Usage dropped ${String.format("%.1f", indicator.dropPercentage)}% from baseline"
-            else
-                "Meter reversal detected"
-        }
+            $indicatorDetails
             
             Priority: HIGH - Dispatch technician for meter inspection
         """.trimIndent()

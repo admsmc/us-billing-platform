@@ -10,12 +10,12 @@ import java.time.LocalDateTime
 
 /**
  * Proactive monitoring job that detects potential water leaks based on continuous usage patterns.
- * 
+ *
  * Detection criteria:
  * - Continuous water usage for 24+ consecutive hours
  * - Usage rate above minimum threshold (e.g., 0.1 gallons/minute)
  * - No significant gaps in consumption
- * 
+ *
  * When detected, automatically creates a case and notifies the customer.
  */
 @Component

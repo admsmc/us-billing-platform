@@ -9,7 +9,9 @@
 
 ## Executive Summary
 
-The US Billing Platform is a **production-grade, Kotlin-based utility billing system** forked from us-payroll-platform. The system demonstrates **excellent architectural patterns**, comprehensive testing, and enterprise-ready infrastructure. However, it is currently in a **hybrid state** between payroll and billing concepts, requiring completion of Phase 3C migration to achieve full billing domain alignment.
+The US Billing Platform is a **production-grade, Kotlin-based utility billing system** forked from us-payroll-platform. The system demonstrates **excellent architectural patterns**, comprehensive testing, and enterprise-ready infrastructure.
+
+> **Update (post-review):** The active Gradle build has since been simplified so that `payroll-domain` and legacy payroll services are no longer part of the billing runtime, and payroll-era Kubernetes manifests have been archived under `deploy/k8s-legacy-payroll/`. Payments, reporting, and filings modules that still model paycheck/payrun semantics are treated as legacy and excluded from the utility billing deployment path.
 
 ### Overall Assessment: ⚠️ **STRONG FOUNDATION, MIGRATION INCOMPLETE**
 
@@ -167,7 +169,7 @@ The system implements a clean bounded-context microservices architecture:
 - ✅ UsageValidator for meter validation
 - ✅ Supports FIXED, PER_UNIT, PERCENTAGE charge types
 
-### Phase 3C: Service Migration ⚠️ **READY BUT NOT EXECUTED**
+### Phase 3C: Service Migration ✅ Core migration executed; payroll modules archived from runtime
 
 **Scope:** 100+ files across 13 modules depend on payroll-domain
 

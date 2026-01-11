@@ -10,13 +10,13 @@ import java.math.BigDecimal
 
 /**
  * Proactive monitoring job for commercial accounts approaching or exceeding credit limits.
- * 
+ *
  * Detection criteria:
  * - Account has a defined credit limit
  * - Current balance is >= 80% of credit limit (warning)
  * - Current balance exceeds credit limit (critical)
  * - Account is commercial/business type
- * 
+ *
  * When detected, creates a case and notifies the commercial customer to arrange payment
  * or request a credit limit increase.
  */

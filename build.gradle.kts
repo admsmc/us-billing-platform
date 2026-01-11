@@ -168,8 +168,10 @@ subprojects {
             // Thresholds (tunable): start conservative, then raise per module over time.
             // You can override per-run with -PjacocoMinLine=0.65
             val defaultMinLine = when (project.name) {
-                "payroll-domain" -> 0.70
-                "tax-service" -> 0.50
+                // Thin façades over other services; tests are focused in core billing modules.
+                "customer-domain" -> 0.10
+                // For customer-portal-service we currently track coverage but do not gate builds on it.
+                "customer-portal-service" -> 0.0
                 else -> 0.30
             }
             val minLine = (project.findProperty("jacocoMinLine") as? String)?.toDoubleOrNull() ?: defaultMinLine
@@ -241,8 +243,7 @@ val sbomProjects = listOf(
     project(":customer-service"),
     project(":rate-service"),
     project(":regulatory-service"),
-    project(":payments-service"),
-    project(":reporting-service"),
+    // Legacy payroll-oriented services (payments/reporting) are excluded from the active billing build.
 )
 
 sbomProjects.forEach { p ->

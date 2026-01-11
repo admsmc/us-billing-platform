@@ -2,9 +2,5 @@
 #
 # B1 (P0): Formal approval workflow for content changes
 #
-# These paths represent payroll-critical, curated content artifacts.
-#
-# NOTE: Replace/extend these owners with your real compliance/SME teams.
-
-/tax-content/src/main/resources/ @andrewmathers
-/labor-service/src/main/resources/ @andrewmathers
+# These paths represented curated tax/labor content artifacts in the original payroll fork.
+# They have been removed or archived in the billing platform.

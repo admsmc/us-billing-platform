@@ -37,9 +37,10 @@ include(
     "billing-orchestrator-service",
     "billing-worker-service",
     "billing-benchmarks",
-    "payments-service",
-    "filings-service",
-    "reporting-service",
+    // Legacy payroll-oriented subsystems (payments/reporting/filings) are excluded from the active billing build.
+    // "payments-service",
+    // "filings-service",
+    // "reporting-service",
     // Customer service platform services (Phase 1)
     "customer-portal-service",
     "notification-service",
